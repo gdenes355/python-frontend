@@ -1,0 +1,26 @@
+.console {
+  height: 100%;
+  width: 100%;
+  background-color: black;
+  overflow: auto;
+  font-size: 15px;
+}
+
+.console pre {
+  height: 18px;
+  margin: 1px;
+  color: white;
+}
+
+.console input {
+  width: 95%;
+  color: white; 
+  background-color: black;
+  font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+  border-color: black;
+  outline: none;
+  border: 0px solid black;
+  font-size: 15px;
+}
+
+.hidden { display:none; }
