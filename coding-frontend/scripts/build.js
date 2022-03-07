@@ -9,7 +9,7 @@ const defaults = rewire('react-scripts/scripts/build.js');
 let config = defaults.__get__('config');
 
 // build into Django target
-config.output.path = path.join(path.dirname(__dirname), '../build');
+config.output.path = path.join(path.dirname(__dirname), 'build');
 
 config.output.filename = '[name]-[hash].js'
 //config.plugins = new BundleTracker({filename: './webpack-stats.json'})
