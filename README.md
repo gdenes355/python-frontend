@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Netlify Status](https://api.netlify.com/api/v1/badges/0a4ab609-ce3f-426b-9319-356b99fcc907/deploy-status)](https://app.netlify.com/sites/gdenes355-python-frontend/deploys)
+[![Netlify Status](https://api.netlify.com/api/v1/badges/0a4ab609-ce3f-426b-9319-356b99fcc907/deploy-status)](https://gdenes355-python-frontend.netlify.app/)
 
 # Getting Started with Create React App
 
