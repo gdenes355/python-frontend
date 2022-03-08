@@ -32,7 +32,7 @@ class DebugPane extends React.Component {
                         <Table className="vartable" size="small" stickyHeader>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Global</TableCell>
+                                <TableCell>Variable</TableCell>
                                 <TableCell align="right">Value</TableCell>
                             </TableRow>
                         </TableHead>
