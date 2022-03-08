@@ -1,5 +1,5 @@
 import * as React from 'react';
-import {Button, Grid, Stack } from '@mui/material';
+import {Button, Grid, Stack} from '@mui/material';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -13,7 +13,7 @@ import "./DebugPane.css"
 class DebugPane extends React.Component {
     render() {
         return (
-            <Stack sx={{height: "100%"}}>
+            <Stack sx={{height: "100%", ml: 1}}>
                 <Grid container spacing={2} sx={{ mt: 0.5 }}>
                 <Grid item>
                         <Button variant="contained" color="success" 

@@ -26,7 +26,7 @@ class Console extends React.Component {
   
     render() {
       return (
-        <Box sx={{width:"100%", height:"100%", pl: "8px", pt: "8px", bgcolor: "black"}}>
+        <Box sx={{width:"100%", height:"100%", bgcolor: "black"}}>
         <div className="console" ref={this.container} onClick={(evt) => {return this.inputField.current != null ? this.inputField.current.focus() : null}}>
   
           <div style={this.style}>

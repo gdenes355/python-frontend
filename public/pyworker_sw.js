@@ -1,4 +1,4 @@
-importScripts("https://cdn.jsdelivr.net/pyodide/v0.19.0/full/pyodide.js");
+importScripts("https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js");
 
 // communication with the main site
 // there are two commands implemented at the moment:

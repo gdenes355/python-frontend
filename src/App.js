@@ -1,5 +1,5 @@
 import React from 'react';
-import Challenge from './components/Challenge'
+import Challenge from './Challenge'
 import './App.css';
 
 class App extends React.Component {
