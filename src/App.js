@@ -1,13 +1,16 @@
 import React from 'react';
-import Challenge from './Challenge'
+import {BrowserRouter, Routes, Route} from "react-router-dom";
+import Book from './Book'
+
 import './App.css';
 
-class App extends React.Component {
-    render() {
-        return (
-          <Challenge guidePath="guide.md" codePath="c01.py"></Challenge>
-        )
-    }
+export default function App() {
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path='/' element={<Book/>} />
+      </Routes>
+    </BrowserRouter>
+  )
 }
-  
-export default App;
