@@ -1,8 +1,8 @@
-import {Button, Box, Grid, InputLabel,MenuItem,Select,FormControl, Card, CardContent} from '@mui/material'
+import {Box, Card, CardContent} from '@mui/material'
 import DebugPane from './components/DebugPane'
 import PyEditor from './components/PyEditor'
 import Console from './components/Console'
-import SpinnerAdornment from './components/SpinnerAdornment'
+import MainControls from './components/MainControls'
 import ReactMarkdown from 'react-markdown'
 import { Allotment } from "allotment"
 import "allotment/dist/style.css"
@@ -130,33 +130,14 @@ class Challenge extends React.Component {
                         <Box sx={{ p:2, overflowY: "auto"}}>
                         <Card>
                             <CardContent>
-                                <Grid container spacing={2}>
-                                    <Grid item>
-                                        <Button variant="contained" color="success" 
-                                            disabled={ this.state.editorState !== READY  } 
-                                            onClick={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}>
-                                            Debug{this.state.editorState === READY ? null : <SpinnerAdornment/>}
-                                        </Button>
-                                    </Grid>
-                                    <Grid item><Button variant="contained" color="error" 
-                                        disabled={ this.state.editorState !== READY } 
-                                        onClick={() => controller["reset-code"](this)}>Reset</Button>
-                                    </Grid>
-                                    <Grid item>
-                                    <FormControl size="small">
-                                        <InputLabel id="theme-label">Theme</InputLabel>
-                                        <Select
-                                            labelId="theme-label"
-                                            id="demo-simple-select"
-                                            defaultValue={this.state.theme}
-                                            onChange={this.handleThemeChange}
-                                            label="Theme">
-                                                <MenuItem value="vs-dark">Dark</MenuItem>
-                                                <MenuItem value="vs-light">Light</MenuItem>
-                                        </Select>
-                                        </FormControl>
-                                    </Grid>
-                                </Grid>
+                                <MainControls
+                                    theme={this.state.theme}
+                                    onThemeChange={this.handleThemeChange}
+                                    onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+                                    onResetCode={() => controller["reset-code"](this)}
+                                    canDebug={this.state.editorState === READY}
+                                    canReset={this.state.editorState === READY}
+                                />
                             </CardContent>
                         </Card>
                             <ReactMarkdown>{this.state.guideMd}</ReactMarkdown>
