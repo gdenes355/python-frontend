@@ -29,6 +29,10 @@ class PyEditor extends React.Component {
         return this.breakpointList;
     }
 
+    setValue(value) {
+        this.editorRef.current.setValue(value)
+    }
+
     handleEditorDidMount = (editor, monaco) => {
         this.editorRef.current = editor
         this.monacoRef.current = monaco
