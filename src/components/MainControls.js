@@ -1,6 +1,7 @@
 import React from 'react'
-import {Button, Grid, InputLabel,MenuItem,Select,FormControl} from '@mui/material'
+import {Button, Grid, InputLabel,MenuItem,Select,FormControl,IconButton} from '@mui/material'
 import SpinnerAdornment from './SpinnerAdornment'
+import ListIcon from '@mui/icons-material/List';
 
 class MainControls extends React.Component {
 
@@ -19,19 +20,22 @@ class MainControls extends React.Component {
                     onClick={this.props.onResetCode}>Reset</Button>
                 </Grid>
                 <Grid item>
-                <FormControl size="small">
-                    <InputLabel id="theme-label">Theme</InputLabel>
-                    <Select
-                        labelId="theme-label"
-                        id="demo-simple-select"
-                        value={this.props.theme ?? "vs-dark"}
-                        onChange={this.props.onThemeChange}
-                        label="Theme">
-                            <MenuItem value="vs-dark">Dark</MenuItem>
-                            <MenuItem value="vs-light">Light</MenuItem>
-                    </Select>
+                    <FormControl size="small">
+                        <InputLabel id="theme-label">Theme</InputLabel>
+                        <Select
+                            labelId="theme-label"
+                            id="demo-simple-select"
+                            value={this.props.theme ?? "vs-dark"}
+                            onChange={this.props.onThemeChange}
+                            label="Theme">
+                                <MenuItem value="vs-dark">Dark</MenuItem>
+                                <MenuItem value="vs-light">Light</MenuItem>
+                        </Select>
                     </FormControl>
                 </Grid>
+                {this.props.hasBook ? 
+                    <Grid item><IconButton color="primary" onClick={(evt) => this.props.toggleBookDrawer(true)}><ListIcon></ListIcon></IconButton></Grid>
+                    : null }
             </Grid>
         )
     }

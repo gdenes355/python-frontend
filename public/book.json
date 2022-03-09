@@ -1,0 +1,18 @@
+{
+    "name": "Fun tasks",
+    "id": "b69f38c6-2cc3-4c64-be5e-8a94ee97f2e9",
+    "children": [
+        {
+            "id": "9c412a88-b282-47c2-a76b-e13a84eba875",
+            "name": "Tic-tac-toe",
+            "guide": "c01.md",
+            "py": "c01.py"
+        },
+        {
+            "id": "46e0a631-5fb7-4723-81a8-8335955712d6",
+            "name": "Cipher challenge",
+            "guide": "c09.md",
+            "py": "c09.py"
+        }
+    ]
+}

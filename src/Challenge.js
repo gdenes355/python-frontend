@@ -78,12 +78,10 @@ class Challenge extends React.Component {
     };
 
     componentDidMount() {
-        const guidePath = this.props.guidePath;
-        const pyPath = this.props.codePath
-        fetch(guidePath)
+        fetch(this.props.guidePath)
             .then(response => response.text())
             .then(text => this.setState({guideMd: text}))
-        fetch(pyPath)
+        fetch(this.props.codePath)
             .then(response => response.text())
             .then(text => this.setState({starterCode: text}))
         navigator.serviceWorker.register('/pysw.js').then(function(reg) {
@@ -95,6 +93,15 @@ class Challenge extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
+        if (prevProps.guidePath !== this.props.guidePath) {
+            fetch(this.props.guidePath)
+                .then(response => response.text())
+                .then(text => this.setState({guideMd: text}))
+            fetch(this.props.codePath)
+                .then(response => response.text())
+                .then(text => this.setState({starterCode: text}))
+            controller["restart-worker"](this)
+        }
         if (this.state.editorState !== prevState.editorState &&
             (prevState.editorState === ON_BREAKPOINT ||
             this.state.editorState === ON_BREAKPOINT))  {
@@ -137,6 +144,8 @@ class Challenge extends React.Component {
                                     onResetCode={() => controller["reset-code"](this)}
                                     canDebug={this.state.editorState === READY}
                                     canReset={this.state.editorState === READY}
+                                    hasBook={this.props.hasBook}
+                                    toggleBookDrawer={this.props.toggleBookDrawer}
                                 />
                             </CardContent>
                         </Card>
