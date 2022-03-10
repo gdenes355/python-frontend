@@ -19,6 +19,15 @@ class Console extends React.Component {
         this.props.onInput(input)
       }
     }
+
+    onKeyDown = (event) => {
+      let char = String.fromCharCode(event.which).toLowerCase();
+      if ((event.ctrlKey || event.metaKey) && char === 'c') {
+        // for Ctrl+C or Cmd+C
+        event.preventDefault()
+        this.props.onInterrupt()
+      }
+    }
   
     componentDidUpdate() {
       this.container.current.scrollTop = this.container.current.scrollHeight;
@@ -28,23 +37,21 @@ class Console extends React.Component {
       return (
         <Box sx={{width:"100%", height:"100%", bgcolor: "black"}}>
         <div className="console" ref={this.container} onClick={(evt) => {return this.inputField.current != null ? this.inputField.current.focus() : null}}>
-  
-          <div style={this.style}>
           {this.props.content.replace(/\n{1}$/, "").split("\n").map((i,key) => {
               return <pre key={key}>{i}</pre>;
           })}
-          </div>
+          
             <input ref={this.inputField}
               className={!this.props.isInputEnabled ? 'hidden' : undefined}
               autoFocus 
-              style={this.style}
               autoComplete="off"
               type="text" 
               value={this.state.inputValue} 
               onChange={event => this.setState({inputValue: event.target.value})} 
-              onKeyPress={this.onKeyPressed}>
+              onKeyPress={this.onKeyPressed}
+              onKeyDown={this.onKeyDown}>
             </input>
-        </div>
+            </div>
         </Box>
       )
     }

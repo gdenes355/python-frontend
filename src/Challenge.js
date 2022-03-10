@@ -41,6 +41,9 @@ const controller = {
         comp.setState((state, props) => {return {consoleText: state.consoleText + "\n" + msg + "\n", editorState: READY}}) 
     },
     "restart-worker": (comp, data) => {
+        if (comp.state === LOADING) {
+            return;
+        }
         if (comp.state.worker) {
             comp.state.worker.terminate()
         }
@@ -50,8 +53,10 @@ const controller = {
         comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER}})
     },
     "run": (comp, data) => {
-        comp.state.worker.postMessage({cmd: "run", code: data.code, breakpoints: data.breakpoints}); 
-        comp.setState({consoleText: "", editorState:RUNNING})
+        if (comp.state.editorState === READY) {
+            comp.state.worker.postMessage({cmd: "run", code: data.code, breakpoints: data.breakpoints}); 
+            comp.setState({consoleText: "", editorState:RUNNING})
+        }
     },
     "reset-code": (comp, data) => comp.editorRef.current.setValue(comp.state.starterCode),
     "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT})
@@ -128,10 +133,17 @@ class Challenge extends React.Component {
                                 starterCode={this.state.starterCode}
                                 theme={this.state.theme}
                                 onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
+                                onDebug={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
                                 />
                         </Allotment.Pane>
                         <Allotment.Pane visible={this.state.editorState !== LOADING && !this.state.editorFullScreen}>
-                            <Console content={this.state.consoleText} isInputEnabled={this.state.editorState === AWAITING_INPUT} onInput={(input) => {controller["input-entered"](this, {input})}}></Console>
+                            <Console 
+                                content={this.state.consoleText} 
+                                isInputEnabled={this.state.editorState === AWAITING_INPUT} 
+                                onInput={(input) => {controller["input-entered"](this, {input})}}
+                                onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
+                                >
+                                </Console>
                         </Allotment.Pane>
                     </Allotment>
                 </Allotment.Pane>
