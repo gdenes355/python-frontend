@@ -68,7 +68,8 @@ class Challenge extends React.Component {
         guideMd: "*Loading the guide... Please wait*",
         debugInfo: {lineno: 0, env: new Map()},
         editorState: LOADING,
-        theme: "vs-dark"
+        theme: "vs-dark",
+        editorFullScreen: false
     };
 
     constructor(props) {
@@ -125,30 +126,32 @@ class Challenge extends React.Component {
                                 isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
                                 debugInfo={this.state.debugInfo}
                                 starterCode={this.state.starterCode}
-                                theme={this.state.theme}/>
+                                theme={this.state.theme}
+                                onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
+                                />
                         </Allotment.Pane>
-                        <Allotment.Pane>
+                        <Allotment.Pane visible={this.state.editorState !== LOADING && !this.state.editorFullScreen}>
                             <Console content={this.state.consoleText} isInputEnabled={this.state.editorState === AWAITING_INPUT} onInput={(input) => {controller["input-entered"](this, {input})}}></Console>
                         </Allotment.Pane>
                     </Allotment>
                 </Allotment.Pane>
-                <Allotment.Pane minSize={200}>
+                <Allotment.Pane minSize={200} visible={this.state.editorState !== LOADING && !this.state.editorFullScreen}>
                     <Allotment vertical >
                         <Box sx={{ p:2, overflowY: "auto"}}>
-                        <Card>
-                            <CardContent>
-                                <MainControls
-                                    theme={this.state.theme}
-                                    onThemeChange={this.handleThemeChange}
-                                    onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
-                                    onResetCode={() => controller["reset-code"](this)}
-                                    canDebug={this.state.editorState === READY}
-                                    canReset={this.state.editorState === READY}
-                                    hasBook={this.props.hasBook}
-                                    toggleBookDrawer={this.props.toggleBookDrawer}
-                                />
-                            </CardContent>
-                        </Card>
+                            <Card>
+                                <CardContent>
+                                    <MainControls
+                                        theme={this.state.theme}
+                                        onThemeChange={this.handleThemeChange}
+                                        onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+                                        onResetCode={() => controller["reset-code"](this)}
+                                        canDebug={this.state.editorState === READY}
+                                        canReset={this.state.editorState === READY}
+                                        hasBook={this.props.hasBook}
+                                        toggleBookDrawer={this.props.toggleBookDrawer}
+                                    />
+                                </CardContent>
+                            </Card>
                             <ReactMarkdown>{this.state.guideMd}</ReactMarkdown>
                         </Box>
                         <Allotment.Pane maxSize={350} minSize={150} snap={true} 
