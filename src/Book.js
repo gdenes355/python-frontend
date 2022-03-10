@@ -65,10 +65,9 @@ export default function Book() {
             )
         } else {
             return (
-                <React.Fragment>
-                
-                <BookCover data={data}></BookCover>
-                <BookDrawer data={data} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
+                <React.Fragment> 
+                    <BookCover data={data}></BookCover>
+                    <BookDrawer data={data} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
                 </React.Fragment>
             )
         }

@@ -11,16 +11,17 @@ function AppContainer() {
   const challengePath = searchParams.get('ch');
 
   useEffect(() => {
-
   }, [bookPath, challengePath]);
 
   if (bookPath) { return (<Book/>) }
   else if (challengePath) {
         return (
-          <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
+          <React.Fragment>
+            <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
+          </React.Fragment>
       )
   } else {
-    return (<p>Please specify a challenge (e.g. <a href="?ch=c01">?ch=01</a>) or a book (e.g. <a href="?book=book.json">?book=book.json</a>)</p>)
+    return (<p>Please specify a challenge (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>) or a book (e.g. <a href="?book=book.json">?book=book.json</a>)</p>)
   }
 }
 

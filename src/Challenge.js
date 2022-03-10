@@ -81,6 +81,7 @@ class Challenge extends React.Component {
         super(props);
         this.editorRef = React.createRef();
         this.handleThemeChange.bind(this);
+        this.getVisibilityWithHach.bind(this);
     };
 
     componentDidMount() {
@@ -119,11 +120,16 @@ class Challenge extends React.Component {
         this.setState({theme: event.target.value})
     }
 
+    getVisibilityWithHach = (visible) => {
+        // allotment seems to dislike visibility=true during load time
+        return this.state.editorState === LOADING ? undefined : visible;
+    }
+
     render() {
         return (       
             <Box sx={{width: "100%", height: "100%"}}>
             <Allotment minSize={100} split="vertical" className="h-100">
-                <Allotment.Pane minSize={200} >
+                <Allotment.Pane>
                     <Allotment vertical>
                         <Allotment.Pane>
                             <PyEditor ref={this.editorRef} 
@@ -136,18 +142,17 @@ class Challenge extends React.Component {
                                 onDebug={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
                                 />
                         </Allotment.Pane>
-                        <Allotment.Pane visible={this.state.editorState !== LOADING && !this.state.editorFullScreen}>
+                        <Allotment.Pane visible={this.getVisibilityWithHach(!this.state.editorFullScreen)} maxSize={350} minSize={150}>
                             <Console 
                                 content={this.state.consoleText} 
                                 isInputEnabled={this.state.editorState === AWAITING_INPUT} 
                                 onInput={(input) => {controller["input-entered"](this, {input})}}
-                                onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
-                                >
+                                onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}>
                                 </Console>
                         </Allotment.Pane>
                     </Allotment>
                 </Allotment.Pane>
-                <Allotment.Pane minSize={200} visible={this.state.editorState !== LOADING && !this.state.editorFullScreen}>
+                <Allotment.Pane visible={this.getVisibilityWithHach(!this.state.editorFullScreen)}>
                     <Allotment vertical >
                         <Box sx={{ p:2, overflowY: "auto"}}>
                             <Card>
