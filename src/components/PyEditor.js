@@ -101,7 +101,7 @@ class PyEditor extends React.Component {
                 value={this.props.starterCode}
                 onMount={this.handleEditorDidMount}
                 theme={this.props.theme}
-                options={{scrollBeyondLastLine: false, tabSize: 2, detectIndentation: false, glyphMargin: true}}
+                options={{scrollBeyondLastLine: false, tabSize: 2, detectIndentation: false, glyphMargin: true, wordWrap: "on"}}
                 formatOnPaste={true}
                 onChange={this.handleEditorChange}
             />           
