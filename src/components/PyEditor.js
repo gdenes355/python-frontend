@@ -55,7 +55,7 @@ class PyEditor extends React.Component {
 
         editor.addAction({
             id: "togglefullscreen",
-            label: "toggle Full Screen Editor",
+            label: "Toggle Full Screen Editor",
             keybindings: [monaco.KeyCode.F11],
             precondition: null,
             keybindingContext: null,
@@ -63,6 +63,19 @@ class PyEditor extends React.Component {
             contextMenuOrder: 1.5,
             run: () => {
                 this.props.onToggleFullScreen()
+            }
+        })
+
+        editor.addAction({
+            id: "debug",
+            label: "Debug",
+            keybindings: [monaco.KeyCode.F5],
+            precondition: null,
+            keybindingContext: null,
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: () => {
+                this.props.onDebug()
             }
         })
 
