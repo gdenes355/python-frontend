@@ -1,7 +1,7 @@
 import React, {useEffect} from 'react';
 import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
-import Book from './Book'
-import Challenge from './Challenge'
+import Book from './book/Book'
+import Challenge from './challenge/Challenge'
 
 import './App.css';
 

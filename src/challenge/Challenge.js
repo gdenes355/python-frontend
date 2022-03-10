@@ -1,14 +1,14 @@
 import {Box, Card, CardContent} from '@mui/material'
-import DebugPane from './components/DebugPane'
-import PyEditor from './components/PyEditor'
-import Console from './components/Console'
-import MainControls from './components/MainControls'
+import DebugPane from './DebugPane'
+import PyEditor from './PyEditor'
+import Console from './Console'
+import MainControls from './MainControls'
 import ReactMarkdown from 'react-markdown'
 import { Allotment } from "allotment"
 import "allotment/dist/style.css"
 import React from 'react'
 import Cookies from 'js-cookie'
-import {READY, AWAITING_INPUT, LOADING, ON_BREAKPOINT, RESTARTING_WORKER, RUNNING} from './ChallengeState'
+import {READY, AWAITING_INPUT, LOADING, ON_BREAKPOINT, RESTARTING_WORKER, RUNNING} from '../ChallengeState'
 
 
 import "./Challenge.css";
@@ -83,7 +83,7 @@ class Challenge extends React.Component {
         super(props);
         this.editorRef = React.createRef();
         this.handleThemeChange.bind(this);
-        this.getVisibilityWithHach.bind(this);
+        this.getVisibilityWithHack.bind(this);
     };
 
     componentDidMount() {
@@ -127,76 +127,119 @@ class Challenge extends React.Component {
         Cookies.set("theme", event.target.value)
     }
 
-    getVisibilityWithHach = (visible) => {
+    getVisibilityWithHack = (visible) => {
         // allotment seems to dislike visibility=true during load time
         return this.state.editorState === LOADING ? undefined : visible;
     }
 
-    render() {
-        return (       
-            <Box sx={{width: "100%", height: "100%"}}>
-            <Allotment minSize={100} split="vertical" className="h-100">
-                <Allotment.Pane>
-                    <Allotment vertical>
-                        <Allotment.Pane>
-                            <PyEditor ref={this.editorRef} 
-                                canPlaceBreakpoint={this.state.editorState === READY}
-                                isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
-                                debugInfo={this.state.debugInfo}
-                                starterCode={this.state.starterCode}
-                                theme={this.state.theme}
-                                onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
-                                onDebug={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
-                                />
-                        </Allotment.Pane>
-                        <Allotment.Pane visible={this.getVisibilityWithHach(!this.state.editorFullScreen)} maxSize={350} minSize={150}>
-                            <Console 
-                                content={this.state.consoleText} 
-                                isInputEnabled={this.state.editorState === AWAITING_INPUT} 
-                                onInput={(input) => {controller["input-entered"](this, {input})}}
-                                onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}>
-                                </Console>
-                        </Allotment.Pane>
-                    </Allotment>
-                </Allotment.Pane>
-                <Allotment.Pane visible={this.getVisibilityWithHach(!this.state.editorFullScreen)}>
-                    <Allotment vertical >
-                        <Box sx={{ p:2, overflowY: "auto"}}>
-                            <Card>
-                                <CardContent>
-                                    <MainControls
-                                        theme={this.state.theme}
-                                        onThemeChange={this.handleThemeChange}
-                                        onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
-                                        onResetCode={() => controller["reset-code"](this)}
-                                        canDebug={this.state.editorState === READY}
-                                        canReset={this.state.editorState === READY}
-                                        hasBook={this.props.hasBook}
-                                        toggleBookDrawer={this.props.toggleBookDrawer}
-                                    />
-                                </CardContent>
-                            </Card>
-                            <ReactMarkdown>{this.state.guideMd}</ReactMarkdown>
-                        </Box>
-                        <Allotment.Pane maxSize={350} minSize={150} snap={true} 
-                            visible={this.state.editorState === RUNNING || 
-                                this.state.editorState === ON_BREAKPOINT ||
-                                this.state.editorState === AWAITING_INPUT}>
-                            <DebugPane 
-                                canContinue={this.state.editorState === ON_BREAKPOINT}
-                                onContinue={() => controller["continue"](this)}
-                                canKill={this.state.editorState === RUNNING || 
-                                        this.state.editorState === ON_BREAKPOINT ||
-                                        this.state.editorState === AWAITING_INPUT}
-                                onKill={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
-                                debugInfo={this.state.debugInfo}
-                            />
-                        </Allotment.Pane>
-                    </Allotment>
-                </Allotment.Pane>
-            </Allotment>
-            </Box> 
+
+    
+    renderEditor() {
+        return (<PyEditor ref={this.editorRef} 
+            canPlaceBreakpoint={this.state.editorState === READY}
+            isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
+            debugInfo={this.state.debugInfo}
+            starterCode={this.state.starterCode}
+            theme={this.state.theme}
+            onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
+            onDebug={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+            />)
+    }
+
+    renderConsole() {
+        return (<Console 
+            content={this.state.consoleText} 
+            isInputEnabled={this.state.editorState === AWAITING_INPUT} 
+            onInput={(input) => {controller["input-entered"](this, {input})}}
+            onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}>
+        </Console>)
+    }
+
+    renderMainControls() {
+        return (
+            <Card>
+                <CardContent>
+                    <MainControls
+                        theme={this.state.theme}
+                        onThemeChange={this.handleThemeChange}
+                        onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+                        onResetCode={() => controller["reset-code"](this)}
+                        canDebug={this.state.editorState === READY}
+                        canReset={this.state.editorState === READY}
+                        hasBook={this.props.hasBook}
+                        toggleBookDrawer={this.props.toggleBookDrawer}
+                    />
+                </CardContent>
+            </Card>
         )
+    }
+
+    renderGuide() {
+        return (<ReactMarkdown>{this.state.guideMd}</ReactMarkdown>)
+    }
+
+    renderDebugPane() {
+        return (<DebugPane 
+            canContinue={this.state.editorState === ON_BREAKPOINT}
+            onContinue={() => controller["continue"](this)}
+            canKill={this.state.editorState === RUNNING || 
+                    this.state.editorState === ON_BREAKPOINT ||
+                    this.state.editorState === AWAITING_INPUT}
+            onKill={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
+            debugInfo={this.state.debugInfo}/>)
+    }
+
+    render() {
+        if (this.props.layout === "fullscreen") {
+            return (       
+                <Box sx={{width: "100%", height: "100%"}}>
+                    <Allotment className="h-100">
+                        <Allotment.Pane>
+                            <Allotment vertical>
+                                <Allotment.Pane>
+                                    {this.renderEditor()}
+                                </Allotment.Pane>
+                                <Allotment.Pane visible={this.getVisibilityWithHack(!this.state.editorFullScreen)} maxSize={350} minSize={150}>
+                                    {this.renderConsole()}
+                                </Allotment.Pane>
+                            </Allotment>
+                        </Allotment.Pane>
+                        <Allotment.Pane visible={this.getVisibilityWithHack(!this.state.editorFullScreen)}>
+                            <Allotment vertical >
+                                <Box sx={{ p:2, overflowY: "auto"}}>
+                                    {this.renderMainControls()}
+                                    {this.renderGuide()}
+                                </Box>
+                                <Allotment.Pane maxSize={350} minSize={150} snap={true} 
+                                    visible={this.state.editorState === RUNNING || 
+                                        this.state.editorState === ON_BREAKPOINT ||
+                                        this.state.editorState === AWAITING_INPUT}>
+                                    {this.renderDebugPane()}
+                                </Allotment.Pane>
+                            </Allotment>
+                        </Allotment.Pane>
+                    </Allotment>
+                </Box> 
+            )
+        } else {
+            return (
+                <Box sx={{width: "100%", height: "100%"}}>
+                    <Box sx={{ p:2}}>
+                        {this.renderGuide()}
+                    </Box>
+                    <Box sx={{height: "600px"}}>
+                        {this.renderEditor()}
+                    </Box>
+                    {this.renderMainControls()}
+                    <Box sx={{maxHeight: "400px", overflowY: "auto"}}>
+                        {this.renderConsole()}
+                        </Box>
+                    <Box sx={{maxHeight: "200px", overflowY: "auto"}}>
+                        {this.renderDebugPane()}
+                    </Box>
+                </Box>
+            )
+        }   
     }
 }
 

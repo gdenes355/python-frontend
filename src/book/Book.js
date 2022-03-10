@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {useLocation} from "react-router-dom";
-import Challenge from './Challenge'
-import BookCover from './book/BookCover'
-import BookDrawer from './book/BookDrawer'
+import Challenge from '../challenge/Challenge'
+import BookCover from './BookCover'
+import BookDrawer from './BookDrawer'
 
 function findNode(node, id) {
     if (node.id === id) {
@@ -58,7 +58,8 @@ export default function Book() {
                         guidePath={paths.guidePath} 
                         codePath={paths.pyPath}
                         hasBook={true}
-                        toggleBookDrawer={toggleDrawer}>
+                        toggleBookDrawer={toggleDrawer}
+                        layout="fullscreen">
                     </Challenge>
                     <BookDrawer data={data} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
                 </React.Fragment>

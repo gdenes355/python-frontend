@@ -1,6 +1,6 @@
 import React from 'react'
 import {Button, Grid, InputLabel,MenuItem,Select,FormControl,IconButton} from '@mui/material'
-import SpinnerAdornment from './SpinnerAdornment'
+import SpinnerAdornment from '../components/SpinnerAdornment'
 import ListIcon from '@mui/icons-material/List';
 
 class MainControls extends React.Component {
