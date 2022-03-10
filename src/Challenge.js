@@ -7,7 +7,9 @@ import ReactMarkdown from 'react-markdown'
 import { Allotment } from "allotment"
 import "allotment/dist/style.css"
 import React from 'react'
+import Cookies from 'js-cookie'
 import {READY, AWAITING_INPUT, LOADING, ON_BREAKPOINT, RESTARTING_WORKER, RUNNING} from './ChallengeState'
+
 
 import "./Challenge.css";
 
@@ -85,6 +87,10 @@ class Challenge extends React.Component {
     };
 
     componentDidMount() {
+        let previousTheme = Cookies.get("theme")
+        if (previousTheme) {
+            this.setState({theme: previousTheme})
+        }
         fetch(this.props.guidePath)
             .then(response => response.text())
             .then(text => this.setState({guideMd: text}))
@@ -118,6 +124,7 @@ class Challenge extends React.Component {
 
     handleThemeChange = (event) => {
         this.setState({theme: event.target.value})
+        Cookies.set("theme", event.target.value)
     }
 
     getVisibilityWithHach = (visible) => {
