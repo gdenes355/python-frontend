@@ -8,7 +8,7 @@ import { Allotment } from "allotment"
 import "allotment/dist/style.css"
 import React from 'react'
 import Cookies from 'js-cookie'
-import {READY, AWAITING_INPUT, LOADING, ON_BREAKPOINT, RESTARTING_WORKER, RUNNING} from '../ChallengeState'
+import {READY, AWAITING_INPUT, LOADING, ON_BREAKPOINT, RESTARTING_WORKER, RUNNING} from './ChallengeState'
 
 
 import "./Challenge.css";
@@ -43,7 +43,7 @@ const controller = {
         comp.setState((state, props) => {return {consoleText: state.consoleText + "\n" + msg + "\n", editorState: READY}}) 
     },
     "restart-worker": (comp, data) => {
-        if (comp.state === LOADING) {
+        if (comp.state.editorState === RESTARTING_WORKER) {
             return;
         }
         if (comp.state.worker) {
@@ -76,7 +76,8 @@ class Challenge extends React.Component {
         debugInfo: {lineno: 0, env: new Map()},
         editorState: LOADING,
         theme: "vs-dark",
-        editorFullScreen: false
+        editorFullScreen: false,
+        errorLoading: false
     };
 
     constructor(props) {
@@ -92,11 +93,12 @@ class Challenge extends React.Component {
             this.setState({theme: previousTheme})
         }
         fetch(this.props.guidePath)
-            .then(response => response.text())
+            .then(response => {if (!response.ok) {this.setState({errorLoading: true})} return response.text()})
             .then(text => this.setState({guideMd: text}))
         fetch(this.props.codePath)
-            .then(response => response.text())
+            .then(response => {if (!response.ok) {this.setState({errorLoading: true})} return response.text()})
             .then(text => this.setState({starterCode: text}))
+
         navigator.serviceWorker.register('/pysw.js').then(function(reg) {
             if (navigator.serviceWorker.controller === null || !reg.active) {
                 window.location.reload();
@@ -190,7 +192,10 @@ class Challenge extends React.Component {
     }
 
     render() {
-        if (this.props.layout === "fullscreen") {
+        if (this.state.errorLoading) {
+            return (<p>The challenges files cannot be found. Have they been moved?</p>)
+        }
+        else if (this.props.layout === "fullscreen") {
             return (       
                 <Box sx={{width: "100%", height: "100%"}}>
                     <Allotment className="h-100">
