@@ -5,20 +5,20 @@
         {
             "id": "9c412a88-b282-47c2-a76b-e13a84eba875",
             "name": "Tic-tac-toe",
-            "guide": "c01.md",
-            "py": "c01.py"
+            "guide": "./progsoc/c01.md",
+            "py": "./progsoc/c01.py"
         },
         {
             "id": "46e0a631-5fb7-4723-81a8-8335955712d6",
             "name": "Cipher challenge",
-            "guide": "c09.md",
-            "py": "c09.py"
+            "guide": "./progsoc/c09.md",
+            "py": "./progsoc/c09.py"
         },
         {
             "id": "15951c06-de53-48a3-9292-d5235807c054",
             "name": "Choose a door",
-            "guide": "c10.md",
-            "py": "c10.py"
+            "guide": "./progsoc/c10.md",
+            "py": "./progsoc/c10.py"
         }
     ]
 }

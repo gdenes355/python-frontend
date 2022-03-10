@@ -8,19 +8,19 @@ import './App.css';
 function AppContainer() {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get('book')
-  const challengeNum = searchParams.get('ch');
+  const challengePath = searchParams.get('ch');
 
   useEffect(() => {
 
-  }, [bookPath, challengeNum]);
+  }, [bookPath, challengePath]);
 
   if (bookPath) { return (<Book/>) }
-  else if (challengeNum) {
+  else if (challengePath) {
         return (
-          <Challenge guidePath={"c" + challengeNum + ".md"} codePath={"c" + challengeNum + ".py"}></Challenge>
+          <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
       )
   } else {
-    return (<p>Please specify a challenge (e.g. <a href="?ch=01">?ch=01</a>) or a book (e.g. <a href="?book=book.json">?book=book.json</a>)</p>)
+    return (<p>Please specify a challenge (e.g. <a href="?ch=c01">?ch=01</a>) or a book (e.g. <a href="?book=book.json">?book=book.json</a>)</p>)
   }
 }
 
