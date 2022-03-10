@@ -53,6 +53,19 @@ class PyEditor extends React.Component {
             }
         })
 
+        editor.addAction({
+            id: "togglefullscreen",
+            label: "toggle Full Screen Editor",
+            keybindings: [monaco.KeyCode.F11],
+            precondition: null,
+            keybindingContext: null,
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: () => {
+                this.props.onToggleFullScreen()
+            }
+        })
+
         monaco.languages.registerHoverProvider('python', {
             provideHover: (model, position) => { 
                 // Log the current word in the console, you probably want to do something else here.
