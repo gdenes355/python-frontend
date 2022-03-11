@@ -16,32 +16,42 @@ function RecursiveItem({node}) {
       )
 }
 
-function extractAllIds(node, arr) {
+function extractAllIds(node, arr, dict) {
     arr.push(node.id)
-    for (let child in node.children) {
-        extractAllIds(child, arr);
+    dict[node.id] = {hasChildren: node.children ? true : false}
+    if (node.children) {
+        for (let child of node.children) {
+            extractAllIds(child, arr, dict);
+        }
     }
 }
 
 export default function BookDrawer(props) {
 
     const [expandedIds, setExpandedIds] = useState([])
+    const [nodeMap, setNodeMap] = useState({})
 
     let navigate = useNavigate();
     const { search } = useLocation();
 
     const handleToggle = (event, nodeIds) => {
-        setExpandedIds(nodeIds);
+        setExpandedIds(nodeIds)
     };
 
+
+
     const handleSelect = (event, nodeIds) => {
-        navigate({search: '?' + new URLSearchParams({"book": new URLSearchParams(search).get("book"), "chid": nodeIds}).toString()}, { replace: false });
+        if (!nodeMap[nodeIds].hasChildren) {
+            navigate({search: '?' + new URLSearchParams({"book": new URLSearchParams(search).get("book"), "chid": nodeIds}).toString()}, { replace: false });
+        } 
       };
 
     useEffect(() => {
         let ids = []
-        extractAllIds(props.data, ids)
-        setExpandedIds(ids);
+        let dict = {}
+        extractAllIds(props.data, ids, dict)
+        setNodeMap(dict);
+        setExpandedIds(ids)
     }, [props]);
 
     return (

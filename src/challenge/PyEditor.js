@@ -85,7 +85,6 @@ class PyEditor extends React.Component {
                 if (this.props.isOnBreakPoint) {
                     let word = model.getWordAtPosition(position);
                     if (word !== undefined && this.props.debugInfo.env.has(word.word)) {
-                        console.log(model.getWordAtPosition(position));
                         return {
                             contents: [
                                 { value: this.props.debugInfo.env.get(word.word) }
