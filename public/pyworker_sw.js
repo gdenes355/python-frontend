@@ -48,6 +48,14 @@ workerBreakpoint = (lineno, env) => {
     return
 }
 
+workerSleep = (timeInS) => {
+    var x = new XMLHttpRequest();
+    x.open('get', '/@sleep@/sleep.js?time='+timeInS, false);
+    x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
+    x.send()
+    return x.response
+}
+
 // Initial Python script to set up stout, stderr and input redirect
 const initPyCode = `
 import sys
@@ -55,6 +63,7 @@ import js
 import ast
 import traceback
 import copy
+import time
 from collections import deque
 
 print(sys.version)
@@ -71,7 +80,7 @@ global_vars = {}
 
 def pyexec(code, breakpoints):
     global global_vars
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input':input}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': sleep}
 
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
@@ -101,11 +110,17 @@ def input(prompt = ""):
         print(prompt)
     return js.workerInput()
 
+# redefine sleep to block
+def sleep(time_in_s):
+    return js.workerSleep(time_in_s)
+
+time.sleep = sleep
+
 def hit_breakpoint(lineno, alocals, aglobals):
     stack = traceback.extract_stack()[1:-1]  # remove wrapper and breakpt method
     VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__", 
         "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
-        "pyexec", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback"]
+        "pyexec", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep"]
     vars = aglobals.copy()
     vars.update(alocals)
     env = { k:str(vars[k]) for k in vars if k not in VARS_TO_REMOVE and not callable(vars[k])}

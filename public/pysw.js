@@ -27,4 +27,11 @@ addEventListener('fetch', async e => {
 		})
 	));
   }
+  else if (u.pathname === '/@sleep@/sleep.js') {
+	  e.respondWith(new Promise(r => {
+		  const t = new URLSearchParams(u.search).get('time');
+		  const response = new Response(null, {status: 304});
+		  setTimeout(r, t*1000, response);
+	  }))
+  }
 });
