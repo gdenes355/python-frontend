@@ -10,10 +10,10 @@
 
 .hidden { display:none; }
 
-.breakpoint-waiting {
-	
+.theme-vs-dark .breakpoint-hit {
+	background-color:   rgb(114, 114, 46);
 }
 
-.breakpoint-hit {
-	background-color:   rgb(114, 114, 46);
+.theme-vs-light .breakpoint-hit {
+	background-color:   rgba(252, 252, 122, 0.623);
 }

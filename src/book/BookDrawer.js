@@ -38,13 +38,11 @@ export default function BookDrawer(props) {
         setExpandedIds(nodeIds)
     };
 
-
-
     const handleSelect = (event, nodeIds) => {
         if (!nodeMap[nodeIds].hasChildren) {
             navigate({search: '?' + new URLSearchParams({"book": new URLSearchParams(search).get("book"), "chid": nodeIds}).toString()}, { replace: false });
         } 
-      };
+    };
 
     useEffect(() => {
         let ids = []

@@ -120,6 +120,7 @@ class PyEditor extends React.Component {
         } 
         return (  
                 <Editor
+                className={"theme-" + this.props.theme}
                 width="100%"
                 height="100%"
                 defaultLanguage="python"
