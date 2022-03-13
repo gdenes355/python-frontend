@@ -42,6 +42,9 @@ const controller = {
         }[data.reason]
         comp.setState((state, props) => {return {consoleText: state.consoleText + "\n" + msg + "\n", editorState: READY}}) 
     },
+    "test-finished": (comp, data) => {
+        comp.setState((state, props) => {return {testResults: data.results, editorState: READY}}) 
+    },
     "restart-worker": (comp, data) => {
         if (comp.state.editorState === RESTARTING_WORKER) {
             return;
@@ -83,7 +86,8 @@ class Challenge extends React.Component {
         editorState: LOADING,
         theme: "vs-dark",
         editorFullScreen: false,
-        errorLoading: false
+        errorLoading: false,
+        testResults: []
     };
 
     constructor(props) {
@@ -178,6 +182,7 @@ class Challenge extends React.Component {
                         canReset={this.state.editorState === READY}
                         canSubmit={this.props.tests !== null}
                         hasBook={this.props.hasBook}
+                        testResults={this.state.testResults}
                         toggleBookDrawer={this.props.toggleBookDrawer}
                     />
                 </CardContent>
