@@ -21,6 +21,7 @@ export default function Book() {
 
     const [data, setData] = useState(null);
     const [paths, setPaths] = useState({guidePath: null, pyPath: null});
+    const [tests, setTests] = useState(null)
     const [drawerOpen, setDrawerOpen] = React.useState(false)
 
     const searchParams = new URLSearchParams(useLocation().search);
@@ -39,6 +40,7 @@ export default function Book() {
                 let node = findNode(data, bookChallengeId);
                 if (node) {
                     setPaths({guidePath: node.guide, pyPath: node.py})
+                    setTests(node.tests)
                 }
             } else {
                 setPaths({guidePath: null, pyPath: null})
@@ -57,6 +59,7 @@ export default function Book() {
                     <Challenge 
                         guidePath={paths.guidePath} 
                         codePath={paths.pyPath}
+                        tests={tests && tests.length > 0 ? tests : null}
                         hasBook={true}
                         toggleBookDrawer={toggleDrawer}
                         layout="fullscreen">

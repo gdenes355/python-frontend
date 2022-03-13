@@ -54,9 +54,15 @@ const controller = {
         let msg = data?.msg == null ? "" : data.msg
         comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER}})
     },
-    "run": (comp, data) => {
+    "debug": (comp, data) => {
         if (comp.state.editorState === READY) {
-            comp.state.worker.postMessage({cmd: "run", code: data.code, breakpoints: data.breakpoints}); 
+            comp.state.worker.postMessage({cmd: "debug", code: data.code, breakpoints: data.breakpoints}); 
+            comp.setState({consoleText: "", editorState:RUNNING})
+        }
+    },
+    "test": (comp, data) => {
+        if (comp.state.editorState === READY) {
+            comp.state.worker.postMessage({cmd: "test", code: data.code, tests: data.tests}); 
             comp.setState({consoleText: "", editorState:RUNNING})
         }
     },
@@ -144,7 +150,8 @@ class Challenge extends React.Component {
             starterCode={this.state.starterCode}
             theme={this.state.theme}
             onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
-            onDebug={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+            onDebug={() => {controller["debug"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+            oSubmit={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
             />)
     }
 
@@ -164,10 +171,12 @@ class Challenge extends React.Component {
                     <MainControls
                         theme={this.state.theme}
                         onThemeChange={this.handleThemeChange}
-                        onDebug={() => { controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+                        onDebug={() => { controller["debug"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+                        onSubmit={() => { controller["test"](this, {code: this.editorRef.current.getValue(), tests: this.props.tests})}}
                         onResetCode={() => controller["reset-code"](this)}
                         canDebug={this.state.editorState === READY}
                         canReset={this.state.editorState === READY}
+                        canSubmit={this.props.tests !== null}
                         hasBook={this.props.hasBook}
                         toggleBookDrawer={this.props.toggleBookDrawer}
                     />

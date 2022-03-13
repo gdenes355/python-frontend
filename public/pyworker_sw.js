@@ -7,16 +7,28 @@ importScripts("https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js");
 // the assumption is that run will not be called while there is an active Python code running
 // also, there is an assumption that there cannot be two synchronouse inputs
 onmessage = function(e) {
-    if (e.data.cmd === "run") {
+    if (e.data.cmd === "debug") {
         let reason = "ok"
         try {
-            self.pyodide.globals.get("pyexec")(e.data.code, e.data.breakpoints)
+            self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints)
         }  
         catch (err) {
             workerPrint(err);
             reason = "error"
         }
         self.postMessage({"cmd": "debug-finished", reason});
+    } else if (e.data.cmd === "test") {
+        let results = [false]
+        console.log("running tests")
+        try {
+            let tests = e.data.tests
+            results = tests.map((test) => self.pyodide.globals.get("pyexec")(e.data.code, test.in, test.out))
+        }
+        catch (err) {
+            // silent failure
+            console.log("Error compiling for test")
+        }
+        self.postMessage({"cmd": "test-finished", results});
     }
 }
 
@@ -67,20 +79,56 @@ import time
 from collections import deque
 
 print(sys.version)
-class MyOutput:
+class DebugOutput:
     def write(self, text):
         js.console.log(text.strip())
         js.workerPrint(text);
 
-my_output = MyOutput()
-sys.stdout = my_output
-sys.stderr = my_output
+class TestOutput:
+    def write(self, text):
+        if not test_outputs:
+            raise Exception("too many actual outputs: " + text)
+        output = test_outputs.pop(0)
+        if output.strip() != text.strip():
+            js.console.log(output, "!=", text)
+            raise Exception("Incorrect output line")
+
+debug_output = DebugOutput()
+test_output = TestOutput()
 
 global_vars = {}
+test_inputs = []
+test_outputs = []
 
-def pyexec(code, breakpoints):
+def pyexec(code, expected_input, expected_output):
+    global test_inputs
+    global test_outputs
     global global_vars
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': sleep}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input}
+
+    sys.stdout = test_output
+    sys.stderr = test_output
+    time.sleep = test_sleep
+
+    test_inputs = expected_input.split("##") if expected_input else []
+    test_outputs = expected_output.split("##") if expected_output else []
+
+    parsed_stmts = ast.parse(code)
+    try:
+        exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
+    except:
+        js.console.log()
+        return False
+
+    return len(test_inputs) == 0 and len(test_outputs) == 0
+
+def pydebug(code, breakpoints):
+    global global_vars
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': debug_sleep}
+
+    sys.stdout = debug_output
+    sys.stderr = debug_output
+    time.sleep = debug_sleep
 
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
@@ -110,21 +158,27 @@ def input(prompt = ""):
         print(prompt)
     return js.workerInput()
 
+def test_input(prompt = ""):
+    if prompt: 
+        print(prompt)
+    return "TODO"
+
 # redefine sleep to block
-def sleep(time_in_s):
+def debug_sleep(time_in_s):
     return js.workerSleep(time_in_s)
 
-time.sleep = sleep
+def test_sleep(time_in_s):
+    pass
+
+
 
 def hit_breakpoint(lineno, alocals, aglobals):
     stack = traceback.extract_stack()[1:-1]  # remove wrapper and breakpt method
     VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__", 
         "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
-        "pyexec", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep"]
+        "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep"]
     vars = aglobals.copy()
     vars.update(alocals)
     env = { k:str(vars[k]) for k in vars if k not in VARS_TO_REMOVE and not callable(vars[k])}
-    # print(env)
-    # print(stack)
     js.workerBreakpoint(lineno, env)
 `

@@ -15,6 +15,15 @@ class MainControls extends React.Component {
                         Debug{this.props.canDebug ? null : <SpinnerAdornment/>}
                     </Button>
                 </Grid>
+                {this.props.canSubmit ? (
+                    <Grid item>
+                            <Button variant="contained" color="success" 
+                            disabled={ !this.props.canDebug } 
+                            onClick={this.props.onSubmit}>
+                            Submit{this.props.canDebug ? null : <SpinnerAdornment/>}
+                        </Button>
+                    </Grid>) : null 
+                }               
                 <Grid item><Button variant="contained" color="error" 
                     disabled={ !this.props.canReset } 
                     onClick={this.props.onResetCode}>Reset</Button>
