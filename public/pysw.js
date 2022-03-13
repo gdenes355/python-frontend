@@ -6,8 +6,9 @@ addEventListener('activate', () => {
 });
 
 var inputPromiseResolve = null;
+var debugPromiseResolve = null;
 
-addEventListener('fetch', async e => {
+addEventListener('fetch', e => {
   const u = new URL(e.request.url);
   if (u.pathname === '/@input@/req.js') {
 		e.respondWith(new Promise(function(resolve) {
@@ -22,7 +23,29 @@ addEventListener('fetch', async e => {
 		e.request.clone().json().then(data => {
 			let local = inputPromiseResolve;
 			inputPromiseResolve = null;
-			local(new Response(data.data, {status:200}));
+			if (local) {
+				local(new Response(JSON.stringify(data), {status:200}));
+			}
+			r(new Response(null,{status:200}));
+		})
+	));
+  }
+  else if (u.pathname === '/@debug@/break.js') {
+	e.respondWith(new Promise(function(resolve) {
+		if (debugPromiseResolve != null) {
+			debugPromiseResolve()
+		}
+		debugPromiseResolve = resolve;
+	}));
+	}
+  else if (u.pathname === '/@debug@/continue.js') {
+	e.respondWith(new Promise(r => 
+		e.request.clone().json().then(data => {
+			let local = debugPromiseResolve;
+			debugPromiseResolve = null;
+			if (local) {
+				local(new Response(JSON.stringify(data), {status:200}));
+			}
 			r(new Response(null,{status:200}));
 		})
 	));

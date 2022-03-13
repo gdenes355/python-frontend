@@ -23,16 +23,15 @@ const controller = {
         x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
         let input = data?.input == null ? "" : data.input
-        try { x.send(JSON.stringify({"data": input})) } catch(e) {}
+        try { x.send(JSON.stringify({"data": input, "breakpoints": comp.state.breakpointsChanged ? comp.editorRef.current.getBreakpoints() : null})) } catch(e) {console.log(e)}
         comp.setState((state, props) => { return {consoleText: state.consoleText + data.input + "\n", awaitingInput: false}})
     },
     "continue": (comp, data) => {
         var x = new XMLHttpRequest();
-        x.open('post', '/@input@/resp.js');
+        x.open('post', '/@debug@/continue.js');
         x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
-        let input = data?.input == null ? "" : data.input
-        try { x.send(JSON.stringify({"data": input})) } catch(e) {}
+        try { x.send(JSON.stringify({"data": "", "breakpoints": comp.state.breakpointsChanged ? comp.editorRef.current.getBreakpoints() : null})) } catch(e) {console.log(e)}
         comp.setState({editorState: RUNNING})
     },
     "debug-finished": (comp, data) => {
@@ -60,7 +59,7 @@ const controller = {
     "debug": (comp, data) => {
         if (comp.state.editorState === READY) {
             comp.state.worker.postMessage({cmd: "debug", code: data.code, breakpoints: data.breakpoints}); 
-            comp.setState({consoleText: "", editorState:RUNNING})
+            comp.setState({consoleText: "", editorState:RUNNING, breakpointsChanged: false})
         }
     },
     "test": (comp, data) => {
@@ -87,7 +86,8 @@ class Challenge extends React.Component {
         theme: "vs-dark",
         editorFullScreen: false,
         errorLoading: false,
-        testResults: []
+        testResults: [],
+        breakpointsChanged: false
     };
 
     constructor(props) {
@@ -95,6 +95,7 @@ class Challenge extends React.Component {
         this.editorRef = React.createRef();
         this.handleThemeChange.bind(this);
         this.getVisibilityWithHack.bind(this);
+        this.onBreakpointsUpdated.bind(this);
     };
 
     componentDidMount() {
@@ -144,12 +145,17 @@ class Challenge extends React.Component {
         return this.state.editorState === LOADING ? undefined : visible;
     }
 
-
+    onBreakpointsUpdated = () => {
+        if (this.editorRef.state !== READY) {
+            this.setState({breakpointsChanged: true})
+        }
+    }
     
     renderEditor() {
         return (<PyEditor ref={this.editorRef} 
-            canPlaceBreakpoint={this.state.editorState === READY}
+            canPlaceBreakpoint={this.state.editorState === READY || this.state.editorState === AWAITING_INPUT || this.state.editorState === ON_BREAKPOINT}
             isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
+            onBreakpointsUpdated={this.onBreakpointsUpdated}
             debugInfo={this.state.debugInfo}
             starterCode={this.state.starterCode}
             theme={this.state.theme}

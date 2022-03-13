@@ -47,16 +47,24 @@ workerInput = () => {
     x.open('get', '/@input@/req.js', false);
     x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
     x.send()
-    return x.response
+    let resp = JSON.parse(x.response)
+    if (resp.breakpoints) {
+        self.pyodide.globals.get("update_breakpoints")(resp.breakpoints)
+    }
+    return resp.data
 } 
 
 workerBreakpoint = (lineno, env) => {
     env = env.toJs();
     self.postMessage({cmd: "breakpt", lineno, env})
     var x = new XMLHttpRequest();
-    x.open('get', '/@input@/req.js', false);
+    x.open('get', '/@debug@/break.js', false);
     x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
     x.send()
+    let resp = JSON.parse(x.response)
+    if (resp.breakpoints) {
+        self.pyodide.globals.get("update_breakpoints")(resp.breakpoints)
+    }
     return
 }
 
@@ -81,7 +89,7 @@ from collections import deque
 print(sys.version)
 class DebugOutput:
     def write(self, text):
-        js.console.log(text.strip())
+        #js.console.log(text.strip())
         js.workerPrint(text);
 
 class TestOutput:
@@ -97,6 +105,7 @@ debug_output = DebugOutput()
 test_output = TestOutput()
 
 global_vars = {}
+active_breakpoints = set()
 test_inputs = []
 test_outputs = []
 
@@ -122,10 +131,10 @@ def pyexec(code, expected_input, expected_output):
 
     return len(test_inputs) == 0 and len(test_outputs) == 0
 
-def pydebug(code, breakpoints):
+def pydebug_old(code, breakpoints):
     global global_vars
+    global active_breakpoints
     global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': debug_sleep}
-
     sys.stdout = debug_output
     sys.stderr = debug_output
     time.sleep = debug_sleep
@@ -133,6 +142,7 @@ def pydebug(code, breakpoints):
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     breakpoints = set(breakpoints)
+    active_breakpoints = set(breakpoints)
 
     # walk the AST and inject breakpoint commands where neeeded
     workqueue = deque()  # stores (node, idx_in_parent, parent). The latter two are needed for instrumentation
@@ -152,6 +162,44 @@ def pydebug(code, breakpoints):
 
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
+
+def pydebug(code, breakpoints):
+    global global_vars
+    global active_breakpoints
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': debug_sleep}
+    sys.stdout = debug_output
+    sys.stderr = debug_output
+    time.sleep = debug_sleep
+
+    parsed_stmts = ast.parse(code)
+    parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
+    active_breakpoints = set(breakpoints)
+
+    injected_breakpoints = set()
+
+    # walk the AST and inject breakpoint commands after each line
+    workqueue = deque()  # stores (node, idx_in_parent, parent). The latter two are needed for instrumentation
+    workqueue.extend([(parsed_stmts.body[i], parsed_stmts) for i in range(len(parsed_stmts.body))])
+    while workqueue:
+        node, parent = workqueue.popleft()
+        if node.lineno not in injected_breakpoints:
+            #js.console.log(str(node.lineno) +  str(node))
+            break_cmd = copy.deepcopy(parsed_break.body[0])
+            break_cmd.value.lineno = node.lineno
+            break_cmd.value.end_lineno = node.lineno
+            break_cmd.value.args[0] = ast.Constant(node.lineno, lineno=0, col_offset=0)
+            idx = parent.body.index(node)
+            parent.body.insert(idx, break_cmd)
+            injected_breakpoints.add(node.lineno)
+        if hasattr(node, 'body'):
+            workqueue.extend([(node.body[i], node) for i in range(len(node.body))])
+    #js.console.log(str(parsed_stmts.body))
+    exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
+
+def update_breakpoints(breakpoints):
+    global active_breakpoints
+    active_breakpoints = set(breakpoints)
+
 # redefine input function
 def input(prompt = ""):
     if prompt: 
@@ -170,15 +218,15 @@ def debug_sleep(time_in_s):
 def test_sleep(time_in_s):
     pass
 
-
-
 def hit_breakpoint(lineno, alocals, aglobals):
-    stack = traceback.extract_stack()[1:-1]  # remove wrapper and breakpt method
-    VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__", 
-        "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
-        "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep"]
-    vars = aglobals.copy()
-    vars.update(alocals)
-    env = { k:str(vars[k]) for k in vars if k not in VARS_TO_REMOVE and not callable(vars[k])}
-    js.workerBreakpoint(lineno, env)
+    if lineno in active_breakpoints:
+        js.console.log("breaking on", lineno)
+        stack = traceback.extract_stack()[1:-1]  # remove wrapper and breakpt method
+        VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__", 
+            "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
+            "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep"]
+        vars = aglobals.copy()
+        vars.update(alocals)
+        env = { k:str(vars[k]) for k in vars if k not in VARS_TO_REMOVE and not callable(vars[k])}
+        js.workerBreakpoint(lineno, env)
 `

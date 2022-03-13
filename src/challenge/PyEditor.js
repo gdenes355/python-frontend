@@ -132,6 +132,7 @@ class PyEditor extends React.Component {
         } else {
             this.breakpointList.push(lineNum)
         }
+        this.props.onBreakpointsUpdated()
         this.updateEditorDecorations();
     }
 
