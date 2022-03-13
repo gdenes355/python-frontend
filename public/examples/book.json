@@ -1,0 +1,18 @@
+{
+    "name": "Example challenges",
+    "id":"a8ab8afe-9470-4fbc-980c-6b8017e3aa0b",
+    "children": [
+        {
+            "id": "afb57340-1197-473c-b24d-5687796fd3d4",
+            "name": "Hello world",
+            "guide": "./examples/c01.md",
+            "py": "./examples/c01.py",
+            "tests": [
+                {
+                    "in": "",
+                    "out": "hello world##"
+                }
+            ]
+        }
+    ]
+}
