@@ -19,6 +19,7 @@ class PyEditor extends React.Component {
         this.handleEditorChange.bind(this);
         this.getValue.bind(this);
         this.getBreakpoints.bind(this);
+        this.toggleBreakpoint.bind(this);
     };
 
     getValue() {
@@ -43,13 +44,7 @@ class PyEditor extends React.Component {
             }
             if (event.target.type === 2) {
                 let lineNum = event.target.position.lineNumber;
-                if (this.breakpointList.includes(lineNum)) {
-                    let index = this.breakpointList.indexOf(lineNum);
-                    this.breakpointList.splice(index, 1)
-                } else {
-                    this.breakpointList.push(lineNum)
-                }
-                this.updateEditorDecorations();
+                this.toggleBreakpoint(lineNum);
             }
         })
 
@@ -68,7 +63,7 @@ class PyEditor extends React.Component {
 
         editor.addAction({
             id: "debug",
-            label: "Debug",
+            label: "Debug: Start Debugging",
             keybindings: [monaco.KeyCode.F5],
             precondition: null,
             keybindingContext: null,
@@ -76,6 +71,19 @@ class PyEditor extends React.Component {
             contextMenuOrder: 1.5,
             run: () => {
                 this.props.onDebug()
+            }
+        })
+
+        editor.addAction({
+            id: "breakpoint",
+            label: "Debug: Toggle Breakpoint",
+            keybindings: [monaco.KeyCode.F9],
+            precondition: null,
+            keybindingContext: null,
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: (ed) => {
+                this.toggleBreakpoint(ed.getPosition()?.lineNumber)
             }
         })
 
@@ -112,6 +120,19 @@ class PyEditor extends React.Component {
                     glyphMarginClassName: 'breakpoint-margin'
                 }
             }}));
+    }
+
+    toggleBreakpoint = (lineNum) =>  {
+        if (!lineNum) {
+            return;
+        }
+        if (this.breakpointList.includes(lineNum)) {
+            let index = this.breakpointList.indexOf(lineNum);
+            this.breakpointList.splice(index, 1)
+        } else {
+            this.breakpointList.push(lineNum)
+        }
+        this.updateEditorDecorations();
     }
 
     render() {
