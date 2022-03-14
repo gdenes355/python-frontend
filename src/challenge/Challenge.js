@@ -34,6 +34,22 @@ const controller = {
         try { x.send(JSON.stringify({"data": "", "breakpoints": comp.state.breakpointsChanged ? comp.editorRef.current.getBreakpoints() : null})) } catch(e) {console.log(e)}
         comp.setState({editorState: RUNNING})
     },
+    "step": (comp, data) => {
+        var x = new XMLHttpRequest();
+        x.open('post', '/@debug@/continue.js');
+        x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
+        let breakpointsUpdated = comp.state.breakpointsChanged
+        let breakpoints = comp.editorRef.current.getBreakpoints()
+        let lineNo = comp.state.debugInfo.lineno + 1;
+        if (!breakpoints.includes(lineNo)) {
+            breakpoints = [...breakpoints]
+            breakpoints.push(lineNo)
+            breakpointsUpdated = true
+        }
+        try { x.send(JSON.stringify({"data": "", "breakpoints": breakpointsUpdated ? breakpoints : null})) } catch(e) {console.log(e)}
+        comp.setState({editorState: RUNNING})
+    },
     "debug-finished": (comp, data) => {
         let msg = {
             "ok": "Program finished ok. Press debug to run again...",
@@ -204,6 +220,7 @@ class Challenge extends React.Component {
         return (<DebugPane 
             canContinue={this.state.editorState === ON_BREAKPOINT}
             onContinue={() => controller["continue"](this)}
+            onStep={() => controller["step"](this)}
             canKill={this.state.editorState === RUNNING || 
                     this.state.editorState === ON_BREAKPOINT ||
                     this.state.editorState === AWAITING_INPUT}

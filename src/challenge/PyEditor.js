@@ -111,6 +111,16 @@ class PyEditor extends React.Component {
     }
 
     updateEditorDecorations() {
+        let stepLine = []
+        if (this.props.isOnBreakPoint && this.props.debugInfo.lineno && !this.breakpointList.includes(this.props.debugInfo.lineno)) {
+            stepLine = [{
+                range: new this.monacoRef.current.Range(this.props.debugInfo.lineno, 1, this.props.debugInfo.lineno, 1),
+                options: {
+                    isWholeLine: true,
+                    className: 'breakpoint-hit'
+                }
+            }]
+        }
         this.decorator = this.editorRef.current.deltaDecorations(this.decorator, 
             this.breakpointList.map(ln => {return {
                 range: new this.monacoRef.current.Range(ln, 1, ln, 1),
@@ -119,7 +129,7 @@ class PyEditor extends React.Component {
                     className: this.props.isOnBreakPoint && this.props.debugInfo.lineno === ln ? 'breakpoint-hit' : 'breakpoint-waiting',
                     glyphMarginClassName: 'breakpoint-margin'
                 }
-            }}));
+            }}).concat(stepLine));
     }
 
     toggleBreakpoint = (lineNum) =>  {

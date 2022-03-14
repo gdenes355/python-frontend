@@ -15,10 +15,15 @@ class DebugPane extends React.Component {
         return (
             <Stack sx={{height: "100%", ml: 1}}>
                 <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <Grid item>
+                    <Grid item>
                         <Button variant="contained" color="success" 
                             disabled={ !this.props.canContinue } 
                             onClick={this.props.onContinue }>Continue</Button>
+                    </Grid>
+                    <Grid item>
+                        <Button variant="contained" color="primary" 
+                            disabled={ !this.props.canContinue } 
+                            onClick={this.props.onStep }>Step to next line</Button>
                     </Grid>
                     <Grid item><Button variant="contained" color="error" 
                         disabled={ !this.props.canKill }
