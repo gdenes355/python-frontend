@@ -62,7 +62,8 @@ export default function Book() {
                         tests={tests && tests.length > 0 ? tests : null}
                         hasBook={true}
                         toggleBookDrawer={toggleDrawer}
-                        layout="fullscreen">
+                        layout="fullscreen"
+                        uid={bookPath + bookChallengeId}>
                     </Challenge>
                     <BookDrawer data={data} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
                 </React.Fragment>

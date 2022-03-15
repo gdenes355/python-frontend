@@ -77,6 +77,7 @@ const controller = {
             comp.state.worker.postMessage({cmd: "debug", code: data.code, breakpoints: data.breakpoints}); 
             comp.setState({consoleText: "", editorState:RUNNING, breakpointsChanged: false})
         }
+        controller["save-code"](comp, data)
     },
     "test": (comp, data) => {
         if (comp.state.editorState === READY) {
@@ -85,7 +86,12 @@ const controller = {
         }
     },
     "reset-code": (comp, data) => comp.editorRef.current.setValue(comp.state.starterCode),
-    "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT})
+    "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT}),
+    "save-code": (comp, data) => {
+        if (comp.props?.uid) {
+            Cookies.set("code-" + comp.props.uid, data.code)
+        }
+    }
 }
 
 
@@ -94,6 +100,7 @@ class Challenge extends React.Component {
 
     state = {
         starterCode: null, 
+        savedCode: null,
         worker: null, 
         consoleText: "Press debug to get started...", 
         guideMd: "*Loading the guide... Please wait*",
@@ -119,6 +126,12 @@ class Challenge extends React.Component {
         if (previousTheme) {
             this.setState({theme: previousTheme})
         }
+        if (this.props?.uid) {
+            let savedCode = Cookies.get("code-" + this.props.uid)
+            if (savedCode) {
+                this.setState({savedCode: savedCode})
+            }
+        }
         fetch(this.props.guidePath)
             .then(response => {if (!response.ok) {this.setState({errorLoading: true})} return response.text()})
             .then(text => this.setState({guideMd: text}))
@@ -143,6 +156,16 @@ class Challenge extends React.Component {
                 .then(response => response.text())
                 .then(text => this.setState({starterCode: text}))
             controller["restart-worker"](this)
+            if (this.props?.uid) {
+                let savedCode = Cookies.get("code-" + this.props.uid)
+                if (savedCode) {
+                    this.setState({savedCode: savedCode})
+                } else {
+                    this.setState({savedCode: null})
+                }
+            } else {
+                this.setState({savedCode: null})
+            }
         }
         if (this.state.editorState !== prevState.editorState &&
             (prevState.editorState === ON_BREAKPOINT ||
@@ -173,7 +196,7 @@ class Challenge extends React.Component {
             isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
             onBreakpointsUpdated={this.onBreakpointsUpdated}
             debugInfo={this.state.debugInfo}
-            starterCode={this.state.starterCode}
+            starterCode={this.state.savedCode ? this.state.savedCode : this.state.starterCode}
             theme={this.state.theme}
             onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
             onDebug={() => {controller["debug"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
