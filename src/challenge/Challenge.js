@@ -90,7 +90,7 @@ const controller = {
     "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT}),
     "save-code": (comp, data) => {
         if (comp.props?.uid) {
-            Cookies.set("code-" + comp.props.uid, data.code)
+            localStorage.setItem("code-" + encodeURIComponent(comp.props.uid), data.code)
         }
     }
 }
@@ -128,7 +128,7 @@ class Challenge extends React.Component {
             this.setState({theme: previousTheme})
         }
         if (this.props?.uid) {
-            let savedCode = Cookies.get("code-" + this.props.uid)
+            let savedCode = localStorage.getItem("code-" + encodeURIComponent(this.props.uid))
             if (savedCode) {
                 this.setState({savedCode: savedCode})
             }
@@ -158,7 +158,7 @@ class Challenge extends React.Component {
                 .then(text => this.setState({starterCode: text}))
             controller["restart-worker"](this)
             if (this.props?.uid) {
-                let savedCode = Cookies.get("code-" + this.props.uid)
+                let savedCode = Cookies.getItem("code-" + encodeURIComponent(this.props.uid))
                 if (savedCode) {
                     this.setState({savedCode: savedCode})
                 } else {
