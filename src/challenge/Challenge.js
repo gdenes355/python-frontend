@@ -196,6 +196,7 @@ class Challenge extends React.Component {
             onContinue={() => controller["continue"](this)}
             onStepInto={() => controller["step"](this)}
             oSubmit={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+            onStop={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
             />)
     }
 

@@ -94,7 +94,7 @@ class PyEditor extends React.Component {
             keybindings: [monaco.KeyCode.F5],
             precondition: "canRun",
             keybindingContext: null,
-            contextMenuGroupId: 'navigation',
+            contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
                 this.props.onDebug()
@@ -107,7 +107,7 @@ class PyEditor extends React.Component {
             keybindings: [monaco.KeyCode.F5],
             precondition: "canStep",
             keybindingContext: null,
-            contextMenuGroupId: 'navigation',
+            contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
                 this.props.onContinue()
@@ -120,10 +120,23 @@ class PyEditor extends React.Component {
             keybindings: [monaco.KeyCode.F10],
             precondition: "canStep",
             keybindingContext: null,
-            contextMenuGroupId: 'navigation',
+            contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
                 this.props.onStepInto()
+            }
+        })
+
+        editor.addAction({
+            id: "debug-stop",
+            label: "Debug: Step Into",
+            keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F5],
+            precondition: "canStep",
+            keybindingContext: null,
+            contextMenuGroupId: '1_debug',
+            contextMenuOrder: 1.5,
+            run: () => {
+                this.props.onStop()
             }
         })
 
@@ -133,7 +146,7 @@ class PyEditor extends React.Component {
             keybindings: [monaco.KeyCode.F9],
             precondition: "canPlaceBreakpoint",
             keybindingContext: null,
-            contextMenuGroupId: 'navigation',
+            contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: (ed) => {
                 this.toggleBreakpoint(ed.getPosition()?.lineNumber)
