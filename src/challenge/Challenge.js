@@ -84,6 +84,7 @@ const controller = {
             comp.state.worker.postMessage({cmd: "test", code: data.code, tests: data.tests}); 
             comp.setState({consoleText: "", editorState:RUNNING})
         }
+        controller["save-code"](comp, data)
     },
     "reset-code": (comp, data) => comp.editorRef.current.setValue(comp.state.starterCode),
     "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT}),
