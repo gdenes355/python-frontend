@@ -10,6 +10,10 @@ class PyEditor extends React.Component {
 
     state = {theme: "vs-dark"}
 
+    canRunCondition = null;
+    canStepCondition = null;
+    canPlaceBreakpointCondition = null
+
     constructor(props) {
         super(props);
         this.editorRef = React.createRef();
@@ -20,6 +24,7 @@ class PyEditor extends React.Component {
         this.getValue.bind(this);
         this.getBreakpoints.bind(this);
         this.toggleBreakpoint.bind(this);
+        this.revealLine.bind(this);
     };
 
     getValue() {
@@ -34,9 +39,31 @@ class PyEditor extends React.Component {
         this.editorRef.current.setValue(value)
     }
 
+    revealLine(lineNo) {
+        this.editorRef.current.revealLine(lineNo)
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.canRunCondition) {
+            if (prevProps.canRun !== this.props.canRun) {
+                this.canRunCondition.set(this.props.canRun)
+            }
+            if (prevProps.isOnBreakPoint !== this.props.isOnBreakPoint) {
+                this.canStepCondition.set(this.props.isOnBreakPoint)
+            }
+            if (prevProps.canPlaceBreakpoint !== this.props.canPlaceBreakpoint) {
+                this.canPlaceBreakpointCondition.set(this.props.canPlaceBreakpoint)
+            }
+        }
+    }
+
     handleEditorDidMount = (editor, monaco) => {
         this.editorRef.current = editor
         this.monacoRef.current = monaco
+
+        this.canRunCondition = editor.createContextKey("canRun", false);
+        this.canStepCondition = editor.createContextKey("canStep", false);
+        this.canPlaceBreakpointCondition = editor.createContextKey("canPlaceBreakpoint", false);
 
         editor.onMouseDown(event => {
             if (!this.props.canPlaceBreakpoint) {
@@ -65,7 +92,7 @@ class PyEditor extends React.Component {
             id: "debug",
             label: "Debug: Start Debugging",
             keybindings: [monaco.KeyCode.F5],
-            precondition: null,
+            precondition: "canRun",
             keybindingContext: null,
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
@@ -75,10 +102,36 @@ class PyEditor extends React.Component {
         })
 
         editor.addAction({
+            id: "debug-continue",
+            label: "Debug: Continue",
+            keybindings: [monaco.KeyCode.F5],
+            precondition: "canStep",
+            keybindingContext: null,
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: () => {
+                this.props.onContinue()
+            }
+        })
+
+        editor.addAction({
+            id: "debug-step-into",
+            label: "Debug: Step Into",
+            keybindings: [monaco.KeyCode.F10],
+            precondition: "canStep",
+            keybindingContext: null,
+            contextMenuGroupId: 'navigation',
+            contextMenuOrder: 1.5,
+            run: () => {
+                this.props.onStepInto()
+            }
+        })
+
+        editor.addAction({
             id: "breakpoint",
             label: "Debug: Toggle Breakpoint",
             keybindings: [monaco.KeyCode.F9],
-            precondition: null,
+            precondition: "canPlaceBreakpoint",
             keybindingContext: null,
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
@@ -92,7 +145,7 @@ class PyEditor extends React.Component {
                 // Log the current word in the console, you probably want to do something else here.
                 if (this.props.isOnBreakPoint) {
                     let word = model.getWordAtPosition(position);
-                    if (word !== undefined && this.props.debugInfo.env.has(word.word)) {
+                    if (word?.word !== undefined && this.props.debugInfo.env.has(word.word)) {
                         return {
                             contents: [
                                 { value: this.props.debugInfo.env.get(word.word) }

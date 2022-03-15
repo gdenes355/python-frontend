@@ -31,24 +31,12 @@ const controller = {
         x.open('post', '/@debug@/continue.js');
         x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
         x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
-        try { x.send(JSON.stringify({"data": "", "breakpoints": comp.state.breakpointsChanged ? comp.editorRef.current.getBreakpoints() : null})) } catch(e) {console.log(e)}
+        try { x.send(JSON.stringify({"breakpoints": comp.state.breakpointsChanged ? comp.editorRef.current.getBreakpoints() : null, "step": data?.step ? data.step : false})) } catch(e) {console.log(e)}
         comp.setState({editorState: RUNNING})
     },
-    "step": (comp, data) => {
-        var x = new XMLHttpRequest();
-        x.open('post', '/@debug@/continue.js');
-        x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
-        let breakpointsUpdated = comp.state.breakpointsChanged
-        let breakpoints = comp.editorRef.current.getBreakpoints()
-        let lineNo = comp.state.debugInfo.lineno + 1;
-        if (!breakpoints.includes(lineNo)) {
-            breakpoints = [...breakpoints]
-            breakpoints.push(lineNo)
-            breakpointsUpdated = true
-        }
-        try { x.send(JSON.stringify({"data": "", "breakpoints": breakpointsUpdated ? breakpoints : null})) } catch(e) {console.log(e)}
-        comp.setState({editorState: RUNNING})
+    "step": (comp, data = {}) => {
+        data.step = true;
+        controller['continue'](comp, data)
     },
     "debug-finished": (comp, data) => {
         let msg = {
@@ -87,7 +75,10 @@ const controller = {
         controller["save-code"](comp, data)
     },
     "reset-code": (comp, data) => comp.editorRef.current.setValue(comp.state.starterCode),
-    "breakpt": (comp, data) => comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT}),
+    "breakpt": (comp, data) => {
+        comp.setState({debugInfo: {lineno: data.lineno, env: new Map([...data.env.entries()].sort())}, editorState: ON_BREAKPOINT})
+        comp.editorRef.current.revealLine(data.lineno)
+    },
     "save-code": (comp, data) => {
         if (comp.props?.uid) {
             localStorage.setItem("code-" + encodeURIComponent(comp.props.uid), data.code)
@@ -158,7 +149,7 @@ class Challenge extends React.Component {
                 .then(text => this.setState({starterCode: text}))
             controller["restart-worker"](this)
             if (this.props?.uid) {
-                let savedCode = Cookies.getItem("code-" + encodeURIComponent(this.props.uid))
+                let savedCode = localStorage.getItem("code-" + encodeURIComponent(this.props.uid))
                 if (savedCode) {
                     this.setState({savedCode: savedCode})
                 } else {
@@ -193,6 +184,7 @@ class Challenge extends React.Component {
     
     renderEditor() {
         return (<PyEditor ref={this.editorRef} 
+            canRun={this.state.editorState === READY}
             canPlaceBreakpoint={this.state.editorState === READY || this.state.editorState === AWAITING_INPUT || this.state.editorState === ON_BREAKPOINT}
             isOnBreakPoint={this.state.editorState === ON_BREAKPOINT}
             onBreakpointsUpdated={this.onBreakpointsUpdated}
@@ -201,6 +193,8 @@ class Challenge extends React.Component {
             theme={this.state.theme}
             onToggleFullScreen={() => {this.setState((state, props) => { return {editorFullScreen: !state.editorFullScreen} })}}
             onDebug={() => {controller["debug"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
+            onContinue={() => controller["continue"](this)}
+            onStepInto={() => controller["step"](this)}
             oSubmit={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
             />)
     }

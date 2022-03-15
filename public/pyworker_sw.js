@@ -65,6 +65,9 @@ workerBreakpoint = (lineno, env) => {
     if (resp.breakpoints) {
         self.pyodide.globals.get("update_breakpoints")(resp.breakpoints)
     }
+    if (resp.step) {
+        self.pyodide.globals.get("prepare_step")()
+    }
     return
 }
 
@@ -108,6 +111,7 @@ global_vars = {}
 active_breakpoints = set()
 test_inputs = []
 test_outputs = []
+step_into = False
 
 def pyexec(code, expected_input, expected_output):
     global test_inputs
@@ -200,6 +204,10 @@ def update_breakpoints(breakpoints):
     global active_breakpoints
     active_breakpoints = set(breakpoints)
 
+def prepare_step():
+    global step_into
+    step_into = True
+
 # redefine input function
 def input(prompt = ""):
     if prompt: 
@@ -219,8 +227,10 @@ def test_sleep(time_in_s):
     pass
 
 def hit_breakpoint(lineno, alocals, aglobals):
-    if lineno in active_breakpoints:
-        js.console.log("breaking on", lineno)
+    global step_into
+    if step_into or lineno in active_breakpoints:
+        step_into = False
+        #js.console.log("breaking on", lineno)
         stack = traceback.extract_stack()[1:-1]  # remove wrapper and breakpt method
         VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__", 
             "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
