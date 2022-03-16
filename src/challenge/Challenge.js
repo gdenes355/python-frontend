@@ -254,7 +254,7 @@ class Challenge extends React.Component {
         else if (this.props.layout === "fullscreen") {
             return (       
                 <Box sx={{width: "100%", height: "100%"}}>
-                    <Allotment className="h-100">
+                    <Allotment className="h-100" defaultSizes={[65, 35]}>
                         <Allotment.Pane>
                             <Allotment vertical>
                                 <Allotment.Pane>
