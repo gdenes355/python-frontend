@@ -13,6 +13,18 @@
                     "out": "hello world##"
                 }
             ]
+        },
+        {
+            "id": "57057e16-3c65-414b-a332-dfea93c626da",
+            "name": "Hello name",
+            "guide": "./examples/c02.md",
+            "py": "./examples/c02.py",
+            "tests": [
+                {
+                    "in": "Joe",
+                    "out": "Hello Joe##"
+                }
+            ]
         }
     ]
 }

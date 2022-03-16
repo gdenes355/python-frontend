@@ -96,13 +96,14 @@ class DebugOutput:
         js.workerPrint(text);
 
 class TestOutput:
+    def __init__(self):
+        self.buffer = ""
+
+    def clear(self):
+        self.buffer = ""
+
     def write(self, text):
-        if not test_outputs:
-            raise Exception("too many actual outputs: " + text)
-        output = test_outputs.pop(0)
-        if output.strip() != text.strip():
-            js.console.log(output, "!=", text)
-            raise Exception("Incorrect output line")
+        self.buffer += text
 
 debug_output = DebugOutput()
 test_output = TestOutput()
@@ -117,15 +118,17 @@ def pyexec(code, expected_input, expected_output):
     global test_inputs
     global test_outputs
     global global_vars
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': test_input}
 
     sys.stdout = test_output
     sys.stderr = test_output
     time.sleep = test_sleep
+    input = test_input
 
     test_inputs = expected_input.split("##") if expected_input else []
-    test_outputs = expected_output.split("##") if expected_output else []
+    test_outputs = '\\n'.join(expected_output.split("##"))
 
+    test_output.clear()
     parsed_stmts = ast.parse(code)
     try:
         exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
@@ -133,15 +136,18 @@ def pyexec(code, expected_input, expected_output):
         js.console.log()
         return False
 
-    return len(test_inputs) == 0 and len(test_outputs) == 0
+    if test_outputs != test_output.buffer:
+        js.console.log(str(test_outputs), "!=", str(test_output.buffer))
+    return len(test_inputs) == 0 and test_outputs == test_output.buffer
 
 def pydebug_old(code, breakpoints):
     global global_vars
     global active_breakpoints
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': debug_sleep}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep}
     sys.stdout = debug_output
     sys.stderr = debug_output
     time.sleep = debug_sleep
+    input = debug_input
 
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
@@ -170,10 +176,11 @@ def pydebug_old(code, breakpoints):
 def pydebug(code, breakpoints):
     global global_vars
     global active_breakpoints
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': input, 'time.sleep': debug_sleep}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep}
     sys.stdout = debug_output
     sys.stderr = debug_output
     time.sleep = debug_sleep
+    input = debug_input
 
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
@@ -208,8 +215,8 @@ def prepare_step():
     global step_into
     step_into = True
 
-# redefine input function
-def input(prompt = ""):
+# input functions
+def debug_input(prompt = ""):
     if prompt: 
         print(prompt)
     return js.workerInput()
@@ -217,7 +224,7 @@ def input(prompt = ""):
 def test_input(prompt = ""):
     if prompt: 
         print(prompt)
-    return "TODO"
+    return test_inputs.pop(0)
 
 # redefine sleep to block
 def debug_sleep(time_in_s):
