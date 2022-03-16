@@ -46,7 +46,7 @@ class MainControls extends React.Component {
                 <Grid item style={{ flexGrow: 1 }}>
                     <Stack spacing={2} direction="row">
                     <Box>
-                        <Button variant="contained" color="success" 
+                        <Button variant="contained" color="primary" 
                             disabled={ !this.props.canDebug } 
                             onClick={this.props.onDebug}>
                             Debug{this.props.canDebug ? null : <SpinnerAdornment/>}

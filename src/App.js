@@ -2,14 +2,35 @@ import React, {useEffect} from 'react';
 import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
 import Book from './book/Book'
 import Challenge from './challenge/Challenge'
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import './App.css';
+
+const theme = createTheme({
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 0,
+        }
+      }
+    },
+  },
+  palette: {
+    primary: {
+      main: '#0a9396',
+    },
+    secondary: {
+      main: '#e9d8a6',
+    },
+  },
+});
 
 function AppContainer() {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get('book')
   const challengePath = searchParams.get('ch');
-
+  
   useEffect(() => {
   }, [bookPath, challengePath]);
 
@@ -17,7 +38,7 @@ function AppContainer() {
   else if (challengePath) {
         return (
           <React.Fragment>
-            <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
+                <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
           </React.Fragment>
       )
   } else {
@@ -27,11 +48,13 @@ function AppContainer() {
 
 export default function App() {
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='*' element={<AppContainer></AppContainer>} />
-      </Routes>
-    </BrowserRouter>
+  return ( 
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path='*' element={<AppContainer></AppContainer>} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
