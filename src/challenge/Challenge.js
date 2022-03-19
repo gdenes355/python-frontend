@@ -55,7 +55,7 @@ const controller = {
         if (comp.state.worker) {
             comp.state.worker.terminate()
         }
-        let worker = new window.Worker('pyworker_sw.js');
+        let worker = new Worker('pyworker_sw.js');
         worker.addEventListener("message", (msg) => controller[msg.data.cmd](comp, msg.data));
         let msg = data?.msg == null ? "" : data.msg
         comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER}})
