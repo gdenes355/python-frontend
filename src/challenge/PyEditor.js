@@ -161,7 +161,7 @@ class PyEditor extends React.Component {
                     if (word?.word !== undefined && this.props.debugInfo.env.has(word.word)) {
                         return {
                             contents: [
-                                { value: this.props.debugInfo.env.get(word.word) }
+                                { value: "```text\n" + this.props.debugInfo.env.get(word.word) + "\n```"}
                             ]
                         };
                     }
