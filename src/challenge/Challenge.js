@@ -158,6 +158,7 @@ class Challenge extends React.Component {
             } else {
                 this.setState({savedCode: null})
             }
+            this.setState({testResults: []})
         }
         if (this.state.editorState !== prevState.editorState &&
             (prevState.editorState === ON_BREAKPOINT ||

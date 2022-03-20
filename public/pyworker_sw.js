@@ -18,7 +18,7 @@ onmessage = function(e) {
         }
         self.postMessage({"cmd": "debug-finished", reason});
     } else if (e.data.cmd === "test") {
-        let results = [false]
+        let results = e.data.tests.map((t) => false);
         console.log("running tests")
         try {
             let tests = e.data.tests
@@ -125,19 +125,24 @@ def pyexec(code, expected_input, expected_output):
     time.sleep = test_sleep
     input = test_input
 
-    test_inputs = expected_input.split("##") if expected_input else []
-    test_outputs = '\\n'.join(expected_output.split("##"))
+    test_inputs = expected_input.split("\\n") if expected_input else []
+    test_outputs = expected_output
 
     test_output.clear()
     parsed_stmts = ast.parse(code)
     try:
         exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
-    except:
-        js.console.log()
+    except Exception as e:
+        # js.console.log(str(e))
         return False
+
+    if len(test_inputs) == 1 and test_inputs[0] == '':
+        test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it 
 
     if test_outputs != test_output.buffer:
         js.console.log(str(test_outputs), "!=", str(test_output.buffer))
+    elif len(test_inputs) > 0:
+        js.console.log("inputs unconsumed: " + str(test_inputs))
     return len(test_inputs) == 0 and test_outputs == test_output.buffer
 
 def pydebug_old(code, breakpoints):

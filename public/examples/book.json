@@ -10,7 +10,7 @@
             "tests": [
                 {
                     "in": "",
-                    "out": "hello world##"
+                    "out": "hello world\n"
                 }
             ]
         },
@@ -22,7 +22,7 @@
             "tests": [
                 {
                     "in": "Joe",
-                    "out": "Hello Joe##"
+                    "out": "Hello Joe\n"
                 }
             ]
         }
