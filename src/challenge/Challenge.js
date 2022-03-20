@@ -50,7 +50,10 @@ const controller = {
     },
     "restart-worker": (comp, data) => {
         if (comp.state.editorState === RESTARTING_WORKER) {
-            return;
+            return; // already resetting
+        }
+        if (comp.state.editorState === READY && !data?.force) {
+            return; // in ready state already
         }
         if (comp.state.worker) {
             comp.state.worker.terminate()
@@ -136,7 +139,7 @@ class Challenge extends React.Component {
                 window.location.reload();
             }
         });
-        controller["restart-worker"](this)
+        controller["restart-worker"](this, {force: true})
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -197,7 +200,7 @@ class Challenge extends React.Component {
             onContinue={() => controller["continue"](this)}
             onStepInto={() => controller["step"](this)}
             oSubmit={() => {controller["run"](this, {code: this.editorRef.current.getValue(), breakpoints: this.editorRef.current.getBreakpoints()})}}
-            onStop={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
+            onStop={() => { controller["restart-worker"](this, {msg: "Interrupted...", force: true})}}
             />)
     }
 
@@ -206,7 +209,7 @@ class Challenge extends React.Component {
             content={this.state.consoleText} 
             isInputEnabled={this.state.editorState === AWAITING_INPUT} 
             onInput={(input) => {controller["input-entered"](this, {input})}}
-            onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}>
+            onInterrupt={() => { controller["restart-worker"](this, {msg: "Interrupted...", force: true})}}>
         </Console>)
     }
 
@@ -244,7 +247,7 @@ class Challenge extends React.Component {
             canKill={this.state.editorState === RUNNING || 
                     this.state.editorState === ON_BREAKPOINT ||
                     this.state.editorState === AWAITING_INPUT}
-            onKill={() => { controller["restart-worker"](this, {msg: "Interrupted..."})}}
+            onKill={() => { controller["restart-worker"](this, {msg: "Interrupted...", force: true})}}
             debugInfo={this.state.debugInfo}/>)
     }
 
