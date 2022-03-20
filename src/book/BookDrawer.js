@@ -51,7 +51,6 @@ export default function BookDrawer(props) {
         setNodeMap(dict);
         setExpandedIds(ids)
     }, [props]);
-
     return (
         <Drawer anchor='right' open={props.open} onClose={() => props.onToggle(false)}>
             <Box
@@ -62,6 +61,7 @@ export default function BookDrawer(props) {
                     defaultCollapseIcon={<ExpandMoreIcon />}
                     defaultExpandIcon={<ChevronRightIcon />}
                     expanded={expandedIds}
+                    selected={props.activePage}
                     onNodeToggle={handleToggle}
                     onNodeSelect={handleSelect}
                     sx={{  maxWidth: 400, }}>

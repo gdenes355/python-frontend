@@ -65,7 +65,7 @@ export default function Book() {
                         layout="fullscreen"
                         uid={bookPath + bookChallengeId}>
                     </Challenge>
-                    <BookDrawer data={data} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
+                    <BookDrawer data={data} activePage={bookChallengeId} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
                 </React.Fragment>
             )
         } else {
