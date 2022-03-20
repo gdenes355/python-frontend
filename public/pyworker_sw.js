@@ -18,7 +18,7 @@ onmessage = function(e) {
         }
         self.postMessage({"cmd": "debug-finished", reason});
     } else if (e.data.cmd === "test") {
-        let results = e.data.tests.map((t) => false);
+        let results = e.data.tests.map((t) => {return {err: "Failed to compile"}});
         console.log("running tests")
         try {
             let tests = e.data.tests
@@ -26,7 +26,6 @@ onmessage = function(e) {
         }
         catch (err) {
             // silent failure
-            console.log("Error compiling for test")
         }
         self.postMessage({"cmd": "test-finished", results});
     }
@@ -88,6 +87,7 @@ import traceback
 import copy
 import time
 from collections import deque
+from pyodide import to_js
 
 print(sys.version)
 class DebugOutput:
@@ -133,17 +133,19 @@ def pyexec(code, expected_input, expected_output):
     try:
         exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
     except Exception as e:
-        # js.console.log(str(e))
-        return False
+        return js.Object.fromEntries(to_js({"err": "Runtime error", "ins": expected_input}))
 
     if len(test_inputs) == 1 and test_inputs[0] == '':
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it 
 
     if test_outputs != test_output.buffer:
         js.console.log(str(test_outputs), "!=", str(test_output.buffer))
+        return js.Object.fromEntries(to_js({"err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
     elif len(test_inputs) > 0:
         js.console.log("inputs unconsumed: " + str(test_inputs))
-    return len(test_inputs) == 0 and test_outputs == test_output.buffer
+        return js.Object.fromEntries(to_js({"err": "Unconsumed input", "ins": expected_input}))
+    else:
+        return True
 
 def pydebug_old(code, breakpoints):
     global global_vars

@@ -4,7 +4,7 @@
   margin-top: 10px;
 }
 
-th {
+.vartable th {
   background-color: rgb(212, 211, 211) !important;
   border: 1px solid black !important;
 }

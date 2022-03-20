@@ -1,59 +1,12 @@
 import React from 'react'
-import {Button, Grid, Box, Stack, InputLabel,MenuItem,Select,FormControl,IconButton,Tooltip,Fade} from '@mui/material'
-import CancelIcon from '@mui/icons-material/Cancel';
-import DoneIcon from '@mui/icons-material/Done';
+import {Button, Grid, Box, Stack, InputLabel,MenuItem,Select,FormControl,IconButton,} from '@mui/material';
 import SpinnerAdornment from '../components/SpinnerAdornment'
 import ListIcon from '@mui/icons-material/List';
 
+import TestResultsIndicator from './TestResultIndicator';
 
-function TestResults(props) {
-    if (props.testTick === null) {
-        return (<span></span>)
-    }
-
-    if (props.testTick) {
-        return (<DoneIcon style={{display: "inline-block", verticalAlign: "middle", height: "100%"}} color="success" fontSize="large" />)
-    } else {
-        return (
-            <Tooltip 
-                TransitionComponent={Fade}
-                TransitionProps={{ timeout: 600 }}
-                title={
-                <React.Fragment>
-                    {props.testResults.filter(Boolean).length} / {props.testResults.length} tests passed
-                    
-                    <div>{props.testResults.map((tr, i) => { return (<span key={i}>{tr ? 
-                        <DoneIcon></DoneIcon> :
-                        <CancelIcon></CancelIcon>
-                }</span>);})}</div>
-                </React.Fragment>
-              } arrow>
-                <CancelIcon style={{display: "inline-block",  verticalAlign: "middle", height: "100%"}} color="error" fontSize="large" />
-            </Tooltip>
-        )
-    }
-
-}
 
 class MainControls extends React.Component {
-
-    constructor(props) {
-        super(props);
-        this.state = {testTick: null};
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (prevProps.testResults !== this.props.testResults) {
-            let tick = this.props.testResults.length> 0 ? true : null
-            for (let i = 0; i < this.props.testResults.length; i++) {
-                if (!this.props.testResults[i]) {
-                    tick = false;
-                    break;
-                }
-            }
-            this.setState({testTick: tick})
-        }
-    }
 
     render() {
         return (
@@ -76,7 +29,7 @@ class MainControls extends React.Component {
                         </Button>
                         </Box>) : null 
                     } 
-                    <TestResults testTick={this.state.testTick} testResults={this.props.testResults}></TestResults>
+                    <TestResultsIndicator testResults={this.props.testResults}></TestResultsIndicator>
                     </Stack>     
                 </Grid>         
                 <Grid item><Button variant="contained" color="error" 
