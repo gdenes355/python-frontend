@@ -38,7 +38,12 @@ function AppContainer() {
   else if (challengePath) {
         return (
           <React.Fragment>
-                <Challenge guidePath={challengePath + ".md"} codePath={challengePath + ".py"}></Challenge>
+                <Challenge 
+                  guidePath={challengePath + ".md"} 
+                  codePath={challengePath + ".py"}
+                  tests={null}>
+
+                </Challenge>
           </React.Fragment>
       )
   } else {
