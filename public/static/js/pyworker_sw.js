@@ -225,12 +225,12 @@ def prepare_step():
 # input functions
 def debug_input(prompt = ""):
     if prompt: 
-        print(prompt)
+        print(prompt, end="")
     return js.workerInput()
 
 def test_input(prompt = ""):
     if prompt: 
-        print(prompt)
+        print(prompt, end="")
     return test_inputs.pop(0)
 
 # redefine sleep to block
