@@ -4,13 +4,15 @@ import { TreeView,TreeItem } from '@mui/lab';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import {Box,Drawer}  from '@mui/material';
+import CancelIcon from '@mui/icons-material/Cancel';
+import DoneIcon from '@mui/icons-material/Done';
 
-function RecursiveItem({node}) {
+function RecursiveItem({node, allTestResults}) {
     const hasChildren = node.children && node.children.length
     return (
-        <TreeItem label={node.name} nodeId={node.id}>
+        <TreeItem label={<div>{allTestResults.passed.has(node.id) ? <DoneIcon></DoneIcon> : (allTestResults.failed.has(node.id) ? <CancelIcon></CancelIcon> : null) }{node.name}</div>} nodeId={node.id}>
           {hasChildren && node.children.map((item) => (
-            <RecursiveItem key={item.id} node={item} expanded={true} />
+            <RecursiveItem key={item.id} node={item} allTestResults={allTestResults} expanded={true} />
           ))}
         </TreeItem>
       )
@@ -65,7 +67,7 @@ export default function BookDrawer(props) {
                     onNodeToggle={handleToggle}
                     onNodeSelect={handleSelect}
                     sx={{  maxWidth: 400, }}>
-                        <RecursiveItem node={props.data}></RecursiveItem>
+                        <RecursiveItem node={props.data} allTestResults={props.allTestResults}></RecursiveItem>
                 </TreeView>
             </Box>
         </Drawer>

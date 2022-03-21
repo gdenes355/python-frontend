@@ -105,7 +105,8 @@ class Challenge extends React.Component {
         editorFullScreen: false,
         errorLoading: false,
         testResults: [],
-        breakpointsChanged: false
+        breakpointsChanged: false,
+        testsPassing: null,
     };
 
     constructor(props) {
@@ -161,13 +162,25 @@ class Challenge extends React.Component {
             } else {
                 this.setState({savedCode: null})
             }
-            this.setState({testResults: []})
+            this.setState({testResults: [], testsPassing: null})
         }
         if (this.state.editorState !== prevState.editorState &&
             (prevState.editorState === ON_BREAKPOINT ||
             this.state.editorState === ON_BREAKPOINT))  {
                 this.editorRef.current.updateEditorDecorations()
             }
+
+        if (this.state.testResults !== prevState.testResults) {
+            let newTestResult = this.state.testResults.length === 0 ? null :
+                this.state.testResults.filter(x => x!==true).length === 0
+            this.setState({testsPassing: newTestResult});
+        }
+
+        if (this.state.testsPassing !== prevState.testsPassing) {
+            if (this.props.onTestsPassingChanged) {
+                this.props.onTestsPassingChanged(this.state.testsPassing)
+            }
+        }
     }
 
     handleThemeChange = (event) => {
