@@ -2,6 +2,7 @@ import {Box, Card, CardContent} from '@mui/material'
 import DebugPane from './DebugPane'
 import PyEditor from './PyEditor'
 import Console from './Console'
+import Guide from './Guide'
 import MainControls from './MainControls'
 import ReactMarkdown from 'react-markdown'
 import { Allotment } from "allotment"
@@ -249,7 +250,7 @@ class Challenge extends React.Component {
     }
 
     renderGuide() {
-        return (<ReactMarkdown>{this.state.guideMd}</ReactMarkdown>)
+        return <Guide md={this.state.guideMd}/>
     }
 
     renderDebugPane() {
