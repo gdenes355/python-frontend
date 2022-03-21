@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {useLocation} from "react-router-dom";
 import Challenge from '../challenge/Challenge'
 import BookCover from './BookCover'
@@ -17,6 +17,17 @@ function findNode(node, id) {
     return null;
 }
 
+const absoluteRegex = new RegExp('^(?:[a-z]+:)?//', 'i');
+
+function enhancePath(filePath, bookPath) {
+    // if filepath is a relative path, then transform it to an absolute path using bookPath
+    if (absoluteRegex.test(filePath)) {
+        return filePath;
+    } else {
+        return new URL(filePath, bookPath);
+    }
+}
+
 export default function Book() {
 
     const [data, setData] = useState(null);
@@ -26,7 +37,9 @@ export default function Book() {
 
     const searchParams = new URLSearchParams(useLocation().search);
     const bookPath = searchParams.get('book')
+    const bookPathAbsolute = useMemo(() => absoluteRegex.test(bookPath) ? bookPath : new URL(bookPath, document.baseURI), [bookPath]);
     const bookChallengeId = searchParams.get('chid');
+    
 
     useEffect(() => {
         fetch(bookPath)
@@ -39,14 +52,15 @@ export default function Book() {
             if (bookChallengeId) {
                 let node = findNode(data, bookChallengeId);
                 if (node) {
-                    setPaths({guidePath: node.guide, pyPath: node.py})
+                    setPaths({guidePath: enhancePath(node.guide, bookPathAbsolute), 
+                        pyPath: enhancePath(node.py, bookPathAbsolute)})
                     setTests(node.tests)
                 }
             } else {
                 setPaths({guidePath: null, pyPath: null})
             }
         }
-    }, [data, bookChallengeId])
+    }, [data, bookChallengeId, bookPathAbsolute])
 
     const toggleDrawer = (open) => {
         setDrawerOpen(open)

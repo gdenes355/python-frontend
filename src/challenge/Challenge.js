@@ -58,7 +58,7 @@ const controller = {
         if (comp.state.worker) {
             comp.state.worker.terminate()
         }
-        let worker = new Worker('pyworker_sw.js');
+        let worker = new Worker('/static/js/pyworker_sw.js');
         worker.addEventListener("message", (msg) => controller[msg.data.cmd](comp, msg.data));
         let msg = data?.msg == null ? "" : data.msg
         comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER}})
@@ -134,7 +134,7 @@ class Challenge extends React.Component {
             .then(response => {if (!response.ok) {this.setState({errorLoading: true})} return response.text()})
             .then(text => this.setState({starterCode: text}))
 
-        navigator.serviceWorker.register('/pysw.js').then(function(reg) {
+        navigator.serviceWorker.register('/static/js/pysw.js').then(function(reg) {
             if (navigator.serviceWorker.controller === null || !reg.active) {
                 window.location.reload();
             }

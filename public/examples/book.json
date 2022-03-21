@@ -5,8 +5,8 @@
         {
             "id": "afb57340-1197-473c-b24d-5687796fd3d4",
             "name": "Hello world",
-            "guide": "./examples/c01.md",
-            "py": "./examples/c01.py",
+            "guide": "c01.md",
+            "py": "c01.py",
             "tests": [
                 {
                     "in": "",
@@ -17,8 +17,8 @@
         {
             "id": "57057e16-3c65-414b-a332-dfea93c626da",
             "name": "Hello name",
-            "guide": "./examples/c02.md",
-            "py": "./examples/c02.py",
+            "guide": "c02.md",
+            "py": "c02.py",
             "tests": [
                 {
                     "in": "Joe",
