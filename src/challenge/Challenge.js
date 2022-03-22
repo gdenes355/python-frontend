@@ -4,7 +4,6 @@ import PyEditor from './PyEditor'
 import Console from './Console'
 import Guide from './Guide'
 import MainControls from './MainControls'
-import ReactMarkdown from 'react-markdown'
 import { Allotment } from "allotment"
 import "allotment/dist/style.css"
 import React from 'react'
