@@ -51,10 +51,42 @@ addEventListener('fetch', e => {
 	));
   }
   else if (u.pathname === '/@sleep@/sleep.js') {
-	  e.respondWith(new Promise(r => {
+	e.respondWith(new Promise(r => {
 		  const t = new URLSearchParams(u.search).get('time');
 		  const response = new Response(null, {status: 304});
 		  setTimeout(r, t*1000, response);
-	  }))
+	}))
+  } 
+  else if (e.request.cache === "only-if-cached" && e.request.mode !== "same-origin") {
+	return;
+  } 
+  else if (!e.request.url.includes("book=")) {
+	  return;
+  }
+  else {
+	console.log("fetching", e.request)
+	e.respondWith(
+		fetch(e.request)
+		  .then(function (response) {
+			// It seems like we only need to set the headers for index.html
+			// If you want to be on the safe side, comment this out
+			// if (!response.url.includes("index.html")) return response;
+	
+			const newHeaders = new Headers(response.headers);
+			newHeaders.set("Cross-Origin-Embedder-Policy", "require-corp");
+			newHeaders.set("Cross-Origin-Opener-Policy", "same-origin");
+	
+			const moddedResponse = new Response(response.body, {
+			  status: response.status,
+			  statusText: response.statusText,
+			  headers: newHeaders,
+			});
+	
+			return moddedResponse;
+		})
+		.catch(function (e) {
+			console.error(e);
+		})
+	  );
   }
 });

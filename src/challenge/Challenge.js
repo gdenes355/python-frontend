@@ -135,7 +135,7 @@ class Challenge extends React.Component {
             .then(response => {if (!response.ok) {this.setState({errorLoading: true})} return response.text()})
             .then(text => this.setState({starterCode: text}))
 
-        navigator.serviceWorker.register('/static/js/pysw.js').then(function(reg) {
+        navigator.serviceWorker.register('pysw.js').then(function(reg) {
             if (navigator.serviceWorker.controller === null || !reg.active) {
                 window.location.reload();
             }
