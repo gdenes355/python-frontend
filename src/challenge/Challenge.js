@@ -284,7 +284,7 @@ class Challenge extends React.Component {
                         </Allotment.Pane>
                         <Allotment.Pane visible={this.getVisibilityWithHack(!this.state.editorFullScreen)}>
                             <Allotment vertical >
-                                <Box sx={{ p:2, overflowY: "auto"}}>
+                                <Box sx={{ p:2, display: "flex", flexDirection: "column", height: "100%"}}>
                                     {this.renderMainControls()}
                                     {this.renderGuide()}
                                 </Box>

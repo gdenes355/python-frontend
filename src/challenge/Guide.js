@@ -6,6 +6,9 @@ import {vs} from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 const StyledGuide = styled('div')(({theme}) => `
     line-height: 1.5rem;
+    overflow-y: auto;
+    flex-grow: 1;
+    margin-top: 3px;
     & :not(pre div) > code { background-color: ${theme.palette.secondary.light}; color: ${theme.palette.error.main}; border-radius: 5px; padding: 2px; }
 `)
   
