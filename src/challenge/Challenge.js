@@ -55,16 +55,33 @@ const controller = {
         if (comp.state.editorState === READY && !data?.force) {
             return; // in ready state already
         }
+        if (comp.state.worker && comp.state.interruptBuffer) {
+            comp.state.interruptBuffer[0] = 2;
+            var x = new XMLHttpRequest();
+            x.open('post', '/@reset@/reset.js');
+            x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
+            try { x.send("") } catch(e) {console.log(e)}
+            return; // we can just issue an interrupt, no need to kill worker
+        }
         if (comp.state.worker) {
             comp.state.worker.terminate()
         }
         let worker = new Worker('/static/js/pyworker_sw.js');
         worker.addEventListener("message", (msg) => controller[msg.data.cmd](comp, msg.data));
+        let interruptBuffer = null;
+        if (window.crossOriginIsolated && window.SharedArrayBuffer) {
+            interruptBuffer = new Uint8Array(new window.SharedArrayBuffer(1));
+            worker.postMessage({ cmd: "setInterruptBuffer", interruptBuffer });
+        }
         let msg = data?.msg == null ? "" : data.msg
-        comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER}})
+        comp.setState((state, props) => {return {consoleText: state.consoleText + msg, worker: worker, editorState: RESTARTING_WORKER, interruptBuffer}})
     },
     "debug": (comp, data) => {
         if (comp.state.editorState === READY) {
+            if (comp.state.interruptBuffer) {
+                comp.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+            }
             comp.state.worker.postMessage({cmd: "debug", code: data.code, breakpoints: data.breakpoints}); 
             comp.setState({consoleText: "", editorState:RUNNING, breakpointsChanged: false})
         }
@@ -72,6 +89,9 @@ const controller = {
     },
     "test": (comp, data) => {
         if (comp.state.editorState === READY) {
+            if (comp.state.interruptBuffer) {
+                comp.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+            }
             comp.state.worker.postMessage({cmd: "test", code: data.code, tests: data.tests}); 
             comp.setState({consoleText: "", editorState:RUNNING})
         }
@@ -107,6 +127,7 @@ class Challenge extends React.Component {
         testResults: [],
         breakpointsChanged: false,
         testsPassing: null,
+        interruptBuffer: null
     };
 
     constructor(props) {
@@ -118,6 +139,7 @@ class Challenge extends React.Component {
     };
 
     componentDidMount() {
+        console.log("crossOriginIsolated", window.crossOriginIsolated)
         let previousTheme = Cookies.get("theme")
         if (previousTheme) {
             this.setState({theme: previousTheme})

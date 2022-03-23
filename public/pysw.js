@@ -7,6 +7,8 @@ addEventListener('activate', () => {
 
 var inputPromiseResolve = null;
 var debugPromiseResolve = null;
+var sleepPromiseResolve = null;
+var sleepTimeout = null;
 
 addEventListener('fetch', e => {
   const u = new URL(e.request.url);
@@ -51,12 +53,38 @@ addEventListener('fetch', e => {
 	));
   }
   else if (u.pathname === '/@sleep@/sleep.js') {
-	e.respondWith(new Promise(r => {
-		  const t = new URLSearchParams(u.search).get('time');
-		  const response = new Response(null, {status: 304});
-		  setTimeout(r, t*1000, response);
+	let local = sleepPromiseResolve;
+	sleepPromiseResolve = null;
+	if (local !== null) {
+		local()
+	}
+	if (sleepTimeout) {
+		clearTimeout(sleepTimeout)
+	}
+	e.respondWith(new Promise(r => {		  
+		  sleepPromiseResolve = r
 	}))
-  } 
+	const t = new URLSearchParams(u.search).get('time');
+	sleepTimeout = setTimeout(sleepPromiseResolve, t*1000, new Response(null, {status: 304}));
+  } else if (u.pathname === '/@reset@/reset.js') {
+	e.respondWith(new Promise(r => {
+		if (debugPromiseResolve != null) {
+			debugPromiseResolve(new Response("{}", {status: 200}))
+			debugPromiseResolve = null
+		}
+		if (inputPromiseResolve != null) {
+			inputPromiseResolve(new Response("{}", {status: 200}))
+			inputPromiseResolve = null;
+		}
+		clearTimeout(sleepTimeout);
+		if (sleepPromiseResolve !== null) {
+			sleepPromiseResolve(new Response(null, {status: 304}))
+			sleepPromiseResolve = null;
+		}
+
+		return new Response(null, {status: 304});
+	}));
+  }
   else if (e.request.cache === "only-if-cached" && e.request.mode !== "same-origin") {
 	return;
   } 

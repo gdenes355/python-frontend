@@ -7,7 +7,15 @@ importScripts("https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js");
 // the assumption is that run will not be called while there is an active Python code running
 // also, there is an assumption that there cannot be two synchronouse inputs
 onmessage = function(e) {
-    if (e.data.cmd === "debug") {
+    if (e.data.cmd === "setInterruptBuffer") {
+        if (self.pyodide) {
+            self.pyodide.setInterruptBuffer(e.data.interruptBuffer)
+            self.interruptBufferToSet = null;
+        } else {
+            self.interruptBufferToSet = e.data.interruptBuffer;
+        }
+    }
+    else if (e.data.cmd === "debug") {
         let reason = "ok"
         try {
             self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints)
@@ -25,7 +33,9 @@ onmessage = function(e) {
             results = tests.map((test) => self.pyodide.globals.get("pyexec")(e.data.code, test.in, test.out))
         }
         catch (err) {
-            // silent failure
+            if (err.message.includes("KeyboardInterrupt")) {
+                results = e.data.tests.map((t) => {return {err: "Interrupted"}});
+            }
         }
         self.postMessage({"cmd": "test-finished", results});
     }
@@ -34,6 +44,10 @@ onmessage = function(e) {
 // loading code
 let loadPyodideAsync = async () => {
     self.pyodide = await loadPyodide({ indexURL : "https://cdn.jsdelivr.net/pyodide/v0.19.0/full/"});
+    if (self.interruptBufferToSet) {
+        self.pyodide.setInterruptBuffer(self.interruptBufferToSet)
+        self.interruptBufferToSet = null
+    }
     await self.pyodide.runPython(initPyCode);
 }
 loadPyodideAsync().then(() => self.postMessage({"cmd": "init-done"}));
