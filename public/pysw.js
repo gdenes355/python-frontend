@@ -60,11 +60,7 @@ addEventListener('fetch', e => {
   else if (e.request.cache === "only-if-cached" && e.request.mode !== "same-origin") {
 	return;
   } 
-  else if (!e.request.url.includes("book=")) {
-	  return;
-  }
-  else {
-	console.log("fetching", e.request)
+  else if (e.request.url.includes("book=") || e.request.url.includes("pyworker_sw.js")) {
 	e.respondWith(
 		fetch(e.request)
 		  .then(function (response) {
