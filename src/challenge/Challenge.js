@@ -228,7 +228,7 @@ class Challenge extends React.Component {
 
     renderMainControls() {
         return (
-            <Card>
+            <Card sx={{overflow: "visible"}}>
                 <CardContent>
                     <MainControls
                         theme={this.state.theme}
