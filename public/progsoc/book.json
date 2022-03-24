@@ -19,6 +19,12 @@
             "name": "Choose a door",
             "guide": "c10.md",
             "py": "c10.py"
+        },
+        {
+            "id": "0c899528-c1a2-4d6c-8a9b-b283c442ee52",
+            "name": "Snakes and ladders",
+            "guide": "c11.md",
+            "py": "c11.py"
         }
     ]
 }
