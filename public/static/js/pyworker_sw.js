@@ -54,6 +54,7 @@ loadPyodideAsync().then(() => self.postMessage({"cmd": "init-done"}));
 
 // js proxy for input and print. These are passed on to the main site
 workerPrint = function(msg) { self.postMessage({"cmd": "print", "msg": msg}); }
+workerCls = function(msg) { self.postMessage({"cmd": "cls"})}
 workerInput = () => {
     self.postMessage({"cmd": "input"});
     var x = new XMLHttpRequest();
@@ -100,6 +101,7 @@ import ast
 import traceback
 import copy
 import time
+import os
 from collections import deque
 from pyodide import to_js
 
@@ -137,6 +139,7 @@ def pyexec(code, expected_input, expected_output):
     sys.stdout = test_output
     sys.stderr = test_output
     time.sleep = test_sleep
+    os.system = test_shell
     input = test_input
 
     test_inputs = expected_input.split("\\n") if expected_input else []
@@ -164,10 +167,11 @@ def pyexec(code, expected_input, expected_output):
 def pydebug_old(code, breakpoints):
     global global_vars
     global active_breakpoints
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep}
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep, 'os.system': debug_shell}
     sys.stdout = debug_output
     sys.stderr = debug_output
     time.sleep = debug_sleep
+    os.system = debug_shell
     input = debug_input
 
     parsed_stmts = ast.parse(code)
@@ -201,8 +205,9 @@ def pydebug(code, breakpoints):
     sys.stdout = debug_output
     sys.stderr = debug_output
     time.sleep = debug_sleep
+    os.system = debug_shell
     input = debug_input
-
+    
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -246,6 +251,16 @@ def test_input(prompt = ""):
     if prompt: 
         print(prompt, end="")
     return test_inputs.pop(0)
+
+# cls
+def debug_shell(cmd):
+    if cmd == "cls" or cmd == "clear":
+        js.workerCls()
+
+def test_shell():
+    pass
+
+
 
 # redefine sleep to block
 def debug_sleep(time_in_s):

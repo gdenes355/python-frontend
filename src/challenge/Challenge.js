@@ -16,6 +16,7 @@ import "./Challenge.css";
 const controller = {
     "init-done": (comp, data) =>  comp.setState({editorState: READY}),
     "print": (comp, data) => comp.setState((state, props) => {return {consoleText: state.consoleText + data.msg}}),
+    "cls": (comp,data) => comp.setState({consoleText: ""}),
     "input": (comp, data) => comp.setState({awaitingInput: true, editorState: AWAITING_INPUT}),
     "input-entered": (comp, data) => {
         var x = new XMLHttpRequest();
