@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip,Fade} from '@mui/material';
-import { tooltipClasses } from '@mui/material/Tooltip';
+import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DoneIcon from '@mui/icons-material/Done';
+import {TestResults} from './context/TestResult'
+
+type TestResultsIndicatorProps = {
+    testResults: TestResults
+};
 
 
-const HtmlTooltip = styled(({ className, ...props }) => (
+const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
     <Tooltip {...props} classes={{ popper: className }} />
   ))(({ theme }) => ({
     [`& .${tooltipClasses.tooltip}`]: {
@@ -19,17 +24,13 @@ const HtmlTooltip = styled(({ className, ...props }) => (
 }));
 
 
-export default function TestResultsIndicator(props) {
+const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
 
-    const [allPassing, setAllPassing] = useState(null);
-
-    useEffect(() => {
-        setAllPassing(props.testResults.filter(x => x!==true).length === 0)
-    }, [props.testResults])
-
+    const [allPassing, setAllPassing] = useState<boolean | null>(null);
+    useEffect(() => setAllPassing(props.testResults.filter(x => !x.outcome).length === 0), [props.testResults]);
     
     if (props?.testResults.length < 1) {
-        return (<span></span>)
+        return (<span></span>);
     }
 
     if (allPassing) {
@@ -41,7 +42,7 @@ export default function TestResultsIndicator(props) {
                 TransitionProps={{ timeout: 600 }}
                 title={
                 <React.Fragment>
-                    {props.testResults.filter(x => x===true).length} / {props.testResults.length} tests passed
+                    {props.testResults.filter(x => x.outcome).length} / {props.testResults.length} tests passed
                     <TableContainer>
                         <Table sx={{ }} aria-label="test table" size="small">
                             <TableHead>
@@ -57,7 +58,7 @@ export default function TestResultsIndicator(props) {
                             {props.testResults.map((tr, i) => { return (
                                 <TableRow key={i}>
                                     <TableCell>
-                                        {tr===true ? <DoneIcon></DoneIcon> : <CancelIcon></CancelIcon>}
+                                        {tr.outcome ? <DoneIcon></DoneIcon> : <CancelIcon></CancelIcon>}
                                     </TableCell>
                                     <TableCell>
                                         {tr.err}
@@ -82,3 +83,5 @@ export default function TestResultsIndicator(props) {
         )
     }
 }
+
+export default TestResultsIndicator;

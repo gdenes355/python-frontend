@@ -1,23 +1,44 @@
-import Editor from "@monaco-editor/react"
+import Editor, {OnMount, Monaco} from "@monaco-editor/react"
+import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import React from 'react'
 import './PyEditor.css'
 
+import DebugContext from './context/DebugContext'
 
-class PyEditor extends React.Component {
+type PyEditorProps = {
+    canRun: boolean,
+    isOnBreakPoint: boolean,
+    canPlaceBreakpoint: boolean,
+    starterCode: string,
+    theme: string,
+    onToggleFullScreen: () => void,
+    onDebug: () => void,
+    onContinue: () => void,
+    onStepInto: () => void,
+    onStop: () => void,
+    debugContext: DebugContext,
+    onBreakpointsUpdated: () => void
+}
 
-    breakpointList = [];
-    decorator = [];
+type PyEditorState = {
 
-    state = {theme: "vs-dark"}
+}
 
-    canRunCondition = null;
-    canStepCondition = null;
-    canPlaceBreakpointCondition = null
 
-    constructor(props) {
+class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
+
+    breakpointList: number[] = [];
+    decorator: string[] = [];
+
+    private canRunCondition : null | monaco.editor.IContextKey<boolean> = null;
+    private canStepCondition : null | monaco.editor.IContextKey<boolean> = null;
+    private canPlaceBreakpointCondition : null | monaco.editor.IContextKey<boolean> = null;
+
+    private editorRef: monaco.editor.IStandaloneCodeEditor | null = null;
+    private monacoRef: Monaco | null = null;
+
+    constructor(props: PyEditorProps) {
         super(props);
-        this.editorRef = React.createRef();
-        this.monacoRef = React.createRef();
         this.handleEditorDidMount.bind(this);
         this.updateEditorDecorations.bind(this);
         this.handleEditorChange.bind(this);
@@ -28,23 +49,27 @@ class PyEditor extends React.Component {
     };
 
     getValue() {
-        return this.editorRef.current.getValue();
+        return this.editorRef ? this.editorRef.getValue() : "";
     }
 
     getBreakpoints() {
         return this.breakpointList;
     }
 
-    setValue(value) {
-        this.editorRef.current.setValue(value)
+    setValue(value: string) {
+        if (this.editorRef) {
+            this.editorRef.setValue(value)
+        }
     }
 
-    revealLine(lineNo) {
-        this.editorRef.current.revealLine(lineNo)
+    revealLine(lineNo: number) {
+        if (this.editorRef) {
+            this.editorRef.revealLine(lineNo)
+        }
     }
 
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.canRunCondition) {
+    componentDidUpdate(prevProps: PyEditorProps) {
+        if (this.canRunCondition && this.canStepCondition && this.canPlaceBreakpointCondition) {
             if (prevProps.canRun !== this.props.canRun) {
                 this.canRunCondition.set(this.props.canRun)
             }
@@ -57,9 +82,9 @@ class PyEditor extends React.Component {
         }
     }
 
-    handleEditorDidMount = (editor, monaco) => {
-        this.editorRef.current = editor
-        this.monacoRef.current = monaco
+    handleEditorDidMount: OnMount = (editor, monaco) => {
+        this.editorRef = editor
+        this.monacoRef = monaco
 
         this.canRunCondition = editor.createContextKey("canRun", false);
         this.canStepCondition = editor.createContextKey("canStep", false);
@@ -79,8 +104,6 @@ class PyEditor extends React.Component {
             id: "togglefullscreen",
             label: "Toggle Full Screen Editor",
             keybindings: [monaco.KeyCode.F11],
-            precondition: null,
-            keybindingContext: null,
             contextMenuGroupId: 'navigation',
             contextMenuOrder: 1.5,
             run: () => {
@@ -93,7 +116,6 @@ class PyEditor extends React.Component {
             label: "Debug: Start Debugging",
             keybindings: [monaco.KeyCode.F5],
             precondition: "canRun",
-            keybindingContext: null,
             contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
@@ -106,7 +128,6 @@ class PyEditor extends React.Component {
             label: "Debug: Continue",
             keybindings: [monaco.KeyCode.F5],
             precondition: "canStep",
-            keybindingContext: null,
             contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
@@ -119,7 +140,6 @@ class PyEditor extends React.Component {
             label: "Debug: Step Into",
             keybindings: [monaco.KeyCode.F10],
             precondition: "canStep",
-            keybindingContext: null,
             contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
@@ -132,7 +152,6 @@ class PyEditor extends React.Component {
             label: "Debug: Step Into",
             keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F5],
             precondition: "canStep",
-            keybindingContext: null,
             contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: () => {
@@ -145,11 +164,14 @@ class PyEditor extends React.Component {
             label: "Debug: Toggle Breakpoint",
             keybindings: [monaco.KeyCode.F9],
             precondition: "canPlaceBreakpoint",
-            keybindingContext: null,
             contextMenuGroupId: '1_debug',
             contextMenuOrder: 1.5,
             run: (ed) => {
-                this.toggleBreakpoint(ed.getPosition()?.lineNumber)
+                let pos = ed.getPosition();
+                if (pos) {
+                    this.toggleBreakpoint(pos.lineNumber)
+                }
+               
             }
         })
 
@@ -158,10 +180,10 @@ class PyEditor extends React.Component {
                 // Log the current word in the console, you probably want to do something else here.
                 if (this.props.isOnBreakPoint) {
                     let word = model.getWordAtPosition(position);
-                    if (word?.word !== undefined && this.props.debugInfo.env.has(word.word)) {
+                    if (word?.word !== undefined && this.props.debugContext.env.has(word.word)) {
                         return {
                             contents: [
-                                { value: "```text\n" + this.props.debugInfo.env.get(word.word) + "\n```"}
+                                { value: "```text\n" + this.props.debugContext.env.get(word.word) + "\n```"}
                             ]
                         };
                     }
@@ -177,28 +199,35 @@ class PyEditor extends React.Component {
     }
 
     updateEditorDecorations() {
-        let stepLine = []
-        if (this.props.isOnBreakPoint && this.props.debugInfo.lineno && !this.breakpointList.includes(this.props.debugInfo.lineno)) {
-            stepLine = [{
-                range: new this.monacoRef.current.Range(this.props.debugInfo.lineno, 1, this.props.debugInfo.lineno, 1),
+        if (!this.monacoRef || !this.editorRef) {
+            return;
+        }
+
+        let decorations: monaco.editor.IModelDecoration[] =  this.breakpointList.map(ln => {return {
+            id: "",
+            ownerId: 0,
+            range: new monaco.Range(ln, 1, ln, 1),
+            options: {
+                isWholeLine: true,
+                className: this.props.isOnBreakPoint && this.props.debugContext.lineno === ln ? 'breakpoint-hit' : 'breakpoint-waiting',
+                glyphMarginClassName: 'breakpoint-margin'
+            }
+        }});
+        if (this.props.isOnBreakPoint && this.props.debugContext.lineno && !this.breakpointList.includes(this.props.debugContext.lineno)) {
+            decorations.push({
+                id: "",
+                ownerId: 0,
+                range: new this.monacoRef.Range(this.props.debugContext.lineno, 1, this.props.debugContext.lineno, 1),
                 options: {
                     isWholeLine: true,
                     className: 'breakpoint-hit'
                 }
-            }]
+            })
         }
-        this.decorator = this.editorRef.current.deltaDecorations(this.decorator, 
-            this.breakpointList.map(ln => {return {
-                range: new this.monacoRef.current.Range(ln, 1, ln, 1),
-                options: {
-                    isWholeLine: true,
-                    className: this.props.isOnBreakPoint && this.props.debugInfo.lineno === ln ? 'breakpoint-hit' : 'breakpoint-waiting',
-                    glyphMarginClassName: 'breakpoint-margin'
-                }
-            }}).concat(stepLine));
+        this.decorator = this.editorRef.deltaDecorations(this.decorator, decorations);
     }
 
-    toggleBreakpoint = (lineNum) =>  {
+    toggleBreakpoint = (lineNum: number) =>  {
         if (!lineNum) {
             return;
         }
@@ -226,7 +255,6 @@ class PyEditor extends React.Component {
                 onMount={this.handleEditorDidMount}
                 theme={this.props.theme}
                 options={{scrollBeyondLastLine: false, tabSize: 2, detectIndentation: false, glyphMargin: true, wordWrap: "on"}}
-                formatOnPaste={true}
                 onChange={this.handleEditorChange}
             />           
         )
@@ -234,4 +262,4 @@ class PyEditor extends React.Component {
     }
 }
 
-export default PyEditor
+export default PyEditor;

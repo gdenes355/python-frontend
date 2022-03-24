@@ -8,8 +8,6 @@
     margin-top: 5px;
 }
 
-.hidden { display:none; }
-
 .theme-vs-dark .breakpoint-hit {
 	background-color:   rgb(114, 114, 46);
 }

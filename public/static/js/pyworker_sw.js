@@ -26,7 +26,7 @@ onmessage = function(e) {
         }
         self.postMessage({"cmd": "debug-finished", reason});
     } else if (e.data.cmd === "test") {
-        let results = e.data.tests.map((t) => {return {err: "Failed to compile"}});
+        let results = e.data.tests.map((t) => {return {outcome: false, err: "Failed to compile"}});
         console.log("running tests")
         try {
             let tests = e.data.tests
@@ -34,7 +34,7 @@ onmessage = function(e) {
         }
         catch (err) {
             if (err.message.includes("KeyboardInterrupt")) {
-                results = e.data.tests.map((t) => {return {err: "Interrupted"}});
+                results = e.data.tests.map((t) => {return {outcome: false, err: "Interrupted"}});
             }
         }
         self.postMessage({"cmd": "test-finished", results});
@@ -157,12 +157,12 @@ def pyexec(code, expected_input, expected_output):
 
     if test_outputs != test_output.buffer:
         js.console.log(str(test_outputs), "!=", str(test_output.buffer))
-        return js.Object.fromEntries(to_js({"err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
+        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
     elif len(test_inputs) > 0:
         js.console.log("inputs unconsumed: " + str(test_inputs))
-        return js.Object.fromEntries(to_js({"err": "Unconsumed input", "ins": expected_input}))
+        return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
     else:
-        return True
+        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
 def pydebug_old(code, breakpoints):
     global global_vars

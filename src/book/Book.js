@@ -87,7 +87,7 @@ export default function Book() {
         }
     }, [data, bookChallengeId, bookPathAbsolute])
 
-    const toggleDrawer = (open) => {
+    const openDrawer = (open) => {
         setDrawerOpen(open)
     };
 
@@ -100,12 +100,12 @@ export default function Book() {
                         codePath={paths.pyPath}
                         tests={tests && tests.length > 0 ? tests : null}
                         hasBook={true}
-                        toggleBookDrawer={toggleDrawer}
+                        openBookDrawer={openDrawer}
                         layout="fullscreen"
                         uid={bookPath + bookChallengeId}
                         onTestsPassingChanged={activeTestsPassingChanged}>
                     </Challenge>
-                    <BookDrawer data={data} allTestResults={allTestResults} activePage={bookChallengeId} onToggle={toggleDrawer} open={drawerOpen}></BookDrawer>
+                    <BookDrawer data={data} allTestResults={allTestResults} activePage={bookChallengeId} onToggle={openDrawer} open={drawerOpen}></BookDrawer>
                 </React.Fragment>
             )
         } else {
