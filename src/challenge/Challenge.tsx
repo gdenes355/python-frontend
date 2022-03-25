@@ -8,20 +8,15 @@ import { Allotment } from "allotment"
 import "allotment/dist/style.css"
 import React from 'react'
 import Cookies from 'js-cookie'
-import ChallengeStatus from './context/ChallengeStatus'
-import {TestResults} from './context/TestResult'
-import DebugContext  from './context/DebugContext'
+import ChallengeStatus from '../models/ChallengeStatus'
+import {TestCases, TestResults} from '../models/Tests'
+import DebugContext  from '../models/DebugContext'
 
 
-
-type TestCase = {
-    in: string,
-    out: string
-}
 
 type TestData = {
     code?: string,
-    tests?: TestCase[]
+    tests?: TestCases,
 }
 
 type PrintData = {
@@ -86,7 +81,7 @@ type ChallengeProps = {
     codePath: string,
     hasBook: boolean,
     layout: string,
-    tests: TestCase[],
+    tests: TestCases,
     onTestsPassingChanged: (passing: boolean | null) => void,
     openBookDrawer: (open: boolean) => void,
 }

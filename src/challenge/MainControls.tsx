@@ -4,7 +4,7 @@ import ListIcon from '@mui/icons-material/List';
 
 import TestResultsIndicator from './TestResultIndicator';
 
-import {TestResults} from './context/TestResult'
+import {TestResults} from '../models/Tests'
 
 type MainControlsProps = {
     canDebug: boolean,

@@ -4,7 +4,7 @@ import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import CancelIcon from '@mui/icons-material/Cancel';
 import DoneIcon from '@mui/icons-material/Done';
-import {TestResults} from './context/TestResult'
+import {TestResults} from '../models/Tests'
 
 type TestResultsIndicatorProps = {
     testResults: TestResults

@@ -2,7 +2,7 @@ import * as React from 'react';
 import {Button, Grid, Stack} from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper} from '@mui/material';
-import DebugContext from './context/DebugContext'
+import DebugContext from '../models/DebugContext'
 
 
 type DebugPaneProps = {

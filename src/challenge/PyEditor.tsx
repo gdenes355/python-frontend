@@ -3,7 +3,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api';
 import React from 'react'
 import './PyEditor.css'
 
-import DebugContext from './context/DebugContext'
+import DebugContext from '../models/DebugContext'
 
 type PyEditorProps = {
     canRun: boolean,

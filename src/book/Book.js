@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {useLocation} from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Challenge from '../challenge/Challenge'
 import BookCover from './BookCover'
 import BookDrawer from './BookDrawer'
@@ -40,6 +40,15 @@ export default function Book() {
     const bookPath = searchParams.get('book')
     const bookPathAbsolute = useMemo(() => absoluteRegex.test(bookPath) ? bookPath : new URL(bookPath, document.baseURI), [bookPath]);
     const bookChallengeId = searchParams.get('chid');
+
+    const navigate = useNavigate();
+    const { search } = useLocation();
+
+    const onNodeSelected = (node) => {
+        if (!node.children || node.children.length === 0) {
+            navigate({search: '?' + new URLSearchParams({"book": new URLSearchParams(search).get("book"), "chid": node.id}).toString()}, { replace: false });
+        } 
+    };
 
     const activeTestsPassingChanged = (newTestState) => {
         if (newTestState === true) {
@@ -105,13 +114,23 @@ export default function Book() {
                         uid={bookPath + bookChallengeId}
                         onTestsPassingChanged={activeTestsPassingChanged}>
                     </Challenge>
-                    <BookDrawer data={data} allTestResults={allTestResults} activePage={bookChallengeId} onToggle={openDrawer} open={drawerOpen}></BookDrawer>
+                    <BookDrawer 
+                        bookRoot={data} 
+                        allTestResults={allTestResults} 
+                        activePage={bookChallengeId} 
+                        onRequestOpen={openDrawer}
+                        onNodeSelected={onNodeSelected}
+                        open={drawerOpen}/>
                 </React.Fragment>
             )
         } else {
             return (
                 <React.Fragment> 
-                    <BookCover data={data}></BookCover>
+                    <BookCover 
+                        bookRoot={data} 
+                        allTestResults={allTestResults} 
+                        activePage={bookChallengeId} 
+                        onNodeSelected={onNodeSelected}/>
                 </React.Fragment>
             )
         }
