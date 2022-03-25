@@ -1,49 +1,29 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import {BrowserRouter, Routes, Route, useLocation} from "react-router-dom";
-import Book from './book/Book'
+import BookFragment from './book/BookFragment'
 import Challenge from './challenge/Challenge'
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
+
+import pageTheme from './themes/pageTheme'
 
 import './App.css';
 
-const theme = createTheme({
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 0,
-        }
-      }
-    },
-  },
-  palette: {
-    primary: {
-      main: '#0a9396',
-    },
-    secondary: {
-      main: '#e9d8a6',
-    },
-  },
-});
-
-function AppContainer() {
+const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get('book')
   const challengePath = searchParams.get('ch');
   
-  useEffect(() => {
-  }, [bookPath, challengePath]);
-
-  if (bookPath) { return (<Book/>) }
+  if (bookPath) { 
+    return (<BookFragment/>) 
+  }
   else if (challengePath) {
         return (
           <React.Fragment>
                 <Challenge 
                   guidePath={challengePath + ".md"} 
-                  codePath={challengePath + ".py"}
-                  tests={null}>
-
-                </Challenge>
+                  codePath={challengePath + ".py"} 
+                  hasBook={false}
+                  layout="linear"/>
           </React.Fragment>
       )
   } else {
@@ -54,7 +34,7 @@ function AppContainer() {
 export default function App() {
 
   return ( 
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
         <Routes>
           <Route path='*' element={<AppContainer></AppContainer>} />

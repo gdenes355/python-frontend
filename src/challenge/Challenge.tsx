@@ -16,7 +16,7 @@ import DebugContext  from '../models/DebugContext'
 
 type TestData = {
     code?: string,
-    tests?: TestCases,
+    tests?: TestCases | null,
 }
 
 type PrintData = {
@@ -76,14 +76,14 @@ type ChallengeState = {
 }
 
 type ChallengeProps = {
-    uid: string | null,
+    uid?: string | null,
     guidePath: string,
     codePath: string,
     hasBook: boolean,
     layout: string,
-    tests: TestCases,
-    onTestsPassingChanged: (passing: boolean | null) => void,
-    openBookDrawer: (open: boolean) => void,
+    tests?: TestCases | null,
+    onTestsPassingChanged?: (passing: boolean | null) => void,
+    openBookDrawer?: (open: boolean) => void,
 }
 
 const controller = {

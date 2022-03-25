@@ -4,53 +4,40 @@ import Challenge from '../challenge/Challenge'
 import BookCover from './BookCover'
 import BookDrawer from './BookDrawer'
 
-function findNode(node, id) {
-    if (node.id === id) {
-        return node;
-    }
-    for (let i = 0; i < node.children?.length; i++) {
-        let res = findNode(node.children[i], id)
-        if (res) {
-            return res;
-        }
-    }
-    return null;
-}
+import BookNodeModel, {findBookNode} from '../models/BookNodeModel';
+import { absolutisePath, isAbsoluteAddress } from '../utils/pathTools';
+import {TestCases, AllTestResults} from '../models/Tests'
 
-const absoluteRegex = new RegExp('^(?:[a-z]+:)?//', 'i');
-
-function enhancePath(filePath, bookPath) {
-    // if filepath is a relative path, then transform it to an absolute path using bookPath
-    if (absoluteRegex.test(filePath)) {
-        return filePath;
-    } else {
-        return new URL(filePath, bookPath);
-    }
+type PathsState = {
+    guidePath: string | null,
+    pyPath: string | null
 }
 
 export default function Book() {
 
     const [data, setData] = useState(null);
-    const [paths, setPaths] = useState({guidePath: null, pyPath: null});
-    const [tests, setTests] = useState(null)
+    const [paths, setPaths] = useState<PathsState>({guidePath: null, pyPath: null});
+    const [tests, setTests] = useState<TestCases|null>(null)
     const [drawerOpen, setDrawerOpen] = React.useState(false)
-    const [allTestResults, setAllTestResults] = useState({passed: new Set(), failed: new Set()})
+    const [allTestResults, setAllTestResults] = useState<AllTestResults>({passed: new Set(), failed: new Set()})
 
     const searchParams = new URLSearchParams(useLocation().search);
-    const bookPath = searchParams.get('book')
-    const bookPathAbsolute = useMemo(() => absoluteRegex.test(bookPath) ? bookPath : new URL(bookPath, document.baseURI), [bookPath]);
+    const bookPath = searchParams.get('book') || ""
+    const bookPathAbsolute = useMemo(() => isAbsoluteAddress(bookPath) ? new URL(bookPath) : new URL(bookPath, document.baseURI), [bookPath]);
     const bookChallengeId = searchParams.get('chid');
 
     const navigate = useNavigate();
-    const { search } = useLocation();
 
-    const onNodeSelected = (node) => {
+    const onNodeSelected = (node: BookNodeModel) => {
         if (!node.children || node.children.length === 0) {
-            navigate({search: '?' + new URLSearchParams({"book": new URLSearchParams(search).get("book"), "chid": node.id}).toString()}, { replace: false });
+            navigate({search: '?' + new URLSearchParams({"book": bookPath, "chid": node.id}).toString()}, { replace: false });
         } 
     };
 
-    const activeTestsPassingChanged = (newTestState) => {
+    const activeTestsPassingChanged = (newTestState: boolean | null) => {
+        if (!bookChallengeId) {
+            return;
+        }
         if (newTestState === true) {
             allTestResults.passed.add(bookChallengeId);
             allTestResults.failed.delete(bookChallengeId);
@@ -71,23 +58,29 @@ export default function Book() {
     }
 
     useEffect(() => {
+        if (!bookPath) {
+            setAllTestResults({passed: new Set(), failed: new Set()})
+            return;
+        }
+
         fetch(bookPath)
             .then((response) => response.json())
             .then((bookData) => setData(bookData));
-        let cachedPass = JSON.parse(localStorage.getItem(encodeURIComponent(bookPath + "-testsPassing")))
-        let cachedFail = JSON.parse(localStorage.getItem(encodeURIComponent(bookPath + "-testsFailing")))
-        if (cachedPass && cachedPass) {
-            setAllTestResults({passed: new Set(cachedPass), failed: new Set(cachedFail)})
-        }
+            
+        let cacheP = localStorage.getItem(encodeURIComponent(bookPath + "-testsPassing"));
+        let cachedPass = cacheP ? JSON.parse(cacheP) : []
+        let cacheF = localStorage.getItem(encodeURIComponent(bookPath + "-testsFailing"));
+        let cachedFail = cacheF ? JSON.parse(cacheF) : []
+        setAllTestResults({passed: new Set(cachedPass), failed: new Set(cachedFail)})
     }, [bookPath]);
 
     useEffect(() => {
         if (data) {
             if (bookChallengeId) {
-                let node = findNode(data, bookChallengeId);
-                if (node) {
-                    setPaths({guidePath: enhancePath(node.guide, bookPathAbsolute), 
-                        pyPath: enhancePath(node.py, bookPathAbsolute)})
+                let node = findBookNode(data, bookChallengeId);
+                if (node && node.guide) {
+                    setPaths({guidePath: absolutisePath(node.guide, bookPathAbsolute), 
+                        pyPath: node.py ? absolutisePath(node.py, bookPathAbsolute) : null})
                     setTests(node.tests)
                 }
             } else {
@@ -96,12 +89,12 @@ export default function Book() {
         }
     }, [data, bookChallengeId, bookPathAbsolute])
 
-    const openDrawer = (open) => {
+    const openDrawer = (open: boolean) => {
         setDrawerOpen(open)
     };
 
     if (data) {
-        if (paths.guidePath) {
+        if (paths.guidePath && paths.pyPath) {
             return (
                 <React.Fragment>
                     <Challenge 
@@ -117,7 +110,7 @@ export default function Book() {
                     <BookDrawer 
                         bookRoot={data} 
                         allTestResults={allTestResults} 
-                        activePage={bookChallengeId} 
+                        activePageId={bookChallengeId || undefined} 
                         onRequestOpen={openDrawer}
                         onNodeSelected={onNodeSelected}
                         open={drawerOpen}/>
@@ -129,7 +122,6 @@ export default function Book() {
                     <BookCover 
                         bookRoot={data} 
                         allTestResults={allTestResults} 
-                        activePage={bookChallengeId} 
                         onNodeSelected={onNodeSelected}/>
                 </React.Fragment>
             )

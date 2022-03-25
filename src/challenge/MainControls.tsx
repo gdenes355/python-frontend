@@ -16,7 +16,7 @@ type MainControlsProps = {
     onDebug: () => void,
     onSubmit: () => void,
     onResetCode: () => void,
-    openBookDrawer: (open: boolean) => void,
+    openBookDrawer?: (open: boolean) => void,
     onThemeChange: (theme: string) => void
 };
 
@@ -63,7 +63,7 @@ const MainControls = (props: MainControlsProps) => (
             </FormControl>
         </Grid>
         {props.hasBook ? 
-            <Grid item><IconButton color="primary" onClick={() => props.openBookDrawer(true)}><ListIcon></ListIcon></IconButton></Grid>
+            <Grid item><IconButton color="primary" onClick={() => props.openBookDrawer ? props.openBookDrawer(true) : undefined }><ListIcon></ListIcon></IconButton></Grid>
             : null }
     </Grid>
 )
