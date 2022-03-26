@@ -29,7 +29,7 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
     const [allPassing, setAllPassing] = useState<boolean | null>(null);
     useEffect(() => setAllPassing(props.testResults.filter(x => !x.outcome).length === 0), [props.testResults]);
     
-    if (props?.testResults.length < 1) {
+    if (props.testResults.length < 1) {
         return (<span></span>);
     }
 
@@ -55,22 +55,23 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                            {props.testResults.map((tr, i) => { return (
+                            {props.testResults.map((tr, i) => {
+                                return (
                                 <TableRow key={i}>
                                     <TableCell>
-                                        {tr.outcome ? <DoneIcon></DoneIcon> : <CancelIcon></CancelIcon>}
+                                        {tr.outcome ? <DoneIcon color="success"></DoneIcon> : <CancelIcon color="error"></CancelIcon>}
                                     </TableCell>
                                     <TableCell>
                                         {tr.err}
                                     </TableCell>
                                     <TableCell>
-                                        {tr.ins?.split("\n").map(x => (<span>{x}<br/></span>))}
+                                        {tr.ins?.split("\n").map((x, j) => (<span key={j}>{x}<br/></span>))}
                                     </TableCell>
                                     <TableCell>
-                                        {tr.expected?.split("\n").map(x => (<span>{x}<br/></span>))}
+                                        {tr.expected?.split("\n").map((x, j) => (<span key={j}>{x}<br/></span>))}
                                     </TableCell>
                                     <TableCell>
-                                        {tr.actual?.split("\n").map(x => (<span>{x}<br/></span>))}
+                                        {tr.actual?.split("\n").map((x, j) => (<span key={j}>{x}<br/></span>))}
                                     </TableCell>
                                 </TableRow>);})}
                             </TableBody>

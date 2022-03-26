@@ -44,10 +44,12 @@ export default function Book() {
         } else if (newTestState === false) {
             allTestResults.passed.delete(bookChallengeId);
             allTestResults.failed.add(bookChallengeId);        
-        } else {
+        } 
+        /*else {
+            // unlikely that we want to delete an old test result this way
             allTestResults.passed.delete(bookChallengeId);
             allTestResults.failed.delete(bookChallengeId);            
-        }
+        }*/
         setAllTestResults(allTestResults); // trigger update
         storeAllResults()
     }
