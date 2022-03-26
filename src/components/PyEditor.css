@@ -15,3 +15,7 @@
 .theme-vs-light .breakpoint-hit {
 	background-color:   rgba(252, 252, 122, 0.623);
 }
+
+.monaco-editor {
+    padding-top: 10px;
+}

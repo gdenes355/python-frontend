@@ -20,7 +20,7 @@ const BookDrawer = (props: BookDrawerProps) => {
     return (
         <Drawer anchor='right' open={props.open} onClose={() => props.onRequestOpen(false)}>
             <Box
-            sx={{ width:  250 }}
+            sx={{ width:  250, overflowX:"hidden" }}
             role="presentation">
                 <BookContents
                     bookRoot={props.bookRoot}

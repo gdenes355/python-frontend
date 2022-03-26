@@ -1,12 +1,15 @@
+import React from 'react'
 import {Box, Card, CardContent} from '@mui/material'
+
 import DebugPane from './DebugPane'
-import PyEditor from './PyEditor'
-import Console from './Console'
-import Guide from './Guide'
+import PyEditor from '../components/PyEditor'
+import Console from '../components/Console'
+import Guide from '../components/Guide'
 import MainControls from './MainControls'
+import BookControlFabs from '../components/BookControlFabs'
 import { Allotment } from "allotment"
 import "allotment/dist/style.css"
-import React from 'react'
+
 import Cookies from 'js-cookie'
 import ChallengeStatus from '../models/ChallengeStatus'
 import {TestCases, TestResults} from '../models/Tests'
@@ -41,6 +44,8 @@ type ChallengeProps = {
     tests?: TestCases | null,
     onTestsPassingChanged?: (passing: boolean | null) => void,
     openBookDrawer?: (open: boolean) => void,
+    onRequestPreviousChallenge?: () => void,
+    onRequestNextChallenge?: () => void,
 }
 
 
@@ -194,9 +199,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                         canDebug={this.state.editorState === ChallengeStatus.READY}
                         canReset={this.state.editorState === ChallengeStatus.READY}
                         canSubmit={this.props.tests !== null}
-                        hasBook={this.props.hasBook}
                         testResults={this.state.testResults}
-                        openBookDrawer={this.props.openBookDrawer}
                     />
                 </CardContent>
             </Card>
@@ -242,6 +245,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                                 <Box sx={{ p:2, display: "flex", flexDirection: "column", height: "100%"}}>
                                     {this.renderMainControls()}
                                     {this.renderGuide()}
+                                    <BookControlFabs
+                                        onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+                                        onNavigateToNextPage={this.props.onRequestNextChallenge}
+                                        onOpenMenu={() => this.props.openBookDrawer ? this.props.openBookDrawer(true): undefined}
+                                    ></BookControlFabs>
                                 </Box>
                                 <Allotment.Pane maxSize={350} minSize={150} snap={true} 
                                     visible={this.state.editorState === ChallengeStatus.RUNNING || 

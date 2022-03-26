@@ -11,12 +11,12 @@ type PyEditorProps = {
     canPlaceBreakpoint: boolean,
     starterCode: string,
     theme: string,
+    debugContext: DebugContext,
     onToggleFullScreen: () => void,
     onDebug: () => void,
     onContinue: () => void,
     onStepInto: () => void,
     onStop: () => void,
-    debugContext: DebugContext,
     onBreakpointsUpdated: () => void
 }
 

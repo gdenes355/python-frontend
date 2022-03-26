@@ -24,5 +24,52 @@ const findBookNode: (node: BookNodeModel, id: String) => BookNodeModel | null = 
     return null;
 }
 
+const nextBookNode: (root: BookNodeModel, currentId: string, nodeFilter?: (node: BookNodeModel) => boolean) => BookNodeModel = (root, currentId, nodeFilter) => {
+    let currentSeen = false
+    let workingStack: Array<BookNodeModel> = [root]
+    while (workingStack.length > 0) {
+        let currentNode = workingStack.pop()
+        if (currentNode && currentSeen) {
+            // we have seen the current node already, so if it passes the filter, then let's just return this node
+            if (!nodeFilter || nodeFilter(currentNode)) {
+                return currentNode
+            }
+        }
+        if (currentNode?.id === currentId) {
+            // just found the current node
+            currentSeen = true;
+        }
+        if (currentNode?.children) {
+            for (let i = currentNode.children.length - 1; i >=0; i--) {
+                workingStack.push(currentNode.children[i])
+            }
+        }
+    }
+    // no node found
+    return root
+}
+
+const prevBookNode: (root: BookNodeModel, currentId: string, nodeFilter?: (node: BookNodeModel) => boolean) => BookNodeModel = (root, currentId, nodeFilter) => {
+    let lastGoodNode = root
+    let workingStack: Array<BookNodeModel> = [root]
+    while (workingStack.length > 0) {
+        let currentNode = workingStack.pop()
+        if (currentNode?.id === currentId) {
+            // just found the current node
+            return lastGoodNode
+        }
+        if (currentNode && (!nodeFilter || nodeFilter(currentNode))) {
+            lastGoodNode = currentNode
+        }
+        if (currentNode?.children) {
+            for (let i = currentNode.children.length - 1; i >=0; i--) {
+                workingStack.push(currentNode.children[i])
+            }
+        }
+    }
+    // no node found
+    return root
+}
+
 export default BookNodeModel;
-export {findBookNode}; 
+export {findBookNode,nextBookNode,prevBookNode}; 

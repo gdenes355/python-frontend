@@ -14,6 +14,7 @@ const StyledGuide = styled('div')(({theme}) => `
     overflow-y: auto;
     flex-grow: 1;
     margin-top: 3px;
+    padding-bottom: 50px;
     & :not(pre div) > code { background-color: ${theme.palette.secondary.light}; color: ${theme.palette.error.main}; border-radius: 5px; padding: 2px; }
 `);
 

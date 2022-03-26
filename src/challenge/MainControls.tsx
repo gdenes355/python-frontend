@@ -1,8 +1,7 @@
 import React from 'react'
-import {Button, Grid, Box, Stack, InputLabel,MenuItem,Select,FormControl,IconButton,} from '@mui/material';
-import ListIcon from '@mui/icons-material/List';
+import {Button, Grid, Box, Stack, InputLabel,MenuItem,Select,FormControl} from '@mui/material';
 
-import TestResultsIndicator from './TestResultIndicator';
+import TestResultsIndicator from '../components/TestResultIndicator';
 
 import {TestResults} from '../models/Tests'
 
@@ -11,12 +10,10 @@ type MainControlsProps = {
     canSubmit: boolean,
     canReset: boolean,
     testResults: TestResults,
-    hasBook: boolean,
     theme: string,
     onDebug: () => void,
     onSubmit: () => void,
     onResetCode: () => void,
-    openBookDrawer?: (open: boolean) => void,
     onThemeChange: (theme: string) => void
 };
 
@@ -62,9 +59,6 @@ const MainControls = (props: MainControlsProps) => (
                 </Select>
             </FormControl>
         </Grid>
-        {props.hasBook ? 
-            <Grid item><IconButton color="primary" onClick={() => props.openBookDrawer ? props.openBookDrawer(true) : undefined }><ListIcon></ListIcon></IconButton></Grid>
-            : null }
     </Grid>
 )
 

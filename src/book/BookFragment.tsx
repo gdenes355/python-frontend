@@ -4,7 +4,7 @@ import Challenge from '../challenge/Challenge'
 import BookCover from './BookCover'
 import BookDrawer from './BookDrawer'
 
-import BookNodeModel, {findBookNode} from '../models/BookNodeModel';
+import BookNodeModel, {findBookNode, nextBookNode, prevBookNode} from '../models/BookNodeModel';
 import { absolutisePath, isAbsoluteAddress } from '../utils/pathTools';
 import {TestCases, AllTestResults} from '../models/Tests'
 
@@ -27,12 +27,6 @@ export default function Book() {
     const bookChallengeId = searchParams.get('chid');
 
     const navigate = useNavigate();
-
-    const onNodeSelected = (node: BookNodeModel) => {
-        if (!node.children || node.children.length === 0) {
-            navigate({search: '?' + new URLSearchParams({"book": bookPath, "chid": node.id}).toString()}, { replace: false });
-        } 
-    };
 
     const activeTestsPassingChanged = (newTestState: boolean | null) => {
         if (!bookChallengeId) {
@@ -91,9 +85,27 @@ export default function Book() {
         }
     }, [data, bookChallengeId, bookPathAbsolute])
 
+    const openNode = (node: BookNodeModel) => {
+        if (!node.children || node.children.length === 0) {
+            navigate({search: '?' + new URLSearchParams({"book": bookPath, "chid": node.id}).toString()}, { replace: false });
+        } 
+    };
+
     const openDrawer = (open: boolean) => {
         setDrawerOpen(open)
-    };
+    }
+
+    const requestNextChallenge = () => {
+        if (data && bookChallengeId) {
+            openNode(nextBookNode(data, bookChallengeId, (node) => node.guide !== undefined))            
+        }
+    }
+
+    const requestPreviousChallenge = () => {
+        if (data && bookChallengeId) {
+            openNode(prevBookNode(data, bookChallengeId, (node) => node.guide !== undefined))            
+        }
+    }
 
     if (data) {
         if (paths.guidePath && paths.pyPath) {
@@ -105,6 +117,8 @@ export default function Book() {
                         tests={tests && tests.length > 0 ? tests : null}
                         hasBook={true}
                         openBookDrawer={openDrawer}
+                        onRequestPreviousChallenge={requestPreviousChallenge}
+                        onRequestNextChallenge={requestNextChallenge}
                         layout="fullscreen"
                         uid={bookPath + bookChallengeId}
                         onTestsPassingChanged={activeTestsPassingChanged}>
@@ -114,7 +128,7 @@ export default function Book() {
                         allTestResults={allTestResults} 
                         activePageId={bookChallengeId || undefined} 
                         onRequestOpen={openDrawer}
-                        onNodeSelected={onNodeSelected}
+                        onNodeSelected={openNode}
                         open={drawerOpen}/>
                 </React.Fragment>
             )
@@ -124,7 +138,7 @@ export default function Book() {
                     <BookCover 
                         bookRoot={data} 
                         allTestResults={allTestResults} 
-                        onNodeSelected={onNodeSelected}/>
+                        onNodeSelected={openNode}/>
                 </React.Fragment>
             )
         }
