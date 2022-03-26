@@ -114,7 +114,8 @@ const controller = {
     "debug-finished": (comp: Challenge, data: DebugFinishedData) => {
         let msg = {
             "ok": "Program finished ok. Press debug to run again...",
-            "error": "Interrupted by error. Check the error message, then press debug to run again..."
+            "error": "Interrupted by error. Check the error message, then press debug to run again...",
+            "interrupt": "Interrupted..."
         }[data.reason]
         comp.setState((state: ChallengeState) => {return {consoleText: state.consoleText + "\n" + msg + "\n", editorState: ChallengeStatus.READY}}) 
     },
