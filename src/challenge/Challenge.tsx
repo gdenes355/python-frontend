@@ -67,7 +67,6 @@ type ChallengeState = {
     editorFullScreen: boolean,
     errorLoading: boolean,
     consoleText: string,
-    awaitingInput: boolean,
     editorState: ChallengeStatus,
     testResults: TestResults,
     breakpointsChanged: boolean,
@@ -90,7 +89,7 @@ const controller = {
     "init-done": (comp: Challenge) =>  comp.setState({editorState: ChallengeStatus.READY}),
     "print": (comp: Challenge, data: PrintData) => comp.setState((state: ChallengeState) => {return {consoleText: state.consoleText + data.msg}}),
     "cls": (comp: Challenge) => comp.setState({consoleText: ""}),
-    "input": (comp: Challenge) => comp.setState({awaitingInput: true, editorState: ChallengeStatus.AWAITING_INPUT}),
+    "input": (comp: Challenge) => comp.setState({editorState: ChallengeStatus.AWAITING_INPUT}),
     "input-entered": (comp: Challenge, data: InputData) => {
         var x = new XMLHttpRequest();
         x.open('post', '/@input@/resp.js');
@@ -98,7 +97,7 @@ const controller = {
         x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0');
         let input = data?.input == null ? "" : data.input
         try { x.send(JSON.stringify({"data": input, "breakpoints": comp.state.breakpointsChanged && comp.editorRef.current ? comp.editorRef.current.getBreakpoints() : null})) } catch(e) {console.log(e)}
-        comp.setState((state: ChallengeState) => { return {consoleText: state.consoleText + data.input + "\n", awaitingInput: false}})
+        comp.setState((state: ChallengeState) => { return {consoleText: state.consoleText + data.input + "\n", editorState: ChallengeStatus.RUNNING}})
     },
     "continue": (comp: Challenge, data: ContinueData) => {
         var x = new XMLHttpRequest();
@@ -210,8 +209,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         testResults: [],
         breakpointsChanged: false,
         testsPassing: null,
-        interruptBuffer: null,
-        awaitingInput: false,
+        interruptBuffer: null
     };
 
     constructor(props: ChallengeProps) {
