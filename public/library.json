@@ -1,0 +1,16 @@
+{
+    "name": "Library",
+    "id": "43be6705-c54a-413b-b44e-473930ee2632",
+    "children": [
+        {
+            "id": "095b1172-4d09-4586-a793-e841051f50af",
+            "name": "Fun tasks",
+            "bookLink": "./progsoc/book.json"
+        },
+        {
+            "id": "700e3541-f129-4a77-9f2d-ccae5e400456",
+            "name": "Examples",
+            "bookLink": "./examples/book.json"
+        }
+    ]
+}

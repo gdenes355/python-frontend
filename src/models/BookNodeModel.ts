@@ -6,7 +6,12 @@ type BookNodeModel = {
     children?: BookNodeModel[],
     py?: string,
     guide?: string,
-    tests: TestCases
+    tests: TestCases,
+    bookLink?: string,
+
+    // cached
+    // what is the main URL of this book (md, py and bookLinks are relative to this)
+    bookMainUrl?: string,
 }
 
 const findBookNode: (node: BookNodeModel, id: String) => BookNodeModel | null = (node, id) => {

@@ -13,6 +13,23 @@ type PathsState = {
     pyPath: string | null
 }
 
+
+const expandBookLinks = (bookNode: BookNodeModel, mainUrl: string, setRemainingBookFetches: (u: (n: number) => (number)) => void) => {
+    bookNode.bookMainUrl = mainUrl;
+    if (bookNode.children) {
+        for (const child of bookNode.children) {
+            expandBookLinks(child, mainUrl, setRemainingBookFetches)
+        }
+    }
+    if (bookNode.bookLink) {
+        setRemainingBookFetches(ct => ct + 1)
+        let path = absolutisePath(bookNode.bookLink, mainUrl)
+        fetch(path)
+            .then((response) => response.json())
+            .then((bookData) => { bookNode.children = bookData.children; expandBookLinks(bookData, path, setRemainingBookFetches); setRemainingBookFetches(ct => ct - 1)})
+    }
+}
+
 export default function Book() {
 
     const [data, setData] = useState(null);
@@ -20,6 +37,8 @@ export default function Book() {
     const [tests, setTests] = useState<TestCases|null>(null)
     const [drawerOpen, setDrawerOpen] = React.useState(false)
     const [allTestResults, setAllTestResults] = useState<AllTestResults>({passed: new Set(), failed: new Set()})
+
+    const [remainingBookFetches, setRemainingBookFetches] = useState(1)
 
     const searchParams = new URLSearchParams(useLocation().search);
     const bookPath = searchParams.get('book') || ""
@@ -54,29 +73,33 @@ export default function Book() {
     }
 
     useEffect(() => {
-        if (!bookPath) {
+        if (!bookPath || !bookPathAbsolute) {
             setAllTestResults({passed: new Set(), failed: new Set()})
             return;
         }
-
+        setRemainingBookFetches(1)
         fetch(bookPath)
             .then((response) => response.json())
-            .then((bookData) => setData(bookData));
+            .then((bookData) => { 
+                setData(bookData); 
+                expandBookLinks(bookData, bookPathAbsolute.toString(), setRemainingBookFetches); 
+                setRemainingBookFetches(ct => ct - 1)
+            })
             
         let cacheP = localStorage.getItem(encodeURIComponent(bookPath + "-testsPassing"));
         let cachedPass = cacheP ? JSON.parse(cacheP) : []
         let cacheF = localStorage.getItem(encodeURIComponent(bookPath + "-testsFailing"));
         let cachedFail = cacheF ? JSON.parse(cacheF) : []
         setAllTestResults({passed: new Set(cachedPass), failed: new Set(cachedFail)})
-    }, [bookPath]);
+    }, [bookPath,bookPathAbsolute]);
 
     useEffect(() => {
         if (data) {
             if (bookChallengeId) {
                 let node = findBookNode(data, bookChallengeId);
                 if (node && node.guide) {
-                    setPaths({guidePath: absolutisePath(node.guide, bookPathAbsolute), 
-                        pyPath: node.py ? absolutisePath(node.py, bookPathAbsolute) : null})
+                    setPaths({guidePath: absolutisePath(node.guide, node.bookMainUrl || bookPathAbsolute), 
+                        pyPath: node.py ? absolutisePath(node.py, node.bookMainUrl || bookPathAbsolute) : null})
                     setTests(node.tests)
                 }
             } else {
@@ -107,7 +130,7 @@ export default function Book() {
         }
     }
 
-    if (data) {
+    if (data && remainingBookFetches === 0) {
         if (paths.guidePath && paths.pyPath) {
             return (
                 <React.Fragment>
@@ -144,7 +167,7 @@ export default function Book() {
         }
     } else {
         return (
-            <p>Loading book...</p>
+            <p>Loading book... fetching {remainingBookFetches} more files...</p>
         )
     }
 }
