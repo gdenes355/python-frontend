@@ -27,7 +27,15 @@ const AppContainer = () => {
           </React.Fragment>
       )
   } else {
-    return (<p>Please specify a challenge (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>) or a book (e.g. <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a>)</p>)
+    return (
+    <p>
+      To get started,just specify the book path. E.g.
+      <ul>
+        <li>Simple examples with test cases: <a href="?book=./examples/book.json">?book=./examples/book.json</a></li>
+        <li>Fun tasks: <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a></li>
+        <li><b>New: </b> You can also specify a library of books: <a href="?book=./library.json">?book=./library.json</a></li>
+      </ul>
+      Alternatively, you can view an individual challenge using the md and py paths: (e.g. <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a>)</p>)
   }
 }
 
