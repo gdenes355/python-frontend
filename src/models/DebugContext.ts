@@ -1,6 +1,6 @@
 type DebugContext = {
-    lineno: number,
-    env: Map<string, string>
-}
+  lineno: number;
+  env: Map<string, string>;
+};
 
-export default DebugContext
+export default DebugContext;

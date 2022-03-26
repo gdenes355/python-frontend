@@ -12,22 +12,25 @@
   color: white;
   width: calc(100% - 20px);
   min-height: 1em;
-  white-space: pre-wrap;       
-  white-space: -moz-pre-wrap;  
-  white-space: -pre-wrap;      
-  white-space: -o-pre-wrap;    
-  word-wrap: break-word;       
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
+  white-space: -o-pre-wrap;
+  word-wrap: break-word;
 }
 
 .console input {
   width: 95%;
-  color: white; 
+  color: white;
   background-color: black;
-  font-family: Consolas,Monaco,Lucida Console,Liberation Mono,DejaVu Sans Mono,Bitstream Vera Sans Mono,Courier New, monospace;
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
   border-color: black;
   outline: none;
   border: 0px solid black;
   font-size: 15px;
 }
 
-.hidden { display:none; }
+.hidden {
+  display: none;
+}

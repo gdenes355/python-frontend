@@ -1,21 +1,21 @@
 .breakpoint-margin {
-	background: red;
-    border-radius: 50%;
-    
-    width: 10px !important;
-    height: 10px !important;
-    margin-left: 5px;
-    margin-top: 5px;
+  background: red;
+  border-radius: 50%;
+
+  width: 10px !important;
+  height: 10px !important;
+  margin-left: 5px;
+  margin-top: 5px;
 }
 
 .theme-vs-dark .breakpoint-hit {
-	background-color:   rgb(114, 114, 46);
+  background-color: rgb(114, 114, 46);
 }
 
 .theme-vs-light .breakpoint-hit {
-	background-color:   rgba(252, 252, 122, 0.623);
+  background-color: rgba(252, 252, 122, 0.623);
 }
 
 .monaco-editor {
-    padding-top: 10px;
+  padding-top: 10px;
 }
