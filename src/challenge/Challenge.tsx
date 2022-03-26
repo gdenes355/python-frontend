@@ -1,7 +1,7 @@
 import React from 'react'
 import {Box, Card, CardContent} from '@mui/material'
 
-import DebugPane from './DebugPane'
+import DebugPane from '../components/DebugPane'
 import PyEditor from '../components/PyEditor'
 import Console from '../components/Console'
 import Guide from '../components/Guide'
