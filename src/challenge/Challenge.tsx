@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Card, CardContent } from "@mui/material";
-
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import Console from "../components/Console";
@@ -16,6 +15,8 @@ import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 
 import ChallengeController from "./ChallengeController";
+
+import "./Challenge.css";
 
 type ChallengeState = {
   starterCode: string | null;
@@ -332,7 +333,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             <Allotment.Pane
               visible={this.getVisibilityWithHack(!this.state.editorFullScreen)}
             >
-              <Allotment vertical>
+              <Allotment vertical className="challenge__right-pane">
                 <Box
                   sx={{
                     p: 2,
@@ -362,6 +363,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                     this.state.editorState === ChallengeStatus.ON_BREAKPOINT ||
                     this.state.editorState === ChallengeStatus.AWAITING_INPUT
                   }
+                  className="debug-pane"
                 >
                   {this.renderDebugPane()}
                 </Allotment.Pane>

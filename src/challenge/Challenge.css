@@ -1,0 +1,8 @@
+.challenge__right-pane :nth-child(2) :first-child {
+  transition: height 0.15s;
+  transition-delay: 0.01s;
+}
+.challenge__right-pane .debug-pane {
+  transition: top 0.15s, height 0.15s;
+  transition-delay: 0.01s;
+}
