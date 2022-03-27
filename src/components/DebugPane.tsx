@@ -55,7 +55,7 @@ const DebugPane = (props: DebugPaneProps) => {
               disabled={!props.canContinue}
               onClick={props.onStep}
             >
-              Step to next line
+              Step into
             </Button>
           </Grid>
           <Grid item>

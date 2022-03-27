@@ -290,6 +290,8 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
           detectIndentation: false,
           glyphMargin: true,
           wordWrap: "on",
+          lineNumbersMinChars: 4,
+          padding: { top: 10 },
         }}
         onChange={this.handleEditorChange}
       />
