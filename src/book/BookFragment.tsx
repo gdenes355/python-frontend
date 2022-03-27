@@ -133,7 +133,7 @@ export default function Book() {
   }, [bookPath, bookPathAbsolute]);
 
   useEffect(() => {
-    if (data) {
+    if (data && remainingBookFetches === 0) {
       if (bookChallengeId) {
         let node = findBookNode(data, bookChallengeId);
         if (node && node.guide) {
@@ -152,7 +152,7 @@ export default function Book() {
         setPaths({ guidePath: null, pyPath: null });
       }
     }
-  }, [data, bookChallengeId, bookPathAbsolute]);
+  }, [data, bookChallengeId, bookPathAbsolute, remainingBookFetches]);
 
   const openNode = (node: BookNodeModel) => {
     if (!node.children || node.children.length === 0) {
