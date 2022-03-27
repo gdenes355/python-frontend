@@ -28,8 +28,8 @@ const AppContainer = () => {
     );
   } else {
     return (
-      <p>
-        To get started,just specify the book path. E.g.
+      <div>
+        <p>To get started,just specify the book path. E.g.</p>
         <ul>
           <li>
             Simple examples with test cases:{" "}
@@ -44,10 +44,11 @@ const AppContainer = () => {
             <a href="?book=./library.json">?book=./library.json</a>
           </li>
         </ul>
-        Alternatively, you can view an individual challenge using the md and py
-        paths: (e.g.{" "}
-        <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a>)
-      </p>
+        <p>
+          Alternatively, you can view an individual challenge using the md and
+          py paths: (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>)
+        </p>
+      </div>
     );
   }
 };
