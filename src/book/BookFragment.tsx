@@ -42,11 +42,12 @@ const expandBookLinks = (
 };
 
 export default function Book() {
-  const [data, setData] = useState(null);
+  const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
     pyPath: null,
   });
+  const [activeNode, setActiveNode] = useState<BookNodeModel | null>(null);
   const [tests, setTests] = useState<TestCases | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
   const [allTestResults, setAllTestResults] = useState<AllTestResults>({
@@ -109,7 +110,7 @@ export default function Book() {
     fetch(bookPath)
       .then((response) => response.json())
       .then((bookData) => {
-        setData(bookData);
+        setRootNode(bookData);
         expandBookLinks(
           bookData,
           bookPathAbsolute.toString(),
@@ -133,9 +134,10 @@ export default function Book() {
   }, [bookPath, bookPathAbsolute]);
 
   useEffect(() => {
-    if (data && remainingBookFetches === 0) {
+    if (rootNode && remainingBookFetches === 0) {
       if (bookChallengeId) {
-        let node = findBookNode(data, bookChallengeId);
+        let node = findBookNode(rootNode, bookChallengeId);
+        setActiveNode(node);
         if (node && node.guide) {
           setPaths({
             guidePath: absolutisePath(
@@ -152,7 +154,7 @@ export default function Book() {
         setPaths({ guidePath: null, pyPath: null });
       }
     }
-  }, [data, bookChallengeId, bookPathAbsolute, remainingBookFetches]);
+  }, [rootNode, bookChallengeId, bookPathAbsolute, remainingBookFetches]);
 
   const openNode = (node: BookNodeModel) => {
     if (!node.children || node.children.length === 0) {
@@ -172,23 +174,31 @@ export default function Book() {
   };
 
   const requestNextChallenge = () => {
-    if (data && bookChallengeId) {
+    if (rootNode && bookChallengeId) {
       openNode(
-        nextBookNode(data, bookChallengeId, (node) => node.guide !== undefined)
+        nextBookNode(
+          rootNode,
+          bookChallengeId,
+          (node) => node.guide !== undefined
+        )
       );
     }
   };
 
   const requestPreviousChallenge = () => {
-    if (data && bookChallengeId) {
+    if (rootNode && bookChallengeId) {
       openNode(
-        prevBookNode(data, bookChallengeId, (node) => node.guide !== undefined)
+        prevBookNode(
+          rootNode,
+          bookChallengeId,
+          (node) => node.guide !== undefined
+        )
       );
     }
   };
 
-  if (data && remainingBookFetches === 0) {
-    if (paths.guidePath && paths.pyPath) {
+  if (rootNode && remainingBookFetches === 0) {
+    if (activeNode && paths.guidePath && paths.pyPath) {
       return (
         <React.Fragment>
           <Challenge
@@ -202,9 +212,10 @@ export default function Book() {
             layout="fullscreen"
             uid={bookPath + bookChallengeId}
             onTestsPassingChanged={activeTestsPassingChanged}
+            isExample={activeNode.isExample}
           ></Challenge>
           <BookDrawer
-            bookRoot={data}
+            bookRoot={rootNode}
             allTestResults={allTestResults}
             activePageId={bookChallengeId || undefined}
             onRequestOpen={openDrawer}
@@ -217,7 +228,7 @@ export default function Book() {
       return (
         <React.Fragment>
           <BookCover
-            bookRoot={data}
+            bookRoot={rootNode}
             allTestResults={allTestResults}
             onNodeSelected={openNode}
           />

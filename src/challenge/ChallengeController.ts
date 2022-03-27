@@ -116,6 +116,9 @@ const ChallengeController = {
       return {
         consoleText: state.consoleText + "\n" + msg + "\n",
         editorState: ChallengeStatus.READY,
+        testResults: comp.props.isExample
+          ? [{ outcome: true }]
+          : state.testResults,
       };
     });
   },

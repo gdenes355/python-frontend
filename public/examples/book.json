@@ -15,6 +15,13 @@
             ]
         },
         {
+            "id": "d0918aba-8427-4601-9bf2-b4a55381f34e",
+            "name": "An example code",
+            "guide": "ex1.md",
+            "py": "ex1.py",
+            "isExample": true
+        },
+        {
             "id": "57057e16-3c65-414b-a332-dfea93c626da",
             "name": "Hello name",
             "guide": "c02.md",

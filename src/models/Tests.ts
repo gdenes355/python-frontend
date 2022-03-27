@@ -7,10 +7,10 @@ type TestCases = Array<TestCase>;
 
 type TestResult = {
   outcome: boolean;
-  err: string;
-  expected: string;
-  actual: string;
-  ins: string;
+  err?: string;
+  expected?: string;
+  actual?: string;
+  ins?: string;
 };
 
 type TestResults = Array<TestResult>;

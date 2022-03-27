@@ -42,6 +42,7 @@ type ChallengeProps = {
   hasBook: boolean;
   layout: string;
   tests?: TestCases | null;
+  isExample?: boolean;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -187,6 +188,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     return (
       <PyEditor
         ref={this.editorRef}
+        readOnly={this.props.isExample}
         canRun={this.state.editorState === ChallengeStatus.READY}
         canPlaceBreakpoint={
           this.state.editorState === ChallengeStatus.READY ||

@@ -8,6 +8,7 @@ type BookNodeModel = {
   guide?: string;
   tests: TestCases;
   bookLink?: string;
+  isExample?: boolean;
 
   // cached
   // what is the main URL of this book (md, py and bookLinks are relative to this)

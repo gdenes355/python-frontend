@@ -12,6 +12,7 @@ type PyEditorProps = {
   starterCode: string;
   theme: string;
   debugContext: DebugContext;
+  readOnly?: boolean;
   onToggleFullScreen: () => void;
   onDebug: () => void;
   onContinue: () => void;
@@ -327,6 +328,7 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
             wordWrap: "on",
             lineNumbersMinChars: 4,
             padding: { top: 10 },
+            readOnly: this.props.readOnly,
           }}
           onChange={this.handleEditorChange}
         />
