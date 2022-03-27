@@ -20,11 +20,18 @@ type PyEditorProps = {
   onBreakpointsUpdated: () => void;
 };
 
-type PyEditorState = {};
+type PyEditorState = {
+  downloadurl?: string;
+};
 
 class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
   breakpointList: number[] = [];
   decorator: string[] = [];
+
+  downloadEl = React.createRef<HTMLAnchorElement>();
+  state = {
+    downloadurl: undefined,
+  };
 
   private canRunCondition: null | monaco.editor.IContextKey<boolean> = null;
   private canStepCondition: null | monaco.editor.IContextKey<boolean> = null;
@@ -43,6 +50,8 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
     this.getBreakpoints.bind(this);
     this.toggleBreakpoint.bind(this);
     this.revealLine.bind(this);
+    this.download.bind(this);
+    this.downloadEl = React.createRef();
   }
 
   getValue() {
@@ -56,6 +65,7 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
   setValue(value: string) {
     if (this.editorRef) {
       this.editorRef.setValue(value);
+      this.breakpointList = [];
     }
   }
 
@@ -102,6 +112,19 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
         let lineNum = event.target.position.lineNumber;
         this.toggleBreakpoint(lineNum);
       }
+    });
+
+    editor.addAction({
+      id: "file-download",
+      label: "File: Download",
+      keybindings: [
+        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS,
+      ],
+      contextMenuGroupId: "navigation",
+      contextMenuOrder: 1,
+      run: (ed) => {
+        this.download();
+      },
     });
 
     editor.addAction({
@@ -271,30 +294,51 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
     this.updateEditorDecorations();
   };
 
+  download = () => {
+    console.log("downloading...");
+    let code = this.getValue();
+    const url = URL.createObjectURL(new Blob([code]));
+    this.setState({ downloadurl: url }, () => {
+      this.downloadEl.current?.click();
+      URL.revokeObjectURL(url); // free up storage--no longer needed.
+      this.setState({ downloadurl: undefined });
+    });
+  };
+
   render() {
     if (this.props.starterCode == null) {
       return <p>Loading code...</p>;
     }
     return (
-      <Editor
-        className={"theme-" + this.props.theme}
-        width="100%"
-        height="100%"
-        defaultLanguage="python"
-        value={this.props.starterCode}
-        onMount={this.handleEditorDidMount}
-        theme={this.props.theme}
-        options={{
-          scrollBeyondLastLine: false,
-          tabSize: 2,
-          detectIndentation: false,
-          glyphMargin: true,
-          wordWrap: "on",
-          lineNumbersMinChars: 4,
-          padding: { top: 10 },
-        }}
-        onChange={this.handleEditorChange}
-      />
+      <div style={{ width: "100%", height: "100%" }}>
+        <Editor
+          className={"theme-" + this.props.theme}
+          width="100%"
+          height="100%"
+          defaultLanguage="python"
+          value={this.props.starterCode}
+          onMount={this.handleEditorDidMount}
+          theme={this.props.theme}
+          options={{
+            scrollBeyondLastLine: false,
+            tabSize: 2,
+            detectIndentation: false,
+            glyphMargin: true,
+            wordWrap: "on",
+            lineNumbersMinChars: 4,
+            padding: { top: 10 },
+          }}
+          onChange={this.handleEditorChange}
+        />
+        <a
+          className="hidden"
+          download="code.py"
+          href={this.state.downloadurl}
+          ref={this.downloadEl}
+        >
+          download
+        </a>
+      </div>
     );
   }
 }
