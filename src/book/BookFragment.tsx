@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Challenge from "../challenge/Challenge";
 import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
+import BookReport from "./BookReport";
 
 import BookNodeModel, {
   findBookNode,
@@ -225,15 +226,21 @@ export default function Book() {
         </React.Fragment>
       );
     } else {
-      return (
-        <React.Fragment>
-          <BookCover
-            bookRoot={rootNode}
-            allTestResults={allTestResults}
-            onNodeSelected={openNode}
-          />
-        </React.Fragment>
-      );
+      if (searchParams.get("report") === "full") {
+        return (
+          <BookReport bookRoot={rootNode} allTestResults={allTestResults} />
+        );
+      } else {
+        return (
+          <React.Fragment>
+            <BookCover
+              bookRoot={rootNode}
+              allTestResults={allTestResults}
+              onNodeSelected={openNode}
+            />
+          </React.Fragment>
+        );
+      }
     }
   } else {
     return <p>Loading book... fetching {remainingBookFetches} more files...</p>;

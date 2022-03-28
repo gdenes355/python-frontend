@@ -45,6 +45,12 @@ const AppContainer = () => {
           </li>
         </ul>
         <p>
+          You can now also generate a progress report using{" "}
+          <a href="?book=./library.json&report=full">
+            ?book=./library.json&report=full
+          </a>
+        </p>
+        <p>
           Alternatively, you can view an individual challenge using the md and
           py paths: (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>)
         </p>
