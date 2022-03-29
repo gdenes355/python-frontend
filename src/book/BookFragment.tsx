@@ -174,6 +174,13 @@ export default function Book() {
     setDrawerOpen(open);
   };
 
+  const openReport = () => {
+    navigate(
+      { search: "?" + new URLSearchParams({ book: bookPath, report: "full" }) },
+      { replace: false }
+    );
+  };
+
   const requestNextChallenge = () => {
     if (rootNode && bookChallengeId) {
       openNode(
@@ -222,6 +229,7 @@ export default function Book() {
             onRequestOpen={openDrawer}
             onNodeSelected={openNode}
             open={drawerOpen}
+            onOpenReport={openReport}
           />
         </React.Fragment>
       );

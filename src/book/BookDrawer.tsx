@@ -1,5 +1,7 @@
 import React from "react";
-import { Box, Drawer } from "@mui/material";
+import { Box, Drawer, Divider, Button } from "@mui/material";
+import AssessmentIcon from "@mui/icons-material/Assessment";
+
 import BookContents from "./BookContents";
 
 import BookNodeModel from "../models/BookNodeModel";
@@ -12,6 +14,7 @@ type BookDrawerProps = {
   activePageId?: string;
   onRequestOpen: (open: boolean) => void;
   onNodeSelected: (node: BookNodeModel) => void;
+  onOpenReport: () => void;
 };
 
 const BookDrawer = (props: BookDrawerProps) => {
@@ -21,13 +24,35 @@ const BookDrawer = (props: BookDrawerProps) => {
       open={props.open}
       onClose={() => props.onRequestOpen(false)}
     >
-      <Box sx={{ width: 250, overflowX: "hidden" }} role="presentation">
-        <BookContents
-          bookRoot={props.bookRoot}
-          onNodeSelected={props.onNodeSelected}
-          allTestResults={props.allTestResults}
-          activePageId={props.activePageId}
-        />
+      <Box
+        sx={{
+          overflow: "hidden",
+          display: "flex",
+          height: "100%",
+          flexDirection: "column",
+        }}
+      >
+        <Box
+          sx={{ width: 250, overflowX: "hidden", "flex-grow": "1" }}
+          role="presentation"
+        >
+          <BookContents
+            bookRoot={props.bookRoot}
+            onNodeSelected={props.onNodeSelected}
+            allTestResults={props.allTestResults}
+            activePageId={props.activePageId}
+          />
+        </Box>
+        <Divider />
+        <Box sx={{ height: "40px" }}>
+          <Button
+            sx={{ width: "100%", height: "100%" }}
+            onClick={props.onOpenReport}
+          >
+            <AssessmentIcon />
+            &nbsp; report page
+          </Button>
+        </Box>
       </Box>
     </Drawer>
   );
