@@ -16,6 +16,7 @@ const Console = (props: ConsoleProps) => {
   const onKeyPressed = (event: KeyboardEvent) => {
     if (inputFieldEl.current && event.key === "Enter") {
       let input = inputFieldEl.current.textContent;
+      inputFieldEl.current.textContent = "";
       props.onInput(input || "");
     }
   };
