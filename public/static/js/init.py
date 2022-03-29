@@ -35,8 +35,6 @@ step_into = False
 def pyexec(code, expected_input, expected_output):
     global test_inputs
     global test_outputs
-   
-
     sys.stdout = test_output
     sys.stderr = test_output
     time.sleep = test_sleep
@@ -67,10 +65,9 @@ def pyexec(code, expected_input, expected_output):
         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
 def pydebug(code, breakpoints):
-    global global_vars
     global active_breakpoints
-    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep}
     global step_into
+    global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback, 'input': debug_input, 'time.sleep': debug_sleep}
     step_into = False
     sys.stdout = debug_output
     sys.stderr = debug_output
@@ -85,12 +82,11 @@ def pydebug(code, breakpoints):
     injected_breakpoints = set()
 
     # walk the AST and inject breakpoint commands after each line
-    workqueue = deque()  # stores (node, idx_in_parent, parent). The latter two are needed for instrumentation
+    workqueue = deque()  # stores (node, parent). The latter two are needed for instrumentation
     workqueue.extend([(parsed_stmts.body[i], parsed_stmts) for i in range(len(parsed_stmts.body))])
     while workqueue:
         node, parent = workqueue.popleft()
         if node.lineno not in injected_breakpoints:
-            #js.console.log(str(node.lineno) +  str(node))
             break_cmd = copy.deepcopy(parsed_break.body[0])
             break_cmd.value.lineno = node.lineno
             break_cmd.value.end_lineno = node.lineno
@@ -100,13 +96,11 @@ def pydebug(code, breakpoints):
             injected_breakpoints.add(node.lineno)
         if hasattr(node, 'body'):
             workqueue.extend([(node.body[i], node) for i in range(len(node.body))])
-    #js.console.log(str(parsed_stmts.body))
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
 def update_breakpoints(breakpoints):
     global active_breakpoints
     active_breakpoints = set(breakpoints)
-
 
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
