@@ -52,7 +52,7 @@ const Console = (props: ConsoleProps) => {
     <Box sx={{ width: "100%", height: "100%", bgcolor: "black" }}>
       <div className="console" ref={containerEl} onClick={onClick}>
         <span className="printed-span">
-          {props.content.replace("\n", "NL\r\n")}
+          {props.content.replace("\n", "\r\n")}
         </span>
         <span
           className={!props.isInputEnabled ? "input-span hidden" : "input-span"}
