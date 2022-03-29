@@ -33,7 +33,7 @@ const BookDrawer = (props: BookDrawerProps) => {
         }}
       >
         <Box
-          sx={{ width: 250, overflowX: "hidden", "flex-grow": "1" }}
+          sx={{ width: 250, overflowX: "hidden", flexGrow: "1" }}
           role="presentation"
         >
           <BookContents
