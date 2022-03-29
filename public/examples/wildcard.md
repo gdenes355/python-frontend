@@ -11,6 +11,6 @@ For example, the test case for this challenge is:
   }
 ]
 ```
-*notice how there is no new line after `.*` in this instance, which would work well with `input("Enter your name")`. 
+*notice how there is no new line after `.*` in this instance, which would work well with `input("Enter your name")`.*
 
 Under the hood, we just convert the test `out` string into a regex, escaping all control sequencing except for `\n` and `.*`.
