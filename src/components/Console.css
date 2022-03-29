@@ -5,11 +5,14 @@
   overflow: auto;
   font-size: 15px;
   padding: 5px;
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+  border: 0px solid black;
+  color: white;
 }
 
-.console pre {
-  margin: 1px;
-  color: white;
+.console .printed-span {
+  margin-left: 1px;
   width: calc(100% - 20px);
   min-height: 1em;
   white-space: pre-wrap;
@@ -19,16 +22,32 @@
   word-wrap: break-word;
 }
 
-.console input {
-  width: 95%;
-  color: white;
-  background-color: black;
+.console .input-span {
   font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
     DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-  border-color: black;
-  outline: none;
-  border: 0px solid black;
   font-size: 15px;
+  min-height: 1em;
+  color: white;
+  outline: 0px solid transparent;
+  border: 0px solid transparent;
+  caret-color: transparent;
+}
+
+.console .input-span:focus::after {
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+  font-size: 15px;
+  content: "_";
+  animation: blinking 1s steps(1, end) infinite;
+}
+
+@keyframes blinking {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .hidden {
