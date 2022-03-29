@@ -10,7 +10,7 @@
             "tests": [
                 {
                     "in": "",
-                    "out": "hello world\n"
+                    "out": "hello world"
                 }
             ]
         },
@@ -30,6 +30,18 @@
                 {
                     "in": "Joe",
                     "out": "Hello Joe\n"
+                }
+            ]
+        },
+        {
+            "id": "a071846a-8f41-4047-aef1-f7370affeffb",
+            "name": "Test with wildcard",
+            "guide": "wildcard.md",
+            "py": "wildcard.py",
+            "tests": [
+                {
+                    "in": "Alice",
+                    "out": ".*Hello Alice (Bob says hi)"
                 }
             ]
         }
