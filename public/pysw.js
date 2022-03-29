@@ -78,7 +78,7 @@ addEventListener('fetch', e => {
         sleepPromiseResolve = null
       }
 
-      return new Response(null, { status: 304 })
+      return new Response(null, { status: 200 })
     }))
   } else if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') {
 
