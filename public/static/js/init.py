@@ -57,7 +57,7 @@ def pyexec(code, expected_input, expected_output):
     if len(test_inputs) == 1 and test_inputs[0] == '':
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it 
 
-    if test_outputs != test_output.buffer:
+    if test_outputs.strip() != test_output.buffer.strip():
         js.console.log(str(test_outputs), "!=", str(test_output.buffer))
         return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
     elif len(test_inputs) > 0:
