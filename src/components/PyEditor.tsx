@@ -177,7 +177,7 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
 
     editor.addAction({
       id: "debug-stop",
-      label: "Debug: Step Into",
+      label: "Debug: Stop",
       keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F5],
       precondition: "canStep",
       contextMenuGroupId: "1_debug",

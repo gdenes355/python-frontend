@@ -13,6 +13,7 @@ import Cookies from "js-cookie";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
+import Help from "./Help";
 
 import ChallengeController from "./ChallengeController";
 
@@ -33,6 +34,7 @@ type ChallengeState = {
   breakpointsChanged: boolean;
   testsPassing: boolean | null;
   interruptBuffer: Uint8Array | null;
+  helpOpen: boolean;
 };
 
 type ChallengeProps = {
@@ -67,6 +69,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     breakpointsChanged: false,
     testsPassing: null,
     interruptBuffer: null,
+    helpOpen: false,
   };
 
   constructor(props: ChallengeProps) {
@@ -254,6 +257,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderMainControls = () => {
+    if (this.state.helpOpen) {
+      return;
+    }
     return (
       <Card sx={{ overflow: "visible" }}>
         <CardContent>
@@ -279,6 +285,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             canReset={this.state.editorState === ChallengeStatus.READY}
             canSubmit={this.props.tests !== null}
             testResults={this.state.testResults}
+            onHelpOpen={(open) => this.setState({ helpOpen: open })}
           />
         </CardContent>
       </Card>
@@ -286,6 +293,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderGuide = () => {
+    if (this.state.helpOpen) {
+      return <Help onClose={() => this.setState({ helpOpen: false })} />;
+    }
     return <Guide md={this.state.guideMd} />;
   };
 

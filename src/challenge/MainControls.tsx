@@ -4,13 +4,18 @@ import {
   Grid,
   Box,
   Stack,
-  InputLabel,
   MenuItem,
-  Select,
-  FormControl,
+  FormControlLabel,
+  Switch,
+  IconButton,
+  ListItemIcon,
 } from "@mui/material";
 
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+
 import TestResultsIndicator from "../components/TestResultIndicator";
+import Menu from "../components/Menu";
 
 import { TestResults } from "../models/Tests";
 
@@ -24,6 +29,7 @@ type MainControlsProps = {
   onSubmit: () => void;
   onResetCode: () => void;
   onThemeChange: (theme: string) => void;
+  onHelpOpen: (open: boolean) => void;
 };
 
 const MainControls = (props: MainControlsProps) => (
@@ -68,19 +74,35 @@ const MainControls = (props: MainControlsProps) => (
       </Button>
     </Grid>
     <Grid item>
-      <FormControl size="small">
-        <InputLabel id="theme-label">Theme</InputLabel>
-        <Select
-          labelId="theme-label"
-          id="demo-simple-select"
-          value={props.theme ?? "vs-dark"}
-          onChange={(evt) => props.onThemeChange(evt.target.value)}
-          label="Theme"
-        >
-          <MenuItem value="vs-dark">Dark</MenuItem>
-          <MenuItem value="vs-light">Light</MenuItem>
-        </Select>
-      </FormControl>
+      <Menu
+        button={
+          <IconButton>
+            <MoreVertIcon />
+          </IconButton>
+        }
+      >
+        <MenuItem>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={props.theme === "vs-dark"}
+                onChange={() => {
+                  props.onThemeChange(
+                    props.theme === "vs-dark" ? "vs-light" : "vs-dark"
+                  );
+                }}
+              ></Switch>
+            }
+            label="Dark mode"
+          />
+        </MenuItem>
+        <MenuItem onClick={() => props.onHelpOpen(true)}>
+          <ListItemIcon>
+            <QuestionMarkIcon />
+          </ListItemIcon>
+          Help
+        </MenuItem>
+      </Menu>
     </Grid>
   </Grid>
 );
