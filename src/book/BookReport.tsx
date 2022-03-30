@@ -176,7 +176,6 @@ const BookReport = (props: BookReportProps) => {
   if (!decoratedRoot) {
     return <p>Generating report...</p>;
   }
-  console.log(decoratedRoot);
   return (
     <Container className="report">
       <h1>
