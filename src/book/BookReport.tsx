@@ -20,12 +20,14 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 
 import "./BookReport.css";
 
 type BookReportProps = {
   bookRoot: BookNodeModel;
   allTestResults: AllTestResults;
+  onCloseReport: () => void;
 };
 
 type ResultsDecorator = {
@@ -124,7 +126,7 @@ const ResultRow = (props: { node: ResultsDecorator }) => {
 
   return (
     <React.Fragment>
-      <TableRow className="content-row">
+      <TableRow className="content-row" onClick={() => setOpen(!open)}>
         <TableCell>
           {node.isLeafNode ? (
             <div>&nbsp;</div>
@@ -177,8 +179,14 @@ const BookReport = (props: BookReportProps) => {
   console.log(decoratedRoot);
   return (
     <Container className="report">
-      <h1>{props.bookRoot.name}</h1>
-      <p>Report generated {new Date().toString()}</p>
+      <h1>
+        <IconButton onClick={props.onCloseReport}>
+          <NavigateBeforeIcon />
+        </IconButton>
+
+        {props.bookRoot.name}
+      </h1>
+      <p>Report generated {new Date().toLocaleString()}</p>
       <TableContainer component={Paper}>
         <Table size="small">
           <TableHead>

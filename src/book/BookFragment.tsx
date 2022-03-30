@@ -174,9 +174,17 @@ export default function Book() {
     setDrawerOpen(open);
   };
 
-  const openReport = () => {
+  const openReport = (open: boolean) => {
     navigate(
-      { search: "?" + new URLSearchParams({ book: bookPath, report: "full" }) },
+      {
+        search:
+          "?" +
+          new URLSearchParams({
+            book: bookPath,
+            report: open ? "full" : "",
+            chid: bookChallengeId || "",
+          }),
+      },
       { replace: false }
     );
   };
@@ -206,7 +214,15 @@ export default function Book() {
   };
 
   if (rootNode && remainingBookFetches === 0) {
-    if (activeNode && paths.guidePath && paths.pyPath) {
+    if (searchParams.get("report") === "full") {
+      return (
+        <BookReport
+          bookRoot={rootNode}
+          allTestResults={allTestResults}
+          onCloseReport={() => openReport(false)}
+        />
+      );
+    } else if (activeNode && paths.guidePath && paths.pyPath) {
       return (
         <React.Fragment>
           <Challenge
@@ -229,26 +245,20 @@ export default function Book() {
             onRequestOpen={openDrawer}
             onNodeSelected={openNode}
             open={drawerOpen}
-            onOpenReport={openReport}
+            onOpenReport={() => openReport(true)}
           />
         </React.Fragment>
       );
     } else {
-      if (searchParams.get("report") === "full") {
-        return (
-          <BookReport bookRoot={rootNode} allTestResults={allTestResults} />
-        );
-      } else {
-        return (
-          <React.Fragment>
-            <BookCover
-              bookRoot={rootNode}
-              allTestResults={allTestResults}
-              onNodeSelected={openNode}
-            />
-          </React.Fragment>
-        );
-      }
+      return (
+        <React.Fragment>
+          <BookCover
+            bookRoot={rootNode}
+            allTestResults={allTestResults}
+            onNodeSelected={openNode}
+          />
+        </React.Fragment>
+      );
     }
   } else {
     return <p>Loading book... fetching {remainingBookFetches} more files...</p>;
