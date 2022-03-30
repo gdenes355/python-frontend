@@ -5,6 +5,8 @@ import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
 import BookReport from "./BookReport";
 
+import { loadTestState, saveTestState } from "./ResultsStore";
+
 import BookNodeModel, {
   findBookNode,
   nextBookNode,
@@ -21,22 +23,30 @@ type PathsState = {
 const expandBookLinks = (
   bookNode: BookNodeModel,
   mainUrl: string,
-  setRemainingBookFetches: (u: (n: number) => number) => void
+  setRemainingBookFetches: (u: (n: number) => number) => void,
+  allRes: AllTestResults,
+  fileRoot: boolean
 ) => {
   bookNode.bookMainUrl = mainUrl;
+  if (fileRoot) {
+    let localRes = loadTestState(bookNode);
+    allRes.passed = new Set([...allRes.passed, ...localRes.passed]);
+    allRes.failed = new Set([...allRes.failed, ...localRes.failed]);
+  }
   if (bookNode.children) {
     for (const child of bookNode.children) {
-      expandBookLinks(child, mainUrl, setRemainingBookFetches);
+      expandBookLinks(child, mainUrl, setRemainingBookFetches, allRes, false);
     }
   }
   if (bookNode.bookLink) {
     setRemainingBookFetches((ct) => ct + 1);
     let path = absolutisePath(bookNode.bookLink, mainUrl);
+
     fetch(path)
       .then((response) => response.json())
       .then((bookData) => {
         bookNode.children = bookData.children;
-        expandBookLinks(bookData, path, setRemainingBookFetches);
+        expandBookLinks(bookData, path, setRemainingBookFetches, allRes, true);
         setRemainingBookFetches((ct) => ct - 1);
       });
   }
@@ -72,15 +82,15 @@ export default function Book() {
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
-    if (!bookChallengeId) {
+    if (!activeNode) {
       return;
     }
     if (newTestState === true) {
-      allTestResults.passed.add(bookChallengeId);
-      allTestResults.failed.delete(bookChallengeId);
+      allTestResults.passed.add(activeNode.id);
+      allTestResults.failed.delete(activeNode.id);
     } else if (newTestState === false) {
-      allTestResults.passed.delete(bookChallengeId);
-      allTestResults.failed.add(bookChallengeId);
+      allTestResults.passed.delete(activeNode.id);
+      allTestResults.failed.add(activeNode.id);
     }
     /*else {
             // unlikely that we want to delete an old test result this way
@@ -88,18 +98,7 @@ export default function Book() {
             allTestResults.failed.delete(bookChallengeId);            
         }*/
     setAllTestResults(allTestResults); // trigger update
-    storeAllResults();
-  };
-
-  const storeAllResults = () => {
-    localStorage.setItem(
-      encodeURIComponent(bookPath + "-testsPassing"),
-      JSON.stringify([...allTestResults.passed])
-    );
-    localStorage.setItem(
-      encodeURIComponent(bookPath + "-testsFailing"),
-      JSON.stringify([...allTestResults.failed])
-    );
+    saveTestState(activeNode, newTestState); // persist
   };
 
   useEffect(() => {
@@ -108,6 +107,7 @@ export default function Book() {
       return;
     }
     setRemainingBookFetches(1);
+    let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
     fetch(bookPath)
       .then((response) => response.json())
       .then((bookData) => {
@@ -115,23 +115,13 @@ export default function Book() {
         expandBookLinks(
           bookData,
           bookPathAbsolute.toString(),
-          setRemainingBookFetches
+          setRemainingBookFetches,
+          allRes,
+          true
         );
         setRemainingBookFetches((ct) => ct - 1);
+        setAllTestResults(allRes);
       });
-
-    let cacheP = localStorage.getItem(
-      encodeURIComponent(bookPath + "-testsPassing")
-    );
-    let cachedPass = cacheP ? JSON.parse(cacheP) : [];
-    let cacheF = localStorage.getItem(
-      encodeURIComponent(bookPath + "-testsFailing")
-    );
-    let cachedFail = cacheF ? JSON.parse(cacheF) : [];
-    setAllTestResults({
-      passed: new Set(cachedPass),
-      failed: new Set(cachedFail),
-    });
   }, [bookPath, bookPathAbsolute]);
 
   useEffect(() => {
