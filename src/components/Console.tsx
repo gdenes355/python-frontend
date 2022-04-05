@@ -9,6 +9,9 @@ type ConsoleProps = {
   onInterrupt: () => void;
 };
 
+// max character count in the console
+const MAX_LENGTH = 1000000;
+
 const Console = (props: ConsoleProps) => {
   const containerEl = useRef<HTMLDivElement>(null);
   const inputFieldEl = useRef<HTMLInputElement>(null);
@@ -52,7 +55,9 @@ const Console = (props: ConsoleProps) => {
     <Box sx={{ width: "100%", height: "100%", bgcolor: "black" }}>
       <div className="console" ref={containerEl} onClick={onClick}>
         <span className="printed-span">
-          {props.content.replace("\n", "\r\n")}
+          {props.content.length > MAX_LENGTH
+            ? props.content.replace("\n", "\r\n").slice(0, MAX_LENGTH)
+            : props.content.replace("\n", "\r\n")}
         </span>
         <span
           className={!props.isInputEnabled ? "input-span hidden" : "input-span"}
