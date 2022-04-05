@@ -210,7 +210,10 @@ const ChallengeController = {
     ChallengeController["save-code"](comp, { code: data.code });
   },
   "reset-code": (comp: Challenge) => {
-    if (comp.state.starterCode && comp.editorRef.current) {
+    if (
+      (comp.state.starterCode === "" || comp.state.starterCode) &&
+      comp.editorRef.current
+    ) {
       comp.editorRef.current.setValue(comp.state.starterCode);
     }
   },

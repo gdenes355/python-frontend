@@ -1,6 +1,6 @@
 {
     "name": "Example challenges",
-    "id":"a8ab8afe-9470-4fbc-980c-6b8017e3aa0b",
+    "id": "a8ab8afe-9470-4fbc-980c-6b8017e3aa0b",
     "children": [
         {
             "id": "afb57340-1197-473c-b24d-5687796fd3d4",
@@ -56,6 +56,13 @@
                     "out": ".*Hello Alice (Bob says hi)"
                 }
             ]
+        },
+        {
+            "id": "f79a3f47-0e12-4a8c-9913-2d325b1dd245",
+            "name": "Empty py",
+            "guide": "c03.md",
+            "py": "c03.py",
+            "isExample": true
         }
     ]
 }
