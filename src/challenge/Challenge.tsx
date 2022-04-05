@@ -123,6 +123,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       fetch(this.props.guidePath)
         .then((response) => response.text())
         .then((text) => this.setState({ guideMd: text }));
+    }
+
+    if (prevProps.codePath !== this.props.codePath) {
       fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));

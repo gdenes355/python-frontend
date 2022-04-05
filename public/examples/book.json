@@ -44,6 +44,18 @@
                     "out": ".*Hello Alice (Bob says hi)"
                 }
             ]
+        },
+        {
+            "id": "a36fb1ce-627e-4d1c-ad18-dc4d84e7fb47",
+            "name": "Test with wildcard - solution",
+            "guide": "wildcard.md",
+            "py": "wildcard_sol.py",
+            "tests": [
+                {
+                    "in": "Alice",
+                    "out": ".*Hello Alice (Bob says hi)"
+                }
+            ]
         }
     ]
 }
