@@ -49,13 +49,15 @@ type SaveCodeData = {
 const ChallengeController = {
   "init-done": (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.READY }),
-  print: (comp: Challenge, data: PrintData) =>
-    comp.setState((state: ChallengeState) => {
-      return { consoleText: state.consoleText + data.msg };
-    }),
-  cls: (comp: Challenge) => comp.setState({ consoleText: "" }),
+  print: (comp: Challenge, data: PrintData) => {
+    if (comp.state.editorState !== ChallengeStatus.READY) {
+      comp.print(data.msg);
+    }
+  },
+  cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
+
   "input-entered": (comp: Challenge, data: InputData) => {
     var x = new XMLHttpRequest();
     x.open("post", "/@input@/resp.js");
@@ -75,11 +77,10 @@ const ChallengeController = {
     } catch (e) {
       console.log(e);
     }
-    comp.setState((state: ChallengeState) => {
-      return {
-        consoleText: state.consoleText + data.input + "\n",
-        editorState: ChallengeStatus.RUNNING,
-      };
+    comp.print(data.input + "\n");
+
+    comp.setState({
+      editorState: ChallengeStatus.RUNNING,
     });
   },
   continue: (comp: Challenge, data: ContinueData) => {
@@ -185,10 +186,10 @@ const ChallengeController = {
         breakpoints: data.breakpoints,
       });
       comp.setState({
-        consoleText: "",
         editorState: ChallengeStatus.RUNNING,
         breakpointsChanged: false,
       });
+      comp.cls();
     }
     ChallengeController["save-code"](comp, { code: data.code });
   },
@@ -205,7 +206,8 @@ const ChallengeController = {
         code: data.code,
         tests: data.tests,
       });
-      comp.setState({ consoleText: "", editorState: ChallengeStatus.RUNNING });
+      comp.setState({ editorState: ChallengeStatus.RUNNING });
+      comp.cls();
     }
     ChallengeController["save-code"](comp, { code: data.code });
   },

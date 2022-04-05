@@ -10,6 +10,7 @@ import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
 import Cookies from "js-cookie";
+import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
@@ -54,6 +55,12 @@ type ChallengeProps = {
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
 
+  currentConsoleText: string = "";
+  printCallback = throttle(
+    () => this.setState({ consoleText: this.currentConsoleText }),
+    100
+  );
+
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
@@ -74,9 +81,20 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   constructor(props: ChallengeProps) {
     super(props);
-    this.handleThemeChange.bind(this);
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
+    this.print.bind(this);
+    this.cls.bind(this);
+  }
+
+  print(text: string) {
+    this.currentConsoleText += text;
+    this.printCallback();
+  }
+
+  cls() {
+    this.currentConsoleText = "";
+    this.printCallback();
   }
 
   componentDidMount() {
