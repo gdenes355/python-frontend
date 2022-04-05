@@ -194,7 +194,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     return (
       <PyEditor
         ref={this.editorRef}
-        readOnly={this.props.isExample}
+        readOnly={false}
         canRun={this.state.editorState === ChallengeStatus.READY}
         canPlaceBreakpoint={
           this.state.editorState === ChallengeStatus.READY ||
