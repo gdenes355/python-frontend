@@ -173,7 +173,7 @@ const ChallengeController = {
     });
   },
   debug: (comp: Challenge, data: DebugData) => {
-    if (!data.code) {
+    if (!data.code && data.code !== "") {
       return;
     }
     if (comp.state.editorState === ChallengeStatus.READY) {
@@ -230,7 +230,7 @@ const ChallengeController = {
     comp.editorRef.current?.revealLine(data.lineno);
   },
   "save-code": (comp: Challenge, data: SaveCodeData) => {
-    if (data.code && comp.props.uid) {
+    if ((data.code || data.code === "") && comp.props.uid) {
       localStorage.setItem(
         "code-" + encodeURIComponent(comp.props.uid),
         data.code
