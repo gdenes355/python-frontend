@@ -63,6 +63,26 @@
             "guide": "c03.md",
             "py": "c03.py",
             "isExample": true
+        },
+        {
+            "name": "Parsons",
+            "children": [
+                {
+                    "id": "ec93a2aa-6c3a-4798-a91a-75d009951963",
+                    "name": "Parsons 1",
+                    "guide": "parsons.md",
+                    "py": "parsons.py",
+                    "typ": "parsons"
+                },
+                {
+                    "id": "404af9d0-78c6-4fdb-9c45-2e2a2f3a33bd",
+                    "name": "Parsons 2",
+                    "guide": "parsons2.md",
+                    "py": "parsons2.py",
+                    "typ": "parsons"
+                }
+            ]
         }
+        
     ]
 }

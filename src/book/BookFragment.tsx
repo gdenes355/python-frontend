@@ -227,7 +227,8 @@ export default function Book() {
             uid={bookPath + bookChallengeId}
             onTestsPassingChanged={activeTestsPassingChanged}
             isExample={activeNode.isExample}
-          ></Challenge>
+            typ={activeNode.typ}
+          />
           <BookDrawer
             bookRoot={rootNode}
             allTestResults={allTestResults}

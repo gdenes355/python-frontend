@@ -173,6 +173,14 @@ const ChallengeController = {
     comp.print(msg);
   },
   debug: (comp: Challenge, data: DebugData) => {
+    if (comp.props.typ === "parsons") {
+      let code = comp.parsonsEditorRef.current?.getValue();
+      data.code = code;
+    }
+
+    ChallengeController["debugpy"](comp, data);
+  },
+  debugpy: (comp: Challenge, data: DebugData) => {
     if (!data.code && data.code !== "") {
       return;
     }
@@ -194,6 +202,16 @@ const ChallengeController = {
     ChallengeController["save-code"](comp, { code: data.code });
   },
   test: (comp: Challenge, data: TestData) => {
+    if (comp.props.typ === "parsons") {
+      comp.setState({
+        testResults: comp.parsonsEditorRef.current?.runTests() || [],
+      });
+      return;
+    }
+
+    ChallengeController["testpy"](comp, data);
+  },
+  testpy: (comp: Challenge, data: TestData) => {
     if (!comp.state.worker || !data.tests || !data.code) {
       return;
     }
@@ -212,6 +230,10 @@ const ChallengeController = {
     ChallengeController["save-code"](comp, { code: data.code });
   },
   "reset-code": (comp: Challenge) => {
+    if (comp.props.typ === "parsons") {
+      comp.parsonsEditorRef.current?.reset();
+      return;
+    }
     if (
       (comp.state.starterCode === "" || comp.state.starterCode) &&
       comp.editorRef.current

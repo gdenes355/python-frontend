@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Card, CardContent } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
+import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
@@ -44,6 +45,7 @@ type ChallengeProps = {
   codePath: string;
   hasBook: boolean;
   layout: string;
+  typ?: "py" | "parsons";
   tests?: TestCases | null;
   isExample?: boolean;
   onTestsPassingChanged?: (passing: boolean | null) => void;
@@ -54,6 +56,7 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
+  parsonsEditorRef = React.createRef<ParsonsEditor>();
 
   currentConsoleText: string = "";
   printCallback = throttle(
@@ -209,6 +212,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderEditor() {
+    if (this.props.typ === "parsons") {
+      return (
+        <ParsonsEditor
+          ref={this.parsonsEditorRef}
+          starterCode={this.state.savedCode || this.state.starterCode || ""}
+        />
+      );
+    }
     return (
       <PyEditor
         ref={this.editorRef}
@@ -224,13 +235,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         }
         onBreakpointsUpdated={this.onBreakpointsUpdated}
         debugContext={this.state.debugContext}
-        starterCode={
-          this.state.savedCode
-            ? this.state.savedCode
-            : this.state.starterCode
-            ? this.state.starterCode
-            : ""
-        }
+        starterCode={this.state.savedCode || this.state.starterCode || ""}
         theme={this.state.theme}
         onToggleFullScreen={() => {
           this.setState((state, props) => {
@@ -304,7 +309,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             onResetCode={() => ChallengeController["reset-code"](this)}
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canReset={this.state.editorState === ChallengeStatus.READY}
-            canSubmit={this.props.tests !== null}
+            canSubmit={
+              this.props.tests !== null || this.props.typ === "parsons"
+            }
             testResults={this.state.testResults}
             onHelpOpen={(open) => this.setState({ helpOpen: open })}
           />
