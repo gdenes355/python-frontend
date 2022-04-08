@@ -3,6 +3,7 @@ import { Box, Card, CardContent } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import Console from "../components/Console";
+import GraphicsPane from "../components/GraphicsPane";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
@@ -30,6 +31,7 @@ type ChallengeState = {
   editorFullScreen: boolean;
   errorLoading: boolean;
   consoleText: string;
+  graphicsCommand: string;
   editorState: ChallengeStatus;
   testResults: TestResults;
   breakpointsChanged: boolean;
@@ -56,16 +58,24 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
 
   currentConsoleText: string = "";
+  currentGraphicsCommand: string = "";
+
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
+
+  drawCallback = throttle(
+    () => this.setState({ graphicsCommand: this.currentGraphicsCommand }),
+    100
+  );  
 
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
     worker: null,
     consoleText: "Press debug to get started...",
+    graphicsCommand: "fillRect(0,0,0,0)",
     guideMd: "*Loading the guide... Please wait*",
     debugContext: { lineno: 0, env: new Map() },
     editorState: ChallengeStatus.LOADING,
@@ -84,12 +94,18 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
+    this.draw.bind(this);
     this.cls.bind(this);
   }
 
   print(text: string) {
     this.currentConsoleText += text;
     this.printCallback();
+  }
+
+  draw(text: string) {
+    this.currentGraphicsCommand = text;
+    this.drawCallback();
   }
 
   cls() {
@@ -277,6 +293,20 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
+  renderGraphicsPane = () => {
+    return (
+      <GraphicsPane
+        content={this.state.graphicsCommand}
+        onInterrupt={() => {
+          ChallengeController["restart-worker"](this, {
+            msg: "Interrupted...",
+            force: true,
+          });
+        }}
+      />
+    );
+  };
+
   renderMainControls = () => {
     if (this.state.helpOpen) {
       return;
@@ -356,11 +386,20 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   visible={this.getVisibilityWithHack(
                     !this.state.editorFullScreen
                   )}
-                  maxSize={350}
+                  maxSize={150}
                   minSize={150}
                 >
                   {this.renderConsole()}
                 </Allotment.Pane>
+                <Allotment.Pane
+                  visible={this.getVisibilityWithHack(
+                    !this.state.editorFullScreen
+                  )}
+                  maxSize={400}
+                  minSize={400}
+                >
+                  {this.renderGraphicsPane()}
+                </Allotment.Pane>                
               </Allotment>
             </Allotment.Pane>
             <Allotment.Pane

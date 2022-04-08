@@ -16,6 +16,11 @@ type PrintData = {
   msg: string;
 };
 
+type DrawData = {
+  msg: string;
+};
+
+
 type InputData = {
   input: string | null;
 };
@@ -54,6 +59,11 @@ const ChallengeController = {
       comp.print(data.msg);
     }
   },
+  draw: (comp: Challenge, data: DrawData) => {
+    if (comp.state.editorState !== ChallengeStatus.READY) {
+      comp.draw(data.msg);
+    }
+  },  
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
@@ -115,13 +125,13 @@ const ChallengeController = {
     }[data.reason];
     comp.setState((state: ChallengeState) => {
       return {
+        consoleText: state.consoleText + "\n" + msg + "\n",
         editorState: ChallengeStatus.READY,
         testResults: comp.props.isExample
           ? [{ outcome: true }]
           : state.testResults,
       };
     });
-    comp.print("\n" + msg + "\n");
   },
   "test-finished": (comp: Challenge, data: TestFinishedData) => {
     comp.setState({
@@ -165,12 +175,12 @@ const ChallengeController = {
     let msg = data.msg == null ? "" : data.msg;
     comp.setState((state: ChallengeState) => {
       return {
+        consoleText: state.consoleText + msg,
         worker: worker,
         editorState: ChallengeStatus.RESTARTING_WORKER,
         interruptBuffer,
       };
     });
-    comp.print(msg);
   },
   debug: (comp: Challenge, data: DebugData) => {
     if (!data.code && data.code !== "") {

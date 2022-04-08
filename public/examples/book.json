@@ -63,6 +63,13 @@
             "guide": "c03.md",
             "py": "c03.py",
             "isExample": true
-        }
+        },
+        {
+            "id": "89fe8468-b659-11ec-b909-0242ac120002",
+            "name": "Graphics",
+            "guide": "c04.md",
+            "py": "c04.py",
+            "isExample": true
+        }        
     ]
 }
