@@ -20,10 +20,6 @@ type DrawData = {
   msg: string;
 };
 
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
 type InputData = {
   input: string | null;
 };
@@ -66,11 +62,7 @@ const ChallengeController = {
     if (comp.state.editorState !== ChallengeStatus.READY) {
       comp.draw(data.msg);
     }
-<<<<<<< Updated upstream
-  },  
-=======
   }, 
->>>>>>> Stashed changes
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),

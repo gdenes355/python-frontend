@@ -3,11 +3,7 @@ import { Box, Card, CardContent } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import Console from "../components/Console";
-<<<<<<< Updated upstream
-import GraphicsPane from "../components/GraphicsPane";
-=======
 import CanvasDisplay from "../components/CanvasDisplay";
->>>>>>> Stashed changes
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
@@ -50,10 +46,7 @@ type ChallengeProps = {
   codePath: string;
   hasBook: boolean;
   layout: string;
-<<<<<<< Updated upstream
-=======
   typ?: "py" | "parsons" | "canvas";
->>>>>>> Stashed changes
   tests?: TestCases | null;
   isExample?: boolean;
   onTestsPassingChanged?: (passing: boolean | null) => void;
@@ -64,11 +57,7 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
-<<<<<<< Updated upstream
-=======
-  parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>(); 
->>>>>>> Stashed changes
 
   currentConsoleText: string = "";
   currentGraphicsCommand: string = "";
@@ -77,14 +66,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
-
-<<<<<<< Updated upstream
-  drawCallback = throttle(
-    () => this.setState({ graphicsCommand: this.currentGraphicsCommand }),
-    100
-  );  
-=======
->>>>>>> Stashed changes
 
   state: ChallengeState = {
     starterCode: null,
@@ -119,15 +100,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.printCallback();
   }
 
-<<<<<<< Updated upstream
-  draw(text: string) {
-    this.currentGraphicsCommand = text;
-    this.drawCallback();
-=======
   draw(msg: string) {
     this.print(msg);
     this.canvasDisplayRef?.current?.runCommand(msg);
->>>>>>> Stashed changes
   }
 
   cls() {
@@ -334,20 +309,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           });
         }}
       />
-    )
-  };
-
-  renderGraphicsPane = () => {
-    return (
-      <GraphicsPane
-        content={this.state.graphicsCommand}
-        onInterrupt={() => {
-          ChallengeController["restart-worker"](this, {
-            msg: "Interrupted...",
-            force: true,
-          });
-        }}
-      />
     );
   };
 
@@ -430,25 +391,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   visible={this.getVisibilityWithHack(
                     !this.state.editorFullScreen
                   )}
-<<<<<<< Updated upstream
-                  maxSize={150}
-                  minSize={150}
-=======
                   maxSize={550}
                   minSize={450}
->>>>>>> Stashed changes
                 >
                   {this.renderConsole()}
-                </Allotment.Pane>
-                <Allotment.Pane
-                  visible={this.getVisibilityWithHack(
-                    !this.state.editorFullScreen
-                  )}
-                  maxSize={400}
-                  minSize={400}
-                >
-                  {this.renderGraphicsPane()}
-                </Allotment.Pane>                
+                </Allotment.Pane>              
               </Allotment>
             </Allotment.Pane>
             <Allotment.Pane
