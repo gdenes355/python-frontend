@@ -246,6 +246,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         />
       );
     }    
+
     return (
       <PyEditor
         ref={this.editorRef}
