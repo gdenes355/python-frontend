@@ -1,5 +1,6 @@
 import React from "react";
 import type ParsonsWidget from "../types/jsparsons/main";
+import "./ParsonsEditor.css";
 
 import { TestResults } from "../models/Tests";
 
