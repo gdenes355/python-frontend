@@ -3,7 +3,11 @@ import { Box, Card, CardContent } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import Console from "../components/Console";
+<<<<<<< Updated upstream
 import GraphicsPane from "../components/GraphicsPane";
+=======
+import CanvasDisplay from "../components/CanvasDisplay";
+>>>>>>> Stashed changes
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
@@ -46,6 +50,10 @@ type ChallengeProps = {
   codePath: string;
   hasBook: boolean;
   layout: string;
+<<<<<<< Updated upstream
+=======
+  typ?: "py" | "parsons" | "canvas";
+>>>>>>> Stashed changes
   tests?: TestCases | null;
   isExample?: boolean;
   onTestsPassingChanged?: (passing: boolean | null) => void;
@@ -56,6 +64,11 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
+<<<<<<< Updated upstream
+=======
+  parsonsEditorRef = React.createRef<ParsonsEditor>();
+  canvasDisplayRef = React.createRef<CanvasDisplay>(); 
+>>>>>>> Stashed changes
 
   currentConsoleText: string = "";
   currentGraphicsCommand: string = "";
@@ -65,10 +78,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     100
   );
 
+<<<<<<< Updated upstream
   drawCallback = throttle(
     () => this.setState({ graphicsCommand: this.currentGraphicsCommand }),
     100
   );  
+=======
+>>>>>>> Stashed changes
 
   state: ChallengeState = {
     starterCode: null,
@@ -103,9 +119,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.printCallback();
   }
 
+<<<<<<< Updated upstream
   draw(text: string) {
     this.currentGraphicsCommand = text;
     this.drawCallback();
+=======
+  draw(msg: string) {
+    this.print(msg);
+    this.canvasDisplayRef?.current?.runCommand(msg);
+>>>>>>> Stashed changes
   }
 
   cls() {
@@ -274,6 +296,28 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   renderConsole = () => {
+    if (this.props.typ === "canvas") {
+      return (
+        <Box>
+          <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
+          <Console
+            content={this.state.consoleText}
+            isInputEnabled={
+              this.state.editorState === ChallengeStatus.AWAITING_INPUT
+            }
+            onInput={(input) => {
+              ChallengeController["input-entered"](this, { input });
+            }}
+            onInterrupt={() => {
+              ChallengeController["restart-worker"](this, {
+                msg: "Interrupted...",
+                force: true,
+              });
+            }}
+          />         
+        </Box>
+      )
+    }
     return (
       <Console
         content={this.state.consoleText}
@@ -290,7 +334,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           });
         }}
       />
-    );
+    )
   };
 
   renderGraphicsPane = () => {
@@ -386,8 +430,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   visible={this.getVisibilityWithHack(
                     !this.state.editorFullScreen
                   )}
+<<<<<<< Updated upstream
                   maxSize={150}
                   minSize={150}
+=======
+                  maxSize={550}
+                  minSize={450}
+>>>>>>> Stashed changes
                 >
                   {this.renderConsole()}
                 </Allotment.Pane>
