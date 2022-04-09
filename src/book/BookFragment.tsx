@@ -216,6 +216,7 @@ export default function Book() {
       return (
         <React.Fragment>
           <Challenge
+            challengeName = {rootNode.name}
             guidePath={paths.guidePath}
             codePath={paths.pyPath}
             tests={tests && tests.length > 0 ? tests : null}
