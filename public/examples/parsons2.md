@@ -1,0 +1,1 @@
+Sequence these shapes in order of their number of sides (least first)

@@ -321,11 +321,7 @@ def pydebug(code, breakpoints):
     step_into = False
     sys.stdout = debug_output
     sys.stderr = debug_output
-<<<<<<< Updated upstream
-    sys.stdctx = debug_context
-=======
     sys.stdctx = debug_context       
->>>>>>> Stashed changes
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input

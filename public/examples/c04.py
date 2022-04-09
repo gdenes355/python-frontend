@@ -16,13 +16,6 @@ stdctx.fill(clearCanvas=True)
 time.sleep(1)
 
 for sq in range(3):
-<<<<<<< Updated upstream
-  
-  stdctx.fillRect(50*sq, 50*sq, 50*(sq+1), 50*(sq+1), clearCanvas=True)
-  time.sleep(1)
-
-=======
 
   stdctx.fillRect(50*sq, 50*sq, 50*(sq+1), 50*(sq+1), clearCanvas=True)
   time.sleep(1)
->>>>>>> Stashed changes
