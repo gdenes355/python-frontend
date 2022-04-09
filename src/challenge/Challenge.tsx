@@ -8,7 +8,7 @@ import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
-import { Allotment } from "allotment";
+import { Allotment, AllotmentHandle} from "allotment";
 import "allotment/dist/style.css";
 
 import Cookies from "js-cookie";
@@ -39,6 +39,7 @@ type ChallengeState = {
   testsPassing: boolean | null;
   interruptBuffer: Uint8Array | null;
   helpOpen: boolean;
+  guideMinimised: boolean;
 };
 
 type ChallengeProps = {
@@ -59,10 +60,12 @@ type ChallengeProps = {
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
-  canvasDisplayRef = React.createRef<CanvasDisplay>(); 
+  canvasDisplayRef = React.createRef<CanvasDisplay>();
+  allotmentGuideRef = React.createRef<AllotmentHandle>();
 
   currentConsoleText: string = "";
   currentGraphicsCommand: string = "";
+
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -86,6 +89,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     testsPassing: null,
     interruptBuffer: null,
     helpOpen: false,
+    guideMinimised: false
   };
 
   constructor(props: ChallengeProps) {
@@ -207,6 +211,16 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     Cookies.set("theme", theme);
   };
 
+  handleGuideDisplayToggle = () => {
+    // detect before reversing to avoid redraw until complete
+    if(!this.state.guideMinimised) {
+      this.allotmentGuideRef?.current?.resize([90, 10]);
+    } else {
+      this.allotmentGuideRef?.current?.resize([65, 35]);
+    }  
+    this.setState({ guideMinimised : !this.state.guideMinimised });    
+  };
+
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -321,11 +335,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       return;
     }
     return (
-      <Card sx={{ overflow: "visible" }}>
+      <Card sx={{ overflow: "visible"}}>
         <CardContent>
           <MainControls
             theme={this.state.theme}
+            guideMinimised = {this.state.guideMinimised}
             onThemeChange={this.handleThemeChange}
+            onGuideDisplayToggle={this.handleGuideDisplayToggle}
             onDebug={() => {
               ChallengeController["debug"](this, {
                 code: this.editorRef.current?.getValue(),
@@ -355,6 +371,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderGuide = () => {
+    if(this.state.guideMinimised) {
+      return;
+    }
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
@@ -389,7 +408,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     } else if (this.props.layout === "fullscreen") {
       return (
         <Box sx={{ width: "100%", height: "100%" }}>
-          <Allotment className="h-100" defaultSizes={[65, 35]}>
+          <Allotment className="h-100" defaultSizes={[65, 35]} ref={this.allotmentGuideRef}>
             <Allotment.Pane>
               <Allotment vertical>
                 <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
@@ -419,6 +438,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   {this.renderMainControls()}
                   {this.renderGuide()}
                   <BookControlFabs
+                    guideMinimised={this.state.guideMinimised}
                     onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
                     onNavigateToNextPage={this.props.onRequestNextChallenge}
                     onOpenMenu={() =>
