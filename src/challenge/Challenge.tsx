@@ -8,6 +8,7 @@ import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
+import FileUploadControl from "../components/FileUploadControl";
 import { Allotment, AllotmentHandle} from "allotment";
 import "allotment/dist/style.css";
 
@@ -87,6 +88,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   allotmentGuideRef = React.createRef<AllotmentHandle>();
+  fileReader = new FileReader();
 
   currentConsoleText: string = "";
 
@@ -232,6 +234,18 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.setState({ theme });
     Cookies.set("theme", theme);
   };
+  
+  handleFileRead = (e:any) => {
+    if(this.fileReader.result) {
+      this.editorRef.current?.setValue(this.fileReader.result.toString())
+    }
+  };  
+
+  handleUpload = (file:File) => {
+    this.fileReader  = new FileReader();
+    this.fileReader.onloadend = this.handleFileRead;
+    this.fileReader.readAsText(file);
+  }
 
   handleGuideDisplayToggle = () => {
     // detect before reversing to avoid redraw until complete
@@ -463,6 +477,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   }}
                 >
                   {this.renderMainControls()}
+                  <FileUploadControl onUpload={this.handleUpload}></FileUploadControl>
                   {this.renderGuide()}
                   <BookControlFabs
                     guideMinimised={this.state.guideMinimised}
