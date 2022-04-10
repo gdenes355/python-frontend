@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
@@ -22,6 +22,31 @@ import ChallengeController from "./ChallengeController";
 
 import "./Challenge.css";
 
+interface TabPanelProps {
+  children?: React.ReactNode;
+  index: number;
+  value: number;
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`simple-tabpanel-${index}`}
+      aria-labelledby={`simple-tab-${index}`}
+      style={{height: "100%"}}
+      {...other}
+    >
+    <Box sx={{ p: 3, width: "100%", height: "100%", padding: "0px"}}>
+          {children}
+    </Box>
+    </div>
+  );
+}
+
 type ChallengeState = {
   starterCode: string | null;
   savedCode: string | null;
@@ -32,7 +57,6 @@ type ChallengeState = {
   editorFullScreen: boolean;
   errorLoading: boolean;
   consoleText: string;
-  graphicsCommand: string;
   editorState: ChallengeStatus;
   testResults: TestResults;
   breakpointsChanged: boolean;
@@ -40,6 +64,7 @@ type ChallengeState = {
   interruptBuffer: Uint8Array | null;
   helpOpen: boolean;
   guideMinimised: boolean;
+  currentTab: number;
 };
 
 type ChallengeProps = {
@@ -64,8 +89,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   allotmentGuideRef = React.createRef<AllotmentHandle>();
 
   currentConsoleText: string = "";
-  currentGraphicsCommand: string = "";
-
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -77,7 +100,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     savedCode: null,
     worker: null,
     consoleText: "Press debug to get started...",
-    graphicsCommand: "fillRect(0,0,0,0)",
     guideMd: "*Loading the guide... Please wait*",
     debugContext: { lineno: 0, env: new Map() },
     editorState: ChallengeStatus.LOADING,
@@ -89,7 +111,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     testsPassing: null,
     interruptBuffer: null,
     helpOpen: false,
-    guideMinimised: false
+    guideMinimised: false,
+    currentTab: 0
   };
 
   constructor(props: ChallengeProps) {
@@ -107,7 +130,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   draw(msg: string) {
-    this.print(msg);
     this.canvasDisplayRef?.current?.runCommand(msg);
   }
 
@@ -221,6 +243,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.setState({ guideMinimised : !this.state.guideMinimised });    
   };
 
+  handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
+    this.setState({currentTab : newValue});
+  };  
+
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -292,25 +318,38 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   renderConsole = () => {
     if (this.props.typ === "canvas") {
       return (
-        <Box>
-          <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
-          <Console
-            content={this.state.consoleText}
-            isInputEnabled={
-              this.state.editorState === ChallengeStatus.AWAITING_INPUT
-            }
-            onInput={(input) => {
-              ChallengeController["input-entered"](this, { input });
-            }}
-            onInterrupt={() => {
-              ChallengeController["restart-worker"](this, {
-                msg: "Interrupted...",
-                force: true,
-              });
-            }}
-          />         
+
+        <Box className={"theme-" + this.state.theme} sx={{ width: '100%', height: '100%' }}>
+        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Tabs value={this.state.currentTab} onChange={this.handleTabChange} aria-label="Output tabs">
+            <Tab label="Canvas" id="simple-tab-0" aria-controls="simple-tabpanel-0" />
+            <Tab label="Console" id="simple-tab-" aria-controls="simple-tabpanel-1" />
+          </Tabs>
         </Box>
-      )
+        <TabPanel value={this.state.currentTab} index={0}>
+          <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
+        </TabPanel>
+        <TabPanel value={this.state.currentTab} index={1} >
+          <Box sx={{ width: "100%", height: "100%" }}>
+            <Console
+                content={this.state.consoleText}
+                isInputEnabled={
+                  this.state.editorState === ChallengeStatus.AWAITING_INPUT
+                }
+                onInput={(input) => {
+                  ChallengeController["input-entered"](this, { input });
+                }}
+                onInterrupt={() => {
+                  ChallengeController["restart-worker"](this, {
+                    msg: "Interrupted...",
+                    force: true,
+                  });
+                }}
+              /> 
+          </Box>     
+        </TabPanel>
+      </Box>      
+      );
     }
     return (
       <Console
