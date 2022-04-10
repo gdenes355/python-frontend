@@ -316,14 +316,31 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   renderConsole = () => {
+    return (<Console
+      content={this.state.consoleText}
+      isInputEnabled={
+        this.state.editorState === ChallengeStatus.AWAITING_INPUT
+      }
+      onInput={(input) => {
+        ChallengeController["input-entered"](this, { input });
+      }}
+      onInterrupt={() => {
+        ChallengeController["restart-worker"](this, {
+          msg: "Interrupted...",
+          force: true,
+        });
+      }}
+    /> );
+  }
+
+  renderOutput = () => {
     if (this.props.typ === "canvas") {
       return (
-
         <Box className={"theme-" + this.state.theme} sx={{ width: '100%', height: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={this.state.currentTab} onChange={this.handleTabChange} aria-label="Output tabs">
             <Tab label="Canvas" id="simple-tab-0" aria-controls="simple-tabpanel-0" />
-            <Tab label="Console" id="simple-tab-" aria-controls="simple-tabpanel-1" />
+            <Tab label="Console" id="simple-tab-1" aria-controls="simple-tabpanel-1" />
           </Tabs>
         </Box>
         <TabPanel value={this.state.currentTab} index={0}>
@@ -331,43 +348,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         </TabPanel>
         <TabPanel value={this.state.currentTab} index={1} >
           <Box sx={{ width: "100%", height: "100%" }}>
-            <Console
-                content={this.state.consoleText}
-                isInputEnabled={
-                  this.state.editorState === ChallengeStatus.AWAITING_INPUT
-                }
-                onInput={(input) => {
-                  ChallengeController["input-entered"](this, { input });
-                }}
-                onInterrupt={() => {
-                  ChallengeController["restart-worker"](this, {
-                    msg: "Interrupted...",
-                    force: true,
-                  });
-                }}
-              /> 
+          {this.renderConsole()}
           </Box>     
         </TabPanel>
       </Box>      
       );
     }
-    return (
-      <Console
-        content={this.state.consoleText}
-        isInputEnabled={
-          this.state.editorState === ChallengeStatus.AWAITING_INPUT
-        }
-        onInput={(input) => {
-          ChallengeController["input-entered"](this, { input });
-        }}
-        onInterrupt={() => {
-          ChallengeController["restart-worker"](this, {
-            msg: "Interrupted...",
-            force: true,
-          });
-        }}
-      />
-    );
+    return this.renderConsole();
   };
 
   renderMainControls = () => {
@@ -459,7 +446,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   maxSize={550}
                   minSize={450}
                 >
-                  {this.renderConsole()}
+                  {this.renderOutput()}
                 </Allotment.Pane>              
               </Allotment>
             </Allotment.Pane>
@@ -513,7 +500,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           <Box sx={{ height: "600px" }}>{this.renderEditor()}</Box>
           {this.renderMainControls()}
           <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
-            {this.renderConsole()}
+            {this.renderOutput()}
           </Box>
           <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
             {this.renderDebugPane()}
