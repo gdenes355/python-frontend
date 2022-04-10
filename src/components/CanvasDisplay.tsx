@@ -14,8 +14,6 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
   state = {
   };
 
-  private placeholder: null = null;
-
   /*
   constructor(props: CanvasDisplayProps) {
     super(props);
