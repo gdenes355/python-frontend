@@ -71,7 +71,15 @@
             "py": "c04.py",
             "isExample": true,
             "typ": "canvas"
-        },        
+        }, 
+        {
+            "id": "ebd04e6a-b9e2-11ec-8422-0242ac120002",
+            "name": "Turtle demo",
+            "guide": "c05.md",
+            "py": "c05.py",
+            "isExample": true,
+            "typ": "canvas"
+        },                
         {
             "name": "Parsons",
             "children": [

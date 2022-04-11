@@ -123,6 +123,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
     this.draw.bind(this);
+    this.turtle.bind(this);
     this.cls.bind(this);
   }
 
@@ -134,6 +135,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   draw(msg: string) {
     this.canvasDisplayRef?.current?.runCommand(msg);
   }
+
+  turtle(msg: string) {
+    console.log("here")
+    this.canvasDisplayRef?.current?.runTurtleCommand(msg);
+  }  
 
   cls() {
     this.currentConsoleText = "";

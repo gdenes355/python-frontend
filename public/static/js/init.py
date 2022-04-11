@@ -151,6 +151,39 @@ test_inputs = []
 test_outputs = []
 step_into = False
 
+# setup turtle library
+
+with open("turtle.py", "w") as file:
+    file.write('''
+
+import js
+import json
+from pyodide import to_js
+
+def post_message(data):
+    js.workerPostMessage(js.Object.fromEntries(to_js(data)))
+
+json_map = {"action":"reset"}
+post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
+
+class Turtle:
+    def forward(self, dist):
+        json_map = {"action":"forward", "value":dist}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
+    def fd(self, dist):
+        self.forward(dist)
+    def setposition(self, x, y):
+        json_map = {"action":"setposition", "x":x, "y":y}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def right(self, angle):
+        json_map = {"action":"right", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def left(self, angle):
+        json_map = {"action":"left", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                
+
+     
+''')
 
 def pyexec(code, expected_input, expected_output):
     global test_inputs

@@ -20,6 +20,10 @@ type DrawData = {
   msg: string;
 };
 
+type TurtleData = {
+  msg: string;
+};
+
 type InputData = {
   input: string | null;
 };
@@ -63,6 +67,11 @@ const ChallengeController = {
       comp.draw(data.msg);
     }
   },
+  turtle: (comp: Challenge, data: TurtleData) => {
+    if (comp.state.editorState !== ChallengeStatus.READY) {
+      comp.turtle(data.msg);
+    }
+  },  
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),

@@ -5,6 +5,11 @@ type CanvasDisplayProps = {
 };
 
 type CanvasDisplayState = {
+  turtle_x_init: number,
+  turtle_y_init: number,    
+  turtle_x: number,
+  turtle_y: number,
+  turtle_dir: number
 };
 
 class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplayState> {
@@ -12,6 +17,11 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
   canvasEl = React.createRef<HTMLCanvasElement>();
   
   state = {
+    turtle_x_init: 250,
+    turtle_y_init: 200,    
+    turtle_x: 250,
+    turtle_y: 200,
+    turtle_dir: 0
   };
 
   /*
@@ -19,6 +29,44 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
     super(props);
   } 
   */
+
+  runTurtleCommand(msg:string) {
+    console.log(msg);
+    const canvas: HTMLCanvasElement = document.getElementById('canvasDisplay') as HTMLCanvasElement;
+    const context = canvas.getContext('2d') as CanvasRenderingContext2D;    
+    try {
+      const turtleObj = JSON.parse(msg);
+      switch(turtleObj.action) { 
+        case "forward":
+          context.moveTo(this.state.turtle_x, this.state.turtle_y);
+          const new_x = this.state.turtle_x + Math.sin(this.state.turtle_dir) * turtleObj.value;
+          const new_y = this.state.turtle_y - Math.cos(this.state.turtle_dir) * turtleObj.value;
+          console.log(new_x + "," + new_y)
+          context.lineTo(new_x, new_y);
+          this.setState({turtle_x: new_x, turtle_y: new_y})
+          context.stroke();
+          break;
+        case "right":
+            this.setState({turtle_dir: this.state.turtle_dir + (Math.PI / 180) * turtleObj.value});
+            break;
+        case "left":
+            this.setState({turtle_dir: this.state.turtle_dir - (Math.PI / 180) * turtleObj.value});
+            break;                         
+        case "setposition":
+          this.setState({turtle_x: turtleObj.x, turtle_y: turtleObj.y});
+          context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+          break;          
+        case "reset":
+          this.setState({turtle_x: this.state.turtle_x_init, turtle_y: this.state.turtle_y_init});
+          context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+          break;
+      }
+    }
+    catch(err) {
+      console.log("error processing canvas turtle action:");
+      console.log(msg);
+    }
+  }
 
   runCommand(msg:string) {
     console.log(msg);
