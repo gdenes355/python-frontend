@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import Challenge from "../challenge/Challenge";
 import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
 import BookReport from "./BookReport";
+
+import { Toolbar, Box } from "@mui/material";
 
 import { loadTestState, saveTestState } from "./ResultsStore";
 
@@ -215,21 +217,50 @@ export default function Book() {
     } else if (activeNode && paths.guidePath && paths.pyPath) {
       return (
         <React.Fragment>
-          <Challenge
-            challengeName = {rootNode.name}
-            guidePath={paths.guidePath}
-            codePath={paths.pyPath}
-            tests={tests && tests.length > 0 ? tests : null}
-            hasBook={true}
-            openBookDrawer={openDrawer}
-            onRequestPreviousChallenge={requestPreviousChallenge}
-            onRequestNextChallenge={requestNextChallenge}
-            layout="fullscreen"
-            uid={bookPath + bookChallengeId}
-            onTestsPassingChanged={activeTestsPassingChanged}
-            isExample={activeNode.isExample}
-            typ={activeNode.typ}
-          />
+          <Box
+            sx={{
+              overflow: "hidden",
+              display: "flex",
+              height: "100%",
+              flexDirection: "column",
+            }}
+          >
+            <Toolbar variant="dense">
+              <div id="logo">
+                {/* placeholder if container site wants to replace it */}
+                <Link to="/">
+                  <img
+                    src="/static/img/header.png"
+                    alt="logo"
+                    style={{ width: "40px" }}
+                  />
+                </Link>
+              </div>
+              <Box
+                sx={{
+                  color: "primary.main",
+                  fontWeight: "bold",
+                  marginLeft: 2,
+                }}
+              >
+                {rootNode.name}
+              </Box>
+            </Toolbar>
+            <Challenge
+              guidePath={paths.guidePath}
+              codePath={paths.pyPath}
+              tests={tests && tests.length > 0 ? tests : null}
+              hasBook={true}
+              openBookDrawer={openDrawer}
+              onRequestPreviousChallenge={requestPreviousChallenge}
+              onRequestNextChallenge={requestNextChallenge}
+              layout="fullscreen"
+              uid={bookPath + bookChallengeId}
+              onTestsPassingChanged={activeTestsPassingChanged}
+              isExample={activeNode.isExample}
+              typ={activeNode.typ}
+            />
+          </Box>
           <BookDrawer
             bookRoot={rootNode}
             allTestResults={allTestResults}

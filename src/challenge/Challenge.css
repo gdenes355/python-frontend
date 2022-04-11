@@ -6,23 +6,3 @@
   transition: top 0.15s, height 0.15s;
   transition-delay: 0.01s;
 }
-
-.header img {
-  width:80px;
-  float:left;
-}
-
-.header {
-  margin-bottom: 10px;
-  font-size: larger;
-  font-weight: bold;
-  color:rgb(27, 140, 216);
-  position:relative;
-}
-
-.header div {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  padding-left:100px;
-}

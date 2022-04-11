@@ -41,7 +41,6 @@ type ChallengeState = {
 
 type ChallengeProps = {
   uid?: string | null;
-  challengeName?: string | null;
   guidePath: string;
   codePath: string;
   hasBook: boolean;
@@ -283,19 +282,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
-  renderTopNav= () => {
-    if (this.state.helpOpen || !this.props.hasBook) {
-      return;
-    }  
-    return (
-      <Box className="header">
-        <a href="/"><img src="/static/img/header.png" alt="logo" /></a>
-        <Box>{this.props.challengeName}</Box>
-      </Box>
-    );
-  };
-
-
   renderMainControls = () => {
     if (this.state.helpOpen) {
       return;
@@ -396,7 +382,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                     height: "100%",
                   }}
                 >
-                  {this.renderTopNav()}
                   {this.renderMainControls()}
                   {this.renderGuide()}
                   <BookControlFabs
