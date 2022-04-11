@@ -137,7 +137,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   turtle(msg: string) {
-    console.log("here")
     this.canvasDisplayRef?.current?.runTurtleCommand(msg);
   }  
 

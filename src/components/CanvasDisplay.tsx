@@ -31,7 +31,6 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
   */
 
   runTurtleCommand(msg:string) {
-    console.log(msg);
     const canvas: HTMLCanvasElement = document.getElementById('canvasDisplay') as HTMLCanvasElement;
     const context = canvas.getContext('2d') as CanvasRenderingContext2D;    
     try {
@@ -41,7 +40,6 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
           context.moveTo(this.state.turtle_x, this.state.turtle_y);
           const new_x = this.state.turtle_x + Math.sin(this.state.turtle_dir) * turtleObj.value;
           const new_y = this.state.turtle_y - Math.cos(this.state.turtle_dir) * turtleObj.value;
-          console.log(new_x + "," + new_y)
           context.lineTo(new_x, new_y);
           this.setState({turtle_x: new_x, turtle_y: new_y})
           context.stroke();

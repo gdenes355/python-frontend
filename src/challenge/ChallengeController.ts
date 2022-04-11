@@ -77,7 +77,7 @@ const ChallengeController = {
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
 
   "input-entered": (comp: Challenge, data: InputData) => {
-    var x = new XMLHttpRequest();
+    let x = new XMLHttpRequest();
     x.open("post", "/@input@/resp.js");
     x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
@@ -102,7 +102,7 @@ const ChallengeController = {
     });
   },
   continue: (comp: Challenge, data: ContinueData) => {
-    var x = new XMLHttpRequest();
+    let x = new XMLHttpRequest();
     x.open("post", "/@debug@/continue.js");
     x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
@@ -156,7 +156,7 @@ const ChallengeController = {
     }
     if (comp.state.worker && comp.state.interruptBuffer) {
       comp.state.interruptBuffer[0] = 2;
-      var x = new XMLHttpRequest();
+      let x = new XMLHttpRequest();
       x.open("post", "/@reset@/reset.js");
       x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
