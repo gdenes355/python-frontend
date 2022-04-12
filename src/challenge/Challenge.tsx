@@ -20,8 +20,11 @@ import DebugContext from "../models/DebugContext";
 import Help from "./Help";
 
 import ChallengeController from "./ChallengeController";
+import ChallengeTypes from "../models/ChallengeTypes";
 
 import "./Challenge.css";
+
+
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -66,6 +69,7 @@ type ChallengeState = {
   helpOpen: boolean;
   guideMinimised: boolean;
   currentTab: number;
+  typInferred: ChallengeTypes;
 };
 
 type ChallengeProps = {
@@ -114,7 +118,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     interruptBuffer: null,
     helpOpen: false,
     guideMinimised: false,
-    currentTab: 0
+    currentTab: 0,
+    typInferred: ChallengeTypes.TYP_PY
   };
 
   constructor(props: ChallengeProps) {
@@ -133,10 +138,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   draw(msg: string) {
+    this.setState({typInferred:ChallengeTypes.TYP_CANVAS});
     this.canvasDisplayRef?.current?.runCommand(msg);
   }
 
   turtle(msg: string) {
+    this.setState({typInferred:ChallengeTypes.TYP_CANVAS});
     this.canvasDisplayRef?.current?.runTurtleCommand(msg);
   }  
 
@@ -195,6 +202,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
+      this.setState({typInferred:ChallengeTypes.TYP_PY});
       ChallengeController["restart-worker"](this, {});
       if (this.props?.uid) {
         let savedCode = localStorage.getItem(
@@ -353,7 +361,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   renderOutput = () => {
-    if (this.props.typ === "canvas") {
+    if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
       return (
         <Box className={"theme-" + this.state.theme} sx={{ width: '100%', height: '100%' }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
