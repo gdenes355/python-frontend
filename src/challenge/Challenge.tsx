@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
+import { Box, Card, CardContent } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
@@ -10,6 +10,7 @@ import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
+import TabbedView from "../components/TabbedView";
 import { Allotment, AllotmentHandle } from "allotment";
 import HeaderBar from "./HeaderBar";
 import "allotment/dist/style.css";
@@ -28,31 +29,6 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import pageTheme, { darkTheme } from "../themes/pageTheme";
 
 import "./Challenge.css";
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`simple-tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      style={{ height: "100%" }}
-      {...other}
-    >
-      <Box sx={{ p: 3, width: "100%", height: "100%", padding: "0px" }}>
-        {children}
-      </Box>
-    </div>
-  );
-}
 
 type ChallengeState = {
   starterCode: string | null;
@@ -274,10 +250,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.setState({ guideMinimised: !this.state.guideMinimised });
   };
 
-  handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    this.setState({ currentTab: newValue });
-  };
-
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -382,32 +354,18 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               bgcolor: "background.default",
             }}
           >
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-              <Tabs
-                value={this.state.currentTab}
-                onChange={this.handleTabChange}
-                aria-label="Output tabs"
-              >
-                <Tab
-                  label="Canvas"
-                  id="simple-tab-0"
-                  aria-controls="simple-tabpanel-0"
-                />
-                <Tab
-                  label="Console"
-                  id="simple-tab-1"
-                  aria-controls="simple-tabpanel-1"
-                />
-              </Tabs>
-            </Box>
-            <TabPanel value={this.state.currentTab} index={0}>
-              <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
-            </TabPanel>
-            <TabPanel value={this.state.currentTab} index={1}>
-              <Box sx={{ width: "100%", height: "100%" }}>
-                {this.renderConsole()}
-              </Box>
-            </TabPanel>
+            <TabbedView
+              panes={[
+                {
+                  label: "Canvas",
+                  content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+                },
+                {
+                  label: "Console",
+                  content: this.renderConsole(),
+                },
+              ]}
+            />
           </Box>
         </ThemeProvider>
       );
