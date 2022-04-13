@@ -483,7 +483,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               <Allotment vertical className="challenge__right-pane">
                 <Box
                   sx={{
-                    p: 2,
+                    paddingLeft: 2,
+                    paddingRight: 2,
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
