@@ -9,6 +9,7 @@ import {
   IconButton,
   ListItemIcon,
   Grid,
+  Button,
 } from "@mui/material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -20,11 +21,14 @@ type HeaderBarProps = {
   theme: string;
   onThemeChange: (theme: string) => void;
   onHelpOpen: (open: boolean) => void;
+  canReset: boolean;
+  canDebug: boolean;
+  onResetCode: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
   return (
-    <Toolbar variant="dense">
+    <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
         <Grid item>
           <Box id="logo">
@@ -41,7 +45,6 @@ const HeaderBar = (props: HeaderBarProps) => {
         <Grid
           item
           sx={{
-            flexGrow: 1,
             verticalAlign: "middle",
             color: "primary.main",
             fontWeight: "bold",
@@ -51,7 +54,22 @@ const HeaderBar = (props: HeaderBarProps) => {
         >
           <span>{props.title || ""}</span>
         </Grid>
-
+        <Grid
+          item
+          sx={{ flexGrow: 1, justifyContent: "center", display: "flex" }}
+        >
+          <div></div>
+        </Grid>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="error"
+            disabled={!props.canReset}
+            onClick={props.onResetCode}
+          >
+            Reset
+          </Button>
+        </Grid>
         <Grid item>
           <Menu
             button={

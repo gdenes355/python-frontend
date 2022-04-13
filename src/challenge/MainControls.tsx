@@ -63,16 +63,6 @@ const MainControlsStack = (props: MainControlsProps) => {
       <TestResultsIndicator
         testResults={props.testResults}
       ></TestResultsIndicator>
-      <Box>
-        <Button
-          variant="contained"
-          color="error"
-          disabled={!props.canReset}
-          onClick={props.onResetCode}
-        >
-          Reset
-        </Button>
-      </Box>
     </Stack>
   );
 };
@@ -117,16 +107,6 @@ const MainControlsGrid = (props: MainControlsProps) => {
             testResults={props.testResults}
           ></TestResultsIndicator>
         </Stack>
-      </Grid>
-      <Grid item>
-        <Button
-          variant="contained"
-          color="error"
-          disabled={!props.canReset}
-          onClick={props.onResetCode}
-        >
-          Reset
-        </Button>
       </Grid>
     </Grid>
   );

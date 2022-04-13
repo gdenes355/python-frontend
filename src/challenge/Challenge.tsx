@@ -481,6 +481,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         theme={this.state.theme}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
+        onResetCode={() => ChallengeController["reset-code"](this)}
+        canDebug={this.state.editorState === ChallengeStatus.READY}
+        canReset={this.state.editorState === ChallengeStatus.READY}
       />
     );
   }
@@ -537,16 +540,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                     onUpload={this.handleUpload}
                   ></FileUploadControl>
                   {this.renderGuide()}
-                  <BookControlFabs
-                    guideMinimised={this.state.guideMinimised}
-                    onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-                    onNavigateToNextPage={this.props.onRequestNextChallenge}
-                    onOpenMenu={() =>
-                      this.props.openBookDrawer
-                        ? this.props.openBookDrawer(true)
-                        : undefined
-                    }
-                  ></BookControlFabs>
                 </Box>
                 <Allotment.Pane
                   maxSize={350}
@@ -564,6 +557,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               </Allotment>
             </Allotment.Pane>
           </Allotment>
+          <BookControlFabs
+            onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+            onNavigateToNextPage={this.props.onRequestNextChallenge}
+            onOpenMenu={() =>
+              this.props.openBookDrawer
+                ? this.props.openBookDrawer(true)
+                : undefined
+            }
+          />
         </Box>
       );
     } else {
