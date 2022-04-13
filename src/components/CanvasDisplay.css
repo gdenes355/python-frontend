@@ -1,21 +1,11 @@
 .graphicsPane {
-  height: calc(100% - 10px);
-  width: calc(100% - 10px);
-  background-color: white;
   overflow: auto;
-  font-size: 15px;
-  padding: 5px;
-  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
-    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-  border: 0px solid black;
-  color: white;
-  background-color: black;
   text-align: center;
 }
 
 .graphicsPane canvas {
-  background-color:#c4c4c4;
-  float:center;
+  background-color: #c4c4c4;
+  float: center;
 }
 
 .hidden {

@@ -6,11 +6,3 @@
   transition: top 0.15s, height 0.15s;
   transition-delay: 0.01s;
 }
-
-.theme-vs-dark {
-  background-color: #1E1E1E;
-}
-
-.theme-vs-light {
-  background-color: white;
-}

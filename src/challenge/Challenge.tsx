@@ -1,5 +1,7 @@
 import React from "react";
 import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
+import { ThemeProvider } from "@mui/material/styles";
+
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
@@ -17,13 +19,15 @@ import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
+import BookNodeModel from "../models/BookNodeModel";
 import Help from "./Help";
 
 import ChallengeController from "./ChallengeController";
 import ChallengeTypes from "../models/ChallengeTypes";
 
+import pageTheme, { darkTheme } from "../themes/pageTheme";
+
 import "./Challenge.css";
-import BookNodeModel from "../models/BookNodeModel";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -368,37 +372,44 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       this.state.typInferred === ChallengeTypes.TYP_CANVAS
     ) {
       return (
-        <Box
-          className={"theme-" + this.state.theme}
-          sx={{ width: "100%", height: "100%" }}
+        <ThemeProvider
+          theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
         >
-          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-            <Tabs
-              value={this.state.currentTab}
-              onChange={this.handleTabChange}
-              aria-label="Output tabs"
-            >
-              <Tab
-                label="Canvas"
-                id="simple-tab-0"
-                aria-controls="simple-tabpanel-0"
-              />
-              <Tab
-                label="Console"
-                id="simple-tab-1"
-                aria-controls="simple-tabpanel-1"
-              />
-            </Tabs>
-          </Box>
-          <TabPanel value={this.state.currentTab} index={0}>
-            <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
-          </TabPanel>
-          <TabPanel value={this.state.currentTab} index={1}>
-            <Box sx={{ width: "100%", height: "100%" }}>
-              {this.renderConsole()}
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%",
+              bgcolor: "background.default",
+            }}
+          >
+            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+              <Tabs
+                value={this.state.currentTab}
+                onChange={this.handleTabChange}
+                aria-label="Output tabs"
+              >
+                <Tab
+                  label="Canvas"
+                  id="simple-tab-0"
+                  aria-controls="simple-tabpanel-0"
+                />
+                <Tab
+                  label="Console"
+                  id="simple-tab-1"
+                  aria-controls="simple-tabpanel-1"
+                />
+              </Tabs>
             </Box>
-          </TabPanel>
-        </Box>
+            <TabPanel value={this.state.currentTab} index={0}>
+              <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
+            </TabPanel>
+            <TabPanel value={this.state.currentTab} index={1}>
+              <Box sx={{ width: "100%", height: "100%" }}>
+                {this.renderConsole()}
+              </Box>
+            </TabPanel>
+          </Box>
+        </ThemeProvider>
       );
     }
     return this.renderConsole();
