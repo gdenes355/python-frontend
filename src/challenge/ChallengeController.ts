@@ -2,6 +2,7 @@ import Challenge, { ChallengeState } from "./Challenge";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
+import ChallengeTypes from "../models/ChallengeTypes";
 
 type WorkerResponse = {
   cmd: string;
@@ -64,12 +65,18 @@ const ChallengeController = {
   },
   draw: (comp: Challenge, data: DrawData) => {
     if (comp.state.editorState !== ChallengeStatus.READY) {
-      comp.draw(data.msg);
+      if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
+        comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+      }
+      comp.canvasDisplayRef?.current?.runCommand(data.msg);
     }
   },
   turtle: (comp: Challenge, data: TurtleData) => {
     if (comp.state.editorState !== ChallengeStatus.READY) {
-      comp.turtle(data.msg);
+      if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
+        comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+      }
+      comp.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
     }
   },
   cls: (comp: Challenge) => comp.cls(),

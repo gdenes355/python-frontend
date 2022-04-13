@@ -47,7 +47,6 @@ type ChallengeState = {
   interruptBuffer: Uint8Array | null;
   helpOpen: boolean;
   guideMinimised: boolean;
-  currentTab: number;
   typInferred: ChallengeTypes;
 };
 
@@ -98,7 +97,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     interruptBuffer: null,
     helpOpen: false,
     guideMinimised: false,
-    currentTab: 0,
     typInferred: ChallengeTypes.TYP_PY,
   };
 
@@ -107,24 +105,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
-    this.draw.bind(this);
-    this.turtle.bind(this);
     this.cls.bind(this);
   }
 
   print(text: string) {
     this.currentConsoleText += text;
     this.printCallback();
-  }
-
-  draw(msg: string) {
-    this.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
-    this.canvasDisplayRef?.current?.runCommand(msg);
-  }
-
-  turtle(msg: string) {
-    this.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
-    this.canvasDisplayRef?.current?.runTurtleCommand(msg);
   }
 
   cls() {
@@ -238,16 +224,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader = new FileReader();
     this.fileReader.onloadend = this.handleFileRead;
     this.fileReader.readAsText(file);
-  };
-
-  handleGuideDisplayToggle = () => {
-    // detect before reversing to avoid redraw until complete
-    if (!this.state.guideMinimised) {
-      this.allotmentGuideRef?.current?.resize([90, 10]);
-    } else {
-      this.allotmentGuideRef?.current?.resize([65, 35]);
-    }
-    this.setState({ guideMinimised: !this.state.guideMinimised });
   };
 
   getVisibilityWithHack = (visible: boolean) => {
@@ -382,7 +358,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         <CardContent>
           <MainControls
             guideMinimised={this.state.guideMinimised}
-            onGuideDisplayToggle={this.handleGuideDisplayToggle}
+            onGuideDisplayToggle={() =>
+              this.setState((prevState, props) => {
+                return { guideMinimised: !prevState.guideMinimised };
+              })
+            }
             onDebug={() => {
               ChallengeController["debug"](this, {
                 code: this.editorRef.current?.getValue(),

@@ -9,7 +9,7 @@ type BookNodeModel = {
   tests: TestCases;
   bookLink?: string;
   isExample?: boolean;
-  typ?: "py" | "parsons";
+  typ?: "py" | "parsons" | "canvas";
 
   // cached
   // what is the main URL of this book (md, py and bookLinks are relative to this)
