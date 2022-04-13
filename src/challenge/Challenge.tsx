@@ -497,70 +497,88 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             height: "100%",
             display: "flex",
             overflow: "hidden",
-            flexDirection: "column",
+            flexDirection: "row",
           }}
         >
-          {this.renderHeader()}
-          <Allotment
-            className="h-100"
-            defaultSizes={[65, 35]}
-            ref={this.allotmentGuideRef}
+          <Box
+            sx={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              overflow: "hidden",
+              flexDirection: "column",
+            }}
           >
-            <Allotment.Pane>
-              <Allotment vertical>
-                <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
-                <Allotment.Pane
-                  visible={this.getVisibilityWithHack(
-                    !this.state.editorFullScreen
-                  )}
-                  maxSize={550}
-                  minSize={450}
-                >
-                  {this.renderOutput()}
-                </Allotment.Pane>
-              </Allotment>
-            </Allotment.Pane>
-            <Allotment.Pane
-              visible={this.getVisibilityWithHack(!this.state.editorFullScreen)}
+            {this.renderHeader()}
+            <Allotment
+              className="h-100"
+              defaultSizes={[65, 35]}
+              ref={this.allotmentGuideRef}
             >
-              <Allotment vertical className="challenge__right-pane">
-                <Box
-                  sx={{
-                    paddingLeft: 2,
-                    paddingRight: 2,
-                    display: "flex",
-                    flexDirection: "column",
-                    height: "100%",
-                  }}
-                >
-                  {this.renderMainControls()}
-                  {this.renderGuide()}
-                </Box>
-                <Allotment.Pane
-                  maxSize={350}
-                  minSize={150}
-                  snap={true}
-                  visible={
-                    this.state.editorState === ChallengeStatus.RUNNING ||
-                    this.state.editorState === ChallengeStatus.ON_BREAKPOINT ||
-                    this.state.editorState === ChallengeStatus.AWAITING_INPUT
-                  }
-                  className="debug-pane"
-                >
-                  {this.renderDebugPane()}
-                </Allotment.Pane>
-              </Allotment>
-            </Allotment.Pane>
-          </Allotment>
-          <BookControlFabs
-            onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-            onNavigateToNextPage={this.props.onRequestNextChallenge}
-            onOpenMenu={() =>
-              this.props.openBookDrawer
-                ? this.props.openBookDrawer(true)
-                : undefined
-            }
-          />
+              <Allotment.Pane>
+                <Allotment vertical>
+                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
+                  <Allotment.Pane
+                    visible={this.getVisibilityWithHack(
+                      !this.state.editorFullScreen
+                    )}
+                    maxSize={550}
+                    minSize={450}
+                  >
+                    {this.renderOutput()}
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+              <Allotment.Pane
+                visible={this.getVisibilityWithHack(
+                  !this.state.editorFullScreen && !this.state.guideMinimised
+                )}
+              >
+                <Allotment vertical className="challenge__right-pane">
+                  <Box
+                    sx={{
+                      paddingLeft: 2,
+                      paddingRight: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                    }}
+                  >
+                    {this.renderMainControls()}
+                    {this.renderGuide()}
+                  </Box>
+                  <Allotment.Pane
+                    maxSize={350}
+                    minSize={150}
+                    snap={true}
+                    visible={
+                      this.state.editorState === ChallengeStatus.RUNNING ||
+                      this.state.editorState ===
+                        ChallengeStatus.ON_BREAKPOINT ||
+                      this.state.editorState === ChallengeStatus.AWAITING_INPUT
+                    }
+                    className="debug-pane"
+                  >
+                    {this.renderDebugPane()}
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+            </Allotment>
+            <BookControlFabs
+              onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+              onNavigateToNextPage={this.props.onRequestNextChallenge}
+              onOpenMenu={() =>
+                this.props.openBookDrawer
+                  ? this.props.openBookDrawer(true)
+                  : undefined
+              }
+            />
+          </Box>
+          <Box>
+            {!this.state.guideMinimised ? undefined : (
+              <div>{this.renderMainControls()}</div>
+            )}
+          </Box>
         </Box>
       );
     } else {
