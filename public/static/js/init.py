@@ -163,10 +163,10 @@ from pyodide import to_js
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 
-json_map = {"action":"reset"}
-post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
-
 class Turtle:
+    def __init__(self):
+        json_map = {"action":"reset"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
     def forward(self, dist):
         json_map = {"action":"forward", "value":dist}
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
