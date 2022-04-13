@@ -8,7 +8,6 @@ import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
-import FileUploadControl from "../components/FileUploadControl";
 import { Allotment, AllotmentHandle } from "allotment";
 import HeaderBar from "./HeaderBar";
 import "allotment/dist/style.css";
@@ -484,6 +483,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onResetCode={() => ChallengeController["reset-code"](this)}
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
+        onUpload={this.handleUpload}
       />
     );
   }
@@ -536,9 +536,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   }}
                 >
                   {this.renderMainControls()}
-                  <FileUploadControl
-                    onUpload={this.handleUpload}
-                  ></FileUploadControl>
                   {this.renderGuide()}
                 </Box>
                 <Allotment.Pane
