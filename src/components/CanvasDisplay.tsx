@@ -1,5 +1,6 @@
 import React from "react";
 import "./CanvasDisplay.css";
+import RealTurtle from "real-turtle"
 
 type CanvasDisplayProps = {
 };
@@ -10,6 +11,7 @@ type CanvasDisplayState = {
   turtle_x: number,
   turtle_y: number,
   turtle_dir: number
+  turtle: any
 };
 
 class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplayState> {
@@ -21,7 +23,8 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
     turtle_y_init: 200,    
     turtle_x: 250,
     turtle_y: 200,
-    turtle_dir: 0
+    turtle_dir: 0,
+    turtle: {"forward": (val:number) => {}, "right": (val:number) => {}, "left": (val:number) => {}, "setPosition": (x:number, y:number) => {}, "fake": true}
   };
 
   /*
@@ -32,31 +35,44 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
 
   runTurtleCommand(msg:string) {
     const canvas: HTMLCanvasElement = document.getElementById('canvasDisplay') as HTMLCanvasElement;
-    const context = canvas.getContext('2d') as CanvasRenderingContext2D;    
+    const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+    console.log(msg)
+    if(this.state.turtle.fake) {
+      this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})})
+    }
+    
     try {
       const turtleObj = JSON.parse(msg);
       switch(turtleObj.action) { 
         case "forward":
+          /*
           context.moveTo(this.state.turtle_x, this.state.turtle_y);
           const new_x = this.state.turtle_x + Math.sin(this.state.turtle_dir) * turtleObj.value;
           const new_y = this.state.turtle_y - Math.cos(this.state.turtle_dir) * turtleObj.value;
           context.lineTo(new_x, new_y);
           this.setState({turtle_x: new_x, turtle_y: new_y})
           context.stroke();
+          */
+          this.state.turtle.forward(turtleObj.value);            
           break;
         case "right":
-            this.setState({turtle_dir: this.state.turtle_dir + (Math.PI / 180) * turtleObj.value});
+            this.state.turtle.right(turtleObj.value); 
+            // this.setState({turtle_dir: this.state.turtle_dir + (Math.PI / 180) * turtleObj.value});
             break;
         case "left":
-            this.setState({turtle_dir: this.state.turtle_dir - (Math.PI / 180) * turtleObj.value});
+            this.state.turtle.left(turtleObj.value); 
+            // this.setState({turtle_dir: this.state.turtle_dir - (Math.PI / 180) * turtleObj.value});
             break;                         
         case "setposition":
-          this.setState({turtle_x: turtleObj.x, turtle_y: turtleObj.y});
-          context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+            this.state.turtle.setPosition(turtleObj.x, turtleObj.y)
+            // this.setState({turtle_x: turtleObj.x, turtle_y: turtleObj.y});
+            // context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
           break;          
         case "reset":
-          this.setState({turtle_x: this.state.turtle_x_init, turtle_y: this.state.turtle_y_init});
-          context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+          // this.setState({turtle_x: this.state.turtle_x_init, turtle_y: this.state.turtle_y_init});
+          // context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+          context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+          this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})})
           break;
       }
     }
@@ -161,16 +177,18 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
 
   render() {
     return (
-      <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
-        <canvas
-          id="canvasDisplay"
-          width="500"
-          height="400"
-          ref = {this.canvasEl}
-        />
-      </div>
+        <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
+          <canvas
+            id="canvasDisplay"
+            width="500"
+            height="400"
+            ref = {this.canvasEl}
+          />
+        </div>
     );
   }
 }
 
 export default CanvasDisplay;
+
+// <script type="text/javascript" src="https://unpkg.com/real-turtle"></script>
