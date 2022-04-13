@@ -46,16 +46,6 @@ const MainControls = (props: MainControlsProps) => (
         ></TestResultsIndicator>
       </Stack>
     </Grid>
-    <Grid item>
-      <Button
-        variant="contained"
-        color="error"
-        disabled={!props.canReset}
-        onClick={props.onResetCode}
-      >
-        Reset
-      </Button>
-    </Grid>
   </Grid>
 );
 

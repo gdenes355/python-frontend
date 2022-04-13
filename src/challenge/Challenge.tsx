@@ -356,6 +356,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         theme={this.state.theme}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
+        onResetCode={() => ChallengeController["reset-code"](this)}
+        canDebug={this.state.editorState === ChallengeStatus.READY}
+        canReset={this.state.editorState === ChallengeStatus.READY}
       />
     );
   }
