@@ -70,15 +70,6 @@ const MainControlsStack = (props: MainControlsProps) => {
 const MainControlsGrid = (props: MainControlsProps) => {
   return (
     <Grid container spacing={2} style={{ display: "flex" }}>
-      <Grid item>
-        <IconButton
-          onClick={() => {
-            props.onGuideDisplayToggle();
-          }}
-        >
-          <DevicesFoldRounded />
-        </IconButton>
-      </Grid>
       <Grid item style={{ flexGrow: 1 }}>
         <Stack spacing={2} direction="row">
           <Box>
@@ -107,6 +98,15 @@ const MainControlsGrid = (props: MainControlsProps) => {
             testResults={props.testResults}
           ></TestResultsIndicator>
         </Stack>
+      </Grid>
+      <Grid item>
+        <IconButton
+          onClick={() => {
+            props.onGuideDisplayToggle();
+          }}
+        >
+          <DevicesFoldRounded />
+        </IconButton>
       </Grid>
     </Grid>
   );
