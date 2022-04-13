@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent, Tabs, Tab, Toolbar } from "@mui/material";
+import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
@@ -10,6 +10,7 @@ import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
 import FileUploadControl from "../components/FileUploadControl";
 import { Allotment, AllotmentHandle } from "allotment";
+import HeaderBar from "./HeaderBar";
 import "allotment/dist/style.css";
 
 import Cookies from "js-cookie";
@@ -412,9 +413,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       <Card sx={{ overflow: "visible" }}>
         <CardContent>
           <MainControls
-            theme={this.state.theme}
             guideMinimised={this.state.guideMinimised}
-            onThemeChange={this.handleThemeChange}
             onGuideDisplayToggle={this.handleGuideDisplayToggle}
             onDebug={() => {
               ChallengeController["debug"](this, {
@@ -437,7 +436,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               this.props.tests !== null || this.props.typ === "parsons"
             }
             testResults={this.state.testResults}
-            onHelpOpen={(open) => this.setState({ helpOpen: open })}
           />
         </CardContent>
       </Card>
@@ -478,27 +476,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderHeader() {
     return (
-      <Toolbar variant="dense">
-        <div id="logo">
-          {/* placeholder if container site wants to replace it */}
-          <a href="/">
-            <img
-              src="/static/img/header.png"
-              alt="logo"
-              style={{ width: "40px" }}
-            />
-          </a>
-        </div>
-        <Box
-          sx={{
-            color: "primary.main",
-            fontWeight: "bold",
-            marginLeft: 2,
-          }}
-        >
-          {this.props.title || this.props.bookNode?.name || ""}
-        </Box>
-      </Toolbar>
+      <HeaderBar
+        title={this.props.title || this.props.bookNode?.name || ""}
+        theme={this.state.theme}
+        onThemeChange={this.handleThemeChange}
+        onHelpOpen={(open) => this.setState({ helpOpen: open })}
+      />
     );
   }
 
