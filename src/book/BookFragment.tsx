@@ -228,13 +228,13 @@ export default function Book() {
             <Toolbar variant="dense">
               <div id="logo">
                 {/* placeholder if container site wants to replace it */}
-                <Link to="/">
+                <a href="/">
                   <img
                     src="/static/img/header.png"
                     alt="logo"
                     style={{ width: "40px" }}
                   />
-                </Link>
+                </a>
               </div>
               <Box
                 sx={{
