@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, Toolbar } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
@@ -20,6 +20,7 @@ import Help from "./Help";
 import ChallengeController from "./ChallengeController";
 
 import "./Challenge.css";
+import BookNodeModel from "../models/BookNodeModel";
 
 type ChallengeState = {
   starterCode: string | null;
@@ -43,7 +44,8 @@ type ChallengeProps = {
   uid?: string | null;
   guidePath: string;
   codePath: string;
-  hasBook: boolean;
+  bookNode?: BookNodeModel;
+  title?: string;
   layout: string;
   typ?: "py" | "parsons";
   tests?: TestCases | null;
@@ -349,12 +351,47 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
+  renderHeader() {
+    return (
+      <Toolbar variant="dense">
+        <div id="logo">
+          {/* placeholder if container site wants to replace it */}
+          <a href="/">
+            <img
+              src="/static/img/header.png"
+              alt="logo"
+              style={{ width: "40px" }}
+            />
+          </a>
+        </div>
+        <Box
+          sx={{
+            color: "primary.main",
+            fontWeight: "bold",
+            marginLeft: 2,
+          }}
+        >
+          {this.props.title || this.props.bookNode?.name || ""}
+        </Box>
+      </Toolbar>
+    );
+  }
+
   render() {
     if (this.state.errorLoading) {
       return <p>The challenges files cannot be found. Have they been moved?</p>;
     } else if (this.props.layout === "fullscreen") {
       return (
-        <Box sx={{ width: "100%", height: "100%" }}>
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "column",
+          }}
+        >
+          {this.renderHeader()}
           <Allotment className="h-100" defaultSizes={[65, 35]}>
             <Allotment.Pane>
               <Allotment vertical>
