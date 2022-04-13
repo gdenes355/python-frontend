@@ -1,21 +1,7 @@
 import React from "react";
-import {
-  Button,
-  Grid,
-  Box,
-  Stack,
-  MenuItem,
-  FormControlLabel,
-  Switch,
-  IconButton,
-  ListItemIcon,
-} from "@mui/material";
-
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import { Button, Grid, Box, Stack } from "@mui/material";
 
 import TestResultsIndicator from "../components/TestResultIndicator";
-import Menu from "../components/Menu";
 
 import { TestResults } from "../models/Tests";
 
@@ -24,12 +10,9 @@ type MainControlsProps = {
   canSubmit: boolean;
   canReset: boolean;
   testResults: TestResults;
-  theme: string;
   onDebug: () => void;
   onSubmit: () => void;
   onResetCode: () => void;
-  onThemeChange: (theme: string) => void;
-  onHelpOpen: (open: boolean) => void;
 };
 
 const MainControls = (props: MainControlsProps) => (
@@ -72,37 +55,6 @@ const MainControls = (props: MainControlsProps) => (
       >
         Reset
       </Button>
-    </Grid>
-    <Grid item>
-      <Menu
-        button={
-          <IconButton>
-            <MoreVertIcon />
-          </IconButton>
-        }
-      >
-        <MenuItem>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={props.theme === "vs-dark"}
-                onChange={() => {
-                  props.onThemeChange(
-                    props.theme === "vs-dark" ? "vs-light" : "vs-dark"
-                  );
-                }}
-              ></Switch>
-            }
-            label="Dark mode"
-          />
-        </MenuItem>
-        <MenuItem onClick={() => props.onHelpOpen(true)}>
-          <ListItemIcon>
-            <QuestionMarkIcon />
-          </ListItemIcon>
-          Help
-        </MenuItem>
-      </Menu>
     </Grid>
   </Grid>
 );
