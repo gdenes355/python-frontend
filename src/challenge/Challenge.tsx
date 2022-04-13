@@ -405,15 +405,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                 >
                   {this.renderMainControls()}
                   {this.renderGuide()}
-                  <BookControlFabs
-                    onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-                    onNavigateToNextPage={this.props.onRequestNextChallenge}
-                    onOpenMenu={() =>
-                      this.props.openBookDrawer
-                        ? this.props.openBookDrawer(true)
-                        : undefined
-                    }
-                  ></BookControlFabs>
                 </Box>
                 <Allotment.Pane
                   maxSize={350}
@@ -431,6 +422,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               </Allotment>
             </Allotment.Pane>
           </Allotment>
+          <BookControlFabs
+            onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+            onNavigateToNextPage={this.props.onRequestNextChallenge}
+            onOpenMenu={() =>
+              this.props.openBookDrawer
+                ? this.props.openBookDrawer(true)
+                : undefined
+            }
+          />
         </Box>
       );
     } else {
