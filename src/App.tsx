@@ -21,7 +21,6 @@ const AppContainer = () => {
         <Challenge
           guidePath={challengePath + ".md"}
           codePath={challengePath + ".py"}
-          hasBook={false}
           layout="linear"
         />
       </React.Fragment>

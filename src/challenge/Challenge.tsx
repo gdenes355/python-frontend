@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent, Tabs, Tab } from "@mui/material";
+import { Box, Card, CardContent, Tabs, Tab, Toolbar } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
@@ -9,7 +9,7 @@ import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
 import FileUploadControl from "../components/FileUploadControl";
-import { Allotment, AllotmentHandle} from "allotment";
+import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 
 import Cookies from "js-cookie";
@@ -23,8 +23,7 @@ import ChallengeController from "./ChallengeController";
 import ChallengeTypes from "../models/ChallengeTypes";
 
 import "./Challenge.css";
-
-
+import BookNodeModel from "../models/BookNodeModel";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -41,12 +40,12 @@ function TabPanel(props: TabPanelProps) {
       hidden={value !== index}
       id={`simple-tabpanel-${index}`}
       aria-labelledby={`simple-tab-${index}`}
-      style={{height: "100%"}}
+      style={{ height: "100%" }}
       {...other}
     >
-    <Box sx={{ p: 3, width: "100%", height: "100%", padding: "0px"}}>
-          {children}
-    </Box>
+      <Box sx={{ p: 3, width: "100%", height: "100%", padding: "0px" }}>
+        {children}
+      </Box>
     </div>
   );
 }
@@ -76,7 +75,8 @@ type ChallengeProps = {
   uid?: string | null;
   guidePath: string;
   codePath: string;
-  hasBook: boolean;
+  bookNode?: BookNodeModel;
+  title?: string;
   layout: string;
   typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
@@ -119,7 +119,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     helpOpen: false,
     guideMinimised: false,
     currentTab: 0,
-    typInferred: ChallengeTypes.TYP_PY
+    typInferred: ChallengeTypes.TYP_PY,
   };
 
   constructor(props: ChallengeProps) {
@@ -138,14 +138,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   draw(msg: string) {
-    this.setState({typInferred:ChallengeTypes.TYP_CANVAS});
+    this.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
     this.canvasDisplayRef?.current?.runCommand(msg);
   }
 
   turtle(msg: string) {
-    this.setState({typInferred:ChallengeTypes.TYP_CANVAS});
+    this.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
     this.canvasDisplayRef?.current?.runTurtleCommand(msg);
-  }  
+  }
 
   cls() {
     this.currentConsoleText = "";
@@ -202,7 +202,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
-      this.setState({typInferred:ChallengeTypes.TYP_PY});
+      this.setState({ typInferred: ChallengeTypes.TYP_PY });
       ChallengeController["restart-worker"](this, {});
       if (this.props?.uid) {
         let savedCode = localStorage.getItem(
@@ -247,32 +247,32 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.setState({ theme });
     Cookies.set("theme", theme);
   };
-  
-  handleFileRead = (e:any) => {
-    if(this.fileReader.result) {
-      this.editorRef.current?.setValue(this.fileReader.result.toString())
-    }
-  };  
 
-  handleUpload = (file:File) => {
-    this.fileReader  = new FileReader();
+  handleFileRead = (e: any) => {
+    if (this.fileReader.result) {
+      this.editorRef.current?.setValue(this.fileReader.result.toString());
+    }
+  };
+
+  handleUpload = (file: File) => {
+    this.fileReader = new FileReader();
     this.fileReader.onloadend = this.handleFileRead;
     this.fileReader.readAsText(file);
-  }
+  };
 
   handleGuideDisplayToggle = () => {
     // detect before reversing to avoid redraw until complete
-    if(!this.state.guideMinimised) {
+    if (!this.state.guideMinimised) {
       this.allotmentGuideRef?.current?.resize([90, 10]);
     } else {
       this.allotmentGuideRef?.current?.resize([65, 35]);
-    }  
-    this.setState({ guideMinimised : !this.state.guideMinimised });    
+    }
+    this.setState({ guideMinimised: !this.state.guideMinimised });
   };
 
   handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
-    this.setState({currentTab : newValue});
-  };  
+    this.setState({ currentTab: newValue });
+  };
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -298,7 +298,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           starterCode={this.state.savedCode || this.state.starterCode || ""}
         />
       );
-    }    
+    }
 
     return (
       <PyEditor
@@ -343,42 +343,62 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   }
 
   renderConsole = () => {
-    return (<Console
-      content={this.state.consoleText}
-      isInputEnabled={
-        this.state.editorState === ChallengeStatus.AWAITING_INPUT
-      }
-      onInput={(input) => {
-        ChallengeController["input-entered"](this, { input });
-      }}
-      onInterrupt={() => {
-        ChallengeController["restart-worker"](this, {
-          msg: "Interrupted...",
-          force: true,
-        });
-      }}
-    /> );
-  }
+    return (
+      <Console
+        content={this.state.consoleText}
+        isInputEnabled={
+          this.state.editorState === ChallengeStatus.AWAITING_INPUT
+        }
+        onInput={(input) => {
+          ChallengeController["input-entered"](this, { input });
+        }}
+        onInterrupt={() => {
+          ChallengeController["restart-worker"](this, {
+            msg: "Interrupted...",
+            force: true,
+          });
+        }}
+      />
+    );
+  };
 
   renderOutput = () => {
-    if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
+    if (
+      this.props.typ === "canvas" ||
+      this.state.typInferred === ChallengeTypes.TYP_CANVAS
+    ) {
       return (
-        <Box className={"theme-" + this.state.theme} sx={{ width: '100%', height: '100%' }}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs value={this.state.currentTab} onChange={this.handleTabChange} aria-label="Output tabs">
-            <Tab label="Canvas" id="simple-tab-0" aria-controls="simple-tabpanel-0" />
-            <Tab label="Console" id="simple-tab-1" aria-controls="simple-tabpanel-1" />
-          </Tabs>
+        <Box
+          className={"theme-" + this.state.theme}
+          sx={{ width: "100%", height: "100%" }}
+        >
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={this.state.currentTab}
+              onChange={this.handleTabChange}
+              aria-label="Output tabs"
+            >
+              <Tab
+                label="Canvas"
+                id="simple-tab-0"
+                aria-controls="simple-tabpanel-0"
+              />
+              <Tab
+                label="Console"
+                id="simple-tab-1"
+                aria-controls="simple-tabpanel-1"
+              />
+            </Tabs>
+          </Box>
+          <TabPanel value={this.state.currentTab} index={0}>
+            <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
+          </TabPanel>
+          <TabPanel value={this.state.currentTab} index={1}>
+            <Box sx={{ width: "100%", height: "100%" }}>
+              {this.renderConsole()}
+            </Box>
+          </TabPanel>
         </Box>
-        <TabPanel value={this.state.currentTab} index={0}>
-          <CanvasDisplay ref={this.canvasDisplayRef}></CanvasDisplay>
-        </TabPanel>
-        <TabPanel value={this.state.currentTab} index={1} >
-          <Box sx={{ width: "100%", height: "100%" }}>
-          {this.renderConsole()}
-          </Box>     
-        </TabPanel>
-      </Box>      
       );
     }
     return this.renderConsole();
@@ -389,11 +409,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       return;
     }
     return (
-      <Card sx={{ overflow: "visible"}}>
+      <Card sx={{ overflow: "visible" }}>
         <CardContent>
           <MainControls
             theme={this.state.theme}
-            guideMinimised = {this.state.guideMinimised}
+            guideMinimised={this.state.guideMinimised}
             onThemeChange={this.handleThemeChange}
             onGuideDisplayToggle={this.handleGuideDisplayToggle}
             onDebug={() => {
@@ -425,7 +445,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderGuide = () => {
-    if(this.state.guideMinimised) {
+    if (this.state.guideMinimised) {
       return;
     }
     if (this.state.helpOpen) {
@@ -456,13 +476,52 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
+  renderHeader() {
+    return (
+      <Toolbar variant="dense">
+        <div id="logo">
+          {/* placeholder if container site wants to replace it */}
+          <a href="/">
+            <img
+              src="/static/img/header.png"
+              alt="logo"
+              style={{ width: "40px" }}
+            />
+          </a>
+        </div>
+        <Box
+          sx={{
+            color: "primary.main",
+            fontWeight: "bold",
+            marginLeft: 2,
+          }}
+        >
+          {this.props.title || this.props.bookNode?.name || ""}
+        </Box>
+      </Toolbar>
+    );
+  }
+
   render() {
     if (this.state.errorLoading) {
       return <p>The challenges files cannot be found. Have they been moved?</p>;
     } else if (this.props.layout === "fullscreen") {
       return (
-        <Box sx={{ width: "100%", height: "100%" }}>
-          <Allotment className="h-100" defaultSizes={[65, 35]} ref={this.allotmentGuideRef}>
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "column",
+          }}
+        >
+          {this.renderHeader()}
+          <Allotment
+            className="h-100"
+            defaultSizes={[65, 35]}
+            ref={this.allotmentGuideRef}
+          >
             <Allotment.Pane>
               <Allotment vertical>
                 <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
@@ -474,7 +533,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   minSize={450}
                 >
                   {this.renderOutput()}
-                </Allotment.Pane>              
+                </Allotment.Pane>
               </Allotment>
             </Allotment.Pane>
             <Allotment.Pane
@@ -491,7 +550,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   }}
                 >
                   {this.renderMainControls()}
-                  <FileUploadControl onUpload={this.handleUpload}></FileUploadControl>
+                  <FileUploadControl
+                    onUpload={this.handleUpload}
+                  ></FileUploadControl>
                   {this.renderGuide()}
                   <BookControlFabs
                     guideMinimised={this.state.guideMinimised}
