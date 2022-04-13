@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import Challenge from "../challenge/Challenge";
 import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
