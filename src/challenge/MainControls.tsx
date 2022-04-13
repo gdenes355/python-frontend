@@ -11,12 +11,10 @@ import { TestResults } from "../models/Tests";
 type MainControlsProps = {
   canDebug: boolean;
   canSubmit: boolean;
-  canReset: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
   onDebug: () => void;
   onSubmit: () => void;
-  onResetCode: () => void;
   onGuideDisplayToggle: () => void;
 };
 

@@ -428,9 +428,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                 tests: this.props.tests,
               });
             }}
-            onResetCode={() => ChallengeController["reset-code"](this)}
             canDebug={this.state.editorState === ChallengeStatus.READY}
-            canReset={this.state.editorState === ChallengeStatus.READY}
             canSubmit={
               this.props.tests !== null || this.props.typ === "parsons"
             }
