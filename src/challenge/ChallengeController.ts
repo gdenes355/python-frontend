@@ -71,7 +71,7 @@ const ChallengeController = {
     if (comp.state.editorState !== ChallengeStatus.READY) {
       comp.turtle(data.msg);
     }
-  },  
+  },
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) =>
     comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
@@ -280,5 +280,3 @@ const ChallengeController = {
 };
 
 export default ChallengeController;
-
-
