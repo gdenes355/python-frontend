@@ -6,13 +6,24 @@ type CanvasDisplayProps = {
 };
 
 type CanvasDisplayState = {
-  turtle: any
+  turtle: any,
+  mode: string,
+  heading: number
 };
+
+const CANVAS_WIDTH = 500;
+const CANVAS_HEIGHT = 400
+const TURTLE_SIZE_DEFAULT = 15;
+const TURTLE_WIDTH_DEFAULT = 1;
+const TURTLE_SPEED_DEFAULT = 0.5;
+const TURTLE_STROKE_DEFAULT = "BLACK";
+const TURTLE_CIRCLE_CCW_DEFAULT = true;
+const TURTLE_STANDARD_MODE_BEARING = 90;
 
 class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplayState> {
 
   canvasEl = React.createRef<HTMLCanvasElement>();
-  
+
   state = {
     turtle: {
       "forward": (val:number) => {}, 
@@ -25,17 +36,38 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
       "setLineWidth": (val:number) => {}, 
       "setSize": (val:number) => {},
       "setSpeed": (val:number) => {},      
-      "setStrokeColorRGB": (r:number, g:number, b:number) => {},
-      "arc": (r:number, e:number) => {},
-      "fake": true}
+      "setStrokeStyle": (val:string) => {},
+      "arc": (r:number, e:number, c:boolean) => {},
+      "beginPath": () => {},      
+      "closePath": () => {}, 
+      "fill": () => {}, 
+      "setFillStyle": (val:string) => {},       
+      "fake": true},
+      mode: "standard",
+      heading: 0
   };
 
-  runTurtleCommand(msg:string) {
+  turtleReset() {
     const canvas: HTMLCanvasElement = document.getElementById('canvasDisplay') as HTMLCanvasElement;
-    const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+    const context = canvas.getContext('2d') as CanvasRenderingContext2D;    
+    this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})});
+    this.state.turtle.setSize(0);
+    this.state.turtle.setPosition(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+    this.state.turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
+    this.setState({"heading": 0});
+    this.setState({"mode": "standard"});
+    this.state.turtle.setSize(TURTLE_SIZE_DEFAULT);
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+    this.state.turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
+    this.state.turtle.setSpeed(TURTLE_SPEED_DEFAULT);
+    this.state.turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);     
+  }
+
+  runTurtleCommand(msg:string) {
+
     console.log(msg)
     if(this.state.turtle.fake) {
-      this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})})
+      this.turtleReset();
     }
     
     try {
@@ -49,12 +81,18 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
           break;          
         case "right":
           this.state.turtle.right(turtleObj.value); 
+          this.state.mode === "logo"?
+            this.setState({"heading": this.state.heading + turtleObj.value}):
+            this.setState({"heading": this.state.heading - turtleObj.value});
           break;
         case "left":
-          this.state.turtle.left(turtleObj.value); 
+          this.state.turtle.left(turtleObj.value);
+          this.state.mode === "logo"?
+            this.setState({"heading": this.state.heading - turtleObj.value}):
+            this.setState({"heading": this.state.heading + turtleObj.value});
           break;                         
         case "setposition":
-          this.state.turtle.setPosition(turtleObj.x, turtleObj.y);
+          this.state.turtle.setPosition(turtleObj.x + CANVAS_WIDTH / 2, turtleObj.y + CANVAS_HEIGHT / 2);
           break; 
         case "penup":
           this.state.turtle.penUp();
@@ -65,6 +103,18 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
         case "pensize":
           this.state.turtle.setLineWidth(turtleObj.value);
           break;
+        case "setheading":
+          const turn = turtleObj.value - this.state.heading;
+          if(turn !== 0) {
+            if(this.state.mode === "logo") {
+              this.state.turtle.right(turn);
+            } else {
+              // standard
+              this.state.turtle.left(turn);
+            }
+            this.setState({heading: turtleObj.value});
+          }
+          break;
         case "hideturtle":
           this.state.turtle.setSize(0);
           break;
@@ -72,11 +122,34 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
           this.state.turtle.setSize(15); // default
           break;
         case "pencolor":
-          this.state.turtle.setStrokeColorRGB(turtleObj.r, turtleObj.g, turtleObj.b); 
-          break;
+          if((typeof turtleObj.value === 'string' || turtleObj.value instanceof String)) {
+            this.state.turtle.setStrokeStyle(turtleObj.value); // a named color as string or html code            
+          } else 
+          {
+            this.state.turtle.setStrokeStyle(`rgb(${turtleObj.value[0]},${turtleObj.value[1]},${turtleObj.value[2]})`) // color tuple
+          }
+          break;   
         case "circle":
-          this.state.turtle.arc(turtleObj.radius, turtleObj.extent);
+          this.state.turtle.arc(turtleObj.radius, turtleObj.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
+          this.state.mode === "logo"?
+            this.setState({"heading": this.state.heading - turtleObj.extent}):
+            this.setState({"heading": this.state.heading + turtleObj.extent});
           break;
+        case "begin_fill":
+          this.state.turtle.beginPath();
+          break;
+        case "end_fill":
+          this.state.turtle.closePath();
+          this.state.turtle.fill()
+          break;
+        case "fillcolor":
+          if((typeof turtleObj.value === 'string' || turtleObj.value instanceof String)) {
+            this.state.turtle.setFillStyle(turtleObj.value); // a named color as string or html code            
+          } else 
+          {
+            this.state.turtle.setFillStyle(`rgb(${turtleObj.value[0]},${turtleObj.value[1]},${turtleObj.value[2]})`) // color tuple
+          }
+          break;          
         case "speed":
           let speed_val = 0.5;
           switch(turtleObj.value) {
@@ -102,13 +175,16 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
           this.state.turtle.setSpeed(speed_val);
           break;                                                      
         case "reset":
-          context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-          this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})});
-          this.state.turtle.setPosition(0, 0);
-          this.state.turtle.setLineWidth(1);
-          this.state.turtle.setSpeed(0.5);
-          this.state.turtle.setSize(15); // default
-          this.state.turtle.setStrokeColorRGB(0, 0, 0); 
+          this.turtleReset();
+          break;
+        case "mode":
+          this.turtleReset();
+          if(turtleObj.value === "logo") {
+            this.state.turtle.setSize(0);
+            this.state.turtle.left(TURTLE_STANDARD_MODE_BEARING); // for logo mode
+            this.state.turtle.setSize(TURTLE_SIZE_DEFAULT);  
+            this.setState({"mode": "logo"});
+          }
           break;
       }
 
@@ -116,6 +192,7 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
     catch(err) {
       console.log("error processing canvas turtle action:");
       console.log(msg);
+      console.log(err);
     }
   }
 
@@ -217,8 +294,8 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
         <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
           <canvas
             id="canvasDisplay"
-            width="500"
-            height="400"
+            width={CANVAS_WIDTH}
+            height={CANVAS_HEIGHT}
             ref = {this.canvasEl}
           />
         </div>

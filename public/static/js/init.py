@@ -163,6 +163,13 @@ from pyodide import to_js
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 
+def mode(mode_type):
+    json_map = {"action":"mode", "value":mode_type}
+    post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+
+def done():
+    pass # no need to do anything
+
 class Turtle:
     def __init__(self):
         json_map = {"action":"reset"}
@@ -224,11 +231,14 @@ class Turtle:
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
     def home(self):
         self.setposition(0, 0)
-    def pencolor(self, r, g, b):
-        json_map = {"action":"pencolor", "r":r, "g":g, "b":b}
+    def pencolor(self, color):
+        json_map = {"action":"pencolor", "value":color}
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def color(self, r, g, b):
-        self.pencolor(r, g, b)      
+    def setheading(self, angle):
+        json_map = {"action":"setheading", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})           
+    def color(self, color):
+        self.pencolor(color)      
     def pensize(self, size):
         json_map = {"action":"pensize", "value":size}
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
@@ -236,7 +246,16 @@ class Turtle:
         self.pensize(size)
     def circle(self, radius, extent = 360):
         json_map = {"action":"circle", "radius":radius, "extent": extent}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                                                
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def begin_fill (self):
+        json_map = {"action":"begin_fill"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def end_fill(self):
+        json_map = {"action":"end_fill"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})        
+    def fillcolor(self, color):
+        json_map = {"action":"fillcolor", "value":color}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                                                   
      
 ''')
 
