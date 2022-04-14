@@ -175,13 +175,68 @@ class Turtle:
     def setposition(self, x, y):
         json_map = {"action":"setposition", "x":x, "y":y}
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def setpos(self, x, y):
+        self.setposition(x, y)
+    def goto(self, x, y):
+        self.setposition(x, y)          
     def right(self, angle):
         json_map = {"action":"right", "value":angle}
         post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def rt(self, angle):
+        self.right(angle)       
     def left(self, angle):
         json_map = {"action":"left", "value":angle}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                
-
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def lt(self, angle):
+        self.left(angle)
+    def backward(self, dist):
+        json_map = {"action":"backward", "value":dist}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def back(self, angle):
+        self.backward(dist) 
+    def bk(self, angle):
+        self.backward(dist)
+    def penup(self):
+        json_map = {"action":"penup"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def pu(self):
+        self.penup()
+    def up(self):
+        self.penup()
+    def pendown(self):
+        json_map = {"action":"pendown"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def pd(self):
+        self.pendown()
+    def down(self):
+        self.pendown()
+    def speed(self, speed_value):
+        json_map = {"action":"speed", "value":speed_value}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def reset(self):
+        json_map = {"action":"reset"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def hideturtle(self):
+        json_map = {"action":"hideturtle"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def showturtle(self):
+        json_map = {"action":"showturtle"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def home(self):
+        self.setposition(0, 0)
+    def pencolor(self, r, g, b):
+        json_map = {"action":"pencolor", "r":r, "g":g, "b":b}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def color(self, r, g, b):
+        self.pencolor(r, g, b)      
+    def pensize(self, size):
+        json_map = {"action":"pensize", "value":size}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def width(self, size):
+        self.pensize(size)
+    def circle(self, radius, extent = 360):
+        json_map = {"action":"circle", "radius":radius, "extent": extent}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                                                
      
 ''')
 

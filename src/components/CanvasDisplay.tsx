@@ -6,11 +6,6 @@ type CanvasDisplayProps = {
 };
 
 type CanvasDisplayState = {
-  turtle_x_init: number,
-  turtle_y_init: number,    
-  turtle_x: number,
-  turtle_y: number,
-  turtle_dir: number
   turtle: any
 };
 
@@ -19,19 +14,21 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
   canvasEl = React.createRef<HTMLCanvasElement>();
   
   state = {
-    turtle_x_init: 250,
-    turtle_y_init: 200,    
-    turtle_x: 250,
-    turtle_y: 200,
-    turtle_dir: 0,
-    turtle: {"forward": (val:number) => {}, "right": (val:number) => {}, "left": (val:number) => {}, "setPosition": (x:number, y:number) => {}, "fake": true}
+    turtle: {
+      "forward": (val:number) => {}, 
+      "right": (val:number) => {}, 
+      "left": (val:number) => {}, 
+      "setPosition": (x:number, y:number) => {}, 
+      "back": (val:number) => {}, 
+      "penUp": () => {}, 
+      "penDown": () => {}, 
+      "setLineWidth": (val:number) => {}, 
+      "setSize": (val:number) => {},
+      "setSpeed": (val:number) => {},      
+      "setStrokeColorRGB": (r:number, g:number, b:number) => {},
+      "arc": (r:number, e:number) => {},
+      "fake": true}
   };
-
-  /*
-  constructor(props: CanvasDisplayProps) {
-    super(props);
-  } 
-  */
 
   runTurtleCommand(msg:string) {
     const canvas: HTMLCanvasElement = document.getElementById('canvasDisplay') as HTMLCanvasElement;
@@ -45,36 +42,76 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
       const turtleObj = JSON.parse(msg);
       switch(turtleObj.action) { 
         case "forward":
-          /*
-          context.moveTo(this.state.turtle_x, this.state.turtle_y);
-          const new_x = this.state.turtle_x + Math.sin(this.state.turtle_dir) * turtleObj.value;
-          const new_y = this.state.turtle_y - Math.cos(this.state.turtle_dir) * turtleObj.value;
-          context.lineTo(new_x, new_y);
-          this.setState({turtle_x: new_x, turtle_y: new_y})
-          context.stroke();
-          */
           this.state.turtle.forward(turtleObj.value);            
           break;
-        case "right":
-            this.state.turtle.right(turtleObj.value); 
-            // this.setState({turtle_dir: this.state.turtle_dir + (Math.PI / 180) * turtleObj.value});
-            break;
-        case "left":
-            this.state.turtle.left(turtleObj.value); 
-            // this.setState({turtle_dir: this.state.turtle_dir - (Math.PI / 180) * turtleObj.value});
-            break;                         
-        case "setposition":
-            this.state.turtle.setPosition(turtleObj.x, turtleObj.y)
-            // this.setState({turtle_x: turtleObj.x, turtle_y: turtleObj.y});
-            // context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
+        case "backward":
+          this.state.turtle.back(turtleObj.value);            
           break;          
+        case "right":
+          this.state.turtle.right(turtleObj.value); 
+          break;
+        case "left":
+          this.state.turtle.left(turtleObj.value); 
+          break;                         
+        case "setposition":
+          this.state.turtle.setPosition(turtleObj.x, turtleObj.y);
+          break; 
+        case "penup":
+          this.state.turtle.penUp();
+          break;
+        case "pendown":
+          this.state.turtle.penDown();
+          break;
+        case "pensize":
+          this.state.turtle.setLineWidth(turtleObj.value);
+          break;
+        case "hideturtle":
+          this.state.turtle.setSize(0);
+          break;
+        case "showturtle":
+          this.state.turtle.setSize(15); // default
+          break;
+        case "pencolor":
+          this.state.turtle.setStrokeColorRGB(turtleObj.r, turtleObj.g, turtleObj.b); 
+          break;
+        case "circle":
+          this.state.turtle.arc(turtleObj.radius, turtleObj.extent);
+          break;
+        case "speed":
+          let speed_val = 0.5;
+          switch(turtleObj.value) {
+            case "fastest":
+              speed_val = 0.9;
+              break;
+            case "fast":
+              speed_val = 0.75;
+              break;
+            case "normal":
+              speed_val = 0.5;
+              break;
+            case "slow":
+              speed_val = 0.25;
+              break;
+            case "slowest":
+              speed_val = 0
+              break;
+            default:
+              speed_val = turtleObj.value === 0 ? 1 : (turtleObj.value / 10); 
+          }
+          
+          this.state.turtle.setSpeed(speed_val);
+          break;                                                      
         case "reset":
-          // this.setState({turtle_x: this.state.turtle_x_init, turtle_y: this.state.turtle_y_init});
-          // context.moveTo(this.state.turtle_x_init, this.state.turtle_y_init);
           context.clearRect(0, 0, context.canvas.width, context.canvas.height);
-          this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})})
+          this.setState({"turtle": new RealTurtle(document.getElementById("canvasDisplay"), {"autoStart":true})});
+          this.state.turtle.setPosition(0, 0);
+          this.state.turtle.setLineWidth(1);
+          this.state.turtle.setSpeed(0.5);
+          this.state.turtle.setSize(15); // default
+          this.state.turtle.setStrokeColorRGB(0, 0, 0); 
           break;
       }
+
     }
     catch(err) {
       console.log("error processing canvas turtle action:");
@@ -190,5 +227,3 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps, CanvasDisplaySta
 }
 
 export default CanvasDisplay;
-
-// <script type="text/javascript" src="https://unpkg.com/real-turtle"></script>
