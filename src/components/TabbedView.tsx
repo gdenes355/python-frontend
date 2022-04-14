@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 
 type TabbedPane = {
@@ -10,10 +10,14 @@ type TabbedViewProps = {
   panes: TabbedPane[];
 };
 
+type TabbedViewState = {
+  currentTab: number | false;
+};
+
 type TabPanelProps = {
   children?: React.ReactNode;
   index: number;
-  value: number;
+  value: number | false;
 };
 
 function TabPanel(props: TabPanelProps) {
@@ -35,30 +39,47 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-const TabbedView = (props: TabbedViewProps) => {
-  const [currentTab, setCurrentTab] = useState(0);
+class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
+  constructor(props: TabbedViewProps) {
+    super(props);
+    this.requestPane.bind(this);
+  }
 
-  return (
-    <React.Fragment>
-      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-        <Tabs
-          value={currentTab}
-          onChange={(evt, newVal) => setCurrentTab(newVal)}
-          aria-label="Output tabs"
-        >
-          {props.panes.map((pane, i) => (
-            <Tab label={pane.label} key={i} />
-          ))}
-        </Tabs>
-      </Box>
-      {props.panes.map((pane, i) => (
-        <TabPanel value={currentTab} index={i}>
-          {pane.content}
-        </TabPanel>
-      ))}
-    </React.Fragment>
-  );
-};
+  state: TabbedViewState = {
+    currentTab: false,
+  };
+
+  requestPane(index: number) {
+    this.setState({ currentTab: index });
+  }
+
+  componentDidMount() {
+    this.setState({ currentTab: 0 });
+  }
+
+  render() {
+    return (
+      <React.Fragment>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={this.state.currentTab}
+            onChange={(evt, newVal) => this.setState({ currentTab: newVal })}
+            aria-label="Output tabs"
+          >
+            {this.props.panes.map((pane, i) => (
+              <Tab label={pane.label} key={i} />
+            ))}
+          </Tabs>
+        </Box>
+        {this.props.panes.map((pane, i) => (
+          <TabPanel value={this.state.currentTab} index={i} key={i}>
+            {pane.content}
+          </TabPanel>
+        ))}
+      </React.Fragment>
+    );
+  }
+}
 
 export default TabbedView;
 export { TabbedPane };
