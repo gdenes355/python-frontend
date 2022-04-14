@@ -11,7 +11,7 @@ import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
 import TabbedView from "../components/TabbedView";
-import { Allotment, AllotmentHandle } from "allotment";
+import { Allotment } from "allotment";
 import HeaderBar from "./HeaderBar";
 import "allotment/dist/style.css";
 
@@ -70,7 +70,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
-  allotmentGuideRef = React.createRef<AllotmentHandle>();
+  tabbedViewRef = React.createRef<TabbedView>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -331,6 +331,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             }}
           >
             <TabbedView
+              ref={this.tabbedViewRef}
               panes={[
                 {
                   label: "Canvas",
@@ -459,20 +460,16 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             }}
           >
             {this.renderHeader()}
-            <Allotment
-              className="h-100"
-              defaultSizes={[65, 35]}
-              ref={this.allotmentGuideRef}
-            >
+            <Allotment className="h-100" defaultSizes={[65, 35]}>
               <Allotment.Pane>
-                <Allotment vertical>
+                <Allotment vertical defaultSizes={[65, 35]}>
                   <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
                     )}
                     maxSize={550}
-                    minSize={450}
+                    minSize={150}
                   >
                     {this.renderOutput()}
                   </Allotment.Pane>

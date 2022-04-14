@@ -80,9 +80,10 @@ const ChallengeController = {
     }
   },
   cls: (comp: Challenge) => comp.cls(),
-  input: (comp: Challenge) =>
-    comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
-
+  input: (comp: Challenge) => {
+    comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT });
+    comp.tabbedViewRef?.current?.requestPane(1);
+  },
   "input-entered": (comp: Challenge, data: InputData) => {
     let x = new XMLHttpRequest();
     x.open("post", "/@input@/resp.js");
