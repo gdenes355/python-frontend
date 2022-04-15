@@ -38,5 +38,6 @@ declare module "real-turtle" {
     setFillStyle(val: string): void;
     fake: boolean;
     options: RealTurtleOptions;
+    canvas: HTMLCanvasElement;
   }
 }

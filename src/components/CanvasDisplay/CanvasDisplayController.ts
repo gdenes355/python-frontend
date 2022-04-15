@@ -7,9 +7,6 @@ const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_STANDARD_MODE_BEARING = 90;
 
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 400;
-
 const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
   try {
     if (cmd.clearCanvas) {
@@ -146,7 +143,10 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
               turtle.options.state.heading + cmd.value);
         break;
       case "setposition":
-        turtle.setPosition(cmd.x + CANVAS_WIDTH / 2, cmd.y + CANVAS_HEIGHT / 2);
+        turtle.setPosition(
+          cmd.x + turtle.canvas.width / 2,
+          cmd.y + turtle.canvas.height / 2
+        );
         break;
       case "penup":
         turtle.penUp();
@@ -248,7 +248,7 @@ const initialiseTurtle: (
     autoStart: true,
     state: {},
   }) as RealTurtle;
-  turtle.setPosition(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+  turtle.setPosition(canvas.width / 2, canvas.height / 2);
   if (mode === "standard") {
     turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
   }

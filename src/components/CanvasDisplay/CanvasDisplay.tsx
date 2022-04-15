@@ -12,9 +12,6 @@ type CanvasDisplayProps = {
   onKeyUp?: React.KeyboardEventHandler;
 };
 
-const CANVAS_WIDTH = 500;
-const CANVAS_HEIGHT = 400;
-
 class CanvasDisplay extends React.Component<CanvasDisplayProps> {
   canvasEl = React.createRef<HTMLCanvasElement>();
 
@@ -66,8 +63,8 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps> {
       <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
         <canvas
           id="canvasDisplay"
-          width={CANVAS_WIDTH}
-          height={CANVAS_HEIGHT}
+          width={500}
+          height={400}
           ref={this.canvasEl}
           onKeyDown={this.props.onKeyDown}
           onKeyUp={this.props.onKeyUp}
