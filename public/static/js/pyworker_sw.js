@@ -1,4 +1,4 @@
-importScripts('https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js')
+importScripts('https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js')
 
 // communication with the main site
 // there are two commands implemented at the moment:
@@ -7,13 +7,14 @@ importScripts('https://cdn.jsdelivr.net/pyodide/v0.19.1/full/pyodide.js')
 // the assumption is that run will not be called while there is an active Python code running
 // also, there is an assumption that there cannot be two synchronouse inputs
 onmessage = function (e) {
-  if (e.data.cmd === 'setInterruptBuffer') {
+  if (e.data.cmd === 'setSharedBuffers') {
     if (self.pyodide) {
       self.pyodide.setInterruptBuffer(e.data.interruptBuffer)
       self.interruptBufferToSet = null
     } else {
       self.interruptBufferToSet = e.data.interruptBuffer
     }
+    self.keyDownBuffer = e.data.keyDownBuffer
   } else if (e.data.cmd === 'debug') {
     let reason = 'ok'
     try {
@@ -45,7 +46,7 @@ onmessage = function (e) {
 // loading code
 const loadPyodideAsync = async () => {
   let initPyPromise = fetch("./init.py")
-  self.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.19.0/full/' })
+  self.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/' })
   
   initPyCode = await (await initPyPromise).text()
 
@@ -53,7 +54,6 @@ const loadPyodideAsync = async () => {
     self.pyodide.setInterruptBuffer(self.interruptBufferToSet)
     self.interruptBufferToSet = null
   }
-  
   await self.pyodide.runPython(initPyCode)
 }
 loadPyodideAsync().then(() => self.postMessage({ cmd: 'init-done' }))
@@ -62,3 +62,4 @@ loadPyodideAsync().then(() => self.postMessage({ cmd: 'init-done' }))
 // eslint-disable-next-line no-unused-vars
 function workerPostMessage (msg) { self.postMessage(msg) }
 function workerPrint (msg) { self.postMessage({ cmd: 'print', msg: msg }) }
+function workerCheckKeyDown(keyCode) { return self.keyDownBuffer[keyCode] > 0;}

@@ -45,6 +45,7 @@ type ChallengeState = {
   breakpointsChanged: boolean;
   testsPassing: boolean | null;
   interruptBuffer: Uint8Array | null;
+  keyDownBuffer: Uint8Array | null;
   helpOpen: boolean;
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
@@ -95,6 +96,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     breakpointsChanged: false,
     testsPassing: null,
     interruptBuffer: null,
+    keyDownBuffer: null,
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
@@ -335,7 +337,17 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               panes={[
                 {
                   label: "Canvas",
-                  content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+                  content: (
+                    <CanvasDisplay
+                      ref={this.canvasDisplayRef}
+                      onKeyDown={(e) =>
+                        ChallengeController["canvas-keydown"](this, e)
+                      }
+                      onKeyUp={(e) =>
+                        ChallengeController["canvas-keyup"](this, e)
+                      }
+                    />
+                  ),
                 },
                 {
                   label: "Console",

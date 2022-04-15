@@ -2,6 +2,11 @@ import React from "react";
 import "./CanvasDisplay.css";
 import RealTurtle from "real-turtle";
 
+type CanvasDisplayProps = {
+  onKeyDown?: React.KeyboardEventHandler;
+  onKeyUp?: React.KeyboardEventHandler;
+};
+
 const CANVAS_WIDTH = 500;
 const CANVAS_HEIGHT = 400;
 const TURTLE_SIZE_DEFAULT = 15;
@@ -11,7 +16,7 @@ const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_CIRCLE_CCW_DEFAULT = true;
 const TURTLE_STANDARD_MODE_BEARING = 90;
 
-class CanvasDisplay extends React.Component {
+class CanvasDisplay extends React.Component<CanvasDisplayProps> {
   canvasEl = React.createRef<HTMLCanvasElement>();
 
   turtle: RealTurtle | null = null;
@@ -340,6 +345,10 @@ class CanvasDisplay extends React.Component {
           width={CANVAS_WIDTH}
           height={CANVAS_HEIGHT}
           ref={this.canvasEl}
+          onKeyDown={this.props.onKeyDown}
+          onKeyUp={this.props.onKeyUp}
+          tabIndex={1}
+          style={{ outline: "none" }}
         />
       </div>
     );
