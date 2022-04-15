@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 
 import {
   Toolbar,
@@ -13,7 +13,9 @@ import {
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import ArticleIcon from "@mui/icons-material/Article";
 import Menu from "../components/Menu";
+import InputsDialog from "../components/InputsDialog";
 import FileUploadControl from "../components/FileUploadControl";
 
 type HeaderBarProps = {
@@ -28,6 +30,9 @@ type HeaderBarProps = {
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
+
+  const inputsDialog = useRef<HTMLDivElement>(null);
+
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
@@ -103,6 +108,12 @@ const HeaderBar = (props: HeaderBarProps) => {
               </ListItemIcon>
               Help
             </MenuItem>
+            <MenuItem>
+              <ListItemIcon>
+                <ArticleIcon />
+              </ListItemIcon>
+              <InputsDialog ref={inputsDialog}/>
+            </MenuItem>            
           </Menu>
         </Grid>
       </Grid>
