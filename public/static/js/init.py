@@ -22,79 +22,105 @@ class DebugContext:
         self._lineWidth = 1.0
         self._textAlign = "start"
         self._textBaseline = "alphabetic"
+        self.__commands = []
+        # when double buffering is enabled, draw calls are batched
+        # and only committed when calling present()
+        self.__double_buffering = False
+
+    def _present(self):
+        post_message({"cmd": "draw", "msg": json.dumps(self.__commands)})
+        self.__commands = []
+
+    def _add_command(self, cmd):
+        self.__commands.append(cmd)
+        if not self.__double_buffering:
+            self._present()
+
+    def present(self):
+        self._present()
+        # public call of this endpoint implies double buffering
+        self.__double_buffering = True
 
     def fillRect(self, x, y, width, height, clearCanvas=False):
         json_map = {"action": "fillRect", "x": x, "y": y,
                     "width": width, "height": height, "clearCanvas": clearCanvas}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def strokeRect(self, x, y, width, height, clearCanvas=False):
         json_map = {"action": "strokeRect", "x": x, "y": y,
                     "width": width, "height": height, "clearCanvas": clearCanvas}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def beginPath(self):
         json_map = {"action": "beginPath"}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def closePath(self):
         json_map = {"action": "closePath"}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def fill(self, fillRule="nonzero", clearCanvas=False):
         json_map = {"action": "fill", "fillRule": fillRule,
                     "clearCanvas": clearCanvas}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def stroke(self):
         json_map = {"action": "stroke"}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def arc(self, x, y, radius, startAngle, endAngle, counterclockwise=False):
         json_map = {"action": "arc", "x": x, "y": y, "radius": radius,
                     "startAngle": startAngle, "endAngle": endAngle, "counterclockwise": counterclockwise}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def ellipse(self, x, y, radiusX, radiusY, rotation, startAngle, endAngle, counterclockwise=False):
         json_map = {"action": "ellipse", "x": x, "y": y, "radiusX": radiusX, "radiusY": radiusY,
                     "rotation": rotation, "startAngle": startAngle, "endAngle": endAngle, "counterclockwise": counterclockwise}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def arcTo(self, x1, y1, x2, y2, radius):
         json_map = {"action": "arc", "x1": x1, "y1": y1,
                     "x2": x2, "y2": y2, "radius": radius}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def bezierCurveTo(self, cp1x, cp1y, cp2x, cp2y, x, y):
         json_map = {"action": "bezierCurveTo", "cp1x": cp1x,
                     "cp1y": cp1y, "cp2x": cp2x, "cp2y": cp2y, "x": x, "y": y}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def moveTo(self, x, y):
         json_map = {"action": "moveTo", "x": x, "y": y}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def clearRect(self, x, y, width, height):
         json_map = {"action": "clearRect", "x": x,
                     "y": y, "width": width, "height": height}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def lineTo(self, x, y):
         json_map = {"action": "lineTo", "x": x, "y": y}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def fillText(self, text, x, y, maxWidth="", clearCanvas=False):
         json_map = {"action": "fillText", "text": text, "x": x,
                     "y": y, "maxWidth": maxWidth, "clearCanvas": clearCanvas}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def strokeText(self, text, x, y, maxWidth="", clearCanvas=False):
         json_map = {"action": "strokeText", "text": text, "x": x,
                     "y": y, "maxWidth": maxWidth, "clearCanvas": clearCanvas}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     def check_key(self, key_code):
         return js.workerCheckKeyDown(key_code)
+
+    @property
+    def double_buffering(self):
+        return self.__double_buffering
+
+    @double_buffering.setter
+    def double_buffering(self, value):
+        self.__double_buffering = value
 
     @property
     def fillStyle(self):
@@ -104,7 +130,7 @@ class DebugContext:
     def fillStyle(self, color):
         self._fillStyle = color
         json_map = {"action": "fillStyle", "color": color}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     @property
     def strokeStyle(self):
@@ -114,7 +140,7 @@ class DebugContext:
     def strokeStyle(self, color):
         self._strokeStyle = color
         json_map = {"action": "strokeStyle", "color": color}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     @property
     def lineWidth(self):
@@ -124,7 +150,7 @@ class DebugContext:
     def lineWidth(self, value):
         self._lineWidth = value
         json_map = {"action": "lineWidth", "value": value}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     @property
     def font(self):
@@ -134,7 +160,7 @@ class DebugContext:
     def font(self, value):
         self._font = value
         json_map = {"action": "font", "value": value}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     @property
     def textAlign(self):
@@ -144,7 +170,7 @@ class DebugContext:
     def textAlign(self, value):
         self._textAlign = value
         json_map = {"action": "textAlign", "value": value}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
     @property
     def textBaseline(self):
@@ -154,7 +180,7 @@ class DebugContext:
     def textBaseline(self, value):
         self._textBaseline = value
         json_map = {"action": "textBaseline", "value": value}
-        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+        self._add_command(json_map)
 
 
 class DebugOutput:
@@ -297,6 +323,7 @@ def pyexec(code, expected_input, expected_output):
     sys.stdout = test_output
     sys.stderr = test_output
     sys.stdctx = debug_context
+    debug_context.double_buffering = False  # assume single buffering
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input

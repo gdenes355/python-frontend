@@ -6,7 +6,7 @@ import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
-import CanvasDisplay from "../components/CanvasDisplay";
+import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";

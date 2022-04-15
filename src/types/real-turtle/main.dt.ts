@@ -8,13 +8,15 @@ declare module "real-turtle" {
     lineWidth?: number;
     size?: number;
     speed?: number;
+    heading?: number; // added for Python frontend
   };
   export type RealTurtleOptions = {
     autoStart?: boolean;
     verbose?: boolean;
     async?: boolean;
     image?: string;
-    state?: RealTurtleOptionsState;
+    state: RealTurtleOptionsState;
+    mode?: "standard" | "logo";
   };
   export default class RealTurtle {
     constructor(canvas: HTMLElement, options: RealTurtleOptions);
