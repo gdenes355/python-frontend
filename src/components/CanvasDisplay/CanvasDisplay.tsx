@@ -39,9 +39,8 @@ class CanvasDisplay extends React.Component<CanvasDisplayProps> {
     const turtleObj = JSON.parse(msg);
     if (turtleObj.action === "reset") {
       if (!this.turtleJustReset) {
+        this.turtleReset("standard");
       }
-      // skip immediate resets
-      this.turtleReset("standard");
     } else if (turtleObj.action === "mode") {
       this.turtleReset(turtleObj.value);
     } else {
