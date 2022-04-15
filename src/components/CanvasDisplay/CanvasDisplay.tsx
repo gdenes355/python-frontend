@@ -1,11 +1,8 @@
 import React from "react";
 import "./CanvasDisplay.css";
 import RealTurtle from "real-turtle";
-import {
-  processCanvasCommand,
-  processTurtleCommand,
-  initialiseTurtle,
-} from "./CanvasDisplayController";
+import { processCanvasCommand } from "./CanvasController";
+import { processTurtleCommand, initialiseTurtle } from "./TurtleController";
 
 type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
