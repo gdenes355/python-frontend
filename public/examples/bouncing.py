@@ -133,5 +133,6 @@ resetScreen()
 while True:
     time.sleep(1 / 60)
     animate()
+    stdctx.present()
     if stdctx.check_key(ord("Q")) or ball.game_over:
-      break
+        break
