@@ -18,7 +18,7 @@ SCREEN_HEIGHT = 400
 RAD = 10
 BAR_WIDTH = 60
 BAR_HEIGHT = 10
-BAR_MOVE_STEP = 15
+BAR_MOVE_STEP = 5
 BLOCK_WIDTH = 60
 BLOCK_HEIGHT = 20
 
@@ -67,28 +67,12 @@ def circle(x, y, r):
 
 
 def rect(x, y, w, h):
-    stdctx.beginPath()
     stdctx.fillRect(x, y, w, h)
-    stdctx.closePath()
-    # stdctx.fill()
 
 
 def resetScreen():
     stdctx.fillStyle = "#FAF7F8"
     rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
-
-
-def move_paddle(evt):
-    # print(evt.keyCode)
-    if ball.game_over:
-        return
-
-    if evt.keyCode == 39:
-        paddle.x_change = BAR_MOVE_STEP
-    elif evt.keyCode == 37:
-        paddle.x_change = -BAR_MOVE_STEP
-    else:
-        print("key not known")
 
 
 def animate():
@@ -103,6 +87,11 @@ def animate():
 
     # clear screen
     resetScreen()
+
+    if stdctx.check_key(39):
+        paddle.x_change = BAR_MOVE_STEP
+    elif stdctx.check_key(37):
+        paddle.x_change = -BAR_MOVE_STEP
 
     # draw green brick and check for brick hit
     stdctx.fillStyle = "#00FF00"
@@ -137,18 +126,12 @@ def animate():
 
     # check for lost game
     if ball.y > SCREEN_HEIGHT:
-        print("Game Over")
         ball.game_over = True
-    else:
-        # set new timeout
-        #window.setTimeout(animate, 10)
-        pass
 
 
 resetScreen()
-#window.addEventListener('keydown', move_paddle, True)
-#window.setTimeout(animate, 10)
-
 while True:
-    time.sleep(1 / 30)
+    time.sleep(1 / 60)
     animate()
+    if stdctx.check_key(ord("Q")) or ball.game_over:
+      break
