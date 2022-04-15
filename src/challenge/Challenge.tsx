@@ -106,6 +106,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
     this.cls.bind(this);
+    this.handleUpload.bind(this);
+    this.handleDownload.bind(this);
   }
 
   print(text: string) {
@@ -225,6 +227,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.onloadend = this.handleFileRead;
     this.fileReader.readAsText(file);
   };
+
+  handleDownload = () => {
+    this.editorRef.current?.download();
+  };  
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -432,6 +438,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
+        onDownload={this.handleDownload}
       />
     );
   }
