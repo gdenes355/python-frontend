@@ -2,6 +2,7 @@ import Challenge, { ChallengeState } from "./Challenge";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
+import ChallengeTypes from "../models/ChallengeTypes";
 
 type WorkerResponse = {
   cmd: string;
@@ -13,6 +14,14 @@ type TestData = {
 };
 
 type PrintData = {
+  msg: string;
+};
+
+type DrawData = {
+  msg: string;
+};
+
+type TurtleData = {
   msg: string;
 };
 
@@ -54,12 +63,29 @@ const ChallengeController = {
       comp.print(data.msg);
     }
   },
+  draw: (comp: Challenge, data: DrawData) => {
+    if (comp.state.editorState !== ChallengeStatus.READY) {
+      if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
+        comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+      }
+      comp.canvasDisplayRef?.current?.runCommand(data.msg);
+    }
+  },
+  turtle: (comp: Challenge, data: TurtleData) => {
+    if (comp.state.editorState !== ChallengeStatus.READY) {
+      if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
+        comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+      }
+      comp.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
+    }
+  },
   cls: (comp: Challenge) => comp.cls(),
-  input: (comp: Challenge) =>
-    comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT }),
-
+  input: (comp: Challenge) => {
+    comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT });
+    comp.tabbedViewRef?.current?.requestPane(1);
+  },
   "input-entered": (comp: Challenge, data: InputData) => {
-    var x = new XMLHttpRequest();
+    let x = new XMLHttpRequest();
     x.open("post", "/@input@/resp.js");
     x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
@@ -84,7 +110,7 @@ const ChallengeController = {
     });
   },
   continue: (comp: Challenge, data: ContinueData) => {
-    var x = new XMLHttpRequest();
+    let x = new XMLHttpRequest();
     x.open("post", "/@debug@/continue.js");
     x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
     x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
@@ -138,7 +164,7 @@ const ChallengeController = {
     }
     if (comp.state.worker && comp.state.interruptBuffer) {
       comp.state.interruptBuffer[0] = 2;
-      var x = new XMLHttpRequest();
+      let x = new XMLHttpRequest();
       x.open("post", "/@reset@/reset.js");
       x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");

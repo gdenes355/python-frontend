@@ -12,11 +12,125 @@ from pyodide import to_js
 
 print(sys.version)
 
+class DebugContext:
+
+    def __init__(self):
+        self._fillStyle = "black"
+        self._strokeStyle = "black"
+        self._font = "10px sans-serif"
+        self._lineWidth = 1.0
+        self._textAlign = "start"
+        self._textBaseline = "alphabetic"
+
+    def fillRect(self, x, y, width, height, clearCanvas=False):
+        json_map = {"action":"fillRect", "x":x, "y":y, "width":width, "height":height, "clearCanvas": clearCanvas}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+    def strokeRect(self, x, y, width, height, clearCanvas=False):
+        json_map = {"action":"strokeRect", "x":x, "y":y, "width":width, "height":height, "clearCanvas": clearCanvas}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+    def beginPath(self):
+        json_map = {"action":"beginPath"}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+    def closePath(self):
+        json_map = {"action":"closePath"}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})   
+    def fill(self, fillRule="nonzero", clearCanvas = False):
+        json_map = {"action":"fill", "fillRule":fillRule, "clearCanvas":clearCanvas}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)}) 
+    def stroke(self):
+        json_map = {"action":"stroke"}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})         
+    def arc(self, x, y, radius, startAngle, endAngle, counterclockwise = False):
+        json_map = {"action":"arc", "x":x, "y":y, "radius":radius, "startAngle":startAngle, "endAngle":endAngle, "counterclockwise":counterclockwise}        
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+    def ellipse(self, x, y, radiusX, radiusY, rotation, startAngle, endAngle, counterclockwise = False):
+        json_map = {"action":"ellipse", "x":x, "y":y, "radiusX":radiusX, "radiusY":radiusY, "rotation":rotation, "startAngle":startAngle, "endAngle":endAngle, "counterclockwise":counterclockwise}        
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})               
+    def arcTo(self, x1, y1, x2, y2, radius):
+        json_map = {"action":"arc", "x1":x1, "y1":y1, "x2":x2, "y2":y2, "radius":radius}        
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)}) 
+    def bezierCurveTo(self, cp1x, cp1y, cp2x, cp2y, x, y):
+        json_map = {"action":"bezierCurveTo", "cp1x":cp1x, "cp1y":cp1y, "cp2x":cp2x, "cp2y":cp2y, "x":x, "y":y}        
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)}) 
+    def moveTo(self, x, y):
+        json_map = {"action":"moveTo", "x":x, "y":y}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})        
+    def clearRect(self, x, y, width, height):
+        json_map = {"action":"clearRect", "x":x, "y":y, "width":width, "height":height}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})        
+    def lineTo(self, x, y):
+        json_map = {"action":"lineTo", "x":x, "y":y}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})  
+    def fillText(self, text, x, y, maxWidth="", clearCanvas=False):
+        json_map = {"action":"fillText", "text":text, "x":x, "y":y, "maxWidth":maxWidth, "clearCanvas": clearCanvas}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})
+    def strokeText(self, text, x, y, maxWidth="", clearCanvas=False):
+        json_map = {"action":"strokeText", "text":text, "x":x, "y":y, "maxWidth":maxWidth, "clearCanvas": clearCanvas}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})      
+
+    @property
+    def fillStyle(self):
+        return self._fillStyle
+
+    @fillStyle.setter
+    def fillStyle(self, color):
+        self._fillStyle = color
+        json_map = {"action":"fillStyle", "color":color}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})     
+
+    @property
+    def strokeStyle(self):
+        return self._strokeStyle
+
+    @strokeStyle.setter
+    def strokeStyle(self, color):
+        self._strokeStyle = color
+        json_map = {"action":"strokeStyle", "color":color}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})       
+
+    @property
+    def lineWidth(self):
+        return self._lineWidth
+
+    @lineWidth.setter
+    def lineWidth(self, value):
+        self._lineWidth = value
+        json_map = {"action":"lineWidth", "value":value}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})  
+
+    @property
+    def font(self):
+        return self._font
+
+    @font.setter
+    def font(self, value):
+        self._font = value
+        json_map = {"action":"font", "value":value}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})     
+
+    @property
+    def textAlign(self):
+        return self._textAlign
+
+    @textAlign.setter
+    def textAlign(self, value):
+        self._textAlign = value
+        json_map = {"action":"textAlign", "value":value}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)})     
+
+    @property
+    def textBaseline(self):
+        return self._textBaseline
+
+    @textBaseline.setter
+    def textBaseline(self, value):
+        self._textBaseline = value
+        json_map = {"action":"textBaseline", "value":value}
+        post_message({"cmd": "draw", "msg": json.dumps(json_map)}) 
 
 class DebugOutput:
     def write(self, text):
         post_message({"cmd": "print", "msg": text})
-
 
 class TestOutput:
     def __init__(self):
@@ -28,8 +142,8 @@ class TestOutput:
     def write(self, text):
         self.buffer += text
 
-
 debug_output = DebugOutput()
+debug_context= DebugContext()
 test_output = TestOutput()
 
 active_breakpoints = set()
@@ -37,12 +151,120 @@ test_inputs = []
 test_outputs = []
 step_into = False
 
+# setup turtle library
+
+with open("turtle.py", "w") as file:
+    file.write('''
+
+import js
+import json
+from pyodide import to_js
+
+def post_message(data):
+    js.workerPostMessage(js.Object.fromEntries(to_js(data)))
+
+def mode(mode_type):
+    json_map = {"action":"mode", "value":mode_type}
+    post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+
+def done():
+    pass # no need to do anything
+
+class Turtle:
+    def __init__(self):
+        json_map = {"action":"reset"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
+    def forward(self, dist):
+        json_map = {"action":"forward", "value":dist}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
+    def fd(self, dist):
+        self.forward(dist)
+    def setposition(self, x, y):
+        json_map = {"action":"setposition", "x":x, "y":y}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def setpos(self, x, y):
+        self.setposition(x, y)
+    def goto(self, x, y):
+        self.setposition(x, y)          
+    def right(self, angle):
+        json_map = {"action":"right", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def rt(self, angle):
+        self.right(angle)       
+    def left(self, angle):
+        json_map = {"action":"left", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def lt(self, angle):
+        self.left(angle)
+    def backward(self, dist):
+        json_map = {"action":"backward", "value":dist}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def back(self, angle):
+        self.backward(dist) 
+    def bk(self, angle):
+        self.backward(dist)
+    def penup(self):
+        json_map = {"action":"penup"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def pu(self):
+        self.penup()
+    def up(self):
+        self.penup()
+    def pendown(self):
+        json_map = {"action":"pendown"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def pd(self):
+        self.pendown()
+    def down(self):
+        self.pendown()
+    def speed(self, speed_value):
+        json_map = {"action":"speed", "value":speed_value}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def reset(self):
+        json_map = {"action":"reset"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def hideturtle(self):
+        json_map = {"action":"hideturtle"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def showturtle(self):
+        json_map = {"action":"showturtle"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def home(self):
+        self.setposition(0, 0)
+    def pencolor(self, color):
+        json_map = {"action":"pencolor", "value":color}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def setheading(self, angle):
+        json_map = {"action":"setheading", "value":angle}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})           
+    def color(self, color):
+        self.pencolor(color)      
+    def pensize(self, size):
+        json_map = {"action":"pensize", "value":size}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def width(self, size):
+        self.pensize(size)
+    def circle(self, radius, extent = 360):
+        json_map = {"action":"circle", "radius":radius, "extent": extent}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def begin_fill (self):
+        json_map = {"action":"begin_fill"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
+    def end_fill(self):
+        json_map = {"action":"end_fill"}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})        
+    def fillcolor(self, color):
+        json_map = {"action":"fillcolor", "value":color}
+        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                                                   
+     
+''')
 
 def pyexec(code, expected_input, expected_output):
     global test_inputs
     global test_outputs
     sys.stdout = test_output
     sys.stderr = test_output
+    sys.stdctx = debug_context    
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
@@ -88,6 +310,7 @@ def pydebug(code, breakpoints):
     step_into = False
     sys.stdout = debug_output
     sys.stderr = debug_output
+    sys.stdctx = debug_context       
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input

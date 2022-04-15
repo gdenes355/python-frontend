@@ -6,7 +6,6 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
-  IconButton,
   ListItemIcon,
   Grid,
   Button,
@@ -15,6 +14,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 import Menu from "../components/Menu";
+import FileUploadControl from "../components/FileUploadControl";
 
 type HeaderBarProps = {
   title?: string;
@@ -24,6 +24,7 @@ type HeaderBarProps = {
   canReset: boolean;
   canDebug: boolean;
   onResetCode: () => void;
+  onUpload: (file: File) => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -61,8 +62,11 @@ const HeaderBar = (props: HeaderBarProps) => {
           <div></div>
         </Grid>
         <Grid item>
+          <FileUploadControl onUpload={props.onUpload} />
+        </Grid>
+        <Grid item>
           <Button
-            variant="contained"
+            variant="outlined"
             color="error"
             disabled={!props.canReset}
             onClick={props.onResetCode}
@@ -73,9 +77,9 @@ const HeaderBar = (props: HeaderBarProps) => {
         <Grid item>
           <Menu
             button={
-              <IconButton>
+              <Button variant="contained" color="primary">
                 <MoreVertIcon />
-              </IconButton>
+              </Button>
             }
           >
             <MenuItem>

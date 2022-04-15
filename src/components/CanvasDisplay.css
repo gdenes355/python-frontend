@@ -1,0 +1,9 @@
+.graphicsPane {
+  overflow: auto;
+  text-align: center;
+}
+
+.graphicsPane canvas {
+  background-color: #c4c4c4;
+  float: center;
+}

@@ -29,7 +29,7 @@
             "tests": [
                 {
                     "in": "Joe",
-                    "out": "Hello Joe\n"
+                    "out": ".*Hello Joe\n"
                 }
             ]
         },
@@ -65,6 +65,22 @@
             "isExample": true
         },
         {
+            "id": "b2fa8941-7eed-44f0-bc80-27af0e45ead8",
+            "name": "Canvas demo",
+            "guide": "c04.md",
+            "py": "c04.py",
+            "isExample": true,
+            "typ": "canvas"
+        }, 
+        {
+            "id": "ebd04e6a-b9e2-11ec-8422-0242ac120002",
+            "name": "Turtle demo",
+            "guide": "c05.md",
+            "py": "c05.py",
+            "isExample": true,
+            "typ": "canvas"
+        },                
+        {
             "id": "cf9c8166-036b-4eb5-a944-29284b8fff79",
             "name": "Parsons",
             "children": [
@@ -84,6 +100,5 @@
                 }
             ]
         }
-        
     ]
 }
