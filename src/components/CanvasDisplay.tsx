@@ -19,26 +19,18 @@ class CanvasDisplay extends React.Component {
   heading = 0;
   mode: "standard" | "logo" = "standard";
 
-  constructor(props: any) {
-    super(props);
-    console.log("drawing canvas");
-  }
-
   turtleReset() {
     const canvas = this.canvasEl.current as HTMLCanvasElement;
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
     this.turtle = new RealTurtle(canvas, { autoStart: true });
     if (!this.turtle) {
       console.log("failed to create turtle");
       return;
     }
-    this.turtle.setSize(0);
     this.turtle.setPosition(CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
     this.turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
     this.heading = 0;
     this.mode = "standard";
     this.turtle.setSize(TURTLE_SIZE_DEFAULT);
-    context.clearRect(0, 0, context.canvas.width, context.canvas.height);
     this.turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
     this.turtle.setSpeed(TURTLE_SPEED_DEFAULT);
     this.turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
