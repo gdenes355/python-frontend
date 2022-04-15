@@ -396,7 +396,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
-    return <Guide md={this.state.guideMd} />;
+    return <Guide md={this.state.guideMd} theme={this.state.theme} />;
   };
 
   renderDebugPane = () => {

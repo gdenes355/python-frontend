@@ -24,18 +24,22 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props;
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`tabpanel-${index}`}
-      aria-labelledby={`simple-tab-${index}`}
-      style={{ height: "100%" }}
+      aria-labelledby={`output-tab-${index}`}
       {...other}
+      sx={{
+        p: 3,
+        width: "100%",
+        padding: "0px",
+        flexGrow: 1,
+        overflow: "auto",
+      }}
     >
-      <Box sx={{ p: 3, width: "100%", height: "100%", padding: "0px" }}>
-        {children}
-      </Box>
-    </div>
+      {children}
+    </Box>
   );
 }
 
@@ -59,7 +63,7 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
 
   render() {
     return (
-      <React.Fragment>
+      <Box sx={{ flexDirection: "column", display: "flex", height: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={this.state.currentTab}
@@ -76,7 +80,7 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
             {pane.content}
           </TabPanel>
         ))}
-      </React.Fragment>
+      </Box>
     );
   }
 }
