@@ -63,7 +63,7 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
         turtle.setSize(0);
         break;
       case "showturtle":
-        turtle.setSize(15); // default
+        turtle.setSize(TURTLE_SIZE_DEFAULT); // default
         break;
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {

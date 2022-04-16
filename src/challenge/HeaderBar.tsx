@@ -3,6 +3,7 @@ import React from "react";
 import {
   Toolbar,
   Box,
+  IconButton,
   MenuItem,
   FormControlLabel,
   Switch,
@@ -10,6 +11,8 @@ import {
   Grid,
   Button,
 } from "@mui/material";
+
+import { FileDownload } from '@mui/icons-material';
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
@@ -25,6 +28,7 @@ type HeaderBarProps = {
   canDebug: boolean;
   onResetCode: () => void;
   onUpload: (file: File) => void;
+  onDownload: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -64,6 +68,12 @@ const HeaderBar = (props: HeaderBarProps) => {
         <Grid item>
           <FileUploadControl onUpload={props.onUpload} />
         </Grid>
+        <Grid item>
+          <IconButton onClick={props.onDownload}>
+            <FileDownload/>
+          </IconButton>  
+        </Grid>        
+         
         <Grid item>
           <Button
             variant="outlined"
