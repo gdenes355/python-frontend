@@ -6,6 +6,7 @@ import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
+import InputBox from "../components/InputBox";
 import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
@@ -48,6 +49,7 @@ type ChallengeState = {
   helpOpen: boolean;
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
+  isFixedInput: boolean;
 };
 
 type ChallengeProps = {
@@ -68,12 +70,15 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
+  inputBoxRef = React.createRef<InputBox>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   tabbedViewRef = React.createRef<TabbedView>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
+
+  fixedUserInput:Array<string> = [];
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -98,11 +103,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
+    isFixedInput: false
   };
 
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
+    this.getFixedInputValue.bind(this);
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
     this.cls.bind(this);
@@ -230,7 +237,20 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   handleDownload = () => {
     this.editorRef.current?.download();
-  };  
+  };
+
+  handleInputModeChange = (inputMode:boolean) => {
+    this.setState({isFixedInput: inputMode})
+  }
+
+  getFixedInputValue = () => {
+    return this.fixedUserInput.shift();
+  }
+
+  refreshFixedUserInput = () => {
+    this.fixedUserInput = this.inputBoxRef.current?.getValue()?.split("\n") || [""];
+    console.log(this.fixedUserInput);
+  }  
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -320,40 +340,69 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
-  renderOutput = () => {
-    if (
-      this.props.typ === "canvas" ||
-      this.state.typInferred === ChallengeTypes.TYP_CANVAS
-    ) {
-      return (
-        <ThemeProvider
-          theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
+  renderFixedInput = () => {
+    return (
+      <ThemeProvider
+      theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            bgcolor: "background.default",
+          }}
         >
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              bgcolor: "background.default",
-            }}
-          >
-            <TabbedView
-              ref={this.tabbedViewRef}
-              panes={[
-                {
-                  label: "Canvas",
-                  content: <CanvasDisplay ref={this.canvasDisplayRef} />,
-                },
-                {
-                  label: "Console",
-                  content: this.renderConsole(),
-                },
-              ]}
-            />
-          </Box>
-        </ThemeProvider>
-      );
-    }
-    return this.renderConsole();
+
+        <InputBox ref={this.inputBoxRef} />
+
+        </Box>
+      </ThemeProvider>
+    );
+  };  
+
+  renderOutput = () => {
+
+    let panes = [
+      {
+        label: "Console",
+        content: this.renderConsole(),
+        show: true
+      },      
+      {
+        label: "Fixed input",
+        content: this.renderFixedInput(),
+        show: this.state.isFixedInput
+      }
+    ];
+
+    if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
+      panes.push({
+        label: "Canvas",
+        content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+        show: true
+      });
+    } 
+
+    return (
+      <ThemeProvider
+        theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            bgcolor: "background.default",
+          }}
+        >
+                
+        <TabbedView
+                ref={this.tabbedViewRef}
+                panes={panes}
+                />
+        </Box>
+      </ThemeProvider>
+    );
+
   };
 
   renderMainControls = () => {
@@ -432,6 +481,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       <HeaderBar
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
+        inputMode={this.state.isFixedInput}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}
@@ -439,6 +489,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
         onDownload={this.handleDownload}
+        onInputModeChange={this.handleInputModeChange}
       />
     );
   }
@@ -469,7 +520,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             {this.renderHeader()}
             <Allotment className="h-100" defaultSizes={[65, 35]}>
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={[65, 35]}>
+                <Allotment vertical defaultSizes={this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS? [50, 50] : [65, 35]}>
                   <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(

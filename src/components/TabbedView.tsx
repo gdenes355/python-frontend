@@ -1,9 +1,11 @@
 import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
+import "./TabbedView.css";
 
 type TabbedPane = {
   label: string;
   content: React.ReactNode;
+  show: boolean;
 };
 
 type TabbedViewProps = {
@@ -71,7 +73,7 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
             aria-label="Output tabs"
           >
             {this.props.panes.map((pane, i) => (
-              <Tab label={pane.label} key={i} />
+              <Tab label={pane.label} className={pane.show ? "tab-show" : "tab-hide"} key={i} />
             ))}
           </Tabs>
         </Box>

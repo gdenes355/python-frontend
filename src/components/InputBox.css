@@ -1,0 +1,41 @@
+.console {
+  height: calc(100% - 10px);
+  width: calc(100% - 10px);
+  background-color: black;
+  overflow: auto;
+  font-size: 15px;
+  padding: 5px;
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+  border: 0px solid black;
+  color: white;
+}
+
+.console .input-span {
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+  font-size: 15px;
+  min-height: 1em;
+  height:100%;
+  color: white;
+  outline: 0px solid transparent;
+  border: 0px solid transparent;
+  caret-color: transparent;
+}
+
+.console .input-span:focus::after {
+  font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
+    DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
+  font-size: 15px;
+  content: "_";
+  animation: blinking 1s steps(1, end) infinite;
+}
+
+@keyframes blinking {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}

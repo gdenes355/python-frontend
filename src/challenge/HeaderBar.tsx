@@ -22,7 +22,9 @@ import FileUploadControl from "../components/FileUploadControl";
 type HeaderBarProps = {
   title?: string;
   theme: string;
+  inputMode: boolean;
   onThemeChange: (theme: string) => void;
+  onInputModeChange: (inputMode: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
@@ -107,6 +109,21 @@ const HeaderBar = (props: HeaderBarProps) => {
                 label="Dark mode"
               />
             </MenuItem>
+            <MenuItem>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={props.inputMode === true}
+                    onChange={() => {
+                      props.onInputModeChange(
+                        props.inputMode === true ? false : true
+                      );
+                    }}
+                  ></Switch>
+                }
+                label="Use fixed inputs"
+              />
+            </MenuItem>            
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />
