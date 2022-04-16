@@ -103,7 +103,7 @@ class CanvasDisplay extends React.Component {
           this.turtle.setSize(0);
           break;
         case "showturtle":
-          this.turtle.setSize(15); // default
+          this.turtle.setSize(TURTLE_SIZE_DEFAULT); // default
           break;
         case "pencolor":
           if (
