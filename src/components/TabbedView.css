@@ -1,6 +1,3 @@
-.tab-show {
-}
-
 .tab-hide {
-  display:none;
+  display:none!important;
 }

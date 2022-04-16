@@ -1,6 +1,5 @@
 import { Box, TextField } from "@mui/material";
 import React, { RefObject } from "react";
-import "./InputBox.css";
 
 type InputBoxProps = {
 };
