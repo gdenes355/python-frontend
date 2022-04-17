@@ -22,9 +22,9 @@ import FileUploadControl from "../components/FileUploadControl";
 type HeaderBarProps = {
   title?: string;
   theme: string;
-  inputMode: boolean;
+  usingFixedInput: boolean;
   onThemeChange: (theme: string) => void;
-  onInputModeChange: (inputMode: boolean) => void;
+  onUsingFixedInputChange: (fixedInput: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
@@ -113,9 +113,9 @@ const HeaderBar = (props: HeaderBarProps) => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={props.inputMode === true}
+                    checked={props.usingFixedInput === true}
                     onChange={() => {
-                      props.onInputModeChange(!props.inputMode);
+                      props.onUsingFixedInputChange(!props.usingFixedInput);
                     }}
                   ></Switch>
                 }

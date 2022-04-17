@@ -262,7 +262,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     return (
       <PyEditor
         ref={this.editorRef}
-        readOnly={false}
         canRun={this.state.editorState === ChallengeStatus.READY}
         canPlaceBreakpoint={
           this.state.editorState === ChallengeStatus.READY ||
@@ -331,13 +330,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           margin="dense"
           fullWidth
           value={this.state.fixedUserInput}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+          onChange={(e) => {
             this.setState({ fixedUserInput: e.target.value });
           }}
           variant="standard"
-          InputProps={{
-            disableUnderline: true,
-          }}
+          InputProps={{ disableUnderline: true }}
           sx={{ padding: 1 }}
         />
       </Box>
@@ -383,7 +380,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             bgcolor: "background.default",
           }}
         >
-          {panes.length > 1 ? (
+          {panes.length === 1 ? (
             <TabbedView ref={this.tabbedViewRef} panes={panes} />
           ) : (
             this.renderConsole()
@@ -469,19 +466,17 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       <HeaderBar
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
-        inputMode={this.state.isFixedInput}
+        usingFixedInput={this.state.isFixedInput}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
-        onDownload={() => {
-          this.editorRef.current?.download();
-        }}
-        onInputModeChange={(inputMode: boolean) => {
-          this.setState({ isFixedInput: inputMode });
-        }}
+        onDownload={() => this.editorRef.current?.download()}
+        onUsingFixedInputChange={(fixedInput) =>
+          this.setState({ isFixedInput: fixedInput })
+        }
       />
     );
   }
