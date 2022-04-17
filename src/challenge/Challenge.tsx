@@ -103,7 +103,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
     isFixedInput: false,
-    fixedUserInput: ""
+    fixedUserInput: "",
   };
 
   constructor(props: ChallengeProps) {
@@ -247,7 +247,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     ) {
       this.setState({ breakpointsChanged: true });
     }
-  };  
+  };
 
   renderEditor() {
     if (this.props.typ === "parsons") {
@@ -323,54 +323,54 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderFixedInput = () => {
     return (
-      <Box sx={{ width: "100%", height: "100%"}}>
-        <TextField 
+      <Box sx={{ width: "100%", height: "100%" }}>
+        <TextField
           placeholder="add fixed inputs here..."
           multiline
           maxRows={Infinity}
           margin="dense"
           fullWidth
           value={this.state.fixedUserInput}
-          onChange={(e:React.ChangeEvent<HTMLInputElement>) => {this.setState({ fixedUserInput: e.target.value });}}
+          onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+            this.setState({ fixedUserInput: e.target.value });
+          }}
           variant="standard"
           InputProps={{
             disableUnderline: true,
           }}
-          sx={{"padding":1}}
-        />  
+          sx={{ padding: 1 }}
+        />
       </Box>
-    )
-  };  
+    );
+  };
 
   renderOutput = () => {
-
     let panes = [
       {
         label: "Console",
         content: this.renderConsole(),
-        show: true
-      }
+        show: true,
+      },
     ];
 
     if (this.state.isFixedInput) {
-      panes.push(      
-        {
-          label: "Fixed input",
-          content: this.renderFixedInput(),
-          show: this.state.isFixedInput
-        }
-      )
+      panes.push({
+        label: "Fixed input",
+        content: this.renderFixedInput(),
+        show: this.state.isFixedInput,
+      });
     }
 
-    if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
-      panes.push(
-        {
-          label: "Canvas",
-          content: <CanvasDisplay ref={this.canvasDisplayRef} />,
-          show: true
-        }
-      );
-    } 
+    if (
+      this.props.typ === "canvas" ||
+      this.state.typInferred === ChallengeTypes.TYP_CANVAS
+    ) {
+      panes.push({
+        label: "Canvas",
+        content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+        show: true,
+      });
+    }
 
     return (
       <ThemeProvider
@@ -383,21 +383,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             bgcolor: "background.default",
           }}
         >
-        
-        {panes.length > 1 ?
-          <TabbedView
-                  ref={this.tabbedViewRef}
-                  panes={panes}
-                  />
-         
-          :
-          this.renderConsole()
-        }
-
+          {panes.length > 1 ? (
+            <TabbedView ref={this.tabbedViewRef} panes={panes} />
+          ) : (
+            this.renderConsole()
+          )}
         </Box>
       </ThemeProvider>
     );
-
   };
 
   renderMainControls = () => {
@@ -483,8 +476,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
-        onDownload={() => {this.editorRef.current?.download();}}
-        onInputModeChange={(inputMode:boolean) => {this.setState({isFixedInput: inputMode})
+        onDownload={() => {
+          this.editorRef.current?.download();
+        }}
+        onInputModeChange={(inputMode: boolean) => {
+          this.setState({ isFixedInput: inputMode });
         }}
       />
     );

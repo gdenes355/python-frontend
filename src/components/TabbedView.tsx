@@ -73,7 +73,11 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
             aria-label="Output tabs"
           >
             {this.props.panes.map((pane, i) => (
-              <Tab label={pane.label} className={pane.show ? "tab-show" : "tab-hide"} key={i} />
+              <Tab
+                label={pane.label}
+                className={pane.show ? "tab-show" : "tab-hide"}
+                key={i}
+              />
             ))}
           </Tabs>
         </Box>
