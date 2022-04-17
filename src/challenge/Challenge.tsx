@@ -6,7 +6,7 @@ import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
-import CanvasDisplay from "../components/CanvasDisplay";
+import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
@@ -45,6 +45,7 @@ type ChallengeState = {
   breakpointsChanged: boolean;
   testsPassing: boolean | null;
   interruptBuffer: Uint8Array | null;
+  keyDownBuffer: Uint8Array | null;
   helpOpen: boolean;
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
@@ -97,6 +98,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     breakpointsChanged: false,
     testsPassing: null,
     interruptBuffer: null,
+    keyDownBuffer: null,
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
@@ -357,8 +359,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           content: this.renderFixedInput(),
           show: this.state.isFixedInput
         }
-      );
-    }
 
     if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
       panes.push(

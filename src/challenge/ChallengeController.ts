@@ -3,6 +3,8 @@ import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import ChallengeTypes from "../models/ChallengeTypes";
+import React from "react";
+import { keyToVMCode } from "../utils/keyTools";
 
 type WorkerResponse = {
   cmd: string;
@@ -54,6 +56,8 @@ type DebugData = {
 type SaveCodeData = {
   code: string | null;
 };
+
+let currentFixedUserInput:string[] = [];
 
 const ChallengeController = {
   "init-done": (comp: Challenge) =>
@@ -192,9 +196,15 @@ const ChallengeController = {
       ChallengeController[msg.data.cmd](comp, msg.data)
     );
     let interruptBuffer: Uint8Array | null = null;
+    let keyDownBuffer: Uint8Array | null = null;
     if (window.crossOriginIsolated && window.SharedArrayBuffer) {
       interruptBuffer = new Uint8Array(new window.SharedArrayBuffer(1));
-      worker.postMessage({ cmd: "setInterruptBuffer", interruptBuffer });
+      keyDownBuffer = new Uint8Array(new window.SharedArrayBuffer(256));
+      worker.postMessage({
+        cmd: "setSharedBuffers",
+        interruptBuffer,
+        keyDownBuffer,
+      });
     }
     let msg = data.msg == null ? "" : data.msg;
     comp.setState((state: ChallengeState) => {
@@ -202,6 +212,7 @@ const ChallengeController = {
         worker: worker,
         editorState: ChallengeStatus.RESTARTING_WORKER,
         interruptBuffer,
+        keyDownBuffer,
       };
     });
     comp.print(msg);
@@ -294,9 +305,22 @@ const ChallengeController = {
       );
     }
   },
-  "fixed_input":[]
+  "canvas-keydown": (comp: Challenge, data: React.KeyboardEvent) => {
+    if (comp.state.keyDownBuffer) {
+      let code = keyToVMCode(data.key);
+      if (code && code > 0 && code < 256) {
+        comp.state.keyDownBuffer[code] = 1;
+      }
+    }
+  },
+  "canvas-keyup": (comp: Challenge, data: React.KeyboardEvent) => {
+    if (comp.state.keyDownBuffer) {
+      let code = keyToVMCode(data.key);
+      if (code && code > 0 && code < 256) {
+        comp.state.keyDownBuffer[code] = 0;
+      }
+    }
+  }
 };
-
-let currentFixedUserInput:string[] = [];
 
 export default ChallengeController;
