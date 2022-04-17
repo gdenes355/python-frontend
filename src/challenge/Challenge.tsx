@@ -322,21 +322,22 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderFixedInput = () => {
     return (
-      <Box sx={{ width: "100%", height: "100%" }}>
-        <TextField
-          placeholder="add fixed inputs here..."
-          multiline
-          maxRows={Infinity}
-          margin="dense"
-          fullWidth
-          value={this.state.fixedUserInput}
-          onChange={(e) => {
-            this.setState({ fixedUserInput: e.target.value });
-          }}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-          sx={{ padding: 1 }}
-        />
+      <Box sx={{ paddingLeft: 1, paddingReft: 1 }}>
+        <Box sx={{ width: "100%", height: "100%" }}>
+          <TextField
+            placeholder="add fixed inputs here..."
+            multiline
+            maxRows={Infinity}
+            margin="dense"
+            value={this.state.fixedUserInput}
+            onChange={(e) => {
+              this.setState({ fixedUserInput: e.target.value });
+            }}
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+            sx={{ width: "100%" }}
+          />
+        </Box>
       </Box>
     );
   };
