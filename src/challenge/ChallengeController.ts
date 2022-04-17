@@ -72,7 +72,8 @@ const ChallengeController = {
       if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
         comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
       }
-      comp.tabbedViewRef?.current?.requestPane(2);
+      const paneRequest = comp.state.isFixedInput ? 2 : 1;
+      comp.tabbedViewRef?.current?.requestPane(paneRequest);
       comp.canvasDisplayRef?.current?.runCommand(data.msg);
     }
   },
@@ -81,7 +82,8 @@ const ChallengeController = {
       if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
         comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
       }
-      comp.tabbedViewRef?.current?.requestPane(2);
+      const paneRequest = comp.state.isFixedInput ? 2 : 1;
+      comp.tabbedViewRef?.current?.requestPane(paneRequest);
       comp.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
     }
   },
