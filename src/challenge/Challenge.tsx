@@ -111,7 +111,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.print.bind(this);
     this.cls.bind(this);
     this.handleUpload.bind(this);
-    this.handleDownload.bind(this);
   }
 
   print(text: string) {
@@ -232,18 +231,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.readAsText(file);
   };
 
-  handleDownload = () => {
-    this.editorRef.current?.download();
-  };
-
-  handleInputModeChange = (inputMode:boolean) => {
-    this.setState({isFixedInput: inputMode})
-  }
-
-  handleFixedUserInputChange = (e:React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({ fixedUserInput: e.target.value });
-  };
-
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -342,7 +329,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           margin="dense"
           fullWidth
           value={this.state.fixedUserInput}
-          onChange={this.handleFixedUserInputChange}
+          onChange={(e:React.ChangeEvent<HTMLInputElement>) => {this.setState({ fixedUserInput: e.target.value });}}
           variant="standard"
           InputProps={{
             disableUnderline: true,
@@ -494,8 +481,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
-        onDownload={this.handleDownload}
-        onInputModeChange={this.handleInputModeChange}
+        onDownload={() => {this.editorRef.current?.download();}}
+        onInputModeChange={(inputMode:boolean) => {this.setState({isFixedInput: inputMode})
+        }}
       />
     );
   }
