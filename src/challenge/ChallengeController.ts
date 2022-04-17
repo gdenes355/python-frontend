@@ -57,7 +57,7 @@ type SaveCodeData = {
   code: string | null;
 };
 
-let currentFixedUserInput:string[] = [];
+let currentFixedUserInput: string[] = [];
 
 const ChallengeController = {
   "init-done": (comp: Challenge) =>
@@ -87,10 +87,10 @@ const ChallengeController = {
   },
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) => {
-    if(comp.state.isFixedInput) {
-      const input = currentFixedUserInput.shift() || "";      
-      const inputData:InputData = {"input": input};
-      ChallengeController["input-entered"](comp, inputData);       
+    if (comp.state.isFixedInput) {
+      const input = currentFixedUserInput.shift() || "";
+      const inputData: InputData = { input: input };
+      ChallengeController["input-entered"](comp, inputData);
     } else {
       comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT });
       comp.tabbedViewRef?.current?.requestPane(0);
@@ -320,7 +320,7 @@ const ChallengeController = {
         comp.state.keyDownBuffer[code] = 0;
       }
     }
-  }
+  },
 };
 
 export default ChallengeController;

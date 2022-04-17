@@ -12,7 +12,7 @@ import {
   Button,
 } from "@mui/material";
 
-import { FileDownload } from '@mui/icons-material';
+import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
@@ -72,10 +72,10 @@ const HeaderBar = (props: HeaderBarProps) => {
         </Grid>
         <Grid item>
           <IconButton onClick={props.onDownload}>
-            <FileDownload/>
-          </IconButton>  
-        </Grid>        
-         
+            <FileDownload />
+          </IconButton>
+        </Grid>
+
         <Grid item>
           <Button
             variant="outlined"
@@ -115,15 +115,13 @@ const HeaderBar = (props: HeaderBarProps) => {
                   <Switch
                     checked={props.inputMode === true}
                     onChange={() => {
-                      props.onInputModeChange(
-                        !props.inputMode
-                      );
+                      props.onInputModeChange(!props.inputMode);
                     }}
                   ></Switch>
                 }
                 label="Use fixed inputs"
               />
-            </MenuItem>            
+            </MenuItem>
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />
