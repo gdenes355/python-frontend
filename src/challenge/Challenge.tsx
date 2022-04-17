@@ -380,7 +380,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             bgcolor: "background.default",
           }}
         >
-          {panes.length === 1 ? (
+          {panes.length > 1 ? (
             <TabbedView ref={this.tabbedViewRef} panes={panes} />
           ) : (
             this.renderConsole()
