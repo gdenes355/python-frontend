@@ -104,7 +104,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                         props.theme === "vs-dark" ? "vs-light" : "vs-dark"
                       );
                     }}
-                  ></Switch>
+                  />
                 }
                 label="Dark mode"
               />
@@ -117,7 +117,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                     onChange={() => {
                       props.onUsingFixedInputChange(!props.usingFixedInput);
                     }}
-                  ></Switch>
+                  />
                 }
                 label="Use fixed inputs"
               />
