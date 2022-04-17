@@ -116,7 +116,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                     checked={props.inputMode === true}
                     onChange={() => {
                       props.onInputModeChange(
-                        props.inputMode === true ? false : true
+                        !props.inputMode
                       );
                     }}
                   ></Switch>

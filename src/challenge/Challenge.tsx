@@ -1,12 +1,11 @@
 import React from "react";
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, TextField } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
-import InputBox from "../components/InputBox";
 import CanvasDisplay from "../components/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
@@ -50,6 +49,7 @@ type ChallengeState = {
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
   isFixedInput: boolean;
+  fixedUserInput: string;
 };
 
 type ChallengeProps = {
@@ -70,15 +70,12 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditor>();
-  inputBoxRef = React.createRef<InputBox>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   tabbedViewRef = React.createRef<TabbedView>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
-
-  fixedUserInput:Array<string> = [];
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -103,13 +100,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
-    isFixedInput: false
+    isFixedInput: false,
+    fixedUserInput: ""
   };
 
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
-    this.getFixedInputValue.bind(this);
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
     this.cls.bind(this);
@@ -223,7 +220,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     Cookies.set("theme", theme);
   };
 
-  handleFileRead = (e: any) => {
+  handleFileRead = (e: ProgressEvent<FileReader>) => {
     if (this.fileReader.result) {
       this.editorRef.current?.setValue(this.fileReader.result.toString());
     }
@@ -243,14 +240,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.setState({isFixedInput: inputMode})
   }
 
-  getFixedInputValue = () => {
-    return this.fixedUserInput.shift();
-  }
-
-  refreshFixedUserInput = () => {
-    this.fixedUserInput = this.inputBoxRef.current?.getValue()?.split("\n") || [""];
-    console.log(this.fixedUserInput);
-  }  
+  handleFixedUserInputChange = (e:React.ChangeEvent<HTMLInputElement>) => {
+    this.setState({ fixedUserInput: e.target.value });
+  };
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -266,7 +258,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     ) {
       this.setState({ breakpointsChanged: true });
     }
-  };
+  };  
 
   renderEditor() {
     if (this.props.typ === "parsons") {
@@ -342,22 +334,23 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderFixedInput = () => {
     return (
-      <ThemeProvider
-      theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
-      >
-        <Box
-          sx={{
-            width: "100%",
-            height: "100%",
-            bgcolor: "background.default",
+      <Box sx={{ width: "100%", height: "100%"}}>
+        <TextField 
+          placeholder="add fixed inputs here..."
+          multiline
+          maxRows={Infinity}
+          margin="dense"
+          fullWidth
+          value={this.state.fixedUserInput}
+          onChange={this.handleFixedUserInputChange}
+          variant="standard"
+          InputProps={{
+            disableUnderline: true,
           }}
-        >
-
-        <InputBox ref={this.inputBoxRef} />
-
-        </Box>
-      </ThemeProvider>
-    );
+          sx={{"padding":1}}
+        />  
+      </Box>
+    )
   };  
 
   renderOutput = () => {
@@ -367,20 +360,27 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         label: "Console",
         content: this.renderConsole(),
         show: true
-      },      
-      {
-        label: "Fixed input",
-        content: this.renderFixedInput(),
-        show: this.state.isFixedInput
       }
     ];
 
+    if (this.state.isFixedInput) {
+      panes.push(      
+        {
+          label: "Fixed input",
+          content: this.renderFixedInput(),
+          show: this.state.isFixedInput
+        }
+      );
+    }
+
     if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
-      panes.push({
-        label: "Canvas",
-        content: <CanvasDisplay ref={this.canvasDisplayRef} />,
-        show: true
-      });
+      panes.push(
+        {
+          label: "Canvas",
+          content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+          show: true
+        }
+      );
     } 
 
     return (
@@ -394,11 +394,17 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             bgcolor: "background.default",
           }}
         >
-                
-        <TabbedView
-                ref={this.tabbedViewRef}
-                panes={panes}
-                />
+        
+        {panes.length > 1 ?
+          <TabbedView
+                  ref={this.tabbedViewRef}
+                  panes={panes}
+                  />
+         
+          :
+          this.renderConsole()
+        }
+
         </Box>
       </ThemeProvider>
     );
@@ -520,7 +526,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             {this.renderHeader()}
             <Allotment className="h-100" defaultSizes={[65, 35]}>
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS? [50, 50] : [65, 35]}>
+                <Allotment vertical defaultSizes={[65, 35]}>
                   <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(

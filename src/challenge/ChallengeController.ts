@@ -84,7 +84,7 @@ const ChallengeController = {
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) => {
     if(comp.state.isFixedInput) {
-      const input = comp.getFixedInputValue() || "";
+      const input = currentFixedUserInput.shift() || "";      
       const inputData:InputData = {"input": input};
       ChallengeController["input-entered"](comp, inputData);       
     } else {
@@ -214,7 +214,7 @@ const ChallengeController = {
     ChallengeController["debugpy"](comp, data);
   },
   debugpy: (comp: Challenge, data: DebugData) => {
-    comp.refreshFixedUserInput();
+    currentFixedUserInput = comp.state.fixedUserInput.split("\n") || [""];
     comp.tabbedViewRef?.current?.requestPane(0);
     if (!data.code && data.code !== "") {
       return;
@@ -294,6 +294,9 @@ const ChallengeController = {
       );
     }
   },
+  "fixed_input":[]
 };
+
+let currentFixedUserInput:string[] = [];
 
 export default ChallengeController;
