@@ -327,7 +327,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           <TextField
             placeholder="add fixed inputs here..."
             multiline
-            maxRows={Infinity}
             margin="dense"
             value={this.state.fixedUserInput}
             onChange={(e) => {
@@ -335,7 +334,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             }}
             variant="standard"
             InputProps={{ disableUnderline: true }}
-            sx={{ width: "100%" }}
+            sx={{ width: "100%", height: "100%" }}
           />
         </Box>
       </Box>
