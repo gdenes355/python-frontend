@@ -322,7 +322,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderFixedInput = () => {
     return (
-      <Box sx={{ paddingLeft: 1, paddingReft: 1 }}>
+      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
         <Box sx={{ width: "100%", height: "100%" }}>
           <TextField
             placeholder="add fixed inputs here..."
