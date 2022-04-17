@@ -359,6 +359,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           content: this.renderFixedInput(),
           show: this.state.isFixedInput
         }
+      )
+    }
 
     if (this.props.typ === "canvas" || this.state.typInferred === ChallengeTypes.TYP_CANVAS) {
       panes.push(
