@@ -63,6 +63,7 @@ const Console = (props: ConsoleProps) => {
           className={!props.isInputEnabled ? "input-span hidden" : "input-span"}
           ref={inputFieldEl}
           role="textbox"
+          title="console textbox"
           onKeyPress={onKeyPressed}
           onKeyDown={onKeyDown}
           contentEditable

@@ -10,7 +10,6 @@ const FileUploadControl = (props: FileUploadControlProps) => {
   const uploadRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = () => {
-    console.log("File upload input clicked...");
     if (uploadRef.current?.files) {
       props.onUpload(uploadRef.current?.files[0]);
     }
@@ -28,6 +27,8 @@ const FileUploadControl = (props: FileUploadControlProps) => {
 
       <input
         type="file"
+        aria-label="file upload selector"
+        title="select file"
         ref={uploadRef}
         onChange={handleUpload}
         style={{ display: "none" }}
