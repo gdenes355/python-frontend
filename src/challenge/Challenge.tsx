@@ -77,6 +77,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
+  currentFixedUserInput: string[] = [];
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
