@@ -365,11 +365,21 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     ) {
       panes.push({
         label: "Canvas",
-        content: <CanvasDisplay ref={this.canvasDisplayRef} />,
-        show: true,
+        content: (
+          <CanvasDisplay
+            ref={this.canvasDisplayRef}
+            onKeyDown={(e) =>
+              ChallengeController["canvas-keydown"](this, e)
+            }
+            onKeyUp={(e) =>
+              ChallengeController["canvas-keyup"](this, e)
+            }
+          />
+        ),
+        show: true
       });
     }
-
+    
     return (
       <ThemeProvider
         theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
