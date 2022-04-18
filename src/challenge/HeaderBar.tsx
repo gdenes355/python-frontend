@@ -12,7 +12,7 @@ import {
   Button,
 } from "@mui/material";
 
-import { FileDownload } from '@mui/icons-material';
+import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
@@ -22,7 +22,9 @@ import FileUploadControl from "../components/FileUploadControl";
 type HeaderBarProps = {
   title?: string;
   theme: string;
+  usingFixedInput: boolean;
   onThemeChange: (theme: string) => void;
+  onUsingFixedInputChange: (fixedInput: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
@@ -70,10 +72,10 @@ const HeaderBar = (props: HeaderBarProps) => {
         </Grid>
         <Grid item>
           <IconButton onClick={props.onDownload}>
-            <FileDownload/>
-          </IconButton>  
-        </Grid>        
-         
+            <FileDownload />
+          </IconButton>
+        </Grid>
+
         <Grid item>
           <Button
             variant="outlined"
@@ -102,9 +104,22 @@ const HeaderBar = (props: HeaderBarProps) => {
                         props.theme === "vs-dark" ? "vs-light" : "vs-dark"
                       );
                     }}
-                  ></Switch>
+                  />
                 }
                 label="Dark mode"
+              />
+            </MenuItem>
+            <MenuItem>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={props.usingFixedInput === true}
+                    onChange={() => {
+                      props.onUsingFixedInputChange(!props.usingFixedInput);
+                    }}
+                  />
+                }
+                label="Use fixed inputs"
               />
             </MenuItem>
             <MenuItem onClick={() => props.onHelpOpen(true)}>

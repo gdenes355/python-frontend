@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, TextField } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
@@ -49,6 +49,8 @@ type ChallengeState = {
   helpOpen: boolean;
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
+  isFixedInput: boolean;
+  fixedUserInput: string;
 };
 
 type ChallengeProps = {
@@ -75,6 +77,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
+  currentFixedUserInput: string[] = [];
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -100,6 +103,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
+    isFixedInput: false,
+    fixedUserInput: "",
   };
 
   constructor(props: ChallengeProps) {
@@ -109,7 +114,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.print.bind(this);
     this.cls.bind(this);
     this.handleUpload.bind(this);
-    this.handleDownload.bind(this);
   }
 
   print(text: string) {
@@ -218,7 +222,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     Cookies.set("theme", theme);
   };
 
-  handleFileRead = (e: any) => {
+  handleFileRead = (e: ProgressEvent<FileReader>) => {
     if (this.fileReader.result) {
       this.editorRef.current?.setValue(this.fileReader.result.toString());
     }
@@ -229,10 +233,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.onloadend = this.handleFileRead;
     this.fileReader.readAsText(file);
   };
-
-  handleDownload = () => {
-    this.editorRef.current?.download();
-  };  
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -263,7 +263,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     return (
       <PyEditor
         ref={this.editorRef}
-        readOnly={false}
         canRun={this.state.editorState === ChallengeStatus.READY}
         canPlaceBreakpoint={
           this.state.editorState === ChallengeStatus.READY ||
@@ -322,50 +321,74 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   };
 
+  renderFixedInput = () => {
+    return (
+      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
+        <Box sx={{ width: "100%", height: "100%" }}>
+          <TextField
+            placeholder="add fixed inputs here..."
+            multiline
+            margin="dense"
+            value={this.state.fixedUserInput}
+            onChange={(e) => {
+              this.setState({ fixedUserInput: e.target.value });
+            }}
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+            sx={{ width: "100%", height: "100%" }}
+          />
+        </Box>
+      </Box>
+    );
+  };
+
   renderOutput = () => {
+    let panes = [
+      {
+        label: "Console",
+        content: this.renderConsole(),
+        show: true,
+      },
+    ];
+
+    if (this.state.isFixedInput) {
+      panes.push({
+        label: "Fixed input",
+        content: this.renderFixedInput(),
+        show: this.state.isFixedInput,
+      });
+    }
+
     if (
       this.props.typ === "canvas" ||
       this.state.typInferred === ChallengeTypes.TYP_CANVAS
     ) {
-      return (
-        <ThemeProvider
-          theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
-        >
-          <Box
-            sx={{
-              width: "100%",
-              height: "100%",
-              bgcolor: "background.default",
-            }}
-          >
-            <TabbedView
-              ref={this.tabbedViewRef}
-              panes={[
-                {
-                  label: "Canvas",
-                  content: (
-                    <CanvasDisplay
-                      ref={this.canvasDisplayRef}
-                      onKeyDown={(e) =>
-                        ChallengeController["canvas-keydown"](this, e)
-                      }
-                      onKeyUp={(e) =>
-                        ChallengeController["canvas-keyup"](this, e)
-                      }
-                    />
-                  ),
-                },
-                {
-                  label: "Console",
-                  content: this.renderConsole(),
-                },
-              ]}
-            />
-          </Box>
-        </ThemeProvider>
-      );
+      panes.push({
+        label: "Canvas",
+        content: <CanvasDisplay ref={this.canvasDisplayRef} />,
+        show: true,
+      });
     }
-    return this.renderConsole();
+
+    return (
+      <ThemeProvider
+        theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            bgcolor: "background.default",
+          }}
+        >
+          {panes.length > 1 ? (
+            <TabbedView ref={this.tabbedViewRef} panes={panes} />
+          ) : (
+            this.renderConsole()
+          )}
+        </Box>
+      </ThemeProvider>
+    );
   };
 
   renderMainControls = () => {
@@ -444,13 +467,17 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       <HeaderBar
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
+        usingFixedInput={this.state.isFixedInput}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
-        onDownload={this.handleDownload}
+        onDownload={() => this.editorRef.current?.download()}
+        onUsingFixedInputChange={(fixedInput) =>
+          this.setState({ isFixedInput: fixedInput })
+        }
       />
     );
   }
@@ -479,16 +506,21 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             }}
           >
             {this.renderHeader()}
-            <Allotment className="h-100" defaultSizes={[65, 35]}>
+            <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={[65, 35]}>
+                <Allotment vertical defaultSizes={[650, 350]}>
                   <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
                     )}
                     maxSize={550}
-                    minSize={150}
+                    minSize={
+                      this.props.typ === "canvas" ||
+                      this.state.typInferred === ChallengeTypes.TYP_CANVAS
+                        ? 450
+                        : 150
+                    }
                   >
                     {this.renderOutput()}
                   </Allotment.Pane>

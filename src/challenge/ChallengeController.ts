@@ -70,6 +70,8 @@ const ChallengeController = {
       if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
         comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
       }
+      const paneRequest = comp.state.isFixedInput ? 2 : 1;
+      comp.tabbedViewRef?.current?.requestPane(paneRequest);
       comp.canvasDisplayRef?.current?.runCommand(data.msg);
     }
   },
@@ -78,13 +80,21 @@ const ChallengeController = {
       if (comp.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
         comp.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
       }
+      const paneRequest = comp.state.isFixedInput ? 2 : 1;
+      comp.tabbedViewRef?.current?.requestPane(paneRequest);
       comp.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
     }
   },
   cls: (comp: Challenge) => comp.cls(),
   input: (comp: Challenge) => {
-    comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT });
-    comp.tabbedViewRef?.current?.requestPane(1);
+    if (comp.state.isFixedInput) {
+      const input = comp.currentFixedUserInput.shift() || "";
+      const inputData: InputData = { input: input };
+      ChallengeController["input-entered"](comp, inputData);
+    } else {
+      comp.setState({ editorState: ChallengeStatus.AWAITING_INPUT });
+      comp.tabbedViewRef?.current?.requestPane(0);
+    }
   },
   "input-entered": (comp: Challenge, data: InputData) => {
     let x = new XMLHttpRequest();
@@ -212,10 +222,11 @@ const ChallengeController = {
       let code = comp.parsonsEditorRef.current?.getValue();
       data.code = code;
     }
-
     ChallengeController["debugpy"](comp, data);
   },
   debugpy: (comp: Challenge, data: DebugData) => {
+    comp.currentFixedUserInput = comp.state.fixedUserInput.split("\n") || [""];
+    comp.tabbedViewRef?.current?.requestPane(0);
     if (!data.code && data.code !== "") {
       return;
     }
