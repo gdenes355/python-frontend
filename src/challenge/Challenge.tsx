@@ -345,7 +345,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     let panes = [
       {
         label: "Console",
-        content: <this.renderConsole />,
+        content: this.renderConsole(),
         show: true,
       },
     ];
@@ -353,7 +353,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     if (this.state.isFixedInput) {
       panes.push({
         label: "Fixed input",
-        content: <this.renderFixedInput />,
+        content: this.renderFixedInput(),
         show: this.state.isFixedInput,
       });
     }
@@ -383,7 +383,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           {panes.length > 1 ? (
             <TabbedView ref={this.tabbedViewRef} panes={panes} />
           ) : (
-            <this.renderConsole />
+            this.renderConsole()
           )}
         </Box>
       </ThemeProvider>
@@ -392,7 +392,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderMainControls = () => {
     if (this.state.helpOpen) {
-      return <div></div>;
+      return;
     }
     return (
       <Card sx={{ overflow: "visible" }}>
@@ -431,7 +431,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   renderGuide = () => {
     if (this.state.guideMinimised) {
-      return <span></span>;
+      return;
     }
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
@@ -504,13 +504,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               flexDirection: "column",
             }}
           >
-            <this.renderHeader />
+            {this.renderHeader()}
             <Allotment className="h-100" defaultSizes={[65, 35]}>
               <Allotment.Pane>
                 <Allotment vertical defaultSizes={[65, 35]}>
-                  <Allotment.Pane>
-                    <this.renderEditor />
-                  </Allotment.Pane>
+                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
@@ -518,7 +516,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                     maxSize={550}
                     minSize={150}
                   >
-                    <this.renderOutput />
+                    {this.renderOutput()}
                   </Allotment.Pane>
                 </Allotment>
               </Allotment.Pane>
@@ -537,8 +535,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                       height: "100%",
                     }}
                   >
-                    <this.renderMainControls />
-                    <this.renderGuide />
+                    {this.renderMainControls()}
+                    {this.renderGuide()}
                   </Box>
                   <Allotment.Pane
                     maxSize={350}
@@ -552,7 +550,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                     }
                     className="debug-pane"
                   >
-                    <this.renderDebugPane />
+                    {this.renderDebugPane()}
                   </Allotment.Pane>
                 </Allotment>
               </Allotment.Pane>
@@ -569,9 +567,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           </Box>
           <Box>
             {!this.state.guideMinimised ? undefined : (
-              <div>
-                <this.renderMainControls />
-              </div>
+              <div>{this.renderMainControls()}</div>
             )}
           </Box>
         </Box>
@@ -579,18 +575,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     } else {
       return (
         <Box sx={{ width: "100%", height: "100%" }}>
-          <Box sx={{ p: 2 }}>
-            <this.renderGuide />
-          </Box>
-          <Box sx={{ height: "600px" }}>
-            <this.renderEditor />
-          </Box>
-          <this.renderMainControls />
+          <Box sx={{ p: 2 }}>{this.renderGuide()}</Box>
+          <Box sx={{ height: "600px" }}>{this.renderEditor()}</Box>
+          {this.renderMainControls()}
           <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
-            <this.renderOutput />
+            {this.renderOutput()}
           </Box>
           <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
-            <this.renderDebugPane />
+            {this.renderDebugPane()}
           </Box>
         </Box>
       );
