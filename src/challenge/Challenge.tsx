@@ -505,16 +505,21 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             }}
           >
             {this.renderHeader()}
-            <Allotment className="h-100" defaultSizes={[65, 35]}>
+            <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={[65, 35]}>
+                <Allotment vertical defaultSizes={[650, 350]}>
                   <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
                     )}
                     maxSize={550}
-                    minSize={150}
+                    minSize={
+                      this.props.typ === "canvas" ||
+                      this.state.typInferred === ChallengeTypes.TYP_CANVAS
+                        ? 450
+                        : 150
+                    }
                   >
                     {this.renderOutput()}
                   </Allotment.Pane>
