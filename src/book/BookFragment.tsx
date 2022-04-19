@@ -116,7 +116,11 @@ export default function Book() {
         {
           search:
             "?" +
-            new URLSearchParams({ book: bookPath, chid: node.id }).toString(),
+            new URLSearchParams({
+              book: bookPath,
+              chid: node.id,
+              "zip-path": zipPath || "",
+            }).toString(),
         },
         { replace: false }
       );
@@ -136,6 +140,7 @@ export default function Book() {
             book: bookPath,
             report: open ? "full" : "",
             chid: bookChallengeId || "",
+            "zip-path": zipPath || "",
           }),
       },
       { replace: false }
@@ -179,6 +184,7 @@ export default function Book() {
       return (
         <React.Fragment>
           <Challenge
+            fetcher={bookFetcher}
             guidePath={paths.guidePath}
             codePath={paths.pyPath}
             tests={tests && tests.length > 0 ? tests : null}

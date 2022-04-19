@@ -3,13 +3,14 @@ import JSZip from "jszip";
 import BookNodeModel from "../models/BookNodeModel";
 import { AllTestResults } from "../models/Tests";
 import { loadTestState } from "./ResultsStore";
+import IFetcher from "../utils/IFetcher";
 
 type BookFetchResult = {
   book: BookNodeModel;
   allResults: AllTestResults;
 };
 
-class BookFetcher {
+class BookFetcher implements IFetcher {
   constructor(bookPath: string, zipPath?: string | null) {
     this.zipPath = zipPath || undefined;
     this.bookPath = bookPath;
@@ -18,33 +19,40 @@ class BookFetcher {
     } else {
       // is this within a zip?
       if (this.zipPath) {
-        this.bookPathAbsolute = new URL(bookPath, "pf-zip://").toString();
+        this.bookPathAbsolute = new URL(bookPath, "pfzip://in.zip/").toString();
       } else {
         this.bookPathAbsolute = new URL(bookPath, document.baseURI).toString();
       }
     }
-
-    if (this.zipPath) {
-      this.fetchZip();
-    }
   }
 
   public usesLocalZip() {
-    return this.zipPath;
+    return this.zipPath || this.zip;
   }
 
   public getBookPathAbsolute() {
     return this.bookPathAbsolute;
   }
 
-  public fetch(url: string) {
-    return fetch(url);
+  public async fetch(url: string) {
+    console.log(this.usesLocalZip());
+    if (this.usesLocalZip()) {
+      if (!this.zip) {
+        await this.fetchZip();
+      }
+      let blob = await this.zip
+        ?.file(url.replace("pfzip://in.zip/", ""))
+        ?.async("blob");
+      return new Response(blob, { status: 200 });
+    } else {
+      return await fetch(url);
+    }
   }
 
   public fetchBook(): Promise<BookFetchResult> {
     return new Promise<BookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-      this.fetch(this.bookPath)
+      this.fetch(this.bookPathAbsolute)
         .then((response) => response.json())
         .then((bookData) =>
           this.expandBookLinks(
@@ -61,6 +69,7 @@ class BookFetcher {
   private zipPath?: string;
   private bookPathAbsolute: string;
   private bookPath: string;
+  private zip: JSZip | null = null;
 
   async expandBookLinks(
     bookNode: BookNodeModel,
@@ -89,32 +98,18 @@ class BookFetcher {
     return { book: bookNode, allResults: allRes };
   }
 
-  private fetchZip() {
-    if (!this.zipPath) {
+  private async fetchZip() {
+    if (!this.zipPath || this.zip) {
       return;
     }
-    fetch(this.zipPath)
-      .then(function (response) {
-        // 2) filter on 200 OK
-        if (response.status === 200 || response.status === 0) {
-          return Promise.resolve(response.blob());
-        } else {
-          return Promise.reject(new Error(response.statusText));
-        }
-      })
-      .then(JSZip.loadAsync) // 3) chain with the zip promise
-      .then(function (zip) {
-        console.log("zip", zip);
-        return zip;
-      })
-      .then((zip) => {
-        return zip.file(this.bookPath)?.async("string");
-      })
-      .then(function success(text) {
-        console.log(text);
-        return JSON.parse(text as string);
-      })
-      .then((obj) => console.log(obj));
+
+    let response = await fetch(this.zipPath);
+    if (response.status !== 200 && response.status !== 0) {
+      console.error("Failed to fetch zip file", this.zipPath);
+      return;
+    }
+    let blob = await response.blob();
+    this.zip = await JSZip.loadAsync(blob);
   }
 }
 

@@ -7,11 +7,14 @@ import { ThemeProvider } from "@mui/material/styles";
 import pageTheme from "./themes/pageTheme";
 
 import "./App.css";
+import DefaultFetcher from "./utils/DefaultFetcher";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
   const challengePath = searchParams.get("ch");
+
+  const defaultFetcher = new DefaultFetcher();
 
   if (bookPath) {
     return <BookFragment />;
@@ -19,6 +22,7 @@ const AppContainer = () => {
     return (
       <React.Fragment>
         <Challenge
+          fetcher={defaultFetcher}
           guidePath={challengePath + ".md"}
           codePath={challengePath + ".py"}
           layout="linear"
