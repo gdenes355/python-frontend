@@ -6,7 +6,6 @@ import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
 import BookReport from "./BookReport";
 import BookFetcher from "./BookFetcher";
-import BookZipper from "./BookZipper";
 
 import { saveTestState } from "./ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
