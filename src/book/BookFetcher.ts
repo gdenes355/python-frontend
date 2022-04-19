@@ -11,14 +11,15 @@ type BookFetchResult = {
 };
 
 class BookFetcher implements IFetcher {
-  constructor(bookPath: string, zipPath?: string | null) {
+  constructor(bookPath: string, zipPath?: string | null, zipData?: string) {
     this.zipPath = zipPath || undefined;
+    this.zipData = zipData || undefined;
     this.bookPath = bookPath;
     if (isAbsoluteAddress(bookPath)) {
       this.bookPathAbsolute = this.bookPath;
     } else {
       // is this within a zip?
-      if (this.zipPath) {
+      if (this.zipPath || this.zipData) {
         this.bookPathAbsolute = new URL(bookPath, "pfzip://in.zip/").toString();
       } else {
         this.bookPathAbsolute = new URL(bookPath, document.baseURI).toString();
@@ -27,7 +28,7 @@ class BookFetcher implements IFetcher {
   }
 
   public usesLocalZip() {
-    return this.zipPath || this.zip;
+    return this.zipPath || this.zip || this.zipData;
   }
 
   public getBookPathAbsolute() {
@@ -35,7 +36,6 @@ class BookFetcher implements IFetcher {
   }
 
   public async fetch(url: string) {
-    console.log(this.usesLocalZip());
     if (this.usesLocalZip()) {
       if (!this.zip) {
         await this.fetchZip();
@@ -67,6 +67,7 @@ class BookFetcher implements IFetcher {
   }
 
   private zipPath?: string;
+  private zipData?: string;
   private bookPathAbsolute: string;
   private bookPath: string;
   private zip: JSZip | null = null;
@@ -99,17 +100,20 @@ class BookFetcher implements IFetcher {
   }
 
   private async fetchZip() {
-    if (!this.zipPath || this.zip) {
+    if (this.zip || (!this.zip && !this.zipData)) {
       return;
     }
-
-    let response = await fetch(this.zipPath);
-    if (response.status !== 200 && response.status !== 0) {
-      console.error("Failed to fetch zip file", this.zipPath);
-      return;
+    if (this.zipPath) {
+      let response = await fetch(this.zipPath);
+      if (response.status !== 200 && response.status !== 0) {
+        console.error("Failed to fetch zip file", this.zipPath);
+        return;
+      }
+      let blob = await response.blob();
+      this.zip = await JSZip.loadAsync(blob);
+    } else if (this.zipData) {
+      this.zip = await JSZip.loadAsync(this.zipData, { base64: true });
     }
-    let blob = await response.blob();
-    this.zip = await JSZip.loadAsync(blob);
   }
 }
 

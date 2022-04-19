@@ -6,6 +6,7 @@ import BookCover from "./BookCover";
 import BookDrawer from "./BookDrawer";
 import BookReport from "./BookReport";
 import BookFetcher from "./BookFetcher";
+import BookZipper from "./BookZipper";
 
 import { saveTestState } from "./ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
@@ -38,11 +39,12 @@ export default function Book() {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book") || "";
   const zipPath = searchParams.get("zip-path");
+  const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
 
   const bookFetcher = useMemo(() => {
-    return new BookFetcher(bookPath, zipPath);
-  }, [bookPath, zipPath]);
+    return new BookFetcher(bookPath, zipPath, zipData);
+  }, [bookPath, zipPath, zipData]);
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
@@ -120,6 +122,7 @@ export default function Book() {
               book: bookPath,
               chid: node.id,
               "zip-path": zipPath || "",
+              "zip-data": zipData || "",
             }).toString(),
         },
         { replace: false }
@@ -141,6 +144,7 @@ export default function Book() {
             report: open ? "full" : "",
             chid: bookChallengeId || "",
             "zip-path": zipPath || "",
+            "zip-data": zipData || "",
           }),
       },
       { replace: false }
