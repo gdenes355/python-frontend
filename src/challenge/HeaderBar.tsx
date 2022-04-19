@@ -23,8 +23,10 @@ type HeaderBarProps = {
   title?: string;
   theme: string;
   usingFixedInput: boolean;
+  editingGuide: boolean;
   onThemeChange: (theme: string) => void;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
+  onEditingGuideChange: (editingGuide: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
@@ -122,6 +124,19 @@ const HeaderBar = (props: HeaderBarProps) => {
                 label="Use fixed inputs"
               />
             </MenuItem>
+            <MenuItem>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={props.editingGuide === true}
+                    onChange={() => {
+                      props.onEditingGuideChange(!props.editingGuide);
+                    }}
+                  />
+                }
+                label="Edit guide"
+              />
+            </MenuItem>            
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

@@ -50,6 +50,7 @@ type ChallengeState = {
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
   isFixedInput: boolean;
+  isEditingGuide: boolean;
   fixedUserInput: string;
 };
 
@@ -104,6 +105,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
     isFixedInput: false,
+    isEditingGuide: false,
     fixedUserInput: "",
   };
 
@@ -447,6 +449,20 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
+    if(this.state.isEditingGuide) { 
+      return (<TextField
+          multiline
+          margin="dense"
+          value={this.state.guideMd}
+          onChange={(e) => {
+            this.setState({ guideMd: e.target.value });
+          }}
+          variant="standard"
+          InputProps={{ disableUnderline: true }}
+          sx={{ width: "100%", height: "100%" }}
+        />
+     )   
+    }
     return <Guide md={this.state.guideMd} theme={this.state.theme} />;
   };
 
@@ -478,6 +494,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
         usingFixedInput={this.state.isFixedInput}
+        editingGuide={this.state.isEditingGuide}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}
@@ -487,6 +504,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onDownload={() => this.editorRef.current?.download()}
         onUsingFixedInputChange={(fixedInput) =>
           this.setState({ isFixedInput: fixedInput })
+        }
+        onEditingGuideChange={(editingGuide) =>
+          this.setState({ isEditingGuide: editingGuide })
         }
       />
     );
