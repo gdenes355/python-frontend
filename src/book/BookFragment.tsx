@@ -213,6 +213,7 @@ export default function Book() {
         />
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
+      const editable = searchParams.get("edit")
       return (
         <React.Fragment>
           <Challenge
@@ -228,6 +229,7 @@ export default function Book() {
             uid={bookPath + bookChallengeId}
             onTestsPassingChanged={activeTestsPassingChanged}
             isExample={activeNode.isExample}
+            showEditTools={editable? true : false}
             typ={activeNode.typ}
           />
           <BookDrawer

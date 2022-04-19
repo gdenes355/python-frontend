@@ -64,6 +64,7 @@ type ChallengeProps = {
   typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
   isExample?: boolean;
+  showEditTools: boolean;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -494,6 +495,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
         usingFixedInput={this.state.isFixedInput}
+        showEditTools={this.props.showEditTools}
         editingGuide={this.state.isEditingGuide}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}

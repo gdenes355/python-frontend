@@ -12,6 +12,7 @@ const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
   const challengePath = searchParams.get("ch");
+  const editable = searchParams.get("edit");
 
   if (bookPath) {
     return <BookFragment />;
@@ -21,6 +22,7 @@ const AppContainer = () => {
         <Challenge
           guidePath={challengePath + ".md"}
           codePath={challengePath + ".py"}
+          showEditTools = {editable ? true : false }
           layout="linear"
         />
       </React.Fragment>
@@ -53,6 +55,10 @@ const AppContainer = () => {
           Alternatively, you can view an individual challenge using the md and
           py paths: (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>)
         </p>
+        <p>
+          To show edit tools for a challenge you can include edit=true in the querystring of a book
+          <a href="?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=true">?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=true</a>
+        </p>        
       </div>
     );
   }
