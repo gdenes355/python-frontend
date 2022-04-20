@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import BookFragment from "./book/Book";
+import Book from "./book/Book";
+import BookUpload from "./book/BookUpload";
 import Challenge from "./challenge/Challenge";
 import { ThemeProvider } from "@mui/material/styles";
 
@@ -13,11 +14,12 @@ const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
   const challengePath = searchParams.get("ch");
+  const [bookFile, setBookFile] = useState<File | null>(null);
 
   const defaultFetcher = new DefaultFetcher();
 
-  if (bookPath) {
-    return <BookFragment />;
+  if (bookPath || bookFile) {
+    return <Book zipFile={bookFile || undefined} />;
   } else if (challengePath) {
     return (
       <React.Fragment>
@@ -43,7 +45,7 @@ const AppContainer = () => {
             <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a>
           </li>
           <li>
-            <b>New: </b> You can also specify a library of books:{" "}
+            You can also specify a library of books:{" "}
             <a href="?book=./library.json">?book=./library.json</a>
           </li>
         </ul>
@@ -57,6 +59,10 @@ const AppContainer = () => {
           Alternatively, you can view an individual challenge using the md and
           py paths: (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>)
         </p>
+        <p>
+          <b>New: </b> drag and drop a zip file with a book inside it
+        </p>
+        <BookUpload onBookUploaded={setBookFile} />
       </div>
     );
   }

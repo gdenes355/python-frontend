@@ -16,12 +16,16 @@ import BookNodeModel, {
 } from "../models/BookNodeModel";
 import { TestCases, AllTestResults } from "../models/Tests";
 
+type BookProps = {
+  zipFile?: File;
+};
+
 type PathsState = {
   guidePath: string | null;
   pyPath: string | null;
 };
 
-export default function Book() {
+const Book = (props: BookProps) => {
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
@@ -36,14 +40,14 @@ export default function Book() {
   });
 
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book") || "";
+  const bookPath = searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
 
   const bookFetcher = useMemo(() => {
-    return new BookFetcher(bookPath, zipPath, zipData);
-  }, [bookPath, zipPath, zipData]);
+    return new BookFetcher(bookPath, zipPath, zipData || props.zipFile);
+  }, [bookPath, zipPath, zipData, props.zipFile]);
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
@@ -227,4 +231,6 @@ export default function Book() {
   } else {
     return <p>Loading book... </p>;
   }
-}
+};
+
+export default Book;

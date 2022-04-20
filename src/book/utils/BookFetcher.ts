@@ -11,7 +11,11 @@ type BookFetchResult = {
 };
 
 class BookFetcher implements IFetcher {
-  constructor(bookPath: string, zipPath?: string | null, zipData?: string) {
+  constructor(
+    bookPath: string,
+    zipPath?: string | null,
+    zipData?: string | File
+  ) {
     this.zipPath = zipPath || undefined;
     this.zipData = zipData || undefined;
     this.bookPath = bookPath;
@@ -67,7 +71,7 @@ class BookFetcher implements IFetcher {
   }
 
   private zipPath?: string;
-  private zipData?: string;
+  private zipData?: string | File;
   private bookPathAbsolute: string;
   private bookPath: string;
   private zip: JSZip | null = null;
