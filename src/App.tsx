@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Book from "./book/Book";
 import BookUpload from "./book/BookUpload";
 import Challenge from "./challenge/Challenge";
@@ -15,6 +16,7 @@ const AppContainer = () => {
   const bookPath = searchParams.get("book");
   const challengePath = searchParams.get("ch");
   const [bookFile, setBookFile] = useState<File | null>(null);
+  const navigate = useNavigate();
 
   const defaultFetcher = new DefaultFetcher();
 
@@ -62,7 +64,12 @@ const AppContainer = () => {
         <p>
           <b>New: </b> drag and drop a zip file with a book inside it
         </p>
-        <BookUpload onBookUploaded={setBookFile} />
+        <BookUpload
+          onBookUploaded={(file) => {
+            setBookFile(file);
+            navigate({ search: "?book=book.json" });
+          }}
+        />
       </div>
     );
   }
