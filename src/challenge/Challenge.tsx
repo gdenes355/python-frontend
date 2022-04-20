@@ -671,11 +671,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                 if(this.state.isEditingGuide){this.handleEditingChange(false);}
                 if(this.props.onRequestNextChallenge){this.props.onRequestNextChallenge();}             
               }}
-              onOpenMenu={() =>
-                this.props.openBookDrawer
-                  ? this.props.openBookDrawer(true)
-                  : undefined
-              }
+              onOpenMenu={() => {
+                if(this.state.isEditingGuide){this.handleEditingChange(false);}
+                if(this.props.openBookDrawer){this.props.openBookDrawer(true)}
+              }}
             />
           </Box>
           <Box>
