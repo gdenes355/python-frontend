@@ -1,5 +1,5 @@
-import BookNodeModel from "../models/BookNodeModel";
-import { AllTestResults } from "../models/Tests";
+import BookNodeModel from "../../models/BookNodeModel";
+import { AllTestResults } from "../../models/Tests";
 
 const loadTestState: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");

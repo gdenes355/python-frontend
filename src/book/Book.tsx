@@ -3,11 +3,11 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import Challenge from "../challenge/Challenge";
 import BookCover from "./BookCover";
-import BookDrawer from "./BookDrawer";
+import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
-import BookFetcher from "./BookFetcher";
+import BookFetcher from "./utils/BookFetcher";
 
-import { saveTestState } from "./ResultsStore";
+import { saveTestState } from "./utils/ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
 import BookNodeModel, {
   findBookNode,

@@ -1,6 +1,6 @@
-import BookNodeModel from "../models/BookNodeModel";
+import BookNodeModel from "../../models/BookNodeModel";
 import JSZip from "jszip";
-import { absolutisePath } from "../utils/pathTools";
+import { absolutisePath } from "../../utils/pathTools";
 import BookFetcher from "./BookFetcher";
 
 export default class BookZipper {

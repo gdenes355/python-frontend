@@ -1,6 +1,6 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import BookFragment from "./book/BookFragment";
+import BookFragment from "./book/Book";
 import Challenge from "./challenge/Challenge";
 import { ThemeProvider } from "@mui/material/styles";
 

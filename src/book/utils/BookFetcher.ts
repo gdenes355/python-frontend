@@ -1,9 +1,9 @@
-import { isAbsoluteAddress, absolutisePath } from "../utils/pathTools";
+import { isAbsoluteAddress, absolutisePath } from "../../utils/pathTools";
 import JSZip from "jszip";
-import BookNodeModel from "../models/BookNodeModel";
-import { AllTestResults } from "../models/Tests";
+import BookNodeModel from "../../models/BookNodeModel";
+import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
-import IFetcher from "../utils/IFetcher";
+import IFetcher from "../../utils/IFetcher";
 
 type BookFetchResult = {
   book: BookNodeModel;

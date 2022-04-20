@@ -4,8 +4,8 @@ import AssessmentIcon from "@mui/icons-material/Assessment";
 
 import BookContents from "./BookContents";
 
-import BookNodeModel from "../models/BookNodeModel";
-import { AllTestResults } from "../models/Tests";
+import BookNodeModel from "../../models/BookNodeModel";
+import { AllTestResults } from "../../models/Tests";
 
 type BookDrawerProps = {
   open: boolean;
