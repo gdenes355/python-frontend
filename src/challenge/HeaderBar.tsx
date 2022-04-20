@@ -137,7 +137,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                             }}
                           />
                         }
-                        label="Edit guide"
+                        label="Edit challenge"
                       />
                     </MenuItem>
                 )

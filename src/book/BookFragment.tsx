@@ -148,12 +148,16 @@ export default function Book() {
   }, [rootNode, bookChallengeId, bookPathAbsolute, remainingBookFetches]);
 
   const openNode = (node: BookNodeModel) => {
+    let newSearchParams = new URLSearchParams({ book: bookPath, chid: node.id })
+    if(searchParams.get("edit")){
+      newSearchParams = new URLSearchParams({ book: bookPath, chid: node.id, edit: (searchParams.get("edit")?.valueOf() || "")})
+    }
     if (!node.children || node.children.length === 0) {
       navigate(
-        {
+        {          
           search:
             "?" +
-            new URLSearchParams({ book: bookPath, chid: node.id }).toString(),
+            newSearchParams.toString(),
         },
         { replace: false }
       );

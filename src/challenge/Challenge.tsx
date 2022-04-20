@@ -33,6 +33,7 @@ import "./Challenge.css";
 type ChallengeState = {
   starterCode: string | null;
   savedCode: string | null;
+  savedJSON: string | null;
   worker: Worker | null;
   guideMd: string;
   debugContext: DebugContext;
@@ -81,6 +82,25 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
 
+  JSON_DEFAULT: string = 
+`
+{
+  "name": "Challenge Name",
+  "isExample": true,
+  "comment1": "tests will be ignored if isExample is true or you can delete the tests block if so",
+  "tests": [
+    {
+        "in": "world",
+        "out": ".*hello\\nworld",
+        "comment2": "the output would match any input prompt followed by hello on one line and world on the next"
+    }
+  ],
+  "comment3": "you can add multiple tests inside the square brackets,
+  typ: "py",
+  "comment4": "typ can be py or parsons or canvas",
+}
+`;
+
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
@@ -89,6 +109,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
+    savedJSON: null,
     worker: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
@@ -117,6 +138,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.print.bind(this);
     this.cls.bind(this);
     this.handleUpload.bind(this);
+    this.handleEditingChange.bind(this);
+    this.handleFileRead.bind(this);
+    this.handleThemeChange.bind(this);    
   }
 
   print(text: string) {
@@ -142,6 +166,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       if (savedCode) {
         this.setState({ savedCode: savedCode });
       }
+      let savedJSON = localStorage.getItem(
+        "json-" + encodeURIComponent(this.props.uid)
+      );
+      if (savedJSON) {
+        this.setState({ savedJSON: savedJSON });
+      }      
     }
     fetch(this.props.guidePath)
       .then((response) => {
@@ -237,6 +267,16 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.readAsText(file);
   };
 
+  handleEditingChange = (editingGuide:boolean) => {
+    if(editingGuide) {
+      ChallengeController["save-code"](this, {code: this.editorRef.current?.getValue() || ""});
+    } else {
+      ChallengeController["save-json"](this, {code: this.editorRef.current?.getValue() || ""});
+      this.setState({ savedJSON: this.editorRef.current?.getValue() || "" });
+    }
+    this.setState({ isEditingGuide: editingGuide });    
+  }
+
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -254,6 +294,31 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderEditor() {
+    if(this.state.isEditingGuide) {
+      return (
+        <PyEditor
+          ref={this.editorRef}
+          starterCode={this.state.savedJSON || this.JSON_DEFAULT}
+          theme={this.state.theme}
+          onToggleFullScreen={() => {
+            this.setState((state, props) => {
+              return { editorFullScreen: !state.editorFullScreen };
+            });
+          }}
+          canRun={false}
+          canPlaceBreakpoint={false}
+          isOnBreakPoint={false}
+          onBreakpointsUpdated={() => {}}
+          debugContext={this.state.debugContext}
+          onDebug={() => {}}
+          onContinue={() => {}}
+          onStepInto={() => {}}
+          onStop={() => {}}         
+        />
+      )
+
+    }
+
     if (this.props.typ === "parsons") {
       return (
         <ParsonsEditor
@@ -499,7 +564,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         editingGuide={this.state.isEditingGuide}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
-        onResetCode={() => ChallengeController["reset-code"](this)}
+        onResetCode={() => {
+          if(this.state.isEditingGuide) {
+            ChallengeController["reset-json"](this);
+          } else {
+            ChallengeController["reset-code"](this);
+          }
+        }}
         canDebug={this.state.editorState === ChallengeStatus.READY}
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
@@ -507,9 +578,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onUsingFixedInputChange={(fixedInput) =>
           this.setState({ isFixedInput: fixedInput })
         }
-        onEditingGuideChange={(editingGuide) =>
-          this.setState({ isEditingGuide: editingGuide })
-        }
+        onEditingGuideChange={this.handleEditingChange}
       />
     );
   }
@@ -594,8 +663,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               </Allotment.Pane>
             </Allotment>
             <BookControlFabs
-              onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-              onNavigateToNextPage={this.props.onRequestNextChallenge}
+              onNavigateToPrevPage={() => {
+                if(this.state.isEditingGuide){this.handleEditingChange(false);}
+                if(this.props.onRequestPreviousChallenge){this.props.onRequestPreviousChallenge();}
+              }}
+              onNavigateToNextPage={() => {
+                if(this.state.isEditingGuide){this.handleEditingChange(false);}
+                if(this.props.onRequestNextChallenge){this.props.onRequestNextChallenge();}             
+              }}
               onOpenMenu={() =>
                 this.props.openBookDrawer
                   ? this.props.openBookDrawer(true)

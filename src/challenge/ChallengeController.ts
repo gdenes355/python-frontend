@@ -287,6 +287,11 @@ const ChallengeController = {
       comp.editorRef.current.setValue(comp.state.starterCode);
     }
   },
+  "reset-json": (comp: Challenge) => {
+  if (comp.editorRef.current) {
+      comp.editorRef.current.setValue(comp.JSON_DEFAULT);
+    }
+  },  
   breakpt: (comp: Challenge, data: DebugContext) => {
     comp.setState({
       debugContext: {
@@ -305,6 +310,14 @@ const ChallengeController = {
       );
     }
   },
+  "save-json": (comp: Challenge, data: SaveCodeData) => {
+    if ((data.code || data.code === "") && comp.props.uid) {
+      localStorage.setItem(
+        "json-" + encodeURIComponent(comp.props.uid),
+        data.code
+      );
+    }
+  },  
   "canvas-keydown": (comp: Challenge, data: React.KeyboardEvent) => {
     if (comp.state.keyDownBuffer) {
       let code = keyToVMCode(data.key);
