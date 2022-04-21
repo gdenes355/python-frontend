@@ -68,8 +68,8 @@ const BookUpload = (props: BookUploadProps) => {
         <CardContent {...getRootProps({ style })}>
           <input {...getInputProps()} />
           <p>
-            Drag &#38; drop your book zip file, or click to select it from the
-            dialog
+            Drag &#38; drop your book zip file, or click to select a zip file
+            from the dialog
           </p>
         </CardContent>
       </Box>

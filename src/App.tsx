@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { ThemeProvider } from "@mui/material/styles";
+
+import Start from "./Start";
 import Book from "./book/Book";
 import BookUpload from "./book/BookUpload";
 import Challenge from "./challenge/Challenge";
-import { ThemeProvider } from "@mui/material/styles";
 
 import pageTheme from "./themes/pageTheme";
 
@@ -35,42 +37,12 @@ const AppContainer = () => {
     );
   } else {
     return (
-      <div>
-        <p>To get started,just specify the book path. E.g.</p>
-        <ul>
-          <li>
-            Simple examples with test cases:{" "}
-            <a href="?book=./examples/book.json">?book=./examples/book.json</a>
-          </li>
-          <li>
-            Fun tasks:{" "}
-            <a href="?book=./progsoc/book.json">?book=./progsoc/book.json</a>
-          </li>
-          <li>
-            You can also specify a library of books:{" "}
-            <a href="?book=./library.json">?book=./library.json</a>
-          </li>
-        </ul>
-        <p>
-          You can now also generate a progress report using{" "}
-          <a href="?book=./library.json&report=full">
-            ?book=./library.json&report=full
-          </a>
-        </p>
-        <p>
-          Alternatively, you can view an individual challenge using the md and
-          py paths: (e.g. <a href="?ch=./progsoc/c01">?ch=./progsoc/c01</a>)
-        </p>
-        <p>
-          <b>New: </b> drag and drop a zip file with a book inside it
-        </p>
-        <BookUpload
-          onBookUploaded={(file) => {
-            setBookFile(file);
-            navigate({ search: "?book=book.json" });
-          }}
-        />
-      </div>
+      <BookUpload
+        onBookUploaded={(file) => {
+          setBookFile(file);
+          navigate({ search: "?book=book.json" });
+        }}
+      />
     );
   }
 };
@@ -80,6 +52,7 @@ export default function App() {
     <ThemeProvider theme={pageTheme}>
       <BrowserRouter>
         <Routes>
+          <Route path="start" element={<Start />} />
           <Route path="*" element={<AppContainer></AppContainer>} />
         </Routes>
       </BrowserRouter>
