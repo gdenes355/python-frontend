@@ -1,0 +1,7 @@
+[build]
+
+[[redirects]]
+  from = "/start"
+  to = "/"
+  status = 200
+  force = true

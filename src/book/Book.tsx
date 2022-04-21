@@ -1,58 +1,31 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+
 import Challenge from "../challenge/Challenge";
 import BookCover from "./BookCover";
-import BookDrawer from "./BookDrawer";
+import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
+import BookFetcher from "./utils/BookFetcher";
 
-import { loadTestState, saveTestState } from "./ResultsStore";
-
+import { saveTestState } from "./utils/ResultsStore";
+import { absolutisePath } from "../utils/pathTools";
 import BookNodeModel, {
   findBookNode,
   nextBookNode,
   prevBookNode,
 } from "../models/BookNodeModel";
-import { absolutisePath, isAbsoluteAddress } from "../utils/pathTools";
 import { TestCases, AllTestResults } from "../models/Tests";
+
+type BookProps = {
+  zipFile?: File;
+};
 
 type PathsState = {
   guidePath: string | null;
   pyPath: string | null;
 };
 
-const expandBookLinks = (
-  bookNode: BookNodeModel,
-  mainUrl: string,
-  setRemainingBookFetches: (u: (n: number) => number) => void,
-  allRes: AllTestResults,
-  fileRoot: boolean
-) => {
-  bookNode.bookMainUrl = mainUrl;
-  if (fileRoot) {
-    let localRes = loadTestState(bookNode);
-    allRes.passed = new Set([...allRes.passed, ...localRes.passed]);
-    allRes.failed = new Set([...allRes.failed, ...localRes.failed]);
-  }
-  if (bookNode.children) {
-    for (const child of bookNode.children) {
-      expandBookLinks(child, mainUrl, setRemainingBookFetches, allRes, false);
-    }
-  }
-  if (bookNode.bookLink) {
-    setRemainingBookFetches((ct) => ct + 1);
-    let path = absolutisePath(bookNode.bookLink, mainUrl);
-
-    fetch(path)
-      .then((response) => response.json())
-      .then((bookData) => {
-        bookNode.children = bookData.children;
-        expandBookLinks(bookData, path, setRemainingBookFetches, allRes, true);
-        setRemainingBookFetches((ct) => ct - 1);
-      });
-  }
-};
-
-export default function Book() {
+const Book = (props: BookProps) => {
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
@@ -66,19 +39,15 @@ export default function Book() {
     failed: new Set(),
   });
 
-  const [remainingBookFetches, setRemainingBookFetches] = useState(1);
-
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book") || "";
-  const bookPathAbsolute = useMemo(
-    () =>
-      isAbsoluteAddress(bookPath)
-        ? new URL(bookPath)
-        : new URL(bookPath, document.baseURI),
-    [bookPath]
-  );
+  const bookPath = searchParams.get("book") || "book.json";
+  const zipPath = searchParams.get("zip-path");
+  const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
 
+  const bookFetcher = useMemo(() => {
+    return new BookFetcher(bookPath, zipPath, zipData || props.zipFile);
+  }, [bookPath, zipPath, zipData, props.zipFile]);
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
@@ -101,51 +70,50 @@ export default function Book() {
     saveTestState(activeNode, newTestState); // persist
   };
 
+  /**
+   * Getting the book to open
+   */
   useEffect(() => {
-    if (!bookPath || !bookPathAbsolute) {
+    if (!bookFetcher) {
       setAllTestResults({ passed: new Set(), failed: new Set() });
       return;
     }
-    setRemainingBookFetches(1);
-    let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-    fetch(bookPath)
-      .then((response) => response.json())
-      .then((bookData) => {
-        setRootNode(bookData);
-        expandBookLinks(
-          bookData,
-          bookPathAbsolute.toString(),
-          setRemainingBookFetches,
-          allRes,
-          true
-        );
-        setRemainingBookFetches((ct) => ct - 1);
-        setAllTestResults(allRes);
-      });
-  }, [bookPath, bookPathAbsolute]);
 
+    bookFetcher.fetchBook().then((result) => {
+      setAllTestResults(result.allResults);
+      setRootNode(result.book);
+    });
+  }, [bookFetcher]);
+
+  /**
+   * Getting the challenge within the book
+   */
   useEffect(() => {
-    if (rootNode && remainingBookFetches === 0) {
-      if (bookChallengeId) {
-        let node = findBookNode(rootNode, bookChallengeId);
-        setActiveNode(node);
-        if (node && node.guide) {
-          setPaths({
-            guidePath: absolutisePath(
-              node.guide,
-              node.bookMainUrl || bookPathAbsolute
-            ),
-            pyPath: node.py
-              ? absolutisePath(node.py, node.bookMainUrl || bookPathAbsolute)
-              : null,
-          });
-          setTests(node.tests);
-        }
-      } else {
-        setPaths({ guidePath: null, pyPath: null });
-      }
+    if (!rootNode) {
+      return;
     }
-  }, [rootNode, bookChallengeId, bookPathAbsolute, remainingBookFetches]);
+    if (bookChallengeId) {
+      let node = findBookNode(rootNode, bookChallengeId);
+      setActiveNode(node);
+      if (node && node.guide) {
+        setPaths({
+          guidePath: absolutisePath(
+            node.guide,
+            node.bookMainUrl || bookFetcher.getBookPathAbsolute()
+          ),
+          pyPath: node.py
+            ? absolutisePath(
+                node.py,
+                node.bookMainUrl || bookFetcher.getBookPathAbsolute()
+              )
+            : null,
+        });
+        setTests(node.tests);
+      }
+    } else {
+      setPaths({ guidePath: null, pyPath: null });
+    }
+  }, [rootNode, bookChallengeId, bookFetcher]);
 
   const openNode = (node: BookNodeModel) => {
     if (!node.children || node.children.length === 0) {
@@ -153,7 +121,12 @@ export default function Book() {
         {
           search:
             "?" +
-            new URLSearchParams({ book: bookPath, chid: node.id }).toString(),
+            new URLSearchParams({
+              book: bookPath,
+              chid: node.id,
+              "zip-path": zipPath || "",
+              "zip-data": zipData || "",
+            }).toString(),
         },
         { replace: false }
       );
@@ -173,6 +146,8 @@ export default function Book() {
             book: bookPath,
             report: open ? "full" : "",
             chid: bookChallengeId || "",
+            "zip-path": zipPath || "",
+            "zip-data": zipData || "",
           }),
       },
       { replace: false }
@@ -203,7 +178,7 @@ export default function Book() {
     }
   };
 
-  if (rootNode && remainingBookFetches === 0) {
+  if (rootNode) {
     if (searchParams.get("report") === "full") {
       return (
         <BookReport
@@ -216,6 +191,7 @@ export default function Book() {
       return (
         <React.Fragment>
           <Challenge
+            fetcher={bookFetcher}
             guidePath={paths.guidePath}
             codePath={paths.pyPath}
             tests={tests && tests.length > 0 ? tests : null}
@@ -253,6 +229,8 @@ export default function Book() {
       );
     }
   } else {
-    return <p>Loading book... fetching {remainingBookFetches} more files...</p>;
+    return <p>Loading book... </p>;
   }
-}
+};
+
+export default Book;

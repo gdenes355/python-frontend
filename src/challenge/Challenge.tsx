@@ -21,6 +21,7 @@ import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
+import IFetcher from "../utils/IFetcher";
 import Help from "./Help";
 
 import ChallengeController from "./ChallengeController";
@@ -63,6 +64,7 @@ type ChallengeProps = {
   typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
   isExample?: boolean;
+  fetcher: IFetcher;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -140,7 +142,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         this.setState({ savedCode: savedCode });
       }
     }
-    fetch(this.props.guidePath)
+    this.props.fetcher
+      .fetch(this.props.guidePath)
       .then((response) => {
         if (!response.ok) {
           this.setState({ errorLoading: true });
@@ -148,7 +151,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         return response.text();
       })
       .then((text) => this.setState({ guideMd: text }));
-    fetch(this.props.codePath)
+    this.props.fetcher
+      .fetch(this.props.codePath)
       .then((response) => {
         if (!response.ok) {
           this.setState({ errorLoading: true });
@@ -167,13 +171,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
     if (prevProps.guidePath !== this.props.guidePath) {
-      fetch(this.props.guidePath)
+      this.props.fetcher
+        .fetch(this.props.guidePath)
         .then((response) => response.text())
         .then((text) => this.setState({ guideMd: text }));
     }
 
     if (prevProps.codePath !== this.props.codePath) {
-      fetch(this.props.codePath)
+      this.props.fetcher
+        .fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
       this.setState({ typInferred: ChallengeTypes.TYP_PY });
@@ -368,18 +374,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         content: (
           <CanvasDisplay
             ref={this.canvasDisplayRef}
-            onKeyDown={(e) =>
-              ChallengeController["canvas-keydown"](this, e)
-            }
-            onKeyUp={(e) =>
-              ChallengeController["canvas-keyup"](this, e)
-            }
+            onKeyDown={(e) => ChallengeController["canvas-keydown"](this, e)}
+            onKeyUp={(e) => ChallengeController["canvas-keyup"](this, e)}
           />
         ),
-        show: true
+        show: true,
       });
     }
-    
+
     return (
       <ThemeProvider
         theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
