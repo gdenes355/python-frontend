@@ -81,6 +81,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
+  bookExports: string[][] = [];
 
   JSON_DEFAULT: string = 
 `
@@ -95,7 +96,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         "comment2": "the output would match any input prompt followed by hello on one line and world on the next"
     }
   ],
-  "comment3": "you can add multiple tests inside the square brackets,
+  "comment3": "you can add multiple tests inside the square brackets",
   typ: "py",
   "comment4": "typ can be py or parsons or canvas",
 }
@@ -276,6 +277,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     }
     this.setState({ isEditingGuide: editingGuide });    
   }
+
+  handleBookDownload = () => {
+    ChallengeController["export-book"](this, {contents: this.bookExports});
+  }
+
+  handleAddToExport = () => {
+    this.handleEditingChange(false);
+    this.bookExports.push([this.state.guideMd, this.editorRef.current?.getValue() || "", this.state.savedJSON || this.JSON_DEFAULT]);
+  }  
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -575,6 +585,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         canReset={this.state.editorState === ChallengeStatus.READY}
         onUpload={this.handleUpload}
         onDownload={() => this.editorRef.current?.download()}
+        onBookDownload={this.handleBookDownload}
+        onAddToExport={this.handleAddToExport}
         onUsingFixedInputChange={(fixedInput) =>
           this.setState({ isFixedInput: fixedInput })
         }

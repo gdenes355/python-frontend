@@ -16,6 +16,8 @@ import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
+import FolderZipIcon from '@mui/icons-material/FolderZip';
 import Menu from "../components/Menu";
 import FileUploadControl from "../components/FileUploadControl";
 
@@ -34,6 +36,8 @@ type HeaderBarProps = {
   onResetCode: () => void;
   onUpload: (file: File) => void;
   onDownload: () => void;
+  onAddToExport: () => void;
+  onBookDownload: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -127,7 +131,7 @@ const HeaderBar = (props: HeaderBarProps) => {
             </MenuItem>
             {props.showEditTools ?
                 (
-                    <MenuItem>
+                    [<MenuItem>
                       <FormControlLabel
                         control={
                           <Switch
@@ -139,7 +143,19 @@ const HeaderBar = (props: HeaderBarProps) => {
                         }
                         label="Edit challenge"
                       />
-                    </MenuItem>
+                    </MenuItem>, 
+                    <MenuItem onClick={() => props.onAddToExport()}>
+                      <ListItemIcon>
+                        <ArrowCircleDownIcon />
+                      </ListItemIcon>
+                      Add to export
+                    </MenuItem>,
+                    <MenuItem onClick={() => props.onBookDownload()}>
+                      <ListItemIcon>
+                        <FolderZipIcon />
+                      </ListItemIcon>
+                      Export book
+                    </MenuItem>]                 
                 )
                 :
                 (null)
