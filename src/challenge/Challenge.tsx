@@ -21,6 +21,7 @@ import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
+import IFetcher from "../utils/IFetcher";
 import Help from "./Help";
 
 import ChallengeController from "./ChallengeController";
@@ -66,6 +67,7 @@ type ChallengeProps = {
   tests?: TestCases | null;
   isExample?: boolean;
   showEditTools: boolean;
+  fetcher: IFetcher;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -83,8 +85,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   currentFixedUserInput: string[] = [];
   bookExports: string[][] = [];
 
-  JSON_DEFAULT: string = 
-`
+  JSON_DEFAULT: string = `
 {
   "name": "Challenge Name",
   "isExample": true,
@@ -141,7 +142,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.handleUpload.bind(this);
     this.handleEditingChange.bind(this);
     this.handleFileRead.bind(this);
-    this.handleThemeChange.bind(this);    
+    this.handleThemeChange.bind(this);
   }
 
   print(text: string) {
@@ -172,9 +173,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       );
       if (savedJSON) {
         this.setState({ savedJSON: savedJSON });
-      }      
+      }
     }
-    fetch(this.props.guidePath)
+    this.props.fetcher
+      .fetch(this.props.guidePath)
       .then((response) => {
         if (!response.ok) {
           this.setState({ errorLoading: true });
@@ -182,7 +184,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         return response.text();
       })
       .then((text) => this.setState({ guideMd: text }));
-    fetch(this.props.codePath)
+    this.props.fetcher
+      .fetch(this.props.codePath)
       .then((response) => {
         if (!response.ok) {
           this.setState({ errorLoading: true });
@@ -201,13 +204,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
     if (prevProps.guidePath !== this.props.guidePath) {
-      fetch(this.props.guidePath)
+      this.props.fetcher
+        .fetch(this.props.guidePath)
         .then((response) => response.text())
         .then((text) => this.setState({ guideMd: text }));
     }
 
     if (prevProps.codePath !== this.props.codePath) {
-      fetch(this.props.codePath)
+      this.props.fetcher
+        .fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
       this.setState({ typInferred: ChallengeTypes.TYP_PY });
@@ -268,24 +273,32 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.readAsText(file);
   };
 
-  handleEditingChange = (editingGuide:boolean) => {
-    if(editingGuide) {
-      ChallengeController["save-code"](this, {code: this.editorRef.current?.getValue() || ""});
+  handleEditingChange = (editingGuide: boolean) => {
+    if (editingGuide) {
+      ChallengeController["save-code"](this, {
+        code: this.editorRef.current?.getValue() || "",
+      });
     } else {
-      ChallengeController["save-json"](this, {code: this.editorRef.current?.getValue() || ""});
+      ChallengeController["save-json"](this, {
+        code: this.editorRef.current?.getValue() || "",
+      });
       this.setState({ savedJSON: this.editorRef.current?.getValue() || "" });
     }
-    this.setState({ isEditingGuide: editingGuide });    
-  }
+    this.setState({ isEditingGuide: editingGuide });
+  };
 
   handleBookDownload = () => {
-    ChallengeController["export-book"](this, {contents: this.bookExports});
-  }
+    ChallengeController["export-book"](this, { contents: this.bookExports });
+  };
 
   handleAddToExport = () => {
     this.handleEditingChange(false);
-    this.bookExports.push([this.state.guideMd, this.editorRef.current?.getValue() || "", this.state.savedJSON || this.JSON_DEFAULT]);
-  }  
+    this.bookExports.push([
+      this.state.guideMd,
+      this.editorRef.current?.getValue() || "",
+      this.state.savedJSON || this.JSON_DEFAULT,
+    ]);
+  };
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -304,7 +317,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderEditor() {
-    if(this.state.isEditingGuide) {
+    if (this.state.isEditingGuide) {
       return (
         <PyEditor
           ref={this.editorRef}
@@ -323,10 +336,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           onDebug={() => {}}
           onContinue={() => {}}
           onStepInto={() => {}}
-          onStop={() => {}}         
+          onStop={() => {}}
         />
-      )
-
+      );
     }
 
     if (this.props.typ === "parsons") {
@@ -446,18 +458,14 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         content: (
           <CanvasDisplay
             ref={this.canvasDisplayRef}
-            onKeyDown={(e) =>
-              ChallengeController["canvas-keydown"](this, e)
-            }
-            onKeyUp={(e) =>
-              ChallengeController["canvas-keyup"](this, e)
-            }
+            onKeyDown={(e) => ChallengeController["canvas-keydown"](this, e)}
+            onKeyUp={(e) => ChallengeController["canvas-keyup"](this, e)}
           />
         ),
-        show: true
+        show: true,
       });
     }
-    
+
     return (
       <ThemeProvider
         theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
@@ -525,8 +533,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
-    if(this.state.isEditingGuide) { 
-      return (<TextField
+    if (this.state.isEditingGuide) {
+      return (
+        <TextField
           multiline
           margin="dense"
           value={this.state.guideMd}
@@ -537,7 +546,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           InputProps={{ disableUnderline: true }}
           sx={{ width: "100%", height: "100%" }}
         />
-     )   
+      );
     }
     return <Guide md={this.state.guideMd} theme={this.state.theme} />;
   };
@@ -575,7 +584,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => {
-          if(this.state.isEditingGuide) {
+          if (this.state.isEditingGuide) {
             ChallengeController["reset-json"](this);
           } else {
             ChallengeController["reset-code"](this);
@@ -676,16 +685,28 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             </Allotment>
             <BookControlFabs
               onNavigateToPrevPage={() => {
-                if(this.state.isEditingGuide){this.handleEditingChange(false);}
-                if(this.props.onRequestPreviousChallenge){this.props.onRequestPreviousChallenge();}
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.onRequestPreviousChallenge) {
+                  this.props.onRequestPreviousChallenge();
+                }
               }}
               onNavigateToNextPage={() => {
-                if(this.state.isEditingGuide){this.handleEditingChange(false);}
-                if(this.props.onRequestNextChallenge){this.props.onRequestNextChallenge();}             
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.onRequestNextChallenge) {
+                  this.props.onRequestNextChallenge();
+                }
               }}
               onOpenMenu={() => {
-                if(this.state.isEditingGuide){this.handleEditingChange(false);}
-                if(this.props.openBookDrawer){this.props.openBookDrawer(true)}
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.openBookDrawer) {
+                  this.props.openBookDrawer(true);
+                }
               }}
             />
           </Box>

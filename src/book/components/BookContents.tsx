@@ -6,8 +6,8 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 
-import BookNodeModel from "../models/BookNodeModel";
-import { AllTestResults } from "../models/Tests";
+import BookNodeModel from "../../models/BookNodeModel";
+import { AllTestResults } from "../../models/Tests";
 
 import "./BookContents.css";
 

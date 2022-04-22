@@ -3,7 +3,7 @@ import { Container } from "@mui/material";
 
 import BookNodeModel from "../models/BookNodeModel";
 import { AllTestResults } from "../models/Tests";
-import BookContents from "./BookContents";
+import BookContents from "./components/BookContents";
 
 type BookCoverProps = {
   bookRoot: BookNodeModel;
