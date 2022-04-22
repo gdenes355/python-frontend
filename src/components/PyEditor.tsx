@@ -1,9 +1,17 @@
+import React, {
+  useState,
+  useImperativeHandle,
+  useRef,
+  useEffect,
+  useContext,
+} from "react";
 import Editor, { OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
-import React from "react";
 import "./PyEditor.css";
 
 import DebugContext from "../models/DebugContext";
+
+import ChallengeContext from "../challenge/ChallengeContext";
 
 type PyEditorProps = {
   canRun: boolean;
@@ -12,314 +20,298 @@ type PyEditorProps = {
   starterCode: string;
   theme: string;
   debugContext: DebugContext;
-  readOnly?: boolean;
   onToggleFullScreen: () => void;
-  onDebug: () => void;
-  onContinue: () => void;
-  onStepInto: () => void;
-  onStop: () => void;
   onBreakpointsUpdated: () => void;
 };
 
-type PyEditorState = {
-  downloadurl?: string;
+type PyEditorHandle = {
+  getValue: () => string;
+  setValue: (value: string) => void;
+  getBreakpoints: () => number[];
+  revealLine: (lineno: number) => void;
+  updateEditorDecorations: () => void;
+  download: () => void;
 };
 
-class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
-  breakpointList: number[] = [];
-  decorator: string[] = [];
+const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
+  (props, ref) => {
+    const propsRef = useRef<PyEditorProps | null>(null);
+    useEffect(() => {
+      propsRef.current = props;
+    }, [props]);
 
-  downloadEl = React.createRef<HTMLAnchorElement>();
-  state = {
-    downloadurl: undefined,
-  };
+    const challengeContext = useContext(ChallengeContext);
 
-  private canRunCondition: null | monaco.editor.IContextKey<boolean> = null;
-  private canStepCondition: null | monaco.editor.IContextKey<boolean> = null;
-  private canPlaceBreakpointCondition: null | monaco.editor.IContextKey<boolean> =
-    null;
+    const breakpointList = useRef<number[]>([]);
+    const decorator = useRef<string[]>([]);
 
-  private editorRef: monaco.editor.IStandaloneCodeEditor | null = null;
-  private monacoRef: Monaco | null = null;
+    const downloadEl = useRef<HTMLAnchorElement>(null);
+    const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
 
-  constructor(props: PyEditorProps) {
-    super(props);
-    this.handleEditorDidMount.bind(this);
-    this.updateEditorDecorations.bind(this);
-    this.handleEditorChange.bind(this);
-    this.getValue.bind(this);
-    this.getBreakpoints.bind(this);
-    this.toggleBreakpoint.bind(this);
-    this.revealLine.bind(this);
-    this.download.bind(this);
-    this.downloadEl = React.createRef();
-  }
-
-  getValue() {
-    return this.editorRef ? this.editorRef.getValue() : "";
-  }
-
-  getBreakpoints() {
-    return this.breakpointList;
-  }
-
-  setValue(value: string) {
-    if (this.editorRef) {
-      this.editorRef.setValue(value);
-      this.breakpointList = [];
-    }
-  }
-
-  revealLine(lineNo: number) {
-    if (this.editorRef) {
-      this.editorRef.revealLine(lineNo);
-    }
-  }
-
-  componentDidUpdate(prevProps: PyEditorProps) {
-    if (
-      this.canRunCondition &&
-      this.canStepCondition &&
-      this.canPlaceBreakpointCondition
-    ) {
-      if (prevProps.canRun !== this.props.canRun) {
-        this.canRunCondition.set(this.props.canRun);
-      }
-      if (prevProps.isOnBreakPoint !== this.props.isOnBreakPoint) {
-        this.canStepCondition.set(this.props.isOnBreakPoint);
-      }
-      if (prevProps.canPlaceBreakpoint !== this.props.canPlaceBreakpoint) {
-        this.canPlaceBreakpointCondition.set(this.props.canPlaceBreakpoint);
-      }
-    }
-  }
-
-  handleEditorDidMount: OnMount = (editor, monaco) => {
-    this.editorRef = editor;
-    this.monacoRef = monaco;
-
-    this.canRunCondition = editor.createContextKey("canRun", false);
-    this.canStepCondition = editor.createContextKey("canStep", false);
-    this.canPlaceBreakpointCondition = editor.createContextKey(
-      "canPlaceBreakpoint",
-      false
+    const canRunCondition = useRef<null | monaco.editor.IContextKey<boolean>>(
+      null
     );
-
-    editor.onMouseDown((event) => {
-      if (!this.props.canPlaceBreakpoint) {
-        return;
-      }
-      if (event.target.type === 2) {
-        let lineNum = event.target.position.lineNumber;
-        this.toggleBreakpoint(lineNum);
-      }
-    });
-
-    editor.addAction({
-      id: "file-download",
-      label: "File: Download",
-      keybindings: [
-        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS,
-      ],
-      contextMenuGroupId: "navigation",
-      contextMenuOrder: 1,
-      run: (ed) => {
-        this.download();
-      },
-    });
-
-    editor.addAction({
-      id: "togglefullscreen",
-      label: "Toggle Full Screen Editor",
-      keybindings: [monaco.KeyCode.F11],
-      contextMenuGroupId: "navigation",
-      contextMenuOrder: 1.5,
-      run: () => {
-        this.props.onToggleFullScreen();
-      },
-    });
-
-    editor.addAction({
-      id: "debug",
-      label: "Debug: Start Debugging",
-      keybindings: [monaco.KeyCode.F5],
-      precondition: "canRun",
-      contextMenuGroupId: "1_debug",
-      contextMenuOrder: 1.5,
-      run: () => {
-        this.props.onDebug();
-      },
-    });
-
-    editor.addAction({
-      id: "debug-continue",
-      label: "Debug: Continue",
-      keybindings: [monaco.KeyCode.F5],
-      precondition: "canStep",
-      contextMenuGroupId: "1_debug",
-      contextMenuOrder: 1.5,
-      run: () => {
-        this.props.onContinue();
-      },
-    });
-
-    editor.addAction({
-      id: "debug-step-into",
-      label: "Debug: Step Into",
-      keybindings: [monaco.KeyCode.F10],
-      precondition: "canStep",
-      contextMenuGroupId: "1_debug",
-      contextMenuOrder: 1.5,
-      run: () => {
-        this.props.onStepInto();
-      },
-    });
-
-    editor.addAction({
-      id: "debug-stop",
-      label: "Debug: Stop",
-      keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F5],
-      precondition: "canStep",
-      contextMenuGroupId: "1_debug",
-      contextMenuOrder: 1.5,
-      run: () => {
-        this.props.onStop();
-      },
-    });
-
-    editor.addAction({
-      id: "breakpoint",
-      label: "Debug: Toggle Breakpoint",
-      keybindings: [monaco.KeyCode.F9],
-      precondition: "canPlaceBreakpoint",
-      contextMenuGroupId: "1_debug",
-      contextMenuOrder: 1.5,
-      run: (ed) => {
-        let pos = ed.getPosition();
-        if (pos) {
-          this.toggleBreakpoint(pos.lineNumber);
-        }
-      },
-    });
-
-    monaco.languages.registerHoverProvider("python", {
-      provideHover: (model, position) => {
-        // Log the current word in the console, you probably want to do something else here.
-        if (this.props.isOnBreakPoint) {
-          let word = model.getWordAtPosition(position);
-          if (
-            word?.word !== undefined &&
-            this.props.debugContext.env.has(word.word)
-          ) {
-            return {
-              contents: [
-                {
-                  value:
-                    "```text\n" +
-                    this.props.debugContext.env.get(word.word) +
-                    "\n```",
-                },
-              ],
-            };
-          }
-        }
-      },
-    });
-  };
-
-  handleEditorChange = () => {
-    if (this.breakpointList.length > 0) {
-      this.updateEditorDecorations();
-    }
-  };
-
-  updateEditorDecorations() {
-    if (!this.monacoRef || !this.editorRef) {
-      return;
-    }
-
-    let decorations: monaco.editor.IModelDecoration[] = this.breakpointList.map(
-      (ln) => {
-        return {
-          id: "",
-          ownerId: 0,
-          range: new monaco.Range(ln, 1, ln, 1),
-          options: {
-            isWholeLine: true,
-            className:
-              this.props.isOnBreakPoint && this.props.debugContext.lineno === ln
-                ? "breakpoint-hit"
-                : "breakpoint-waiting",
-            glyphMarginClassName: "breakpoint-margin",
-          },
-        };
-      }
+    const canStepCondition = useRef<null | monaco.editor.IContextKey<boolean>>(
+      null
     );
-    if (
-      this.props.isOnBreakPoint &&
-      this.props.debugContext.lineno &&
-      !this.breakpointList.includes(this.props.debugContext.lineno)
-    ) {
-      decorations.push({
-        id: "",
-        ownerId: 0,
-        range: new this.monacoRef.Range(
-          this.props.debugContext.lineno,
-          1,
-          this.props.debugContext.lineno,
-          1
-        ),
-        options: {
-          isWholeLine: true,
-          className: "breakpoint-hit",
+    const canPlaceBreakpointCondition =
+      useRef<null | monaco.editor.IContextKey<boolean>>(null);
+
+    const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+    const monacoRef = useRef<Monaco | null>(null);
+
+    const getValue = () => {
+      return editorRef?.current?.getValue() || "";
+    };
+
+    const setValue = (value: string) => {
+      editorRef.current?.setValue(value);
+      breakpointList.current = [];
+    };
+
+    const getBreakpoints = () => {
+      return breakpointList?.current || [];
+    };
+
+    const revealLine = (lineNo: number) => {
+      editorRef.current?.revealLine(lineNo);
+    };
+
+    useImperativeHandle(ref, () => ({
+      getValue,
+      setValue,
+      getBreakpoints,
+      revealLine,
+      updateEditorDecorations,
+      download,
+    }));
+
+    useEffect(() => {
+      canRunCondition?.current?.set(props.canRun);
+    }, [props.canRun, canRunCondition]);
+    useEffect(() => {
+      canStepCondition?.current?.set(props.isOnBreakPoint);
+    }, [props.isOnBreakPoint, canStepCondition]);
+    useEffect(() => {
+      canPlaceBreakpointCondition?.current?.set(props.canPlaceBreakpoint);
+    }, [props.canPlaceBreakpoint, canPlaceBreakpointCondition]);
+
+    const handleEditorDidMount: OnMount = (editor, monaco) => {
+      editorRef.current = editor;
+      monacoRef.current = monaco;
+
+      canRunCondition.current = editor.createContextKey("canRun", false);
+      canStepCondition.current = editor.createContextKey("canStep", false);
+      canPlaceBreakpointCondition.current = editor.createContextKey(
+        "canPlaceBreakpoint",
+        false
+      );
+
+      editor.onMouseDown((event) => {
+        if (event.target.type === 2) {
+          let lineNum = event.target.position.lineNumber;
+          toggleBreakpoint(lineNum);
+        }
+      });
+
+      editor.addAction({
+        id: "file-download",
+        label: "File: Download",
+        keybindings: [
+          monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.KeyS,
+        ],
+        contextMenuGroupId: "navigation",
+        contextMenuOrder: 1,
+        run: (ed) => {
+          download();
         },
       });
-    }
-    this.decorator = this.editorRef.deltaDecorations(
-      this.decorator,
-      decorations
-    );
-  }
 
-  toggleBreakpoint = (lineNum: number) => {
-    if (!lineNum) {
-      return;
-    }
-    if (this.breakpointList.includes(lineNum)) {
-      let index = this.breakpointList.indexOf(lineNum);
-      this.breakpointList.splice(index, 1);
-    } else {
-      this.breakpointList.push(lineNum);
-    }
-    this.props.onBreakpointsUpdated();
-    this.updateEditorDecorations();
-  };
+      editor.addAction({
+        id: "togglefullscreen",
+        label: "Toggle Full Screen Editor",
+        keybindings: [monaco.KeyCode.F11],
+        contextMenuGroupId: "navigation",
+        contextMenuOrder: 1.5,
+        run: () => {
+          props.onToggleFullScreen();
+        },
+      });
 
-  download = () => {
-    console.log("downloading...");
-    let code = this.getValue();
-    const url = URL.createObjectURL(new Blob([code]));
-    this.setState({ downloadurl: url }, () => {
-      this.downloadEl.current?.click();
-      URL.revokeObjectURL(url); // free up storage--no longer needed.
-      this.setState({ downloadurl: undefined });
-    });
-  };
+      editor.addAction({
+        id: "debug",
+        label: "Debug: Start Debugging",
+        keybindings: [monaco.KeyCode.F5],
+        precondition: "canRun",
+        contextMenuGroupId: "1_debug",
+        contextMenuOrder: 1.5,
+        run: () => challengeContext?.actions["debug"](),
+      });
 
-  render() {
-    if (this.props.starterCode == null) {
+      editor.addAction({
+        id: "debug-continue",
+        label: "Debug: Continue",
+        keybindings: [monaco.KeyCode.F5],
+        precondition: "canStep",
+        contextMenuGroupId: "1_debug",
+        contextMenuOrder: 1.5,
+        run: () => challengeContext?.actions["continue"](),
+      });
+
+      editor.addAction({
+        id: "debug-step-into",
+        label: "Debug: Step Into",
+        keybindings: [monaco.KeyCode.F10],
+        precondition: "canStep",
+        contextMenuGroupId: "1_debug",
+        contextMenuOrder: 1.5,
+        run: () => challengeContext?.actions["step"](),
+      });
+
+      editor.addAction({
+        id: "debug-stop",
+        label: "Debug: Stop",
+        keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.F5],
+        precondition: "canStep",
+        contextMenuGroupId: "1_debug",
+        contextMenuOrder: 1.5,
+        run: () => challengeContext?.actions["kill"](),
+      });
+
+      editor.addAction({
+        id: "breakpoint",
+        label: "Debug: Toggle Breakpoint",
+        keybindings: [monaco.KeyCode.F9],
+        precondition: "canPlaceBreakpoint",
+        contextMenuGroupId: "1_debug",
+        contextMenuOrder: 1.5,
+        run: (ed) => {
+          let pos = ed.getPosition();
+          if (pos) {
+            toggleBreakpoint(pos.lineNumber);
+          }
+        },
+      });
+
+      monaco.languages.registerHoverProvider("python", {
+        provideHover: (model, position) => {
+          // Log the current word in the console, you probably want to do something else here.
+          if (props.isOnBreakPoint) {
+            let word = model.getWordAtPosition(position);
+            if (
+              word?.word !== undefined &&
+              props.debugContext.env.has(word.word)
+            ) {
+              return {
+                contents: [
+                  {
+                    value:
+                      "```text\n" +
+                      props.debugContext.env.get(word.word) +
+                      "\n```",
+                  },
+                ],
+              };
+            }
+          }
+        },
+      });
+    };
+
+    const handleEditorChange = () => {
+      if ((breakpointList.current?.length || 0) > 0) {
+        updateEditorDecorations();
+      }
+    };
+
+    const updateEditorDecorations = () => {
+      if (!monacoRef.current || !editorRef.current || !breakpointList) {
+        return;
+      }
+
+      let decorations: monaco.editor.IModelDecoration[] =
+        breakpointList.current.map((ln) => {
+          return {
+            id: "",
+            ownerId: 0,
+            range: new monaco.Range(ln, 1, ln, 1),
+            options: {
+              isWholeLine: true,
+              className:
+                props.isOnBreakPoint && props.debugContext.lineno === ln
+                  ? "breakpoint-hit"
+                  : "breakpoint-waiting",
+              glyphMarginClassName: "breakpoint-margin",
+            },
+          };
+        });
+      if (
+        props.isOnBreakPoint &&
+        props.debugContext.lineno &&
+        !breakpointList.current?.includes(props.debugContext.lineno)
+      ) {
+        decorations.push({
+          id: "",
+          ownerId: 0,
+          range: new monacoRef.current.Range(
+            props.debugContext.lineno,
+            1,
+            props.debugContext.lineno,
+            1
+          ),
+          options: {
+            isWholeLine: true,
+            className: "breakpoint-hit",
+          },
+        });
+      }
+      decorator.current = editorRef.current.deltaDecorations(
+        decorator.current,
+        decorations
+      );
+    };
+
+    const toggleBreakpoint = (lineNum: number) => {
+      if (!breakpointList.current || !propsRef.current?.canPlaceBreakpoint) {
+        return;
+      }
+      if (breakpointList.current.includes(lineNum)) {
+        let index = breakpointList.current.indexOf(lineNum);
+        breakpointList.current.splice(index, 1);
+      } else {
+        breakpointList.current.push(lineNum);
+      }
+      props.onBreakpointsUpdated();
+      updateEditorDecorations();
+    };
+
+    const download = () => {
+      let code = getValue();
+      const url = URL.createObjectURL(new Blob([code]));
+      setDownloadUrl(url);
+    };
+
+    useEffect(() => {
+      if (downloadUrl) {
+        downloadEl.current?.click();
+        URL.revokeObjectURL(downloadUrl); // free up storage--no longer needed.
+        setDownloadUrl(null);
+      }
+    }, [downloadUrl]);
+
+    if (props.starterCode == null) {
       return <p>Loading code...</p>;
     }
     return (
       <div style={{ width: "100%", height: "100%" }}>
         <Editor
-          className={"theme-" + this.props.theme}
+          className={"theme-" + props.theme}
           width="100%"
           height="100%"
           defaultLanguage="python"
-          value={this.props.starterCode}
-          onMount={this.handleEditorDidMount}
-          theme={this.props.theme}
+          value={props.starterCode}
+          onMount={handleEditorDidMount}
+          theme={props.theme}
           options={{
             scrollBeyondLastLine: false,
             tabSize: 2,
@@ -328,21 +320,21 @@ class PyEditor extends React.Component<PyEditorProps, PyEditorState> {
             wordWrap: "on",
             lineNumbersMinChars: 4,
             padding: { top: 10 },
-            readOnly: this.props.readOnly,
           }}
-          onChange={this.handleEditorChange}
+          onChange={handleEditorChange}
         />
         <a
           className="hidden"
           download="code.py"
-          href={this.state.downloadurl}
-          ref={this.downloadEl}
+          href={downloadUrl || undefined}
+          ref={downloadEl}
         >
           download
         </a>
       </div>
     );
   }
-}
+);
 
 export default PyEditor;
+export { PyEditorHandle };

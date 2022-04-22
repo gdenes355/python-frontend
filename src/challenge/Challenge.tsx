@@ -3,7 +3,7 @@ import { Box, Card, CardContent, TextField } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
-import PyEditor from "../components/PyEditor";
+import PyEditor, { PyEditorHandle } from "../components/PyEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
 import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
@@ -24,10 +24,11 @@ import BookNodeModel from "../models/BookNodeModel";
 import IFetcher from "../utils/IFetcher";
 import Help from "./Help";
 
-import ChallengeController from "./ChallengeController";
 import ChallengeTypes from "../models/ChallengeTypes";
 
 import pageTheme, { darkTheme } from "../themes/pageTheme";
+
+import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
 
@@ -62,7 +63,6 @@ type ChallengeProps = {
   codePath: string;
   bookNode?: BookNodeModel;
   title?: string;
-  layout: string;
   typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
   isExample?: boolean;
@@ -75,7 +75,7 @@ type ChallengeProps = {
 };
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
-  editorRef = React.createRef<PyEditor>();
+  editorRef = React.createRef<PyEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   tabbedViewRef = React.createRef<TabbedView>();
@@ -84,6 +84,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
   bookExports: string[][] = [];
+
+  chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
   JSON_DEFAULT: string = `
 {
@@ -199,7 +201,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         window.location.reload();
       }
     });
-    ChallengeController["restart-worker"](this, { force: true });
+    this.chContext.actions["restart-worker"]({ force: true });
   }
 
   componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
@@ -216,7 +218,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
       this.setState({ typInferred: ChallengeTypes.TYP_PY });
-      ChallengeController["restart-worker"](this, {});
+      this.chContext.actions["restart-worker"]({});
       if (this.props?.uid) {
         let savedCode = localStorage.getItem(
           "code-" + encodeURIComponent(this.props.uid)
@@ -275,11 +277,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   handleEditingChange = (editingGuide: boolean) => {
     if (editingGuide) {
-      ChallengeController["save-code"](this, {
+      this.chContext.actions["save-code"]({
         code: this.editorRef.current?.getValue() || "",
       });
     } else {
-      ChallengeController["save-json"](this, {
+      this.chContext.actions["save-json"]({
         code: this.editorRef.current?.getValue() || "",
       });
       this.setState({ savedJSON: this.editorRef.current?.getValue() || "" });
@@ -288,7 +290,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   handleBookDownload = () => {
-    ChallengeController["export-book"](this, { contents: this.bookExports });
+    this.chContext.actions["export-book"]({ contents: this.bookExports });
   };
 
   handleAddToExport = () => {
@@ -324,7 +326,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           starterCode={this.state.savedJSON || this.JSON_DEFAULT}
           theme={this.state.theme}
           onToggleFullScreen={() => {
-            this.setState((state, props) => {
+            this.setState((state) => {
               return { editorFullScreen: !state.editorFullScreen };
             });
           }}
@@ -333,10 +335,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           isOnBreakPoint={false}
           onBreakpointsUpdated={() => {}}
           debugContext={this.state.debugContext}
-          onDebug={() => {}}
-          onContinue={() => {}}
-          onStepInto={() => {}}
-          onStop={() => {}}
         />
       );
     }
@@ -367,24 +365,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         starterCode={this.state.savedCode || this.state.starterCode || ""}
         theme={this.state.theme}
         onToggleFullScreen={() => {
-          this.setState((state, props) => {
+          this.setState((state) => {
             return { editorFullScreen: !state.editorFullScreen };
-          });
-        }}
-        onDebug={() => {
-          ChallengeController["debug"](this, {
-            code: this.editorRef.current?.getValue(),
-            breakpoints: this.editorRef.current
-              ? this.editorRef.current.getBreakpoints()
-              : [],
-          });
-        }}
-        onContinue={() => ChallengeController["continue"](this, {})}
-        onStepInto={() => ChallengeController["step"](this)}
-        onStop={() => {
-          ChallengeController["restart-worker"](this, {
-            msg: "Interrupted...",
-            force: true,
           });
         }}
       />
@@ -399,10 +381,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           this.state.editorState === ChallengeStatus.AWAITING_INPUT
         }
         onInput={(input) => {
-          ChallengeController["input-entered"](this, { input });
+          this.chContext.actions["input-entered"]({ input });
         }}
         onInterrupt={() => {
-          ChallengeController["restart-worker"](this, {
+          this.chContext.actions["restart-worker"]({
             msg: "Interrupted...",
             force: true,
           });
@@ -458,8 +440,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         content: (
           <CanvasDisplay
             ref={this.canvasDisplayRef}
-            onKeyDown={(e) => ChallengeController["canvas-keydown"](this, e)}
-            onKeyUp={(e) => ChallengeController["canvas-keyup"](this, e)}
+            onKeyDown={(e) => this.chContext.actions["canvas-keydown"](e)}
+            onKeyUp={(e) => this.chContext.actions["canvas-keyup"](e)}
           />
         ),
         show: true,
@@ -488,7 +470,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   };
 
   renderMainControls = () => {
-    if (this.state.helpOpen) {
+    if (this.state.helpOpen && !this.state.guideMinimised) {
       return;
     }
     return (
@@ -497,24 +479,10 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           <MainControls
             guideMinimised={this.state.guideMinimised}
             onGuideDisplayToggle={() =>
-              this.setState((prevState, props) => {
+              this.setState((prevState) => {
                 return { guideMinimised: !prevState.guideMinimised };
               })
             }
-            onDebug={() => {
-              ChallengeController["debug"](this, {
-                code: this.editorRef.current?.getValue(),
-                breakpoints: this.editorRef.current
-                  ? this.editorRef.current.getBreakpoints()
-                  : [],
-              });
-            }}
-            onSubmit={() => {
-              ChallengeController["test"](this, {
-                code: this.editorRef.current?.getValue(),
-                tests: this.props.tests,
-              });
-            }}
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={
               this.props.tests !== null || this.props.typ === "parsons"
@@ -551,28 +519,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     return <Guide md={this.state.guideMd} theme={this.state.theme} />;
   };
 
-  renderDebugPane = () => {
-    return (
-      <DebugPane
-        canContinue={this.state.editorState === ChallengeStatus.ON_BREAKPOINT}
-        onContinue={() => ChallengeController["continue"](this, {})}
-        onStep={() => ChallengeController["step"](this)}
-        canKill={
-          this.state.editorState === ChallengeStatus.RUNNING ||
-          this.state.editorState === ChallengeStatus.ON_BREAKPOINT ||
-          this.state.editorState === ChallengeStatus.AWAITING_INPUT
-        }
-        onKill={() => {
-          ChallengeController["restart-worker"](this, {
-            msg: "Interrupted...",
-            force: true,
-          });
-        }}
-        debugContext={this.state.debugContext}
-      />
-    );
-  };
-
   renderHeader() {
     return (
       <HeaderBar
@@ -585,9 +531,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => {
           if (this.state.isEditingGuide) {
-            ChallengeController["reset-json"](this);
+            this.chContext.actions["reset-json"]();
           } else {
-            ChallengeController["reset-code"](this);
+            this.chContext.actions["reset-code"]();
           }
         }}
         canDebug={this.state.editorState === ChallengeStatus.READY}
@@ -607,129 +553,131 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   render() {
     if (this.state.errorLoading) {
       return <p>The challenges files cannot be found. Have they been moved?</p>;
-    } else if (this.props.layout === "fullscreen") {
+    } else {
       return (
-        <Box
-          sx={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            overflow: "hidden",
-            flexDirection: "row",
-          }}
-        >
+        <ChallengeContext.Provider value={this.chContext}>
           <Box
             sx={{
               width: "100%",
               height: "100%",
               display: "flex",
               overflow: "hidden",
-              flexDirection: "column",
+              flexDirection: "row",
             }}
           >
-            {this.renderHeader()}
-            <Allotment className="h-100" defaultSizes={[650, 350]}>
-              <Allotment.Pane>
-                <Allotment vertical defaultSizes={[650, 350]}>
-                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
-                  <Allotment.Pane
-                    visible={this.getVisibilityWithHack(
-                      !this.state.editorFullScreen
-                    )}
-                    maxSize={550}
-                    minSize={
-                      this.props.typ === "canvas" ||
-                      this.state.typInferred === ChallengeTypes.TYP_CANVAS
-                        ? 450
-                        : 150
-                    }
-                  >
-                    {this.renderOutput()}
-                  </Allotment.Pane>
-                </Allotment>
-              </Allotment.Pane>
-              <Allotment.Pane
-                visible={this.getVisibilityWithHack(
-                  !this.state.editorFullScreen && !this.state.guideMinimised
-                )}
-              >
-                <Allotment vertical className="challenge__right-pane">
-                  <Box
-                    sx={{
-                      paddingLeft: 2,
-                      paddingRight: 2,
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                    }}
-                  >
-                    {this.renderMainControls()}
-                    {this.renderGuide()}
-                  </Box>
-                  <Allotment.Pane
-                    maxSize={350}
-                    minSize={150}
-                    snap={true}
-                    visible={
-                      this.state.editorState === ChallengeStatus.RUNNING ||
-                      this.state.editorState ===
-                        ChallengeStatus.ON_BREAKPOINT ||
-                      this.state.editorState === ChallengeStatus.AWAITING_INPUT
-                    }
-                    className="debug-pane"
-                  >
-                    {this.renderDebugPane()}
-                  </Allotment.Pane>
-                </Allotment>
-              </Allotment.Pane>
-            </Allotment>
-            <BookControlFabs
-              onNavigateToPrevPage={() => {
-                if (this.state.isEditingGuide) {
-                  this.handleEditingChange(false);
-                }
-                if (this.props.onRequestPreviousChallenge) {
-                  this.props.onRequestPreviousChallenge();
-                }
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                overflow: "hidden",
+                flexDirection: "column",
               }}
-              onNavigateToNextPage={() => {
-                if (this.state.isEditingGuide) {
-                  this.handleEditingChange(false);
-                }
-                if (this.props.onRequestNextChallenge) {
-                  this.props.onRequestNextChallenge();
-                }
-              }}
-              onOpenMenu={() => {
-                if (this.state.isEditingGuide) {
-                  this.handleEditingChange(false);
-                }
-                if (this.props.openBookDrawer) {
-                  this.props.openBookDrawer(true);
-                }
-              }}
-            />
+            >
+              {this.renderHeader()}
+              <Allotment className="h-100" defaultSizes={[650, 350]}>
+                <Allotment.Pane>
+                  <Allotment vertical defaultSizes={[650, 350]}>
+                    <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
+                    <Allotment.Pane
+                      visible={this.getVisibilityWithHack(
+                        !this.state.editorFullScreen
+                      )}
+                      maxSize={550}
+                      minSize={
+                        this.props.typ === "canvas" ||
+                        this.state.typInferred === ChallengeTypes.TYP_CANVAS
+                          ? 450
+                          : 150
+                      }
+                    >
+                      {this.renderOutput()}
+                    </Allotment.Pane>
+                  </Allotment>
+                </Allotment.Pane>
+                <Allotment.Pane
+                  visible={this.getVisibilityWithHack(
+                    !this.state.editorFullScreen && !this.state.guideMinimised
+                  )}
+                >
+                  <Allotment vertical className="challenge__right-pane">
+                    <Box
+                      sx={{
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                      }}
+                    >
+                      {this.renderMainControls()}
+                      {this.renderGuide()}
+                    </Box>
+                    <Allotment.Pane
+                      maxSize={350}
+                      minSize={150}
+                      snap={true}
+                      visible={
+                        this.state.editorState === ChallengeStatus.RUNNING ||
+                        this.state.editorState ===
+                          ChallengeStatus.ON_BREAKPOINT ||
+                        this.state.editorState ===
+                          ChallengeStatus.AWAITING_INPUT
+                      }
+                      className="debug-pane"
+                    >
+                      <DebugPane
+                        canContinue={
+                          this.state.editorState ===
+                          ChallengeStatus.ON_BREAKPOINT
+                        }
+                        canKill={
+                          this.state.editorState === ChallengeStatus.RUNNING ||
+                          this.state.editorState ===
+                            ChallengeStatus.ON_BREAKPOINT ||
+                          this.state.editorState ===
+                            ChallengeStatus.AWAITING_INPUT
+                        }
+                        debugContext={this.state.debugContext}
+                      />
+                    </Allotment.Pane>
+                  </Allotment>
+                </Allotment.Pane>
+              </Allotment>
+              <BookControlFabs
+                onNavigateToPrevPage={() => {
+                  if (this.state.isEditingGuide) {
+                    this.handleEditingChange(false);
+                  }
+                  if (this.props.onRequestPreviousChallenge) {
+                    this.props.onRequestPreviousChallenge();
+                  }
+                }}
+                onNavigateToNextPage={() => {
+                  if (this.state.isEditingGuide) {
+                    this.handleEditingChange(false);
+                  }
+                  if (this.props.onRequestNextChallenge) {
+                    this.props.onRequestNextChallenge();
+                  }
+                }}
+                onOpenMenu={() => {
+                  if (this.state.isEditingGuide) {
+                    this.handleEditingChange(false);
+                  }
+                  if (this.props.openBookDrawer) {
+                    this.props.openBookDrawer(true);
+                  }
+                }}
+              />
+            </Box>
+            <Box>
+              {!this.state.guideMinimised ? undefined : (
+                <div>{this.renderMainControls()}</div>
+              )}
+            </Box>
           </Box>
-          <Box>
-            {!this.state.guideMinimised ? undefined : (
-              <div>{this.renderMainControls()}</div>
-            )}
-          </Box>
-        </Box>
-      );
-    } else {
-      return (
-        <Box sx={{ width: "100%", height: "100%" }}>
-          <Box sx={{ p: 2 }}>{this.renderGuide()}</Box>
-          <Box sx={{ height: "600px" }}>{this.renderEditor()}</Box>
-          {this.renderMainControls()}
-          <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
-            {this.renderOutput()}
-          </Box>
-          <Box sx={{ maxHeight: "200px", overflowY: "auto" }}>
-            {this.renderDebugPane()}
-          </Box>
-        </Box>
+        </ChallengeContext.Provider>
       );
     }
   }

@@ -203,7 +203,6 @@ const Book = (props: BookProps) => {
             openBookDrawer={openDrawer}
             onRequestPreviousChallenge={requestPreviousChallenge}
             onRequestNextChallenge={requestNextChallenge}
-            layout="fullscreen"
             uid={bookPath + bookChallengeId}
             onTestsPassingChanged={activeTestsPassingChanged}
             isExample={activeNode.isExample}
