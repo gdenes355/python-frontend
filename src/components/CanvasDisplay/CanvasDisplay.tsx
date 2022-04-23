@@ -1,76 +1,92 @@
-import React from "react";
+import React, { useContext, useRef, useImperativeHandle } from "react";
 import "./CanvasDisplay.css";
 import RealTurtle from "real-turtle";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, initialiseTurtle } from "./TurtleController";
+
+import ChallengeContext from "../../challenge/ChallengeContext";
+
+type CanvasDisplayHandle = {
+  turtleReset: (mode: "standard" | "logo") => void;
+  runTurtleCommand: (msg: string) => void;
+  runCommand: (msg: string) => void;
+};
 
 type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
   onKeyUp?: React.KeyboardEventHandler;
 };
 
-class CanvasDisplay extends React.Component<CanvasDisplayProps> {
-  canvasEl = React.createRef<HTMLCanvasElement>();
+const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
+  (props, ref) => {
+    const canvasEl = useRef<HTMLCanvasElement>(null);
+    const challengeContext = useContext(ChallengeContext);
 
-  turtle: RealTurtle | null = null;
-  turtleJustReset = false; // the turtle has been just reset, so no need to do this right now
+    const turtle = useRef<RealTurtle | null>(null);
+    const turtleJustReset = useRef(false); // the turtle has been just reset, so no need to do this right now
 
-  turtleReset(mode: "standard" | "logo") {
-    const canvas = this.canvasEl.current as HTMLCanvasElement;
-    this.turtle = initialiseTurtle(canvas, mode);
-    this.turtleJustReset = true;
-  }
+    const turtleReset = (mode: "standard" | "logo") => {
+      const canvas = canvasEl.current as HTMLCanvasElement;
+      turtle.current = initialiseTurtle(canvas, mode);
+      turtleJustReset.current = true;
+    };
 
-  runTurtleCommand(msg: string) {
-    if (!this.turtle || this.turtle.fake) {
-      this.turtleReset("standard");
-    }
-    if (!this.turtle) {
-      console.log("error?");
-      return; // impossible to reach, reset should have created a turtle
-    }
-
-    const turtleObj = JSON.parse(msg);
-    if (turtleObj.action === "reset") {
-      if (!this.turtleJustReset) {
-        this.turtleReset("standard");
+    const runTurtleCommand = (msg: string) => {
+      if (!turtle.current || turtle.current?.fake) {
+        turtleReset("standard");
       }
-    } else if (turtleObj.action === "mode") {
-      this.turtleReset(turtleObj.value);
-    } else {
-      this.turtleJustReset = false;
-      processTurtleCommand(this.turtle, turtleObj);
-    }
-  }
+      if (!turtle.current) {
+        console.log("error?");
+        return; // impossible to reach, reset should have created a turtle
+      }
 
-  runCommand(msg: string) {
-    const canvas: HTMLCanvasElement = document.getElementById(
-      "canvasDisplay"
-    ) as HTMLCanvasElement;
+      const turtleObj = JSON.parse(msg);
+      if (turtleObj.action === "reset") {
+        if (!turtleJustReset) {
+          turtleReset("standard");
+        }
+      } else if (turtleObj.action === "mode") {
+        turtleReset(turtleObj.value);
+      } else {
+        turtleJustReset.current = false;
+        processTurtleCommand(turtle.current, turtleObj);
+      }
+    };
 
-    const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-    const drawObjs = JSON.parse(msg);
-    for (let drawObj of drawObjs) {
-      processCanvasCommand(context, drawObj);
-    }
-  }
+    const runCommand = (msg: string) => {
+      const canvas: HTMLCanvasElement = document.getElementById(
+        "canvasDisplay"
+      ) as HTMLCanvasElement;
 
-  render() {
+      const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+      const drawObjs = JSON.parse(msg);
+      for (let drawObj of drawObjs) {
+        processCanvasCommand(context, drawObj);
+      }
+    };
+
+    useImperativeHandle(ref, () => ({
+      runCommand,
+      runTurtleCommand,
+      turtleReset,
+    }));
+
     return (
       <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
         <canvas
           id="canvasDisplay"
           width={500}
           height={400}
-          ref={this.canvasEl}
-          onKeyDown={this.props.onKeyDown}
-          onKeyUp={this.props.onKeyUp}
+          ref={canvasEl}
+          onKeyDown={challengeContext?.actions["canvas-keydown"]}
+          onKeyUp={challengeContext?.actions["canvas-keyup"]}
           tabIndex={1}
           style={{ outline: "none" }}
         />
       </div>
     );
   }
-}
+);
 
 export default CanvasDisplay;
+export { CanvasDisplayHandle };

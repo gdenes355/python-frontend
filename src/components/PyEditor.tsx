@@ -12,13 +12,13 @@ import "./PyEditor.css";
 import DebugContext from "../models/DebugContext";
 
 import ChallengeContext from "../challenge/ChallengeContext";
+import VsThemeContext from "../themes/VsThemeContext";
 
 type PyEditorProps = {
   canRun: boolean;
   isOnBreakPoint: boolean;
   canPlaceBreakpoint: boolean;
   starterCode: string;
-  theme: string;
   debugContext: DebugContext;
   onToggleFullScreen: () => void;
   onBreakpointsUpdated: () => void;
@@ -39,6 +39,8 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
     useEffect(() => {
       propsRef.current = props;
     }, [props]);
+
+    const themeContext = useContext(VsThemeContext);
 
     const challengeContext = useContext(ChallengeContext);
 
@@ -305,13 +307,13 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
     return (
       <div style={{ width: "100%", height: "100%" }}>
         <Editor
-          className={"theme-" + props.theme}
+          className={"theme-" + themeContext.theme}
           width="100%"
           height="100%"
           defaultLanguage="python"
           value={props.starterCode}
           onMount={handleEditorDidMount}
-          theme={props.theme}
+          theme={themeContext.theme}
           options={{
             scrollBeyondLastLine: false,
             tabSize: 2,

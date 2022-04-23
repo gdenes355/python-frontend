@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Card, CardContent, TextField } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "../components/PyEditor";
@@ -8,17 +7,16 @@ import JsonEditor, { JsonEditorHandle } from "../components/JsonEditor";
 import ParsonsEditor, {
   ParsonsEditorHandle,
 } from "../components/ParsonsEditor";
-import Console from "../components/Console";
-import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
+import ChallengeConsole from "./ChallengeConsole";
+import CanvasDisplay, {
+  CanvasDisplayHandle,
+} from "../components/CanvasDisplay/CanvasDisplay";
 import Guide from "../components/Guide";
 import MainControls from "./MainControls";
 import BookControlFabs from "../components/BookControlFabs";
-import TabbedView from "../components/TabbedView";
 import { Allotment } from "allotment";
 import HeaderBar from "./HeaderBar";
 import "allotment/dist/style.css";
-
-import Cookies from "js-cookie";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
@@ -26,10 +24,9 @@ import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import IFetcher from "../utils/IFetcher";
 import Help from "./Help";
+import Outputs, { OutputsHandle } from "./Outputs";
 
 import ChallengeTypes from "../models/ChallengeTypes";
-
-import pageTheme, { darkTheme } from "../themes/pageTheme";
 
 import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
@@ -41,16 +38,14 @@ type ChallengeState = {
   savedJSON: string | null;
   guideMd: string;
   debugContext: DebugContext;
-  theme: string;
   editorFullScreen: boolean;
-  errorLoading: boolean;
   consoleText: string;
   editorState: ChallengeStatus;
   testResults: TestResults;
   testsPassing: boolean | null;
   helpOpen: boolean;
   guideMinimised: boolean;
-  typInferred: ChallengeTypes;
+  typ: ChallengeTypes; // use this in favour of the props.typ
   isFixedInput: boolean;
   isEditingGuide: boolean;
   fixedUserInput: string;
@@ -77,8 +72,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplay>();
-  tabbedViewRef = React.createRef<TabbedView>();
+  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -124,14 +119,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     guideMd: "*Loading the guide... Please wait*",
     debugContext: { lineno: 0, env: new Map() },
     editorState: ChallengeStatus.LOADING,
-    theme: "vs-dark",
     editorFullScreen: false,
-    errorLoading: false,
     testResults: [],
     testsPassing: null,
     helpOpen: false,
     guideMinimised: false,
-    typInferred: ChallengeTypes.TYP_PY,
+    typ: ChallengeTypes.TYP_PY,
     isFixedInput: false,
     isEditingGuide: false,
     fixedUserInput: "",
@@ -142,11 +135,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
     this.print.bind(this);
-    this.cls.bind(this);
     this.handleUpload.bind(this);
     this.handleEditingChange.bind(this);
     this.handleFileRead.bind(this);
-    this.handleThemeChange.bind(this);
   }
 
   print(text: string) {
@@ -154,17 +145,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.printCallback();
   }
 
-  cls() {
-    this.currentConsoleText = "";
-    this.printCallback();
-  }
-
   componentDidMount() {
     console.log("crossOriginIsolated", window.crossOriginIsolated);
-    let previousTheme = Cookies.get("theme");
-    if (previousTheme) {
-      this.setState({ theme: previousTheme });
-    }
     if (this.props?.uid) {
       let savedCode = localStorage.getItem(
         "code-" + encodeURIComponent(this.props.uid)
@@ -183,7 +165,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       .fetch(this.props.guidePath)
       .then((response) => {
         if (!response.ok) {
-          this.setState({ errorLoading: true });
+          throw Error("Failed to load guide");
         }
         return response.text();
       })
@@ -192,7 +174,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       .fetch(this.props.codePath)
       .then((response) => {
         if (!response.ok) {
-          this.setState({ errorLoading: true });
+          throw Error("Failed to load Python code");
         }
         return response.text();
       })
@@ -219,7 +201,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         .fetch(this.props.codePath)
         .then((response) => response.text())
         .then((text) => this.setState({ starterCode: text }));
-      this.setState({ typInferred: ChallengeTypes.TYP_PY });
+      this.setState({
+        typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+      });
       this.chContext.actions["restart-worker"]({});
       if (this.props?.uid) {
         let savedCode = localStorage.getItem(
@@ -260,11 +244,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     }
   }
 
-  handleThemeChange = (theme: string) => {
-    this.setState({ theme });
-    Cookies.set("theme", theme);
-  };
-
   handleFileRead = (e: ProgressEvent<FileReader>) => {
     if (this.fileReader.result) {
       this.editorRef.current?.setValue(this.fileReader.result.toString());
@@ -289,10 +268,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       this.setState({ savedJSON: this.editorRef.current?.getValue() || "" });
     }
     this.setState({ isEditingGuide: editingGuide });
-  };
-
-  handleBookDownload = () => {
-    this.chContext.actions["export-book"]({ contents: this.bookExports });
   };
 
   handleAddToExport = () => {
@@ -326,7 +301,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         <JsonEditor
           ref={this.jsonEditorRef}
           starterCode={this.state.savedJSON || this.JSON_DEFAULT}
-          theme={this.state.theme}
           onToggleFullScreen={() => {
             this.setState((state) => {
               return { editorFullScreen: !state.editorFullScreen };
@@ -360,7 +334,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         onBreakpointsUpdated={this.onBreakpointsUpdated}
         debugContext={this.state.debugContext}
         starterCode={this.state.savedCode || this.state.starterCode || ""}
-        theme={this.state.theme}
         onToggleFullScreen={() => {
           this.setState((state) => {
             return { editorFullScreen: !state.editorFullScreen };
@@ -369,26 +342,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       />
     );
   }
-
-  renderConsole = () => {
-    return (
-      <Console
-        content={this.state.consoleText}
-        isInputEnabled={
-          this.state.editorState === ChallengeStatus.AWAITING_INPUT
-        }
-        onInput={(input) => {
-          this.chContext.actions["input-entered"]({ input });
-        }}
-        onInterrupt={() => {
-          this.chContext.actions["restart-worker"]({
-            msg: "Interrupted...",
-            force: true,
-          });
-        }}
-      />
-    );
-  };
 
   renderFixedInput = () => {
     return (
@@ -408,61 +361,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           />
         </Box>
       </Box>
-    );
-  };
-
-  renderOutput = () => {
-    let panes = [
-      {
-        label: "Console",
-        content: this.renderConsole(),
-        show: true,
-      },
-    ];
-
-    if (this.state.isFixedInput) {
-      panes.push({
-        label: "Fixed input",
-        content: this.renderFixedInput(),
-        show: this.state.isFixedInput,
-      });
-    }
-
-    if (
-      this.props.typ === "canvas" ||
-      this.state.typInferred === ChallengeTypes.TYP_CANVAS
-    ) {
-      panes.push({
-        label: "Canvas",
-        content: (
-          <CanvasDisplay
-            ref={this.canvasDisplayRef}
-            onKeyDown={(e) => this.chContext.actions["canvas-keydown"](e)}
-            onKeyUp={(e) => this.chContext.actions["canvas-keyup"](e)}
-          />
-        ),
-        show: true,
-      });
-    }
-
-    return (
-      <ThemeProvider
-        theme={this.state.theme === "vs-dark" ? darkTheme : pageTheme}
-      >
-        <Box
-          sx={{
-            width: "100%",
-            height: "100%",
-            bgcolor: "background.default",
-          }}
-        >
-          {panes.length > 1 ? (
-            <TabbedView ref={this.tabbedViewRef} panes={panes} />
-          ) : (
-            this.renderConsole()
-          )}
-        </Box>
-      </ThemeProvider>
     );
   };
 
@@ -513,170 +411,175 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         />
       );
     }
-    return <Guide md={this.state.guideMd} theme={this.state.theme} />;
+    return <Guide md={this.state.guideMd} />;
   };
 
-  renderHeader() {
-    return (
-      <HeaderBar
-        title={this.props.title || this.props.bookNode?.name || ""}
-        theme={this.state.theme}
-        usingFixedInput={this.state.isFixedInput}
-        showEditTools={this.props.showEditTools}
-        editingGuide={this.state.isEditingGuide}
-        onThemeChange={this.handleThemeChange}
-        onHelpOpen={(open) => this.setState({ helpOpen: open })}
-        onResetCode={() => {
-          if (this.state.isEditingGuide) {
-            this.chContext.actions["reset-json"]();
-          } else {
-            this.chContext.actions["reset-code"]();
-          }
-        }}
-        canDebug={this.state.editorState === ChallengeStatus.READY}
-        canReset={this.state.editorState === ChallengeStatus.READY}
-        onUpload={this.handleUpload}
-        onDownload={() => this.editorRef.current?.download()}
-        onBookDownload={this.handleBookDownload}
-        onAddToExport={this.handleAddToExport}
-        onUsingFixedInputChange={(fixedInput) =>
-          this.setState({ isFixedInput: fixedInput })
-        }
-        onEditingGuideChange={this.handleEditingChange}
-      />
-    );
-  }
-
   render() {
-    if (this.state.errorLoading) {
-      return <p>The challenges files cannot be found. Have they been moved?</p>;
-    } else {
-      return (
-        <ChallengeContext.Provider value={this.chContext}>
+    return (
+      <ChallengeContext.Provider value={this.chContext}>
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "row",
+          }}
+        >
           <Box
             sx={{
               width: "100%",
               height: "100%",
               display: "flex",
               overflow: "hidden",
-              flexDirection: "row",
+              flexDirection: "column",
             }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                overflow: "hidden",
-                flexDirection: "column",
+            <HeaderBar
+              title={this.props.title || this.props.bookNode?.name || ""}
+              usingFixedInput={this.state.isFixedInput}
+              showEditTools={this.props.showEditTools}
+              editingGuide={this.state.isEditingGuide}
+              onHelpOpen={(open) => this.setState({ helpOpen: open })}
+              onResetCode={() => {
+                if (this.state.isEditingGuide) {
+                  this.chContext.actions["reset-json"]();
+                } else {
+                  this.chContext.actions["reset-code"]();
+                }
               }}
-            >
-              {this.renderHeader()}
-              <Allotment className="h-100" defaultSizes={[650, 350]}>
-                <Allotment.Pane>
-                  <Allotment vertical defaultSizes={[650, 350]}>
-                    <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
-                    <Allotment.Pane
-                      visible={this.getVisibilityWithHack(
-                        !this.state.editorFullScreen
-                      )}
-                      maxSize={550}
-                      minSize={
-                        this.props.typ === "canvas" ||
-                        this.state.typInferred === ChallengeTypes.TYP_CANVAS
-                          ? 450
-                          : 150
+              canDebug={this.state.editorState === ChallengeStatus.READY}
+              canReset={this.state.editorState === ChallengeStatus.READY}
+              onUpload={this.handleUpload}
+              onDownload={() => this.editorRef.current?.download()}
+              onBookDownload={() =>
+                this.chContext.actions["export-book"]({
+                  contents: this.bookExports,
+                })
+              }
+              onAddToExport={this.handleAddToExport}
+              onUsingFixedInputChange={(fixedInput) =>
+                this.setState({ isFixedInput: fixedInput })
+              }
+              onEditingGuideChange={this.handleEditingChange}
+            />
+
+            <Allotment className="h-100" defaultSizes={[650, 350]}>
+              <Allotment.Pane>
+                <Allotment vertical defaultSizes={[650, 350]}>
+                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
+                  <Allotment.Pane
+                    visible={this.getVisibilityWithHack(
+                      !this.state.editorFullScreen
+                    )}
+                    maxSize={550}
+                    minSize={
+                      this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
+                    }
+                  >
+                    <Outputs
+                      ref={this.outputsRef}
+                      console={
+                        <ChallengeConsole
+                          content={this.state.consoleText}
+                          inputEnabled={
+                            this.state.editorState ===
+                            ChallengeStatus.AWAITING_INPUT
+                          }
+                        />
                       }
-                    >
-                      {this.renderOutput()}
-                    </Allotment.Pane>
-                  </Allotment>
-                </Allotment.Pane>
-                <Allotment.Pane
-                  visible={this.getVisibilityWithHack(
-                    !this.state.editorFullScreen && !this.state.guideMinimised
-                  )}
-                >
-                  <Allotment vertical className="challenge__right-pane">
-                    <Box
-                      sx={{
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                      }}
-                    >
-                      {this.renderMainControls()}
-                      {this.renderGuide()}
-                    </Box>
-                    <Allotment.Pane
-                      maxSize={350}
-                      minSize={150}
-                      snap={true}
-                      visible={
+                      fixedInput={
+                        this.state.isFixedInput
+                          ? this.renderFixedInput()
+                          : undefined
+                      }
+                      canvas={<CanvasDisplay ref={this.canvasDisplayRef} />}
+                    />
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+              <Allotment.Pane
+                visible={this.getVisibilityWithHack(
+                  !this.state.editorFullScreen && !this.state.guideMinimised
+                )}
+              >
+                <Allotment vertical className="challenge__right-pane">
+                  <Box
+                    sx={{
+                      paddingLeft: 2,
+                      paddingRight: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                    }}
+                  >
+                    {this.renderMainControls()}
+                    {this.renderGuide()}
+                  </Box>
+                  <Allotment.Pane
+                    maxSize={350}
+                    minSize={150}
+                    snap={true}
+                    visible={
+                      this.state.editorState === ChallengeStatus.RUNNING ||
+                      this.state.editorState ===
+                        ChallengeStatus.ON_BREAKPOINT ||
+                      this.state.editorState === ChallengeStatus.AWAITING_INPUT
+                    }
+                    className="debug-pane"
+                  >
+                    <DebugPane
+                      canContinue={
+                        this.state.editorState === ChallengeStatus.ON_BREAKPOINT
+                      }
+                      canKill={
                         this.state.editorState === ChallengeStatus.RUNNING ||
                         this.state.editorState ===
                           ChallengeStatus.ON_BREAKPOINT ||
                         this.state.editorState ===
                           ChallengeStatus.AWAITING_INPUT
                       }
-                      className="debug-pane"
-                    >
-                      <DebugPane
-                        canContinue={
-                          this.state.editorState ===
-                          ChallengeStatus.ON_BREAKPOINT
-                        }
-                        canKill={
-                          this.state.editorState === ChallengeStatus.RUNNING ||
-                          this.state.editorState ===
-                            ChallengeStatus.ON_BREAKPOINT ||
-                          this.state.editorState ===
-                            ChallengeStatus.AWAITING_INPUT
-                        }
-                        debugContext={this.state.debugContext}
-                      />
-                    </Allotment.Pane>
-                  </Allotment>
-                </Allotment.Pane>
-              </Allotment>
-              <BookControlFabs
-                onNavigateToPrevPage={() => {
-                  if (this.state.isEditingGuide) {
-                    this.handleEditingChange(false);
-                  }
-                  if (this.props.onRequestPreviousChallenge) {
-                    this.props.onRequestPreviousChallenge();
-                  }
-                }}
-                onNavigateToNextPage={() => {
-                  if (this.state.isEditingGuide) {
-                    this.handleEditingChange(false);
-                  }
-                  if (this.props.onRequestNextChallenge) {
-                    this.props.onRequestNextChallenge();
-                  }
-                }}
-                onOpenMenu={() => {
-                  if (this.state.isEditingGuide) {
-                    this.handleEditingChange(false);
-                  }
-                  if (this.props.openBookDrawer) {
-                    this.props.openBookDrawer(true);
-                  }
-                }}
-              />
-            </Box>
-            <Box>
-              {!this.state.guideMinimised ? undefined : (
-                <div>{this.renderMainControls()}</div>
-              )}
-            </Box>
+                      debugContext={this.state.debugContext}
+                    />
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+            </Allotment>
+            <BookControlFabs
+              onNavigateToPrevPage={() => {
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.onRequestPreviousChallenge) {
+                  this.props.onRequestPreviousChallenge();
+                }
+              }}
+              onNavigateToNextPage={() => {
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.onRequestNextChallenge) {
+                  this.props.onRequestNextChallenge();
+                }
+              }}
+              onOpenMenu={() => {
+                if (this.state.isEditingGuide) {
+                  this.handleEditingChange(false);
+                }
+                if (this.props.openBookDrawer) {
+                  this.props.openBookDrawer(true);
+                }
+              }}
+            />
           </Box>
-        </ChallengeContext.Provider>
-      );
-    }
+          <Box>
+            {!this.state.guideMinimised ? undefined : (
+              <div>{this.renderMainControls()}</div>
+            )}
+          </Box>
+        </Box>
+      </ChallengeContext.Provider>
+    );
   }
 }
 

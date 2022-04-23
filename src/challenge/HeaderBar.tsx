@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 
 import {
   Toolbar,
@@ -16,18 +16,18 @@ import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
-import ArrowCircleDownIcon from '@mui/icons-material/ArrowCircleDown';
-import FolderZipIcon from '@mui/icons-material/FolderZip';
+import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
+import FolderZipIcon from "@mui/icons-material/FolderZip";
 import Menu from "../components/Menu";
 import FileUploadControl from "../components/FileUploadControl";
 
+import VsThemeContext from "../themes/VsThemeContext";
+
 type HeaderBarProps = {
   title?: string;
-  theme: string;
   usingFixedInput: boolean;
   showEditTools: boolean;
   editingGuide: boolean;
-  onThemeChange: (theme: string) => void;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
   onEditingGuideChange: (editingGuide: boolean) => void;
   onHelpOpen: (open: boolean) => void;
@@ -41,6 +41,7 @@ type HeaderBarProps = {
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
+  const themeContext = useContext(VsThemeContext);
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
@@ -105,10 +106,12 @@ const HeaderBar = (props: HeaderBarProps) => {
               <FormControlLabel
                 control={
                   <Switch
-                    checked={props.theme === "vs-dark"}
+                    checked={themeContext.theme === "vs-dark"}
                     onChange={() => {
-                      props.onThemeChange(
-                        props.theme === "vs-dark" ? "vs-light" : "vs-dark"
+                      themeContext.handleThemeChange(
+                        themeContext.theme === "vs-dark"
+                          ? "vs-light"
+                          : "vs-dark"
                       );
                     }}
                   />
@@ -129,37 +132,35 @@ const HeaderBar = (props: HeaderBarProps) => {
                 label="Use fixed inputs"
               />
             </MenuItem>
-            {props.showEditTools ?
-                (
-                    [<MenuItem>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={props.editingGuide === true}
-                            onChange={() => {
-                              props.onEditingGuideChange(!props.editingGuide);
-                            }}
-                          />
-                        }
-                        label="Edit challenge"
-                      />
-                    </MenuItem>, 
-                    <MenuItem onClick={() => props.onAddToExport()}>
-                      <ListItemIcon>
-                        <ArrowCircleDownIcon />
-                      </ListItemIcon>
-                      Add to export
-                    </MenuItem>,
-                    <MenuItem onClick={() => props.onBookDownload()}>
-                      <ListItemIcon>
-                        <FolderZipIcon />
-                      </ListItemIcon>
-                      Export book
-                    </MenuItem>]                 
-                )
-                :
-                (null)
-              }       
+            {props.showEditTools
+              ? [
+                  <MenuItem>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={props.editingGuide === true}
+                          onChange={() => {
+                            props.onEditingGuideChange(!props.editingGuide);
+                          }}
+                        />
+                      }
+                      label="Edit challenge"
+                    />
+                  </MenuItem>,
+                  <MenuItem onClick={() => props.onAddToExport()}>
+                    <ListItemIcon>
+                      <ArrowCircleDownIcon />
+                    </ListItemIcon>
+                    Add to export
+                  </MenuItem>,
+                  <MenuItem onClick={() => props.onBookDownload()}>
+                    <ListItemIcon>
+                      <FolderZipIcon />
+                    </ListItemIcon>
+                    Export book
+                  </MenuItem>,
+                ]
+              : null}
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

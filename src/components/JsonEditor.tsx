@@ -1,10 +1,16 @@
-import React, { useImperativeHandle, useRef, useEffect } from "react";
+import React, {
+  useImperativeHandle,
+  useRef,
+  useEffect,
+  useContext,
+} from "react";
 import Editor, { OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
+import VsThemeContext from "../themes/VsThemeContext";
+
 type JsonEditorProps = {
   starterCode: string;
-  theme: string;
   onToggleFullScreen: () => void;
 };
 
@@ -16,6 +22,7 @@ type JsonEditorHandle = {
 
 const JsonEditor = React.forwardRef<JsonEditorHandle, JsonEditorProps>(
   (props, ref) => {
+    const themeContext = useContext(VsThemeContext);
     const propsRef = useRef<JsonEditorProps | null>(null);
     useEffect(() => {
       propsRef.current = props;
@@ -58,13 +65,13 @@ const JsonEditor = React.forwardRef<JsonEditorHandle, JsonEditorProps>(
     };
     return (
       <Editor
-        className={"theme-" + props.theme}
+        className={"theme-" + themeContext.theme}
         width="100%"
         height="100%"
         defaultLanguage="json"
         value={props.starterCode}
         onMount={handleEditorDidMount}
-        theme={props.theme}
+        theme={themeContext.theme}
         options={{
           scrollBeyondLastLine: false,
           tabSize: 2,

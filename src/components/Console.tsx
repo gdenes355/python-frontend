@@ -1,6 +1,14 @@
-import React, { useEffect, useRef, KeyboardEvent, MouseEvent } from "react";
+import React, {
+  useEffect,
+  useRef,
+  KeyboardEvent,
+  MouseEvent,
+  useContext,
+} from "react";
 import { Box } from "@mui/material";
 import "./Console.css";
+
+import ChallengeContext from "../challenge/ChallengeContext";
 
 type ConsoleProps = {
   isInputEnabled: boolean;
@@ -15,6 +23,8 @@ const MAX_LENGTH = 1000000;
 const Console = (props: ConsoleProps) => {
   const containerEl = useRef<HTMLDivElement>(null);
   const inputFieldEl = useRef<HTMLInputElement>(null);
+
+  const challengeContext = useContext(ChallengeContext);
 
   const onKeyPressed = (event: KeyboardEvent) => {
     if (inputFieldEl.current && event.key === "Enter") {

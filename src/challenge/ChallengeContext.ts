@@ -7,6 +7,8 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import PaneType from "../models/PaneType";
+import { time } from "console";
 
 type WorkerResponse = {
   cmd: string;
@@ -66,25 +68,26 @@ class ChallengeContextClass {
     },
     draw: (data: DrawData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
-          this.challenge.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
+          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
-        const paneRequest = this.challenge.state.isFixedInput ? 2 : 1;
-        this.challenge.tabbedViewRef?.current?.requestPane(paneRequest);
+        this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
         this.challenge.canvasDisplayRef?.current?.runCommand(data.msg);
       }
     },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typInferred !== ChallengeTypes.TYP_CANVAS) {
-          this.challenge.setState({ typInferred: ChallengeTypes.TYP_CANVAS });
+        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
+          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
-        const paneRequest = this.challenge.state.isFixedInput ? 2 : 1;
-        this.challenge.tabbedViewRef?.current?.requestPane(paneRequest);
+        this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
         this.challenge.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
       }
     },
-    cls: () => this.challenge.cls(),
+    cls: () => {
+      this.challenge.currentConsoleText = "";
+      this.challenge.printCallback();
+    },
     input: () => {
       if (this.challenge.state.isFixedInput) {
         const input = this.challenge.currentFixedUserInput.shift() || "";
@@ -94,7 +97,7 @@ class ChallengeContextClass {
         this.challenge.setState({
           editorState: ChallengeStatus.AWAITING_INPUT,
         });
-        this.challenge.tabbedViewRef?.current?.requestPane(0);
+        this.challenge.outputsRef?.current?.focusPane(PaneType.CONSOLE);
       }
     },
     "input-entered": (data: InputData) => {
@@ -225,7 +228,7 @@ class ChallengeContextClass {
       this.challenge.print(msg);
     },
     debug: () => {
-      if (this.challenge.props.typ === "parsons") {
+      if (this.challenge.state.typ === "parsons") {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, []);
@@ -241,7 +244,7 @@ class ChallengeContextClass {
     debugpy: (code: string, breakpoints: number[]) => {
       this.challenge.currentFixedUserInput =
         this.challenge.state.fixedUserInput.split("\n") || [""];
-      this.challenge.tabbedViewRef?.current?.requestPane(0);
+      this.challenge.outputsRef?.current?.focusPane(PaneType.CONSOLE);
 
       if (this.challenge.state.editorState === ChallengeStatus.READY) {
         if (this.challenge.interruptBuffer) {
@@ -256,12 +259,12 @@ class ChallengeContextClass {
           editorState: ChallengeStatus.RUNNING,
         });
         this.challenge.breakpointsChanged = false;
-        this.challenge.cls();
+        this.actions["cls"]();
       }
       this.actions["save-code"]({ code });
     },
     test: () => {
-      if (this.challenge.props.typ === "parsons") {
+      if (this.challenge.state.typ === "parsons") {
         this.challenge.setState({
           testResults:
             this.challenge.parsonsEditorRef.current?.runTests() || [],
@@ -288,12 +291,12 @@ class ChallengeContextClass {
           tests: tests,
         });
         this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
-        this.challenge.cls();
+        this.actions["cls"]();
       }
       this.actions["save-code"]({ code });
     },
     "reset-code": () => {
-      if (this.challenge.props.typ === "parsons") {
+      if (this.challenge.state.typ === "parsons") {
         this.challenge.parsonsEditorRef.current?.reset();
         return;
       }
