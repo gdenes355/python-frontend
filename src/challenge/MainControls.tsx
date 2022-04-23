@@ -36,12 +36,25 @@ const MainControlsStack = (props: MainControlsProps) => {
         <DevicesFoldRounded />
       </IconButton>
       <Box>
-        <RunSplitButton
-          onClickDebug={props.onDebug}
-          onClickRun={props.onRun}
+        <Button
+          variant="contained"
+          color="primary"
           disabled={!props.canDebug}
-        />
-      </Box>      
+          onClick={props.onDebug}
+        >
+          DEBUG
+        </Button>
+      </Box>
+      <Box>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!props.canDebug}
+          onClick={props.onRun}
+        >
+          RUN
+        </Button>
+      </Box>           
       {props.canSubmit ? (
         <Box>
           <Button
