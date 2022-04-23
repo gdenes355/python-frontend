@@ -1,6 +1,8 @@
 import React from "react";
 import { Box, Card, CardContent } from "@mui/material";
 
+import IChallenge from "./IChallenge";
+
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
 import ParsonsEditor, {
@@ -47,11 +49,11 @@ type ChallengeState = {
   helpOpen: boolean;
   guideMinimised: boolean;
   typ: ChallengeTypes; // use this in favour of the props.typ
-  isFixedInput: boolean;
+  usesFixedInput: boolean;
 };
 
 type ChallengeProps = {
-  uid?: string | null;
+  uid: string;
   guidePath: string;
   codePath: string;
   bookNode?: BookNodeModel;
@@ -66,7 +68,10 @@ type ChallengeProps = {
   onRequestNextChallenge?: () => void;
 };
 
-class Challenge extends React.Component<ChallengeProps, ChallengeState> {
+class Challenge
+  extends React.Component<ChallengeProps, ChallengeState>
+  implements IChallenge
+{
   editorRef = React.createRef<PyEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
@@ -76,7 +81,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
-  bookExports: string[][] = [];
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
@@ -104,7 +108,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
-    isFixedInput: false,
+    usesFixedInput: false,
   };
 
   constructor(props: ChallengeProps) {
@@ -125,25 +129,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         this.setState({ savedCode: savedCode });
       }
     }
-    this.props.fetcher
-      .fetch(this.props.guidePath)
-      .then((response) => {
-        if (!response.ok) {
-          throw Error("Failed to load guide");
-        }
-        return response.text();
-      })
-      .then((text) => this.setState({ guideMd: text }));
-    this.props.fetcher
-      .fetch(this.props.codePath)
-      .then((response) => {
-        if (!response.ok) {
-          throw Error("Failed to load Python code");
-        }
-        return response.text();
-      })
-      .then((text) => this.setState({ starterCode: text }));
-
+    this.chContext.actions["fetch-code"]();
+    this.chContext.actions["fetch-guide"]();
     navigator.serviceWorker.register("pysw.js").then(function (reg) {
       if (navigator.serviceWorker.controller === null || !reg.active) {
         window.location.reload();
@@ -154,17 +141,11 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
     if (prevProps.guidePath !== this.props.guidePath) {
-      this.props.fetcher
-        .fetch(this.props.guidePath)
-        .then((response) => response.text())
-        .then((text) => this.setState({ guideMd: text }));
+      this.chContext.actions["fetch-guide"]();
     }
 
     if (prevProps.codePath !== this.props.codePath) {
-      this.props.fetcher
-        .fetch(this.props.codePath)
-        .then((response) => response.text())
-        .then((text) => this.setState({ starterCode: text }));
+      this.chContext.actions["fetch-code"]();
       this.setState({
         typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
       });
@@ -328,20 +309,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
           >
             <HeaderBar
               title={this.props.title || this.props.bookNode?.name || ""}
-              usingFixedInput={this.state.isFixedInput}
+              usingFixedInput={this.state.usesFixedInput}
               showEditTools={false}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
               onUpload={this.handleUpload}
               onDownload={() => this.editorRef.current?.download()}
-              onBookDownload={() =>
-                this.chContext.actions["export-book"]({
-                  contents: this.bookExports,
-                })
-              }
               onUsingFixedInputChange={(fixedInput) =>
-                this.setState({ isFixedInput: fixedInput })
+                this.setState({ usesFixedInput: fixedInput })
               }
             />
 
@@ -370,7 +346,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                         />
                       }
                       fixedInput={
-                        this.state.isFixedInput ? (
+                        this.state.usesFixedInput ? (
                           <FixedInputField ref={this.fixedInputFieldRef} />
                         ) : undefined
                       }

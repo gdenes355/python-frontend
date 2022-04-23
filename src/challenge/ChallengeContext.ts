@@ -8,6 +8,7 @@ import { keyToVMCode } from "../utils/keyTools";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import PaneType from "../models/PaneType";
+import IChallenge from "./IChallenge";
 
 type WorkerResponse = {
   cmd: string;
@@ -55,7 +56,7 @@ class ChallengeContextClass {
     this.challenge = challenge;
   }
 
-  private challenge: Challenge;
+  private challenge: IChallenge;
 
   public actions = {
     "init-done": () =>
@@ -92,7 +93,7 @@ class ChallengeContextClass {
       this.challenge.printCallback();
     },
     input: () => {
-      if (this.challenge.state.isFixedInput) {
+      if (this.challenge.state.usesFixedInput) {
         const input = this.challenge.currentFixedUserInput.shift() || "";
         const inputData: InputData = { input: input };
         this.actions["input-entered"](inputData);
@@ -231,7 +232,7 @@ class ChallengeContextClass {
       this.actions["print-console"](msg);
     },
     debug: () => {
-      if (this.challenge.state.typ === "parsons") {
+      if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, []);
@@ -391,6 +392,28 @@ class ChallengeContextClass {
           saveAs(blob, "challenges.zip");
         });
       }
+    },
+    "fetch-guide": () => {
+      this.challenge.props.fetcher
+        .fetch(this.challenge.props.guidePath)
+        .then((response) => {
+          if (!response.ok) {
+            throw Error("Failed to load guide");
+          }
+          return response.text();
+        })
+        .then((text) => this.challenge.setState({ guideMd: text }));
+    },
+    "fetch-code": () => {
+      this.challenge.props.fetcher
+        .fetch(this.challenge.props.codePath)
+        .then((response) => {
+          if (!response.ok) {
+            throw Error("Failed to load Python code");
+          }
+          return response.text();
+        })
+        .then((text) => this.challenge.setState({ starterCode: text }));
     },
   };
 }
