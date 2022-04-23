@@ -39,7 +39,6 @@ type ChallengeState = {
   starterCode: string | null;
   savedCode: string | null;
   savedJSON: string | null;
-  worker: Worker | null;
   guideMd: string;
   debugContext: DebugContext;
   theme: string;
@@ -48,10 +47,7 @@ type ChallengeState = {
   consoleText: string;
   editorState: ChallengeStatus;
   testResults: TestResults;
-  breakpointsChanged: boolean;
   testsPassing: boolean | null;
-  interruptBuffer: Uint8Array | null;
-  keyDownBuffer: Uint8Array | null;
   helpOpen: boolean;
   guideMinimised: boolean;
   typInferred: ChallengeTypes;
@@ -91,6 +87,12 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
+  // non-UI (non-React) internal state
+  breakpointsChanged: boolean = false;
+  worker: Worker | null = null;
+  interruptBuffer: Uint8Array | null = null;
+  keyDownBuffer: Uint8Array | null = null;
+
   JSON_DEFAULT: string = `
 {
   "name": "Challenge Name",
@@ -118,7 +120,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     starterCode: null,
     savedCode: null,
     savedJSON: null,
-    worker: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
     debugContext: { lineno: 0, env: new Map() },
@@ -127,10 +128,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     editorFullScreen: false,
     errorLoading: false,
     testResults: [],
-    breakpointsChanged: false,
     testsPassing: null,
-    interruptBuffer: null,
-    keyDownBuffer: null,
     helpOpen: false,
     guideMinimised: false,
     typInferred: ChallengeTypes.TYP_PY,
@@ -318,7 +316,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       this.editorRef.current &&
       this.state.editorState !== ChallengeStatus.READY
     ) {
-      this.setState({ breakpointsChanged: true });
+      this.breakpointsChanged = true;
     }
   };
 

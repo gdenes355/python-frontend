@@ -108,7 +108,7 @@ class ChallengeContextClass {
           JSON.stringify({
             data: input,
             breakpoints:
-              this.challenge.state.breakpointsChanged &&
+              this.challenge.breakpointsChanged &&
               this.challenge.editorRef.current
                 ? this.challenge.editorRef.current.getBreakpoints()
                 : null,
@@ -132,7 +132,7 @@ class ChallengeContextClass {
         x.send(
           JSON.stringify({
             breakpoints:
-              this.challenge.state.breakpointsChanged &&
+              this.challenge.breakpointsChanged &&
               this.challenge.editorRef.current
                 ? this.challenge.editorRef.current.getBreakpoints()
                 : null,
@@ -185,8 +185,8 @@ class ChallengeContextClass {
       ) {
         return; // in ready state already
       }
-      if (this.challenge.state.worker && this.challenge.state.interruptBuffer) {
-        this.challenge.state.interruptBuffer[0] = 2;
+      if (this.challenge.worker && this.challenge.interruptBuffer) {
+        this.challenge.interruptBuffer[0] = 2;
         let x = new XMLHttpRequest();
         x.open("post", "/@reset@/reset.js");
         x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
@@ -198,9 +198,7 @@ class ChallengeContextClass {
         }
         return; // we can just issue an interrupt, no need to kill worker
       }
-      if (this.challenge.state.worker) {
-        this.challenge.state.worker.terminate();
-      }
+      this.challenge.worker?.terminate();
       let worker = new Worker("/static/js/pyworker_sw.js");
       worker.addEventListener("message", (msg: MessageEvent<WorkerResponse>) =>
         // @ts-ignore  dybamic dispatch from worker
@@ -218,13 +216,11 @@ class ChallengeContextClass {
         });
       }
       let msg = data.msg == null ? "" : data.msg;
-      this.challenge.setState((state: ChallengeState) => {
-        return {
-          worker: worker,
-          editorState: ChallengeStatus.RESTARTING_WORKER,
-          interruptBuffer,
-          keyDownBuffer,
-        };
+      this.challenge.worker = worker;
+      this.challenge.interruptBuffer = interruptBuffer;
+      this.challenge.keyDownBuffer = keyDownBuffer;
+      this.challenge.setState({
+        editorState: ChallengeStatus.RESTARTING_WORKER,
       });
       this.challenge.print(msg);
     },
@@ -248,18 +244,18 @@ class ChallengeContextClass {
       this.challenge.tabbedViewRef?.current?.requestPane(0);
 
       if (this.challenge.state.editorState === ChallengeStatus.READY) {
-        if (this.challenge.state.interruptBuffer) {
-          this.challenge.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+        if (this.challenge.interruptBuffer) {
+          this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
-        this.challenge.state.worker?.postMessage({
+        this.challenge.worker?.postMessage({
           cmd: "debug",
           code: code,
           breakpoints: breakpoints,
         });
         this.challenge.setState({
           editorState: ChallengeStatus.RUNNING,
-          breakpointsChanged: false,
         });
+        this.challenge.breakpointsChanged = false;
         this.challenge.cls();
       }
       this.actions["save-code"]({ code });
@@ -279,14 +275,14 @@ class ChallengeContextClass {
       }
     },
     testpy: (code: string, tests: TestCases) => {
-      if (!this.challenge.state.worker) {
+      if (!this.challenge.worker) {
         return;
       }
       if (this.challenge.state.editorState === ChallengeStatus.READY) {
-        if (this.challenge.state.interruptBuffer) {
-          this.challenge.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+        if (this.challenge.interruptBuffer) {
+          this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
-        this.challenge.state.worker.postMessage({
+        this.challenge.worker.postMessage({
           cmd: "test",
           code: code,
           tests: tests,
@@ -342,18 +338,18 @@ class ChallengeContextClass {
       }
     },
     "canvas-keydown": (data: React.KeyboardEvent) => {
-      if (this.challenge.state.keyDownBuffer) {
+      if (this.challenge.keyDownBuffer) {
         let code = keyToVMCode(data.key);
         if (code && code > 0 && code < 256) {
-          this.challenge.state.keyDownBuffer[code] = 1;
+          this.challenge.keyDownBuffer[code] = 1;
         }
       }
     },
     "canvas-keyup": (data: React.KeyboardEvent) => {
-      if (this.challenge.state.keyDownBuffer) {
+      if (this.challenge.keyDownBuffer) {
         let code = keyToVMCode(data.key);
         if (code && code > 0 && code < 256) {
-          this.challenge.state.keyDownBuffer[code] = 0;
+          this.challenge.keyDownBuffer[code] = 0;
         }
       }
     },
