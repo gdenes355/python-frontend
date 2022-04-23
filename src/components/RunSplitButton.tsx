@@ -15,7 +15,7 @@ type RunSplitButtonProps = {
   disabled: boolean;
 };
 
-const options = ['Debug', 'Run'];
+const options = ['DEBUG', 'RUN'];
 
 export default function RunSplitButton(props : RunSplitButtonProps) {
   const [open, setOpen] = React.useState(false);
