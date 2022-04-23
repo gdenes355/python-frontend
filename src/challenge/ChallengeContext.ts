@@ -1,5 +1,5 @@
 import React, { createContext } from "react";
-import Challenge, { ChallengeState } from "./Challenge";
+import Challenge from "./Challenge";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
@@ -8,7 +8,7 @@ import { keyToVMCode } from "../utils/keyTools";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import PaneType from "../models/PaneType";
-import IChallenge from "./IChallenge";
+import IChallenge, { IChallengeState } from "./IChallenge";
 
 type WorkerResponse = {
   cmd: string;
@@ -160,7 +160,7 @@ class ChallengeContextClass {
           "Interrupted by error. Check the error message, then press debug to run again...",
         interrupt: "Interrupted...",
       }[data.reason];
-      this.challenge.setState((state: ChallengeState) => {
+      this.challenge.setState((state: IChallengeState) => {
         return {
           editorState: ChallengeStatus.READY,
           testResults: this.challenge.props.isExample
@@ -301,6 +301,15 @@ class ChallengeContextClass {
         this.actions["cls"]();
       }
       this.actions["save-code"]({ code });
+    },
+    "breakpoints-updated": () => {
+      if (
+        this.challenge.editorRef.current &&
+        this.challenge.state.editorState !== ChallengeStatus.READY
+      ) {
+        this.challenge.breakpointsChanged = true;
+      }
+      // otherwise no need to set the lazy flag, breakpoints will be queried when debugging
     },
     "reset-code": () => {
       if (this.challenge.state.typ === "parsons") {

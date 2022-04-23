@@ -139,7 +139,6 @@ class Challenge
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
-    this.onBreakpointsUpdated.bind(this);
     this.handleEditingChange.bind(this);
   }
 
@@ -231,15 +230,6 @@ class Challenge
       : visible;
   };
 
-  onBreakpointsUpdated = () => {
-    if (
-      this.editorRef.current &&
-      this.state.editorState !== ChallengeStatus.READY
-    ) {
-      this.breakpointsChanged = true;
-    }
-  };
-
   renderEditor() {
     if (this.state.isEditingGuide) {
       return (
@@ -276,7 +266,6 @@ class Challenge
         isOnBreakPoint={
           this.state.editorState === ChallengeStatus.ON_BREAKPOINT
         }
-        onBreakpointsUpdated={this.onBreakpointsUpdated}
         debugContext={this.state.debugContext}
         starterCode={this.state.savedCode || this.state.starterCode || ""}
         onToggleFullScreen={() => {

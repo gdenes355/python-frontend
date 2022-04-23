@@ -2,7 +2,7 @@ import React from "react";
 import { DebouncedFunc } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import ChallengeTypes from "../models/ChallengeTypes";
-import { TestCases } from "../models/Tests";
+import { TestCases, TestResults } from "../models/Tests";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -29,6 +29,7 @@ type IChallengeState = {
   guideMd: string;
   debugContext: DebugContext;
   consoleText: string;
+  testResults: TestResults;
 };
 
 interface IChallenge {

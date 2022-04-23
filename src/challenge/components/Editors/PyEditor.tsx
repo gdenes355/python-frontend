@@ -21,7 +21,6 @@ type PyEditorProps = {
   starterCode: string;
   debugContext: DebugContext;
   onToggleFullScreen: () => void;
-  onBreakpointsUpdated: () => void;
 };
 
 type PyEditorHandle = {
@@ -283,7 +282,7 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
       } else {
         breakpointList.current.push(lineNum);
       }
-      props.onBreakpointsUpdated();
+      challengeContext?.actions["breakpoints-updated"]();
       updateEditorDecorations();
     };
 

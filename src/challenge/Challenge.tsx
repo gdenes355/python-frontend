@@ -1,7 +1,12 @@
 import React from "react";
+import { throttle } from "lodash";
 import { Box, Card, CardContent } from "@mui/material";
+import { Allotment } from "allotment";
+import "allotment/dist/style.css";
 
 import IChallenge, { IChallengeState, IChallengeProps } from "./IChallenge";
+import ChallengeTypes from "../models/ChallengeTypes";
+import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -18,26 +23,18 @@ import FixedInputField, {
 import Guide from "../components/Guide";
 import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
-import { Allotment } from "allotment";
 import HeaderBar from "./components/HeaderBar";
-import "allotment/dist/style.css";
-import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
-import { TestCases, TestResults } from "../models/Tests";
+import { TestCases } from "../models/Tests";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
-
-import ChallengeTypes from "../models/ChallengeTypes";
-
-import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
   editorFullScreen: boolean;
-  testResults: TestResults;
   testsPassing: boolean | null;
   helpOpen: boolean;
   guideMinimised: boolean;
@@ -99,7 +96,6 @@ class Challenge
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
-    this.onBreakpointsUpdated.bind(this);
   }
 
   componentDidMount() {
@@ -161,15 +157,6 @@ class Challenge
       : visible;
   };
 
-  onBreakpointsUpdated = () => {
-    if (
-      this.editorRef.current &&
-      this.state.editorState !== ChallengeStatus.READY
-    ) {
-      this.breakpointsChanged = true;
-    }
-  };
-
   renderEditor() {
     if (this.props.typ === "parsons") {
       return (
@@ -192,7 +179,6 @@ class Challenge
         isOnBreakPoint={
           this.state.editorState === ChallengeStatus.ON_BREAKPOINT
         }
-        onBreakpointsUpdated={this.onBreakpointsUpdated}
         debugContext={this.state.debugContext}
         starterCode={this.state.savedCode || this.state.starterCode || ""}
         onToggleFullScreen={() => {
@@ -373,4 +359,3 @@ class Challenge
 }
 
 export default Challenge;
-export { ChallengeState };
