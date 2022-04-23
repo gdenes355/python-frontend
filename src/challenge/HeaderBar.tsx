@@ -23,8 +23,10 @@ type HeaderBarProps = {
   title?: string;
   theme: string;
   usingFixedInput: boolean;
+  showRun: boolean;
   onThemeChange: (theme: string) => void;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
+  onShowRunChange: (showRun: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
@@ -113,6 +115,19 @@ const HeaderBar = (props: HeaderBarProps) => {
               <FormControlLabel
                 control={
                   <Switch
+                    checked={props.showRun === true}
+                    onChange={() => {
+                      props.onShowRunChange(!props.showRun);
+                    }}
+                  />
+                }
+                label="Show Run Button"
+              />
+            </MenuItem>             
+            <MenuItem>
+              <FormControlLabel
+                control={
+                  <Switch
                     checked={props.usingFixedInput === true}
                     onChange={() => {
                       props.onUsingFixedInputChange(!props.usingFixedInput);
@@ -121,7 +136,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                 }
                 label="Use fixed inputs"
               />
-            </MenuItem>
+            </MenuItem>           
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

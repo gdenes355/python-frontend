@@ -52,6 +52,7 @@ type ChallengeState = {
   typInferred: ChallengeTypes;
   isFixedInput: boolean;
   fixedUserInput: string;
+  showRun: boolean;
 };
 
 type ChallengeProps = {
@@ -107,6 +108,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     typInferred: ChallengeTypes.TYP_PY,
     isFixedInput: false,
     fixedUserInput: "",
+    showRun: false
   };
 
   constructor(props: ChallengeProps) {
@@ -294,7 +296,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               ? this.editorRef.current.getBreakpoints()
               : [],
           });
-        }}
+        }}       
         onContinue={() => ChallengeController["continue"](this, {})}
         onStepInto={() => ChallengeController["step"](this)}
         onStop={() => {
@@ -412,6 +414,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         <CardContent>
           <MainControls
             guideMinimised={this.state.guideMinimised}
+            showRun={this.state.showRun}
             onGuideDisplayToggle={() =>
               this.setState((prevState, props) => {
                 return { guideMinimised: !prevState.guideMinimised };
@@ -425,6 +428,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                   : [],
               });
             }}
+            onRun={() => {
+              ChallengeController["run"](this, {code: this.editorRef.current?.getValue()});
+            }} 
             onSubmit={() => {
               ChallengeController["test"](this, {
                 code: this.editorRef.current?.getValue(),
@@ -480,6 +486,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
         usingFixedInput={this.state.isFixedInput}
+        showRun={this.state.showRun}
+        onShowRunChange={(showRunValue) =>
+          this.setState({ showRun: showRunValue })}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}

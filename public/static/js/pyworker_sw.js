@@ -28,6 +28,19 @@ onmessage = function (e) {
       }
     }
     self.postMessage({ cmd: 'debug-finished', reason })
+  } else if (e.data.cmd === 'run') {
+    let reason = 'ok'
+    try {
+      self.pyodide.globals.get('pyrun')(e.data.code)
+    } catch (err) {
+      if (err.message.includes('KeyboardInterrupt')) {
+        reason = 'interrupt'
+      } else {
+        workerPrint(err)
+        reason = 'error'
+      }
+    }
+    self.postMessage({ cmd: 'debug-finished', reason })      
   } else if (e.data.cmd === 'test') {
     let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile' } })
     console.log('running tests')

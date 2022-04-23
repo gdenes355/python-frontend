@@ -400,6 +400,16 @@ def pydebug(code, breakpoints):
                              for i in range(len(node.body))])
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
+def pyrun(code):
+    global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
+    sys.stdout = debug_output
+    sys.stderr = debug_output
+    sys.stdctx = debug_context
+    time.sleep = debug_sleep
+    os.system = debug_shell
+    input = debug_input
+    exec(code, global_vars)    
+
 
 def update_breakpoints(breakpoints):
     global active_breakpoints

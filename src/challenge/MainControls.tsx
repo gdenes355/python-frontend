@@ -13,7 +13,9 @@ type MainControlsProps = {
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
+  showRun: boolean;
   onDebug: () => void;
+  onRun: () => void;
   onSubmit: () => void;
   onGuideDisplayToggle: () => void;
 };
@@ -46,6 +48,18 @@ const MainControlsStack = (props: MainControlsProps) => {
           Debug
         </Button>
       </Box>
+      {props.showRun && (
+      <Box>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!props.canDebug}
+          onClick={props.onRun}
+        >
+          Run
+        </Button>
+      </Box>
+      )}       
       {props.canSubmit ? (
         <Box>
           <Button
@@ -69,7 +83,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
   return (
     <Grid container spacing={2} style={{ display: "flex" }}>
       <Grid item style={{ flexGrow: 1 }}>
-        <Stack spacing={2} direction="row">
+        <Stack spacing={2} direction="row">     
           <Box>
             <Button
               variant="contained"
@@ -80,6 +94,18 @@ const MainControlsGrid = (props: MainControlsProps) => {
               Debug
             </Button>
           </Box>
+          {props.showRun && (
+          <Box>
+            <Button
+              variant="contained"
+              color="primary"
+              disabled={!props.canDebug}
+              onClick={props.onRun}
+            >
+              Run (No Breaks)
+            </Button>
+          </Box>
+          )}           
           {props.canSubmit ? (
             <Box>
               <Button
