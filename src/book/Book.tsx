@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import Challenge from "../challenge/Challenge";
+import ChallengeEditor from "../challenge/ChallengeEditor";
 import BookCover from "./BookCover";
 import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
@@ -46,6 +47,7 @@ const Book = (props: BookProps) => {
   const zipPath = searchParams.get("zip-path");
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
+  const editable = searchParams.get("edit");
 
   const bookFetcher = useMemo(() => {
     return new BookFetcher(bookPath, zipPath, zipData || props.zipFile);
@@ -192,38 +194,70 @@ const Book = (props: BookProps) => {
         />
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
-      const editable = searchParams.get("edit");
-      return (
-        <React.Fragment>
-          <ErrorBounday>
-            <Challenge
-              fetcher={bookFetcher}
-              guidePath={paths.guidePath}
-              codePath={paths.pyPath}
-              tests={tests && tests.length > 0 ? tests : null}
-              bookNode={activeNode}
-              title={rootNode.name}
-              openBookDrawer={openDrawer}
-              onRequestPreviousChallenge={requestPreviousChallenge}
-              onRequestNextChallenge={requestNextChallenge}
-              uid={bookPath + bookChallengeId}
-              onTestsPassingChanged={activeTestsPassingChanged}
-              isExample={activeNode.isExample}
-              showEditTools={editable ? true : false}
-              typ={activeNode.typ}
-            />
-            <BookDrawer
-              bookRoot={rootNode}
-              allTestResults={allTestResults}
-              activePageId={bookChallengeId || undefined}
-              onRequestOpen={openDrawer}
-              onNodeSelected={openNode}
-              open={drawerOpen}
-              onOpenReport={() => openReport(true)}
-            />
-          </ErrorBounday>
-        </React.Fragment>
-      );
+      if (editable) {
+        return (
+          <React.Fragment>
+            <ErrorBounday>
+              <ChallengeEditor
+                fetcher={bookFetcher}
+                guidePath={paths.guidePath}
+                codePath={paths.pyPath}
+                tests={tests && tests.length > 0 ? tests : null}
+                bookNode={activeNode}
+                title={rootNode.name}
+                openBookDrawer={openDrawer}
+                onRequestPreviousChallenge={requestPreviousChallenge}
+                onRequestNextChallenge={requestNextChallenge}
+                uid={bookPath + bookChallengeId}
+                onTestsPassingChanged={activeTestsPassingChanged}
+                isExample={activeNode.isExample}
+                showEditTools={editable ? true : false}
+                typ={activeNode.typ}
+              />
+              <BookDrawer
+                bookRoot={rootNode}
+                allTestResults={allTestResults}
+                activePageId={bookChallengeId || undefined}
+                onRequestOpen={openDrawer}
+                onNodeSelected={openNode}
+                open={drawerOpen}
+                onOpenReport={() => openReport(true)}
+              />
+            </ErrorBounday>
+          </React.Fragment>
+        );
+      } else {
+        return (
+          <React.Fragment>
+            <ErrorBounday>
+              <Challenge
+                fetcher={bookFetcher}
+                guidePath={paths.guidePath}
+                codePath={paths.pyPath}
+                tests={tests && tests.length > 0 ? tests : null}
+                bookNode={activeNode}
+                title={rootNode.name}
+                openBookDrawer={openDrawer}
+                onRequestPreviousChallenge={requestPreviousChallenge}
+                onRequestNextChallenge={requestNextChallenge}
+                uid={bookPath + bookChallengeId}
+                onTestsPassingChanged={activeTestsPassingChanged}
+                isExample={activeNode.isExample}
+                typ={activeNode.typ}
+              />
+              <BookDrawer
+                bookRoot={rootNode}
+                allTestResults={allTestResults}
+                activePageId={bookChallengeId || undefined}
+                onRequestOpen={openDrawer}
+                onNodeSelected={openNode}
+                open={drawerOpen}
+                onOpenReport={() => openReport(true)}
+              />
+            </ErrorBounday>
+          </React.Fragment>
+        );
+      }
     } else {
       return (
         <React.Fragment>

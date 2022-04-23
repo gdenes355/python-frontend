@@ -27,17 +27,17 @@ import VsThemeContext from "../../themes/VsThemeContext";
 type HeaderBarProps = {
   title?: string;
   usingFixedInput: boolean;
-  showEditTools: boolean;
-  editingGuide: boolean;
+  showEditTools?: boolean;
+  editingGuide?: boolean;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
-  onEditingGuideChange: (editingGuide: boolean) => void;
+  onEditingGuideChange?: (editingGuide: boolean) => void;
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
   onUpload: (file: File) => void;
   onDownload: () => void;
-  onAddToExport: () => void;
-  onBookDownload: () => void;
+  onAddToExport?: () => void;
+  onBookDownload?: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -141,20 +141,20 @@ const HeaderBar = (props: HeaderBarProps) => {
                         <Switch
                           checked={props.editingGuide === true}
                           onChange={() => {
-                            props.onEditingGuideChange(!props.editingGuide);
+                            props.onEditingGuideChange?.(!props.editingGuide);
                           }}
                         />
                       }
                       label="Edit challenge"
                     />
                   </MenuItem>,
-                  <MenuItem onClick={() => props.onAddToExport()}>
+                  <MenuItem onClick={() => props.onAddToExport?.()}>
                     <ListItemIcon>
                       <ArrowCircleDownIcon />
                     </ListItemIcon>
                     Add to export
                   </MenuItem>,
-                  <MenuItem onClick={() => props.onBookDownload()}>
+                  <MenuItem onClick={() => props.onBookDownload?.()}>
                     <ListItemIcon>
                       <FolderZipIcon />
                     </ListItemIcon>

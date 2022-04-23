@@ -315,10 +315,10 @@ class ChallengeContextClass {
         );
       }
     },
-    "reset-json": () =>
-      this.challenge.jsonEditorRef.current?.setValue(
+    "reset-json": () => {},
+    /*this.challenge.jsonEditorRef.current?.setValue(
         this.challenge.JSON_DEFAULT
-      ),
+      ),*/
     breakpt: (data: DebugContext) => {
       this.challenge.setState({
         debugContext: {
