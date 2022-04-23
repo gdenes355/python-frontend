@@ -51,6 +51,7 @@ type RestartWorkerData = {
 type DebugData = {
   code?: string | null;
   breakpoints?: number[];
+  mode?: string;
 };
 
 type SaveCodeData = {
@@ -224,13 +225,6 @@ const ChallengeController = {
     }
     ChallengeController["debugpy"](comp, data);
   },
-  run: (comp: Challenge, data: DebugData) => {
-    if (comp.props.typ === "parsons") {
-      let code = comp.parsonsEditorRef.current?.getValue();
-      data.code = code;
-    }
-    ChallengeController["runpy"](comp, data);
-  },  
   debugpy: (comp: Challenge, data: DebugData) => {
     comp.currentFixedUserInput = comp.state.fixedUserInput.split("\n") || [""];
     comp.tabbedViewRef?.current?.requestPane(0);
@@ -241,40 +235,20 @@ const ChallengeController = {
       if (comp.state.interruptBuffer) {
         comp.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
       }
-      comp.state.worker?.postMessage({
-        cmd: "debug",
-        code: data.code,
-        breakpoints: data.breakpoints,
-      });
       comp.setState({
         editorState: ChallengeStatus.RUNNING,
         breakpointsChanged: false,
-      });
-      comp.cls();
-    }
-    ChallengeController["save-code"](comp, { code: data.code });
-  },
-  runpy: (comp: Challenge, data: DebugData) => {
-    comp.currentFixedUserInput = comp.state.fixedUserInput.split("\n") || [""];
-    comp.tabbedViewRef?.current?.requestPane(0);
-    if (!data.code && data.code !== "") {
-      return;
-    }
-    if (comp.state.editorState === ChallengeStatus.READY) {
-      if (comp.state.interruptBuffer) {
-        comp.state.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
-      }
-      comp.setState({
-        editorState: ChallengeStatus.RUNNING
-      });      
+      });     
       comp.state.worker?.postMessage({
-        cmd: "run",
-        code: data.code
+        cmd: data.mode,
+        code: data.code,
+        breakpoints: data.breakpoints,
       });
+
       comp.cls();
     }
     ChallengeController["save-code"](comp, { code: data.code });
-  },  
+  }, 
   test: (comp: Challenge, data: TestData) => {
     if (comp.props.typ === "parsons") {
       comp.setState({

@@ -52,7 +52,6 @@ type ChallengeState = {
   typInferred: ChallengeTypes;
   isFixedInput: boolean;
   fixedUserInput: string;
-  showRun: boolean;
 };
 
 type ChallengeProps = {
@@ -108,7 +107,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     typInferred: ChallengeTypes.TYP_PY,
     isFixedInput: false,
     fixedUserInput: "",
-    showRun: false
   };
 
   constructor(props: ChallengeProps) {
@@ -242,6 +240,16 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     this.fileReader.readAsText(file);
   };
 
+  handleDebug = (runMode: string) => {
+    ChallengeController["debug"](this, {
+      code: this.editorRef.current?.getValue(),
+      breakpoints: this.editorRef.current
+        ? this.editorRef.current.getBreakpoints()
+        : [],
+      mode: runMode
+    });
+  }
+
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
     return this.state.editorState === ChallengeStatus.LOADING
@@ -289,14 +297,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             return { editorFullScreen: !state.editorFullScreen };
           });
         }}
-        onDebug={() => {
-          ChallengeController["debug"](this, {
-            code: this.editorRef.current?.getValue(),
-            breakpoints: this.editorRef.current
-              ? this.editorRef.current.getBreakpoints()
-              : [],
-          });
-        }}       
+        onDebug={() => {this.handleDebug("debug")}}       
         onContinue={() => ChallengeController["continue"](this, {})}
         onStepInto={() => ChallengeController["step"](this)}
         onStop={() => {
@@ -414,23 +415,13 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         <CardContent>
           <MainControls
             guideMinimised={this.state.guideMinimised}
-            showRun={this.state.showRun}
             onGuideDisplayToggle={() =>
               this.setState((prevState, props) => {
                 return { guideMinimised: !prevState.guideMinimised };
               })
             }
-            onDebug={() => {
-              ChallengeController["debug"](this, {
-                code: this.editorRef.current?.getValue(),
-                breakpoints: this.editorRef.current
-                  ? this.editorRef.current.getBreakpoints()
-                  : [],
-              });
-            }}
-            onRun={() => {
-              ChallengeController["run"](this, {code: this.editorRef.current?.getValue()});
-            }} 
+            onDebug={() => this.handleDebug("debug")}
+            onRun={() => this.handleDebug("run")} 
             onSubmit={() => {
               ChallengeController["test"](this, {
                 code: this.editorRef.current?.getValue(),
@@ -486,9 +477,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
         title={this.props.title || this.props.bookNode?.name || ""}
         theme={this.state.theme}
         usingFixedInput={this.state.isFixedInput}
-        showRun={this.state.showRun}
-        onShowRunChange={(showRunValue) =>
-          this.setState({ showRun: showRunValue })}
         onThemeChange={this.handleThemeChange}
         onHelpOpen={(open) => this.setState({ helpOpen: open })}
         onResetCode={() => ChallengeController["reset-code"](this)}

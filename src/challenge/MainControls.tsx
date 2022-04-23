@@ -1,19 +1,16 @@
 import React from "react";
-
 import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
-
 import { DevicesFoldRounded } from "@mui/icons-material";
-
 import TestResultsIndicator from "../components/TestResultIndicator";
-
 import { TestResults } from "../models/Tests";
+import RunSplitButton from "../components/RunSplitButton";
+
 
 type MainControlsProps = {
   canDebug: boolean;
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
-  showRun: boolean;
   onDebug: () => void;
   onRun: () => void;
   onSubmit: () => void;
@@ -39,27 +36,12 @@ const MainControlsStack = (props: MainControlsProps) => {
         <DevicesFoldRounded />
       </IconButton>
       <Box>
-        <Button
-          variant="contained"
-          color="primary"
+        <RunSplitButton
+          onClickDebug={props.onDebug}
+          onClickRun={props.onRun}
           disabled={!props.canDebug}
-          onClick={props.onDebug}
-        >
-          Debug
-        </Button>
-      </Box>
-      {props.showRun && (
-      <Box>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={!props.canDebug}
-          onClick={props.onRun}
-        >
-          Run
-        </Button>
-      </Box>
-      )}       
+        />
+      </Box>      
       {props.canSubmit ? (
         <Box>
           <Button
@@ -85,27 +67,12 @@ const MainControlsGrid = (props: MainControlsProps) => {
       <Grid item style={{ flexGrow: 1 }}>
         <Stack spacing={2} direction="row">     
           <Box>
-            <Button
-              variant="contained"
-              color="primary"
+            <RunSplitButton
+              onClickDebug={props.onDebug}
+              onClickRun={props.onRun}
               disabled={!props.canDebug}
-              onClick={props.onDebug}
-            >
-              Debug
-            </Button>
-          </Box>
-          {props.showRun && (
-          <Box>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={!props.canDebug}
-              onClick={props.onRun}
-            >
-              Run (No Debug)
-            </Button>
-          </Box>
-          )}           
+            />
+          </Box>            
           {props.canSubmit ? (
             <Box>
               <Button
