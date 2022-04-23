@@ -102,7 +102,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
               disabled={!props.canDebug}
               onClick={props.onRun}
             >
-              Run (No Breaks)
+              Run (No Debug)
             </Button>
           </Box>
           )}           
