@@ -4,6 +4,7 @@ import { ThemeProvider } from "@mui/material/styles";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "../components/PyEditor";
+import JsonEditor, { JsonEditorHandle } from "../components/JsonEditor";
 import ParsonsEditor from "../components/ParsonsEditor";
 import Console from "../components/Console";
 import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
@@ -76,6 +77,7 @@ type ChallengeProps = {
 
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditorHandle>();
+  jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditor>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   tabbedViewRef = React.createRef<TabbedView>();
@@ -100,8 +102,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     }
   ],
   "comment3": "you can add multiple tests inside the square brackets",
-  typ: "py",
-  "comment4": "typ can be py or parsons or canvas",
+  "typ": "py",
+  "comment4": "typ can be py or parsons or canvas"
 }
 `;
 
@@ -321,8 +323,8 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   renderEditor() {
     if (this.state.isEditingGuide) {
       return (
-        <PyEditor
-          ref={this.editorRef}
+        <JsonEditor
+          ref={this.jsonEditorRef}
           starterCode={this.state.savedJSON || this.JSON_DEFAULT}
           theme={this.state.theme}
           onToggleFullScreen={() => {
@@ -330,11 +332,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               return { editorFullScreen: !state.editorFullScreen };
             });
           }}
-          canRun={false}
-          canPlaceBreakpoint={false}
-          isOnBreakPoint={false}
-          onBreakpointsUpdated={() => {}}
-          debugContext={this.state.debugContext}
         />
       );
     }

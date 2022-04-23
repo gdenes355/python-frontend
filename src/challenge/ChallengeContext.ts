@@ -28,10 +28,6 @@ type InputData = {
   input: string | null;
 };
 
-type ContinueData = {
-  step?: boolean | null;
-};
-
 type DebugFinishedData = {
   reason: number;
 };
@@ -315,11 +311,10 @@ class ChallengeContextClass {
         );
       }
     },
-    "reset-json": () => {
-      if (this.challenge.editorRef.current) {
-        this.challenge.editorRef.current.setValue(this.challenge.JSON_DEFAULT);
-      }
-    },
+    "reset-json": () =>
+      this.challenge.jsonEditorRef.current?.setValue(
+        this.challenge.JSON_DEFAULT
+      ),
     breakpt: (data: DebugContext) => {
       this.challenge.setState({
         debugContext: {
