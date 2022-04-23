@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useImperativeHandle, useRef } from "react";
 import type ParsonsWidget from "jsparsons";
 import "./ParsonsEditor.css";
 
@@ -31,90 +31,86 @@ const loadCss = (url: string) => {
   document.body.appendChild(tag);
 };
 
-type ParsonsEditorState = {
-  jsLoaded: boolean;
-  parsons: ParsonsWidget | null;
+type ParsonsEditorHandle = {
+  getValue: () => string;
+  runTests: () => TestResults;
+  reset: () => void;
 };
 
 type ParsonsEditorProps = {
   starterCode: string;
 };
 
-class ParsonsEditor extends React.Component<
-  ParsonsEditorProps,
-  ParsonsEditorState
-> {
-  state: ParsonsEditorState = {
-    jsLoaded: false,
-    parsons: null,
-  };
+const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
+  (props, ref) => {
+    const [parsons, setParsons] = useState<ParsonsWidget | null>(null);
+    const jsLoaded = useRef("unloaded");
 
-  getValue() {
-    let result = "";
-    if (this.state.parsons) {
-      let lines = this.state.parsons.normalizeIndents(
-        this.state.parsons.getModifiedCode(
-          "#ul-" + this.state.parsons.options.sortableId
-        )
-      );
+    const getValue = () => {
+      let result = "";
+      if (parsons) {
+        let lines = parsons.normalizeIndents(
+          parsons.getModifiedCode("#ul-" + parsons.options.sortableId)
+        );
 
-      for (let line of lines) {
-        result += "  ".repeat(line.indent) + line.code + "\n";
+        for (let line of lines) {
+          result += "  ".repeat(line.indent) + line.code + "\n";
+        }
       }
-    }
-    return result;
-  }
+      return result;
+    };
 
-  runTests(): TestResults {
-    let errors = this.state.parsons?.getFeedback() || "initialising";
-    if (errors.length === 0) {
-      return [{ outcome: true }];
-    } else {
-      return [{ outcome: false, err: errors }];
-    }
-  }
+    const runTests = () => {
+      let errors = parsons?.getFeedback() || "initialising";
+      if (errors.length === 0) {
+        return [{ outcome: true }];
+      } else {
+        return [{ outcome: false, err: errors }];
+      }
+    };
 
-  reset() {
-    this.state.parsons?.shuffleLines();
-  }
+    const reset = () => {
+      parsons?.shuffleLines();
+    };
 
-  componentDidMount() {
-    // iffe to load all js dependencies sequentially
-    (async () => {
-      loadCss("js-parsons/parsons.css");
-      loadCss("js-parsons/lib/prettify.css");
-      await loadJS("js-parsons/lib/prettify.js");
-      await loadJS("js-parsons/lib/jquery.min.js");
-      await loadJS("js-parsons/lib/jquery-ui.min.js");
-      await loadJS("js-parsons/lib/jquery.ui.touch-punch.min.js");
-      await loadJS("js-parsons/lib/underscore-min.js");
-      await loadJS("js-parsons/lib/lis.js");
-      await loadJS("js-parsons/parsons.js");
-      this.setState({ jsLoaded: true });
-    })();
-  }
+    useImperativeHandle(ref, () => ({ getValue, runTests, reset }));
 
-  componentDidUpdate(
-    prevProps: ParsonsEditorProps,
-    prevState: ParsonsEditorState
-  ) {
-    if (!prevState.jsLoaded && this.state.jsLoaded) {
-      // @ts-ignore
-      let parsons = new ParsonsWidget({
-        sortableId: "sortable",
-        trashId: "sortableTrash",
-        max_wrong_lines: 1,
-      });
-      parsons.init(this.props.starterCode);
+    useEffect(() => {
+      if (jsLoaded.current !== "unloaded") {
+        return;
+      }
+
+      jsLoaded.current = "loading";
+      // iffe to load all js dependencies sequentially
+      (async () => {
+        loadCss("js-parsons/parsons.css");
+        loadCss("js-parsons/lib/prettify.css");
+        await loadJS("js-parsons/lib/prettify.js");
+        await loadJS("js-parsons/lib/jquery.min.js");
+        await loadJS("js-parsons/lib/jquery-ui.min.js");
+        await loadJS("js-parsons/lib/jquery.ui.touch-punch.min.js");
+        await loadJS("js-parsons/lib/underscore-min.js");
+        await loadJS("js-parsons/lib/lis.js");
+        await loadJS("js-parsons/parsons.js");
+        jsLoaded.current = "loaded";
+        // @ts-ignore
+        let newParsons = new ParsonsWidget({
+          sortableId: "sortable",
+          trashId: "sortableTrash",
+          max_wrong_lines: 1,
+        });
+        setParsons(newParsons);
+      })();
+    });
+
+    useEffect(() => {
+      if (jsLoaded.current !== "loaded" || !parsons) {
+        return;
+      }
+      parsons.init(props.starterCode);
       parsons.shuffleLines();
-      this.setState({ parsons });
-    }
-    if (prevProps.starterCode !== this.props.starterCode) {
-      this.state.parsons?.init(this.props.starterCode);
-      this.state.parsons?.shuffleLines();
-    }
-  }
-  render() {
+    }, [parsons, props.starterCode]);
+
     return (
       <div>
         <div id="sortableTrash" className="sortable-code"></div>
@@ -122,6 +118,7 @@ class ParsonsEditor extends React.Component<
       </div>
     );
   }
-}
+);
 
 export default ParsonsEditor;
+export { ParsonsEditorHandle };

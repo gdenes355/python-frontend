@@ -5,7 +5,9 @@ import { ThemeProvider } from "@mui/material/styles";
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "../components/PyEditor";
 import JsonEditor, { JsonEditorHandle } from "../components/JsonEditor";
-import ParsonsEditor from "../components/ParsonsEditor";
+import ParsonsEditor, {
+  ParsonsEditorHandle,
+} from "../components/ParsonsEditor";
 import Console from "../components/Console";
 import CanvasDisplay from "../components/CanvasDisplay/CanvasDisplay";
 import Guide from "../components/Guide";
@@ -78,7 +80,7 @@ type ChallengeProps = {
 class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
-  parsonsEditorRef = React.createRef<ParsonsEditor>();
+  parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplay>();
   tabbedViewRef = React.createRef<TabbedView>();
   fileReader = new FileReader();
@@ -169,7 +171,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       let savedCode = localStorage.getItem(
         "code-" + encodeURIComponent(this.props.uid)
       );
-      if (savedCode) {
+      if (this.props.typ !== "parsons" && savedCode) {
         this.setState({ savedCode: savedCode });
       }
       let savedJSON = localStorage.getItem(
