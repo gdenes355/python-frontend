@@ -9,10 +9,10 @@ import Editor, { OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import "./PyEditor.css";
 
-import DebugContext from "../models/DebugContext";
+import DebugContext from "../../../models/DebugContext";
 
-import ChallengeContext from "../challenge/ChallengeContext";
-import VsThemeContext from "../themes/VsThemeContext";
+import ChallengeContext from "../../ChallengeContext";
+import VsThemeContext from "../../../themes/VsThemeContext";
 
 type PyEditorProps = {
   canRun: boolean;

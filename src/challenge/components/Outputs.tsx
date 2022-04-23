@@ -2,11 +2,11 @@ import React, { useContext, useRef, useImperativeHandle } from "react";
 import { Box } from "@mui/material";
 import { ThemeProvider } from "@mui/material/styles";
 
-import TabbedView from "../components/TabbedView";
-import pageTheme, { darkTheme } from "../themes/pageTheme";
-import VsThemeContext from "../themes/VsThemeContext";
+import TabbedView from "../../components/TabbedView";
+import pageTheme, { darkTheme } from "../../themes/pageTheme";
+import VsThemeContext from "../../themes/VsThemeContext";
 
-import PaneType from "../models/PaneType";
+import PaneType from "../../models/PaneType";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;

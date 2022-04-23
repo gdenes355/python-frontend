@@ -2,20 +2,23 @@ import React from "react";
 import { Box, Card, CardContent, TextField } from "@mui/material";
 
 import DebugPane from "../components/DebugPane";
-import PyEditor, { PyEditorHandle } from "../components/PyEditor";
-import JsonEditor, { JsonEditorHandle } from "../components/JsonEditor";
+import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
+import JsonEditor, { JsonEditorHandle } from "./components/Editors/JsonEditor";
 import ParsonsEditor, {
   ParsonsEditorHandle,
-} from "../components/ParsonsEditor";
-import ChallengeConsole from "./ChallengeConsole";
+} from "./components/Editors/ParsonsEditor";
+import ChallengeConsole from "./components/ChallengeConsole";
 import CanvasDisplay, {
   CanvasDisplayHandle,
-} from "../components/CanvasDisplay/CanvasDisplay";
+} from "./components/CanvasDisplay/CanvasDisplay";
+import FixedInputField, {
+  FixedInputFieldHandle,
+} from "./components/FixedInputField";
 import Guide from "../components/Guide";
-import MainControls from "./MainControls";
-import BookControlFabs from "../components/BookControlFabs";
+import MainControls from "./components/MainControls";
+import BookControlFabs from "../book/components/BookControlFabs";
 import { Allotment } from "allotment";
-import HeaderBar from "./HeaderBar";
+import HeaderBar from "./components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
@@ -23,8 +26,8 @@ import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import IFetcher from "../utils/IFetcher";
-import Help from "./Help";
-import Outputs, { OutputsHandle } from "./Outputs";
+import Help from "./components/Help";
+import Outputs, { OutputsHandle } from "./components/Outputs";
 
 import ChallengeTypes from "../models/ChallengeTypes";
 
@@ -48,7 +51,6 @@ type ChallengeState = {
   typ: ChallengeTypes; // use this in favour of the props.typ
   isFixedInput: boolean;
   isEditingGuide: boolean;
-  fixedUserInput: string;
 };
 
 type ChallengeProps = {
@@ -73,6 +75,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
   jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
 
@@ -127,22 +130,15 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     typ: ChallengeTypes.TYP_PY,
     isFixedInput: false,
     isEditingGuide: false,
-    fixedUserInput: "",
   };
 
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
-    this.print.bind(this);
     this.handleUpload.bind(this);
     this.handleEditingChange.bind(this);
     this.handleFileRead.bind(this);
-  }
-
-  print(text: string) {
-    this.currentConsoleText += text;
-    this.printCallback();
   }
 
   componentDidMount() {
@@ -343,27 +339,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
     );
   }
 
-  renderFixedInput = () => {
-    return (
-      <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-        <Box sx={{ width: "100%", height: "100%" }}>
-          <TextField
-            placeholder="add fixed inputs here..."
-            multiline
-            margin="dense"
-            value={this.state.fixedUserInput}
-            onChange={(e) => {
-              this.setState({ fixedUserInput: e.target.value });
-            }}
-            variant="standard"
-            InputProps={{ disableUnderline: true }}
-            sx={{ width: "100%", height: "100%" }}
-          />
-        </Box>
-      </Box>
-    );
-  };
-
   renderMainControls = () => {
     if (this.state.helpOpen && !this.state.guideMinimised) {
       return;
@@ -441,13 +416,6 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
               showEditTools={this.props.showEditTools}
               editingGuide={this.state.isEditingGuide}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
-              onResetCode={() => {
-                if (this.state.isEditingGuide) {
-                  this.chContext.actions["reset-json"]();
-                } else {
-                  this.chContext.actions["reset-code"]();
-                }
-              }}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
               onUpload={this.handleUpload}
@@ -489,9 +457,9 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
                         />
                       }
                       fixedInput={
-                        this.state.isFixedInput
-                          ? this.renderFixedInput()
-                          : undefined
+                        this.state.isFixedInput ? (
+                          <FixedInputField ref={this.fixedInputFieldRef} />
+                        ) : undefined
                       }
                       canvas={<CanvasDisplay ref={this.canvasDisplayRef} />}
                     />

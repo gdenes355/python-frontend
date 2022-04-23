@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
-import Console from "../components/Console";
-import ChallengeContext from "./ChallengeContext";
+import Console from "../../components/Console";
+import ChallengeContext from "../ChallengeContext";
 
 const ChallengeConsole = (props: {
   content: string;

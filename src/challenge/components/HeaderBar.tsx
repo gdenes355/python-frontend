@@ -18,10 +18,11 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import FolderZipIcon from "@mui/icons-material/FolderZip";
-import Menu from "../components/Menu";
-import FileUploadControl from "../components/FileUploadControl";
+import Menu from "../../components/Menu";
+import FileUploadControl from "../../components/FileUploadControl";
 
-import VsThemeContext from "../themes/VsThemeContext";
+import ChallengeContext from "../ChallengeContext";
+import VsThemeContext from "../../themes/VsThemeContext";
 
 type HeaderBarProps = {
   title?: string;
@@ -33,7 +34,6 @@ type HeaderBarProps = {
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
-  onResetCode: () => void;
   onUpload: (file: File) => void;
   onDownload: () => void;
   onAddToExport: () => void;
@@ -42,6 +42,7 @@ type HeaderBarProps = {
 
 const HeaderBar = (props: HeaderBarProps) => {
   const themeContext = useContext(VsThemeContext);
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
@@ -89,7 +90,7 @@ const HeaderBar = (props: HeaderBarProps) => {
             variant="outlined"
             color="error"
             disabled={!props.canReset}
-            onClick={props.onResetCode}
+            onClick={() => challengeContext?.actions["reset-code"]}
           >
             Reset
           </Button>

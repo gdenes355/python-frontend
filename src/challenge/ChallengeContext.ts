@@ -8,7 +8,6 @@ import { keyToVMCode } from "../utils/keyTools";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import PaneType from "../models/PaneType";
-import { time } from "console";
 
 type WorkerResponse = {
   cmd: string;
@@ -63,8 +62,12 @@ class ChallengeContextClass {
       this.challenge.setState({ editorState: ChallengeStatus.READY }),
     print: (data: PrintData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        this.challenge.print(data.msg);
+        this.actions["print-console"](data.msg);
       }
+    },
+    "print-console": (text: string) => {
+      this.challenge.currentConsoleText += text;
+      this.challenge.printCallback();
     },
     draw: (data: DrawData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
@@ -120,7 +123,7 @@ class ChallengeContextClass {
       } catch (e) {
         console.log(e);
       }
-      this.challenge.print(data.input + "\n");
+      this.actions["print-console"](data.input + "\n");
 
       this.challenge.setState({
         editorState: ChallengeStatus.RUNNING,
@@ -163,7 +166,7 @@ class ChallengeContextClass {
             : state.testResults,
         };
       });
-      this.challenge.print("\n" + msg + "\n");
+      this.actions["print-console"]("\n" + msg + "\n");
     },
     kill: () =>
       this.actions["restart-worker"]({
@@ -225,7 +228,7 @@ class ChallengeContextClass {
       this.challenge.setState({
         editorState: ChallengeStatus.RESTARTING_WORKER,
       });
-      this.challenge.print(msg);
+      this.actions["print-console"](msg);
     },
     debug: () => {
       if (this.challenge.state.typ === "parsons") {
@@ -243,7 +246,9 @@ class ChallengeContextClass {
     },
     debugpy: (code: string, breakpoints: number[]) => {
       this.challenge.currentFixedUserInput =
-        this.challenge.state.fixedUserInput.split("\n") || [""];
+        this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
+          "",
+        ];
       this.challenge.outputsRef?.current?.focusPane(PaneType.CONSOLE);
 
       if (this.challenge.state.editorState === ChallengeStatus.READY) {

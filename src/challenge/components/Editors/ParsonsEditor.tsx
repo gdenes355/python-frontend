@@ -2,7 +2,7 @@ import React, { useEffect, useState, useImperativeHandle, useRef } from "react";
 import type ParsonsWidget from "jsparsons";
 import "./ParsonsEditor.css";
 
-import { TestResults } from "../models/Tests";
+import { TestResults } from "../../../models/Tests";
 
 const loadJS = (url: string) =>
   new Promise<void>((r) => {

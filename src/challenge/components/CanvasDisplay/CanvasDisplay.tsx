@@ -4,7 +4,7 @@ import RealTurtle from "real-turtle";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, initialiseTurtle } from "./TurtleController";
 
-import ChallengeContext from "../../challenge/ChallengeContext";
+import ChallengeContext from "../../ChallengeContext";
 
 type CanvasDisplayHandle = {
   turtleReset: (mode: "standard" | "logo") => void;
