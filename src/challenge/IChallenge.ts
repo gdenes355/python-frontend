@@ -9,6 +9,7 @@ import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
 import IFetcher from "../utils/IFetcher";
+import DebugContext from "../models/DebugContext";
 
 type IChallengeProps = {
   uid: string;
@@ -17,6 +18,7 @@ type IChallengeProps = {
   guidePath: string;
   codePath: string;
   fetcher: IFetcher;
+  typ?: "py" | "parsons" | "canvas";
 };
 
 type IChallengeState = {
@@ -24,6 +26,9 @@ type IChallengeState = {
   editorState: ChallengeStatus;
   typ: ChallengeTypes;
   usesFixedInput: boolean;
+  guideMd: string;
+  debugContext: DebugContext;
+  consoleText: string;
 };
 
 interface IChallenge {
@@ -49,3 +54,4 @@ interface IChallenge {
 }
 
 export default IChallenge;
+export { IChallengeProps, IChallengeState };

@@ -140,26 +140,17 @@ class Challenge
     super(props);
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
-    this.handleUpload.bind(this);
     this.handleEditingChange.bind(this);
-    this.handleFileRead.bind(this);
   }
 
   componentDidMount() {
     console.log("crossOriginIsolated", window.crossOriginIsolated);
-    if (this.props?.uid) {
-      let savedCode = localStorage.getItem(
-        "code-" + encodeURIComponent(this.props.uid)
-      );
-      if (this.props.typ !== "parsons" && savedCode) {
-        this.setState({ savedCode: savedCode });
-      }
-      let savedJSON = localStorage.getItem(
-        "json-" + encodeURIComponent(this.props.uid)
-      );
-      if (savedJSON) {
-        this.setState({ savedJSON: savedJSON });
-      }
+    this.chContext.actions["load-saved-code"]();
+    let savedJSON = localStorage.getItem(
+      "json-" + encodeURIComponent(this.props.uid)
+    );
+    if (savedJSON) {
+      this.setState({ savedJSON: savedJSON });
     }
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
@@ -182,18 +173,7 @@ class Challenge
         typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
       });
       this.chContext.actions["restart-worker"]({});
-      if (this.props?.uid) {
-        let savedCode = localStorage.getItem(
-          "code-" + encodeURIComponent(this.props.uid)
-        );
-        if (savedCode) {
-          this.setState({ savedCode: savedCode });
-        } else {
-          this.setState({ savedCode: null });
-        }
-      } else {
-        this.setState({ savedCode: null });
-      }
+      this.chContext.actions["load-saved-code"]();
       this.setState({ testResults: [], testsPassing: null });
     }
     if (
@@ -220,18 +200,6 @@ class Challenge
       }
     }
   }
-
-  handleFileRead = (e: ProgressEvent<FileReader>) => {
-    if (this.fileReader.result) {
-      this.editorRef.current?.setValue(this.fileReader.result.toString());
-    }
-  };
-
-  handleUpload = (file: File) => {
-    this.fileReader = new FileReader();
-    this.fileReader.onloadend = this.handleFileRead;
-    this.fileReader.readAsText(file);
-  };
 
   handleEditingChange = (editingGuide: boolean) => {
     if (editingGuide) {
@@ -399,8 +367,6 @@ class Challenge
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
-              onUpload={this.handleUpload}
-              onDownload={() => this.editorRef.current?.download()}
               onBookDownload={() =>
                 this.chContext.actions["export-book"]({
                   contents: this.bookExports,
@@ -499,9 +465,7 @@ class Challenge
                 if (this.state.isEditingGuide) {
                   this.handleEditingChange(false);
                 }
-                if (this.props.onRequestPreviousChallenge) {
-                  this.props.onRequestPreviousChallenge();
-                }
+                this.props.onRequestPreviousChallenge?.();
               }}
               onNavigateToNextPage={() => {
                 if (this.state.isEditingGuide) {
@@ -515,9 +479,7 @@ class Challenge
                 if (this.state.isEditingGuide) {
                   this.handleEditingChange(false);
                 }
-                if (this.props.openBookDrawer) {
-                  this.props.openBookDrawer(true);
-                }
+                this.props.openBookDrawer?.(true);
               }}
             />
           </Box>

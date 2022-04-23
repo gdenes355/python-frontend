@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Card, CardContent } from "@mui/material";
 
-import IChallenge from "./IChallenge";
+import IChallenge, { IChallengeState, IChallengeProps } from "./IChallenge";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -24,9 +24,7 @@ import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
-import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
-import IFetcher from "../utils/IFetcher";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 
@@ -36,32 +34,19 @@ import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
 
-type ChallengeState = {
-  starterCode: string | null;
+type ChallengeState = IChallengeState & {
   savedCode: string | null;
-  guideMd: string;
-  debugContext: DebugContext;
   editorFullScreen: boolean;
-  consoleText: string;
-  editorState: ChallengeStatus;
   testResults: TestResults;
   testsPassing: boolean | null;
   helpOpen: boolean;
   guideMinimised: boolean;
-  typ: ChallengeTypes; // use this in favour of the props.typ
-  usesFixedInput: boolean;
 };
 
-type ChallengeProps = {
-  uid: string;
-  guidePath: string;
-  codePath: string;
+type ChallengeProps = IChallengeProps & {
   bookNode?: BookNodeModel;
   title?: string;
-  typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
-  isExample?: boolean;
-  fetcher: IFetcher;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -115,20 +100,11 @@ class Challenge
     super(props);
     this.getVisibilityWithHack.bind(this);
     this.onBreakpointsUpdated.bind(this);
-    this.handleUpload.bind(this);
-    this.handleFileRead.bind(this);
   }
 
   componentDidMount() {
     console.log("crossOriginIsolated", window.crossOriginIsolated);
-    if (this.props?.uid) {
-      let savedCode = localStorage.getItem(
-        "code-" + encodeURIComponent(this.props.uid)
-      );
-      if (this.props.typ !== "parsons" && savedCode) {
-        this.setState({ savedCode: savedCode });
-      }
-    }
+    this.chContext.actions["load-saved-code"]();
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
     navigator.serviceWorker.register("pysw.js").then(function (reg) {
@@ -150,18 +126,7 @@ class Challenge
         typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
       });
       this.chContext.actions["restart-worker"]({});
-      if (this.props?.uid) {
-        let savedCode = localStorage.getItem(
-          "code-" + encodeURIComponent(this.props.uid)
-        );
-        if (savedCode) {
-          this.setState({ savedCode: savedCode });
-        } else {
-          this.setState({ savedCode: null });
-        }
-      } else {
-        this.setState({ savedCode: null });
-      }
+      this.chContext.actions["load-saved-code"]();
       this.setState({ testResults: [], testsPassing: null });
     }
     if (
@@ -188,18 +153,6 @@ class Challenge
       }
     }
   }
-
-  handleFileRead = (e: ProgressEvent<FileReader>) => {
-    if (this.fileReader.result) {
-      this.editorRef.current?.setValue(this.fileReader.result.toString());
-    }
-  };
-
-  handleUpload = (file: File) => {
-    this.fileReader = new FileReader();
-    this.fileReader.onloadend = this.handleFileRead;
-    this.fileReader.readAsText(file);
-  };
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -314,8 +267,6 @@ class Challenge
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
-              onUpload={this.handleUpload}
-              onDownload={() => this.editorRef.current?.download()}
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
               }
@@ -403,12 +354,8 @@ class Challenge
               </Allotment.Pane>
             </Allotment>
             <BookControlFabs
-              onNavigateToPrevPage={() =>
-                this.props.onRequestPreviousChallenge?.()
-              }
-              onNavigateToNextPage={() => {
-                this.props.onRequestNextChallenge?.();
-              }}
+              onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+              onNavigateToNextPage={this.props.onRequestNextChallenge}
               onOpenMenu={() => {
                 this.props.openBookDrawer?.(true);
               }}

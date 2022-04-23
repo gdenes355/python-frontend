@@ -57,6 +57,7 @@ class ChallengeContextClass {
   }
 
   private challenge: IChallenge;
+  private fileReader: FileReader | null = null;
 
   public actions = {
     "init-done": () =>
@@ -414,6 +415,34 @@ class ChallengeContextClass {
           return response.text();
         })
         .then((text) => this.challenge.setState({ starterCode: text }));
+    },
+    "load-saved-code": () => {
+      let savedCode = localStorage.getItem(
+        "code-" + encodeURIComponent(this.challenge.props.uid)
+      );
+      if (this.challenge.props.typ !== "parsons" && savedCode) {
+        if (savedCode) {
+          this.challenge.setState({ savedCode: savedCode });
+        } else {
+          this.challenge.setState({ savedCode: null });
+        }
+      }
+    },
+    "handle-file-read": (e: ProgressEvent<FileReader>) => {
+      if (this.fileReader?.result) {
+        this.challenge.editorRef.current?.setValue(
+          this.fileReader.result.toString()
+        );
+        this.fileReader = null;
+      }
+    },
+    "handle-code-upload": (file: File) => {
+      this.fileReader = new FileReader();
+      this.fileReader.onloadend = this.actions["handle-file-read"];
+      this.fileReader.readAsText(file);
+    },
+    "download-code": () => {
+      this.challenge?.editorRef.current?.download();
     },
   };
 }

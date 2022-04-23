@@ -34,8 +34,6 @@ type HeaderBarProps = {
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
-  onUpload: (file: File) => void;
-  onDownload: () => void;
   onAddToExport?: () => void;
   onBookDownload?: () => void;
 };
@@ -77,10 +75,14 @@ const HeaderBar = (props: HeaderBarProps) => {
           <div></div>
         </Grid>
         <Grid item>
-          <FileUploadControl onUpload={props.onUpload} />
+          <FileUploadControl
+            onUpload={challengeContext?.actions["handle-code-upload"]}
+          />
         </Grid>
         <Grid item>
-          <IconButton onClick={props.onDownload}>
+          <IconButton
+            onClick={() => challengeContext?.actions["download-code"]()}
+          >
             <FileDownload />
           </IconButton>
         </Grid>
@@ -90,7 +92,7 @@ const HeaderBar = (props: HeaderBarProps) => {
             variant="outlined"
             color="error"
             disabled={!props.canReset}
-            onClick={() => challengeContext?.actions["reset-code"]}
+            onClick={() => challengeContext?.actions["reset-code"]()}
           >
             Reset
           </Button>
