@@ -1,5 +1,4 @@
 import React, { createContext } from "react";
-import Challenge from "./Challenge";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
