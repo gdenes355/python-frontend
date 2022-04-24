@@ -326,6 +326,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
             force: true,
           });
         }}
+        theme={this.state.theme}
       />
     );
   };
@@ -591,7 +592,7 @@ class Challenge extends React.Component<ChallengeProps, ChallengeState> {
       return (
         <Box sx={{ width: "100%", height: "100%" }}>
           <Box sx={{ p: 2 }}>{this.renderGuide()}</Box>
-          <Box sx={{ height: "600px" }}>{this.renderEditor()}</Box>
+          <Box className={this.state.theme} sx={{ height: "600px" }}>{this.renderEditor()}</Box>
           {this.renderMainControls()}
           <Box sx={{ maxHeight: "400px", overflowY: "auto" }}>
             {this.renderOutput()}

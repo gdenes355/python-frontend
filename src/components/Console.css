@@ -1,14 +1,22 @@
 .console {
   height: calc(100% - 10px);
   width: calc(100% - 10px);
-  background-color: black;
   overflow: auto;
   font-size: 15px;
   padding: 5px;
   font-family: Consolas, Monaco, Lucida Console, Liberation Mono,
     DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
   border: 0px solid black;
+}
+
+.theme-vs-dark {
+  background-color: black;
   color: white;
+}
+
+.theme-vs-light {
+  background-color: white;
+  color: black;
 }
 
 .console .printed-span {

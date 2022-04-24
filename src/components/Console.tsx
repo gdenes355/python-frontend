@@ -7,6 +7,7 @@ type ConsoleProps = {
   content: string;
   onInput: (input: string) => void;
   onInterrupt: () => void;
+  theme: string;
 };
 
 // max character count in the console
@@ -53,7 +54,7 @@ const Console = (props: ConsoleProps) => {
 
   return (
     <Box sx={{ width: "100%", height: "100%", bgcolor: "black" }}>
-      <div className="console" ref={containerEl} onClick={onClick}>
+      <div className={'console theme-' + props.theme} ref={containerEl} onClick={onClick}>
         <span className="printed-span">
           {props.content.length > MAX_LENGTH
             ? props.content.replace("\n", "\r\n").slice(0, MAX_LENGTH)
