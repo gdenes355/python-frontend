@@ -5,8 +5,6 @@ import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
 import PaneType from "../models/PaneType";
 import IChallenge, { IChallengeState } from "./IChallenge";
 
@@ -47,12 +45,8 @@ type SaveCodeData = {
   code: string | null;
 };
 
-type ExportBookData = {
-  contents: string[][] | null;
-};
-
 class ChallengeContextClass {
-  constructor(challenge: Challenge) {
+  constructor(challenge: IChallenge) {
     this.challenge = challenge;
   }
 
@@ -370,37 +364,6 @@ class ChallengeContextClass {
         if (code && code > 0 && code < 256) {
           this.challenge.keyDownBuffer[code] = 0;
         }
-      }
-    },
-    "export-book": (data: ExportBookData) => {
-      if (data.contents) {
-        let childrenObjects: Object[] = [];
-        let book_json = {
-          name: "book export",
-          id: 0,
-          children: childrenObjects,
-        };
-        let children_json = [];
-        var zip = new JSZip();
-
-        for (const [i, challenge] of data.contents.entries()) {
-          zip.file(`c${i}.py`, challenge[1]);
-          zip.file(`c${i}.md`, challenge[0]);
-          try {
-            const challenge_json = JSON.parse(challenge[2]);
-            children_json.push(challenge_json);
-          } catch {
-            console.log("invalid json for this challenge");
-            console.log(challenge[2]);
-          }
-        }
-
-        book_json["children"] = children_json;
-        zip.file(`book.json`, JSON.stringify(book_json), { binary: false });
-
-        zip.generateAsync({ type: "blob" }).then(function (blob) {
-          saveAs(blob, "challenges.zip");
-        });
       }
     },
     "fetch-guide": () => {

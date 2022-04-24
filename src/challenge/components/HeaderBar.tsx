@@ -16,7 +16,6 @@ import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
-import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import FolderZipIcon from "@mui/icons-material/FolderZip";
 import Menu from "../../components/Menu";
 import FileUploadControl from "../../components/FileUploadControl";
@@ -34,7 +33,6 @@ type HeaderBarProps = {
   onHelpOpen: (open: boolean) => void;
   canReset: boolean;
   canDebug: boolean;
-  onAddToExport?: () => void;
   onBookDownload?: () => void;
 };
 
@@ -74,19 +72,36 @@ const HeaderBar = (props: HeaderBarProps) => {
         >
           <div></div>
         </Grid>
-        <Grid item>
-          <FileUploadControl
-            onUpload={challengeContext?.actions["handle-code-upload"]}
-          />
-        </Grid>
-        <Grid item>
-          <IconButton
-            onClick={() => challengeContext?.actions["download-code"]()}
-          >
-            <FileDownload />
-          </IconButton>
-        </Grid>
-
+        {props.showEditTools
+          ? [
+              <Grid item>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={props.editingGuide === true}
+                      onChange={() => {
+                        props.onEditingGuideChange?.(!props.editingGuide);
+                      }}
+                    />
+                  }
+                  label="Edit guide"
+                />
+              </Grid>,
+            ]
+          : [
+              <Grid item>
+                <FileUploadControl
+                  onUpload={challengeContext?.actions["handle-code-upload"]}
+                />
+              </Grid>,
+              <Grid item>
+                <IconButton
+                  onClick={() => challengeContext?.actions["download-code"]()}
+                >
+                  <FileDownload />
+                </IconButton>
+              </Grid>,
+            ]}
         <Grid item>
           <Button
             variant="outlined"
@@ -137,25 +152,6 @@ const HeaderBar = (props: HeaderBarProps) => {
             </MenuItem>
             {props.showEditTools
               ? [
-                  <MenuItem>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={props.editingGuide === true}
-                          onChange={() => {
-                            props.onEditingGuideChange?.(!props.editingGuide);
-                          }}
-                        />
-                      }
-                      label="Edit challenge"
-                    />
-                  </MenuItem>,
-                  <MenuItem onClick={() => props.onAddToExport?.()}>
-                    <ListItemIcon>
-                      <ArrowCircleDownIcon />
-                    </ListItemIcon>
-                    Add to export
-                  </MenuItem>,
                   <MenuItem onClick={() => props.onBookDownload?.()}>
                     <ListItemIcon>
                       <FolderZipIcon />
@@ -163,7 +159,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                     Export book
                   </MenuItem>,
                 ]
-              : null}
+              : undefined}
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

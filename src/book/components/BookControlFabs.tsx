@@ -4,64 +4,80 @@ import { Box, Fab } from "@mui/material";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ListIcon from "@mui/icons-material/List";
+import SaveIcon from "@mui/icons-material/Save";
 
 type BookControlFabsProps = {
   onNavigateToPrevPage?: () => void;
   onNavigateToNextPage?: () => void;
   onOpenMenu?: () => void;
+  onSave?: () => void;
 };
 
 const BookControlFabs = (props: BookControlFabsProps) => {
-  if (
-    props.onNavigateToNextPage &&
-    props.onNavigateToPrevPage &&
-    props.onOpenMenu
-  ) {
-    return (
-      <Box
-        sx={{
-          top: "auto",
-          left: "auto",
-          position: "absolute",
-          right: "20px",
-          bottom: "20px",
-        }}
+  let btns = [];
+  if (props.onSave) {
+    btns.push(
+      <Fab
+        sx={{ m: 1 }}
+        size="small"
+        onClick={() => props.onSave?.()}
+        color="primary"
       >
-        <Fab
-          size="small"
-          sx={{ m: 1 }}
-          onClick={() =>
-            props.onNavigateToPrevPage
-              ? props.onNavigateToPrevPage()
-              : undefined
-          }
-        >
-          <NavigateBeforeIcon />
-        </Fab>
-        <Fab
-          size="small"
-          sx={{ m: 1 }}
-          onClick={() =>
-            props.onNavigateToNextPage
-              ? props.onNavigateToNextPage()
-              : undefined
-          }
-        >
-          <NavigateNextIcon />
-        </Fab>
-        <Fab
-          size="small"
-          sx={{ m: 1 }}
-          color="primary"
-          onClick={() => (props.onOpenMenu ? props.onOpenMenu() : undefined)}
-        >
-          <ListIcon />
-        </Fab>
-      </Box>
+        <SaveIcon />
+      </Fab>
     );
-  } else {
-    return <div></div>;
   }
+
+  if (props.onNavigateToPrevPage) {
+    btns.push(
+      <Fab
+        size="small"
+        sx={{ m: 1 }}
+        onClick={() => props.onNavigateToPrevPage?.()}
+      >
+        <NavigateBeforeIcon />
+      </Fab>
+    );
+  }
+
+  if (props.onNavigateToNextPage) {
+    btns.push(
+      <Fab
+        size="small"
+        sx={{ m: 1 }}
+        onClick={() => props.onNavigateToNextPage?.()}
+      >
+        <NavigateNextIcon />
+      </Fab>
+    );
+  }
+
+  if (props.onOpenMenu) {
+    btns.push(
+      <Fab
+        size="small"
+        sx={{ m: 1 }}
+        color="primary"
+        onClick={() => props.onOpenMenu?.()}
+      >
+        <ListIcon />
+      </Fab>
+    );
+  }
+
+  return (
+    <Box
+      sx={{
+        top: "auto",
+        left: "auto",
+        position: "absolute",
+        right: "20px",
+        bottom: "20px",
+      }}
+    >
+      {btns}
+    </Box>
+  );
 };
 
 export default BookControlFabs;

@@ -16,6 +16,7 @@ type OutputsProps = {
   console: React.ReactNode;
   canvas: React.ReactNode;
   fixedInput: React.ReactNode;
+  json?: React.ReactNode;
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
@@ -46,6 +47,15 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
       content: props.canvas,
       show: true,
       typ: PaneType.CANVAS,
+    });
+  }
+
+  if (props.json) {
+    panes.push({
+      label: "Edit challenge",
+      content: props.json,
+      show: true,
+      typ: PaneType.JSON_EDITOR,
     });
   }
 

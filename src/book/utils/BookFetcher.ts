@@ -3,14 +3,9 @@ import JSZip from "jszip";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
-import IFetcher from "../../utils/IFetcher";
+import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 
-type BookFetchResult = {
-  book: BookNodeModel;
-  allResults: AllTestResults;
-};
-
-class BookFetcher implements IFetcher {
+class BookFetcher implements IBookFetcher {
   constructor(
     bookPath: string,
     zipPath?: string | null,
@@ -53,8 +48,8 @@ class BookFetcher implements IFetcher {
     }
   }
 
-  public fetchBook(): Promise<BookFetchResult> {
-    return new Promise<BookFetchResult>((r, e) => {
+  public fetchBook(): Promise<IBookFetchResult> {
+    return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
       this.fetch(this.bookPathAbsolute)
         .then((response) => response.json())

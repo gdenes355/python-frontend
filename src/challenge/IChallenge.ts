@@ -8,8 +8,8 @@ import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
-import IFetcher from "../utils/IFetcher";
 import DebugContext from "../models/DebugContext";
+import IBookFetcher from "../book/utils/IBookFetcher";
 
 type IChallengeProps = {
   uid: string;
@@ -17,7 +17,7 @@ type IChallengeProps = {
   isExample?: boolean;
   guidePath: string;
   codePath: string;
-  fetcher: IFetcher;
+  fetcher: IBookFetcher;
   typ?: "py" | "parsons" | "canvas";
 };
 

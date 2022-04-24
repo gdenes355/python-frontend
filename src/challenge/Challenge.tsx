@@ -287,7 +287,11 @@ class Challenge
                           <FixedInputField ref={this.fixedInputFieldRef} />
                         ) : undefined
                       }
-                      canvas={<CanvasDisplay ref={this.canvasDisplayRef} />}
+                      canvas={
+                        this.state.typ === ChallengeTypes.TYP_CANVAS ? (
+                          <CanvasDisplay ref={this.canvasDisplayRef} />
+                        ) : undefined
+                      }
                     />
                   </Allotment.Pane>
                 </Allotment>

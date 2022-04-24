@@ -1,10 +1,10 @@
 import BookNodeModel from "../../models/BookNodeModel";
 import JSZip from "jszip";
 import { absolutisePath } from "../../utils/pathTools";
-import BookFetcher from "./BookFetcher";
+import IBookFetcher from "./IBookFetcher";
 
 export default class BookZipper {
-  constructor(fetcher: BookFetcher) {
+  constructor(fetcher: IBookFetcher) {
     this.fetcher = fetcher;
   }
 
@@ -15,7 +15,7 @@ export default class BookZipper {
   }
 
   private zip = new JSZip();
-  private fetcher: BookFetcher;
+  private fetcher: IBookFetcher;
 
   private async addNode(node: BookNodeModel) {
     if (node.guide) {
