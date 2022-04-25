@@ -1,41 +1,39 @@
-import * as React from 'react';
-import Button from '@mui/material/Button';
-import ButtonGroup from '@mui/material/ButtonGroup';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
-import Grow from '@mui/material/Grow';
-import Paper from '@mui/material/Paper';
-import Popper from '@mui/material/Popper';
-import MenuItem from '@mui/material/MenuItem';
-import MenuList from '@mui/material/MenuList';
+import React, { useState, useContext, useRef } from "react";
+import Button from "@mui/material/Button";
+import ButtonGroup from "@mui/material/ButtonGroup";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import ClickAwayListener from "@mui/material/ClickAwayListener";
+import Grow from "@mui/material/Grow";
+import Paper from "@mui/material/Paper";
+import Popper from "@mui/material/Popper";
+import MenuItem from "@mui/material/MenuItem";
+import MenuList from "@mui/material/MenuList";
+import ChallengeContext from "../ChallengeContext";
 
 type RunSplitButtonProps = {
-  onClickDebug: () => void;
-  onClickRun: () => void;
   disabled: boolean;
 };
 
-const options = ['DEBUG', 'RUN'];
+const options = ["DEBUG", "RUN"];
 
-export default function RunSplitButton(props : RunSplitButtonProps) {
-  const [open, setOpen] = React.useState(false);
-  const anchorRef = React.useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
+export default function RunSplitButton(props: RunSplitButtonProps) {
+  const [open, setOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const anchorRef = useRef<HTMLDivElement>(null);
+
+  const challengeContext = useContext(ChallengeContext);
 
   const handleClick = () => {
-    selectedIndex === 0 ? props.onClickDebug() : props.onClickRun();
+    let mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
+    challengeContext?.actions["debug"](mode);
   };
 
   const handleMenuItemClick = (
     event: React.MouseEvent<HTMLLIElement, MouseEvent>,
-    index: number,
+    index: number
   ) => {
     setSelectedIndex(index);
     setOpen(false);
-  };
-
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
   };
 
   const handleClose = (event: Event) => {
@@ -51,21 +49,27 @@ export default function RunSplitButton(props : RunSplitButtonProps) {
 
   return (
     <React.Fragment>
-      <ButtonGroup variant="contained" ref={anchorRef} aria-label="split button">
-        <Button 
+      <ButtonGroup
+        variant="contained"
+        ref={anchorRef}
+        aria-label="split button"
+      >
+        <Button
           onClick={handleClick}
           variant="contained"
           color="primary"
-          disabled={props.disabled}>
-        {options[selectedIndex]}
+          disabled={props.disabled}
+        >
+          {options[selectedIndex]}
         </Button>
         <Button
-          size="small"         
-          aria-controls={open ? 'run-split-button-menu' : undefined}
-          aria-expanded={open ? 'true' : undefined}
+          size="small"
+          aria-controls={open ? "run-split-button-menu" : undefined}
+          aria-expanded={open ? "true" : undefined}
           aria-label="select run choice"
           aria-haspopup="menu"
-          onClick={handleToggle}
+          disabled={props.disabled}
+          onClick={() => setOpen((prevOpen) => !prevOpen)}
         >
           <ArrowDropDownIcon />
         </Button>
@@ -82,7 +86,7 @@ export default function RunSplitButton(props : RunSplitButtonProps) {
             {...TransitionProps}
             style={{
               transformOrigin:
-                placement === 'bottom' ? 'center top' : 'center bottom',
+                placement === "bottom" ? "center top" : "center bottom",
             }}
           >
             <Paper>

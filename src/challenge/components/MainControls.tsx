@@ -1,23 +1,21 @@
-import React from "react";
+import React, { useContext } from "react";
 import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
 import { DevicesFoldRounded } from "@mui/icons-material";
-import TestResultsIndicator from "../components/TestResultIndicator";
-import { TestResults } from "../models/Tests";
-import RunSplitButton from "../components/RunSplitButton";
-
+import TestResultsIndicator from "../../components/TestResultIndicator";
+import { TestResults } from "../../models/Tests";
+import RunSplitButton from "./RunSplitButton";
+import ChallengeContext from "../ChallengeContext";
 
 type MainControlsProps = {
   canDebug: boolean;
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
-  onDebug: () => void;
-  onRun: () => void;
-  onSubmit: () => void;
   onGuideDisplayToggle: () => void;
 };
 
 const MainControlsStack = (props: MainControlsProps) => {
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Stack
       spacing={2}
@@ -40,7 +38,7 @@ const MainControlsStack = (props: MainControlsProps) => {
           variant="contained"
           color="primary"
           disabled={!props.canDebug}
-          onClick={props.onDebug}
+          onClick={() => challengeContext?.actions["debug"]()}
         >
           DEBUG
         </Button>
@@ -50,18 +48,18 @@ const MainControlsStack = (props: MainControlsProps) => {
           variant="contained"
           color="primary"
           disabled={!props.canDebug}
-          onClick={props.onRun}
+          onClick={() => challengeContext?.actions["debug"]("run")}
         >
           RUN
         </Button>
-      </Box>           
+      </Box>
       {props.canSubmit ? (
         <Box>
           <Button
             variant="contained"
             color="primary"
             disabled={!props.canDebug}
-            onClick={props.onSubmit}
+            onClick={() => challengeContext?.actions["test"]()}
           >
             Submit
           </Button>
@@ -75,24 +73,21 @@ const MainControlsStack = (props: MainControlsProps) => {
 };
 
 const MainControlsGrid = (props: MainControlsProps) => {
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Grid container spacing={2} style={{ display: "flex" }}>
       <Grid item style={{ flexGrow: 1 }}>
-        <Stack spacing={2} direction="row">     
+        <Stack spacing={2} direction="row">
           <Box>
-            <RunSplitButton
-              onClickDebug={props.onDebug}
-              onClickRun={props.onRun}
-              disabled={!props.canDebug}
-            />
-          </Box>            
+            <RunSplitButton disabled={!props.canDebug} />
+          </Box>
           {props.canSubmit ? (
             <Box>
               <Button
                 variant="contained"
                 color="primary"
                 disabled={!props.canDebug}
-                onClick={props.onSubmit}
+                onClick={() => challengeContext?.actions["test"]()}
               >
                 Submit
               </Button>

@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useContext } from "react";
 import { Button, Grid, Stack } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -12,13 +12,12 @@ import {
 } from "@mui/material";
 import DebugContext from "../models/DebugContext";
 
+import ChallengeContext from "../challenge/ChallengeContext";
+
 type DebugPaneProps = {
   debugContext: DebugContext;
   canContinue: boolean;
   canKill: boolean;
-  onContinue: () => void;
-  onStep: () => void;
-  onKill: () => void;
 };
 
 const StyledTable = styled("div")(
@@ -34,6 +33,7 @@ const StyledTable = styled("div")(
 );
 
 const DebugPane = (props: DebugPaneProps) => {
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Stack sx={{ height: "100%" }}>
       <Paper sx={{ width: "100%", pl: 1, pb: 1 }}>
@@ -43,7 +43,7 @@ const DebugPane = (props: DebugPaneProps) => {
               variant="contained"
               color="success"
               disabled={!props.canContinue}
-              onClick={props.onContinue}
+              onClick={() => challengeContext?.actions["continue"]()}
             >
               Continue
             </Button>
@@ -53,7 +53,7 @@ const DebugPane = (props: DebugPaneProps) => {
               variant="contained"
               color="primary"
               disabled={!props.canContinue}
-              onClick={props.onStep}
+              onClick={() => challengeContext?.actions["step"]()}
             >
               Step into
             </Button>
@@ -63,7 +63,7 @@ const DebugPane = (props: DebugPaneProps) => {
               variant="contained"
               color="error"
               disabled={!props.canKill}
-              onClick={props.onKill}
+              onClick={() => challengeContext?.actions["kill"]()}
             >
               Stop
             </Button>

@@ -3,7 +3,7 @@ import { Box, IconButton } from "@mui/material";
 import { FileUpload } from "@mui/icons-material";
 
 type FileUploadControlProps = {
-  onUpload: (file: File) => void;
+  onUpload?: (file: File) => void;
 };
 
 const FileUploadControl = (props: FileUploadControlProps) => {
@@ -11,7 +11,7 @@ const FileUploadControl = (props: FileUploadControlProps) => {
 
   const handleUpload = () => {
     if (uploadRef.current?.files) {
-      props.onUpload(uploadRef.current?.files[0]);
+      props.onUpload?.(uploadRef.current?.files[0]);
     }
   };
 

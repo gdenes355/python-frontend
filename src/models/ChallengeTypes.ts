@@ -1,7 +1,7 @@
 enum ChallengeTypes {
-  TYP_PY,
-  TYP_CANVAS,
-  TYP_PARSONS,
+  TYP_PY = "py",
+  TYP_CANVAS = "canvas",
+  TYP_PARSONS = "parsons",
 }
 
 export default ChallengeTypes;
