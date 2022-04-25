@@ -49,6 +49,13 @@ const StartPage = () => {
             /?book=./library.json&report=full
           </a>
         </p>
+        <p>
+          To show edit tools for a challenge you can include edit=true in the
+          querystring of a book
+          <a href="?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=true">
+            ?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=true
+          </a>
+        </p>
       </div>
     </Container>
   );

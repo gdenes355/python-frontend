@@ -1,18 +1,11 @@
 import React from "react";
-import { throttle } from "lodash";
-import { Box, Card, CardContent } from "@mui/material";
-import { Allotment } from "allotment";
-import "allotment/dist/style.css";
-
-import IChallenge, { IChallengeState, IChallengeProps } from "./IChallenge";
-import ChallengeTypes from "../models/ChallengeTypes";
-import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
+import { saveAs } from "file-saver";
+import { Box, Card, CardContent, TextField } from "@mui/material";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
-import ParsonsEditor, {
-  ParsonsEditorHandle,
-} from "./components/Editors/ParsonsEditor";
+import JsonEditor, { JsonEditorHandle } from "./components/Editors/JsonEditor";
+import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import ChallengeConsole from "./components/ChallengeConsole";
 import CanvasDisplay, {
   CanvasDisplayHandle,
@@ -23,38 +16,69 @@ import FixedInputField, {
 import Guide from "../components/Guide";
 import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
+import { Allotment } from "allotment";
 import HeaderBar from "./components/HeaderBar";
+import "allotment/dist/style.css";
+import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
-import { TestCases } from "../models/Tests";
+import { TestCases, TestResults } from "../models/Tests";
+import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 
-import "./Challenge.css";
+import ChallengeTypes from "../models/ChallengeTypes";
 
-type ChallengeState = IChallengeState & {
+import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
+
+import "./Challenge.css";
+import IChallenge from "./IChallenge";
+import IBookFetcher from "../book/utils/IBookFetcher";
+import EditableBookStore from "../book/utils/EditableBookStore";
+
+import BookZipper from "../book/utils/BookZipper";
+
+type ChallengeEditorState = {
+  starterCode: string | null;
   savedCode: string | null;
+  guideMd: string;
+  debugContext: DebugContext;
   editorFullScreen: boolean;
+  consoleText: string;
+  editorState: ChallengeStatus;
+  testResults: TestResults;
   testsPassing: boolean | null;
   helpOpen: boolean;
   guideMinimised: boolean;
+  typ: ChallengeTypes; // use this in favour of the props.typ
+  usesFixedInput: boolean;
+  isEditingGuide: boolean;
 };
 
-type ChallengeProps = IChallengeProps & {
-  bookNode?: BookNodeModel;
+type ChallengeEditorProps = {
+  uid: string;
+  bookStore: EditableBookStore;
+  guidePath: string;
+  codePath: string;
+  bookNode: BookNodeModel;
   title?: string;
+  typ?: "py" | "parsons" | "canvas";
   tests?: TestCases | null;
+  isExample?: boolean;
+  fetcher: IBookFetcher;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
+  onBookNodeSaved: (node: BookNodeModel) => void;
 };
 
-class Challenge
-  extends React.Component<ChallengeProps, ChallengeState>
+class ChallengeEditor
+  extends React.Component<ChallengeEditorProps, ChallengeEditorState>
   implements IChallenge
 {
   editorRef = React.createRef<PyEditorHandle>();
+  jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
@@ -63,6 +87,7 @@ class Challenge
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
+  bookExports: string[][] = [];
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
@@ -77,7 +102,7 @@ class Challenge
     100
   );
 
-  state: ChallengeState = {
+  state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,
     consoleText: "Press debug to get started...",
@@ -91,38 +116,53 @@ class Challenge
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
+    isEditingGuide: false,
   };
 
-  constructor(props: ChallengeProps) {
+  constructor(props: ChallengeEditorProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
+    this.exportAsZip.bind(this);
+    this.save.bind(this);
+  }
+
+  nodeToJson(node: BookNodeModel) {
+    let proxy = {
+      name: node.name,
+      isExample: node.isExample,
+      typ: node.typ,
+      tests: node.tests,
+    };
+    return JSON.stringify(proxy, null, 2);
   }
 
   componentDidMount() {
     console.log("crossOriginIsolated", window.crossOriginIsolated);
-    this.chContext.actions["load-saved-code"]();
-    this.chContext.actions["fetch-code"]();
-    this.chContext.actions["fetch-guide"]();
+    this.chContext.actions["fetch-code"](); // from local storage
+    this.chContext.actions["fetch-guide"](); // from local storage
     navigator.serviceWorker.register("pysw.js").then(function (reg) {
       if (navigator.serviceWorker.controller === null || !reg.active) {
         window.location.reload();
       }
     });
     this.chContext.actions["restart-worker"]({ force: true });
+    this.jsonEditorRef.current?.setValue(this.nodeToJson(this.props.bookNode));
   }
 
-  componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
+  componentDidUpdate(
+    prevProps: ChallengeEditorProps,
+    prevState: ChallengeEditorState
+  ) {
     if (prevProps.guidePath !== this.props.guidePath) {
-      this.chContext.actions["fetch-guide"]();
+      this.chContext.actions["fetch-guide"](); // from local storage
     }
 
     if (prevProps.codePath !== this.props.codePath) {
-      this.chContext.actions["fetch-code"]();
+      this.chContext.actions["fetch-code"](); // from local storage
       this.setState({
         typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
       });
       this.chContext.actions["restart-worker"]({});
-      this.chContext.actions["load-saved-code"]();
       this.setState({ testResults: [], testsPassing: null });
     }
     if (
@@ -148,7 +188,67 @@ class Challenge
         this.props.onTestsPassingChanged(this.state.testsPassing);
       }
     }
+
+    if (this.props.bookNode !== prevProps.bookNode) {
+      this.jsonEditorRef.current?.setValue(
+        this.nodeToJson(this.props.bookNode)
+      );
+    }
   }
+
+  exportAsZip = () => {
+    this.props.fetcher
+      .fetchBook()
+      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .then((zip) =>
+        zip.generateAsync({
+          type: "blob",
+          compression: "DEFLATE",
+          compressionOptions: {
+            level: 9,
+          },
+        })
+      )
+      .then((blob) => saveAs(blob, "challenges.zip"));
+    //.then((d) => console.log(encodeURIComponent(d)));
+  };
+
+  save = () => {
+    // saving the code
+    this.props.bookStore.store.save(
+      this.editorRef.current?.getValue() || "",
+      this.props.codePath
+    );
+
+    // saving the guide is easy
+    this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
+
+    // update the book from json
+    let changed = false;
+    let editedNode = JSON.parse(
+      this.jsonEditorRef.current?.getValue() || ""
+    ) as BookNodeModel;
+    if (editedNode.name && editedNode.name !== this.props.bookNode.name) {
+      changed = true;
+      this.props.bookNode.name = editedNode.name;
+    }
+    if (editedNode.isExample !== this.props.bookNode.isExample) {
+      changed = true;
+      this.props.bookNode.isExample = editedNode.isExample;
+    }
+    if (editedNode.typ !== this.props.bookNode.typ) {
+      changed = true;
+      this.props.bookNode.typ = editedNode.typ;
+    }
+    if (editedNode.tests !== this.props.tests) {
+      changed = true;
+      this.props.bookNode.tests = editedNode.tests;
+    }
+    if (changed) {
+      this.props.bookStore.store.saveBook();
+      this.props.onBookNodeSaved(this.props.bookNode);
+    }
+  };
 
   getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
@@ -156,39 +256,6 @@ class Challenge
       ? undefined
       : visible;
   };
-
-  renderEditor() {
-    if (this.props.typ === "parsons") {
-      return (
-        <ParsonsEditor
-          ref={this.parsonsEditorRef}
-          starterCode={this.state.savedCode || this.state.starterCode || ""}
-        />
-      );
-    }
-
-    return (
-      <PyEditor
-        ref={this.editorRef}
-        canRun={this.state.editorState === ChallengeStatus.READY}
-        canPlaceBreakpoint={
-          this.state.editorState === ChallengeStatus.READY ||
-          this.state.editorState === ChallengeStatus.AWAITING_INPUT ||
-          this.state.editorState === ChallengeStatus.ON_BREAKPOINT
-        }
-        isOnBreakPoint={
-          this.state.editorState === ChallengeStatus.ON_BREAKPOINT
-        }
-        debugContext={this.state.debugContext}
-        starterCode={this.state.savedCode || this.state.starterCode || ""}
-        onToggleFullScreen={() => {
-          this.setState((state) => {
-            return { editorFullScreen: !state.editorFullScreen };
-          });
-        }}
-      />
-    );
-  }
 
   renderMainControls = () => {
     if (this.state.helpOpen && !this.state.guideMinimised) {
@@ -208,7 +275,7 @@ class Challenge
             canSubmit={
               this.props.tests !== null || this.props.typ === "parsons"
             }
-            testResults={this.state.testResults}
+            testResults={[]}
           />
         </CardContent>
       </Card>
@@ -221,6 +288,21 @@ class Challenge
     }
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
+    }
+    if (this.state.isEditingGuide) {
+      return (
+        <TextField
+          multiline
+          margin="dense"
+          value={this.state.guideMd}
+          onChange={(e) => {
+            this.setState({ guideMd: e.target.value });
+          }}
+          variant="standard"
+          InputProps={{ disableUnderline: true }}
+          sx={{ width: "100%", height: "100%" }}
+        />
+      );
     }
     return <Guide md={this.state.guideMd} />;
   };
@@ -249,19 +331,45 @@ class Challenge
             <HeaderBar
               title={this.props.title || this.props.bookNode?.name || ""}
               usingFixedInput={this.state.usesFixedInput}
-              showEditTools={false}
+              showEditTools={true}
+              editingGuide={this.state.isEditingGuide}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
+              onBookDownload={this.exportAsZip}
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
+              }
+              onEditingGuideChange={(editing) =>
+                this.setState({ isEditingGuide: editing })
               }
             />
 
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
                 <Allotment vertical defaultSizes={[650, 350]}>
-                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
+                  <Allotment.Pane>
+                    <PyEditor
+                      ref={this.editorRef}
+                      canRun={this.state.editorState === ChallengeStatus.READY}
+                      canPlaceBreakpoint={
+                        this.state.editorState === ChallengeStatus.READY ||
+                        this.state.editorState ===
+                          ChallengeStatus.AWAITING_INPUT ||
+                        this.state.editorState === ChallengeStatus.ON_BREAKPOINT
+                      }
+                      isOnBreakPoint={
+                        this.state.editorState === ChallengeStatus.ON_BREAKPOINT
+                      }
+                      debugContext={this.state.debugContext}
+                      starterCode={this.state.starterCode || ""}
+                      onToggleFullScreen={() => {
+                        this.setState((state) => {
+                          return { editorFullScreen: !state.editorFullScreen };
+                        });
+                      }}
+                    />
+                  </Allotment.Pane>
                   <Allotment.Pane
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
@@ -291,6 +399,19 @@ class Challenge
                         this.state.typ === ChallengeTypes.TYP_CANVAS ? (
                           <CanvasDisplay ref={this.canvasDisplayRef} />
                         ) : undefined
+                      }
+                      json={
+                        <JsonEditor
+                          ref={this.jsonEditorRef}
+                          starterCode={this.nodeToJson(this.props.bookNode)}
+                          onToggleFullScreen={() => {
+                            this.setState((state) => {
+                              return {
+                                editorFullScreen: !state.editorFullScreen,
+                              };
+                            });
+                          }}
+                        />
                       }
                     />
                   </Allotment.Pane>
@@ -349,6 +470,7 @@ class Challenge
               onOpenMenu={() => {
                 this.props.openBookDrawer?.(true);
               }}
+              onSave={this.save}
             />
           </Box>
           <Box>
@@ -362,4 +484,4 @@ class Challenge
   }
 }
 
-export default Challenge;
+export default ChallengeEditor;

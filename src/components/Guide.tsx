@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import ReactMarkdown from "react-markdown";
 import { styled } from "@mui/material/styles";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -7,9 +7,10 @@ import {
   vscDarkPlus,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+import VsThemeContext from "../themes/VsThemeContext";
+
 type GuideProps = {
   md: string;
-  theme?: string;
 };
 
 const StyledGuide = styled("div")(
@@ -25,8 +26,9 @@ const StyledGuide = styled("div")(
 `
 );
 
-const Guide = ({ md, theme }: GuideProps) => {
+const Guide = ({ md }: GuideProps) => {
   const [localMd, setLocalMd] = useState("");
+  const themeContext = useContext(VsThemeContext);
   useEffect(() => {
     // For best visuals, the md cannot have ``` tags without a language definition
     // the code below will ensure that opening ``` tags have a plaintext annotation
@@ -47,7 +49,7 @@ const Guide = ({ md, theme }: GuideProps) => {
             return !inline && match ? (
               <SyntaxHighlighter
                 children={String(children).replace(/\n$/, "")}
-                style={theme === "vs-dark" ? vscDarkPlus : vs}
+                style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
                 customStyle={{ fontSize: "1.05em" }}
                 language={match[1]}
                 PreTag="div"

@@ -1,24 +1,20 @@
-import React from "react";
-
+import React, { useContext } from "react";
 import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
-
 import { DevicesFoldRounded } from "@mui/icons-material";
-
-import TestResultsIndicator from "../components/TestResultIndicator";
-
-import { TestResults } from "../models/Tests";
+import TestResultsIndicator from "../../components/TestResultIndicator";
+import { TestResults } from "../../models/Tests";
+import ChallengeContext from "../ChallengeContext";
 
 type MainControlsProps = {
   canDebug: boolean;
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
-  onDebug: () => void;
-  onSubmit: () => void;
   onGuideDisplayToggle: () => void;
 };
 
 const MainControlsStack = (props: MainControlsProps) => {
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Stack
       spacing={2}
@@ -41,7 +37,7 @@ const MainControlsStack = (props: MainControlsProps) => {
           variant="contained"
           color="primary"
           disabled={!props.canDebug}
-          onClick={props.onDebug}
+          onClick={() => challengeContext?.actions["debug"]()}
         >
           Debug
         </Button>
@@ -52,7 +48,7 @@ const MainControlsStack = (props: MainControlsProps) => {
             variant="contained"
             color="primary"
             disabled={!props.canDebug}
-            onClick={props.onSubmit}
+            onClick={() => challengeContext?.actions["test"]()}
           >
             Submit
           </Button>
@@ -66,6 +62,7 @@ const MainControlsStack = (props: MainControlsProps) => {
 };
 
 const MainControlsGrid = (props: MainControlsProps) => {
+  const challengeContext = useContext(ChallengeContext);
   return (
     <Grid container spacing={2} style={{ display: "flex" }}>
       <Grid item style={{ flexGrow: 1 }}>
@@ -75,7 +72,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
               variant="contained"
               color="primary"
               disabled={!props.canDebug}
-              onClick={props.onDebug}
+              onClick={() => challengeContext?.actions["debug"]()}
             >
               Debug
             </Button>
@@ -86,7 +83,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
                 variant="contained"
                 color="primary"
                 disabled={!props.canDebug}
-                onClick={props.onSubmit}
+                onClick={() => challengeContext?.actions["test"]()}
               >
                 Submit
               </Button>

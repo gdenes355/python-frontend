@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import Challenge from "../challenge/Challenge";
+import ChallengeEditor from "../challenge/ChallengeEditor";
 import BookCover from "./BookCover";
 import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
@@ -16,6 +17,11 @@ import BookNodeModel, {
 } from "../models/BookNodeModel";
 import { TestCases, AllTestResults } from "../models/Tests";
 
+import ErrorBounday from "../components/ErrorBoundary";
+import EditableBookStore, {
+  createEditableBookStore,
+} from "./utils/EditableBookStore";
+
 type BookProps = {
   zipFile?: File;
 };
@@ -24,6 +30,8 @@ type PathsState = {
   guidePath: string | null;
   pyPath: string | null;
 };
+
+type EditState = "cloning" | "editing" | "export" | undefined;
 
 const Book = (props: BookProps) => {
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
@@ -38,16 +46,28 @@ const Book = (props: BookProps) => {
     passed: new Set(),
     failed: new Set(),
   });
+  const [editState, setEditState] = useState<EditState>(undefined);
+  const [editableBookStore, setEditableBookStore] =
+    useState<EditableBookStore | null>(null);
 
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
+  const editParam = searchParams.get("edit");
 
   const bookFetcher = useMemo(() => {
+    if (editParam === "editing" && !editableBookStore) {
+      let store = new EditableBookStore();
+      setEditableBookStore(store);
+      return store.fetcher;
+    }
+    if (editableBookStore) {
+      return editableBookStore.fetcher;
+    }
     return new BookFetcher(bookPath, zipPath, zipData || props.zipFile);
-  }, [bookPath, zipPath, zipData, props.zipFile]);
+  }, [bookPath, zipPath, zipData, props.zipFile, editableBookStore, editParam]);
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
@@ -69,6 +89,43 @@ const Book = (props: BookProps) => {
     setAllTestResults(allTestResults); // trigger update
     saveTestState(activeNode, newTestState); // persist
   };
+
+  /**
+   * Managing edit state
+   */
+  const bookClonedForEditing = useMemo(
+    () => (store: EditableBookStore) => {
+      setEditableBookStore(store);
+      setEditState("editing");
+      navigate({
+        search:
+          "?" +
+          new URLSearchParams({
+            book: "edit://edit/book.json",
+            chid: activeNode?.id || "",
+            edit: "editing",
+          }),
+      });
+    },
+    [activeNode, navigate]
+  );
+  useEffect(() => {
+    if (
+      editParam === "clone" &&
+      !editState &&
+      rootNode &&
+      bookFetcher &&
+      bookFetcher instanceof BookFetcher
+    ) {
+      setEditState("cloning");
+      createEditableBookStore(rootNode, bookFetcher).then(bookClonedForEditing);
+      return;
+    }
+
+    if (editParam === "editing") {
+      setEditState("editing");
+    }
+  }, [editParam, editState, rootNode, bookFetcher, bookClonedForEditing]);
 
   /**
    * Getting the book to open
@@ -116,17 +173,17 @@ const Book = (props: BookProps) => {
   }, [rootNode, bookChallengeId, bookFetcher]);
 
   const openNode = (node: BookNodeModel) => {
+    let newSearchParams = new URLSearchParams({
+      book: bookPath,
+      chid: node.id,
+      "zip-path": zipPath || "",
+      "zip-data": zipData || "",
+      edit: editParam || "",
+    });
     if (!node.children || node.children.length === 0) {
       navigate(
         {
-          search:
-            "?" +
-            new URLSearchParams({
-              book: bookPath,
-              chid: node.id,
-              "zip-path": zipPath || "",
-              "zip-data": zipData || "",
-            }).toString(),
+          search: "?" + newSearchParams.toString(),
         },
         { replace: false }
       );
@@ -188,35 +245,78 @@ const Book = (props: BookProps) => {
         />
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
-      return (
-        <React.Fragment>
-          <Challenge
-            fetcher={bookFetcher}
-            guidePath={paths.guidePath}
-            codePath={paths.pyPath}
-            tests={tests && tests.length > 0 ? tests : null}
-            bookNode={activeNode}
-            title={rootNode.name}
-            openBookDrawer={openDrawer}
-            onRequestPreviousChallenge={requestPreviousChallenge}
-            onRequestNextChallenge={requestNextChallenge}
-            layout="fullscreen"
-            uid={bookPath + bookChallengeId}
-            onTestsPassingChanged={activeTestsPassingChanged}
-            isExample={activeNode.isExample}
-            typ={activeNode.typ}
-          />
-          <BookDrawer
-            bookRoot={rootNode}
-            allTestResults={allTestResults}
-            activePageId={bookChallengeId || undefined}
-            onRequestOpen={openDrawer}
-            onNodeSelected={openNode}
-            open={drawerOpen}
-            onOpenReport={() => openReport(true)}
-          />
-        </React.Fragment>
-      );
+      if (!editState) {
+        return (
+          <React.Fragment>
+            <ErrorBounday>
+              <Challenge
+                fetcher={bookFetcher}
+                guidePath={paths.guidePath}
+                codePath={paths.pyPath}
+                tests={tests && tests.length > 0 ? tests : null}
+                bookNode={activeNode}
+                title={rootNode.name}
+                openBookDrawer={openDrawer}
+                onRequestPreviousChallenge={requestPreviousChallenge}
+                onRequestNextChallenge={requestNextChallenge}
+                uid={bookPath + bookChallengeId}
+                onTestsPassingChanged={activeTestsPassingChanged}
+                isExample={activeNode.isExample}
+                typ={activeNode.typ}
+              />
+              <BookDrawer
+                bookRoot={rootNode}
+                allTestResults={allTestResults}
+                activePageId={bookChallengeId || undefined}
+                onRequestOpen={openDrawer}
+                onNodeSelected={openNode}
+                open={drawerOpen}
+                onOpenReport={() => openReport(true)}
+              />
+            </ErrorBounday>
+          </React.Fragment>
+        );
+      } else if (editState === "cloning") {
+        return <p>Cloning this book for editing... Please wait...</p>;
+      } else if (!editableBookStore) {
+        return <p>Something went wrong. Please refresh the page</p>;
+      } else {
+        return (
+          <React.Fragment>
+            <ErrorBounday>
+              <ChallengeEditor
+                bookStore={editableBookStore}
+                fetcher={bookFetcher}
+                guidePath={paths.guidePath}
+                codePath={paths.pyPath}
+                tests={tests && tests.length > 0 ? tests : null}
+                bookNode={activeNode}
+                title={rootNode.name}
+                openBookDrawer={openDrawer}
+                onRequestPreviousChallenge={requestPreviousChallenge}
+                onRequestNextChallenge={requestNextChallenge}
+                uid={bookPath + bookChallengeId}
+                onTestsPassingChanged={activeTestsPassingChanged}
+                isExample={activeNode.isExample}
+                typ={activeNode.typ}
+                onBookNodeSaved={(n) => {
+                  requestNextChallenge();
+                  setTimeout(() => openNode(n), 500); // hack for now
+                }}
+              />
+              <BookDrawer
+                bookRoot={rootNode}
+                allTestResults={allTestResults}
+                activePageId={bookChallengeId || undefined}
+                onRequestOpen={openDrawer}
+                onNodeSelected={openNode}
+                open={drawerOpen}
+                onOpenReport={() => openReport(true)}
+              />
+            </ErrorBounday>
+          </React.Fragment>
+        );
+      }
     } else {
       return (
         <React.Fragment>
