@@ -12,6 +12,7 @@ import {
   IconButton,
   CircularProgress,
 } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 
 import BookNodeModel from "../models/BookNodeModel";
 import { AllTestResults } from "../models/Tests";
@@ -177,7 +178,7 @@ const BookReport = (props: BookReportProps) => {
     return <p>Generating report...</p>;
   }
   return (
-    <Container className="report">
+    <Paper className="report">
       <h1>
         <IconButton onClick={props.onCloseReport}>
           <NavigateBeforeIcon />
@@ -209,7 +210,7 @@ const BookReport = (props: BookReportProps) => {
           </TableBody>
         </Table>
       </TableContainer>
-    </Container>
+    </Paper>
   );
 };
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useContext } from "react";
 import ReactMarkdown from "react-markdown";
+import { Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
@@ -20,8 +21,8 @@ const StyledGuide = styled("div")(
     flex-grow: 1;
     margin-top: 3px;
     padding-bottom: 50px;
-    & :not(pre div) > code { background-color: ${theme.palette.secondary.light};  border-radius: 5px; padding: 4px; };
-    & pre { background-color: ${theme.palette.secondary.light}; }
+    & :not(pre div) > code { background-color: ${theme.palette.secondary.light};  border-radius: 5px; padding: 4px; color: black; };
+    & pre { background-color: ${theme.palette.secondary.light}; color: black;}
 
 `
 );
@@ -42,29 +43,31 @@ const Guide = ({ md }: GuideProps) => {
   }, [md]);
   return (
     <StyledGuide>
-      <ReactMarkdown
-        components={{
-          code({ node, inline, className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            return !inline && match ? (
-              <SyntaxHighlighter
-                children={String(children).replace(/\n$/, "")}
-                style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
-                customStyle={{ fontSize: "1.05em" }}
-                language={match[1]}
-                PreTag="div"
-                {...props}
-              />
-            ) : (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            );
-          },
-        }}
-      >
-        {localMd}
-      </ReactMarkdown>
+      <Box>
+        <ReactMarkdown
+          components={{
+            code({ node, inline, className, children, ...props }) {
+              const match = /language-(\w+)/.exec(className || "");
+              return !inline && match ? (
+                <SyntaxHighlighter
+                  children={String(children).replace(/\n$/, "")}
+                  style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
+                  customStyle={{ fontSize: "1.05em" }}
+                  language={match[1]}
+                  PreTag="div"
+                  {...props}
+                />
+              ) : (
+                <code className={className} {...props}>
+                  {children}
+                </code>
+              );
+            },
+          }}
+        >
+          {localMd}
+        </ReactMarkdown>
+      </Box>
     </StyledGuide>
   );
 };

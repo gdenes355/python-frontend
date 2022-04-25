@@ -1,6 +1,6 @@
 import React from "react";
 import { saveAs } from "file-saver";
-import { Box, Card, CardContent, TextField } from "@mui/material";
+import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -310,7 +310,7 @@ class ChallengeEditor
   render() {
     return (
       <ChallengeContext.Provider value={this.chContext}>
-        <Box
+        <Paper
           sx={{
             width: "100%",
             height: "100%",
@@ -478,7 +478,7 @@ class ChallengeEditor
               <div>{this.renderMainControls()}</div>
             )}
           </Box>
-        </Box>
+        </Paper>
       </ChallengeContext.Provider>
     );
   }

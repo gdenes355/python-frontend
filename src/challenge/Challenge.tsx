@@ -1,6 +1,6 @@
 import React from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent } from "@mui/material";
+import { Box, Card, CardContent, Paper } from "@mui/material";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
@@ -236,7 +236,7 @@ class Challenge
   render() {
     return (
       <ChallengeContext.Provider value={this.chContext}>
-        <Box
+        <Paper
           sx={{
             width: "100%",
             height: "100%",
@@ -364,7 +364,7 @@ class Challenge
               <div>{this.renderMainControls()}</div>
             )}
           </Box>
-        </Box>
+        </Paper>
       </ChallengeContext.Provider>
     );
   }

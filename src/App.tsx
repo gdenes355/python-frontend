@@ -6,7 +6,7 @@ import { ThemeProvider } from "@mui/material/styles";
 import Start from "./Start";
 import Book from "./book/Book";
 import BookUpload from "./book/BookUpload";
-import pageTheme from "./themes/pageTheme";
+import pageTheme, { darkTheme } from "./themes/pageTheme";
 import VsThemeContext from "./themes/VsThemeContext";
 
 import Cookies from "js-cookie";
@@ -52,7 +52,7 @@ export default function App() {
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
     >
-      <ThemeProvider theme={pageTheme}>
+      <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
         <BrowserRouter>
           <Routes>
             <Route path="start" element={<Start />} />
