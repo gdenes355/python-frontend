@@ -14,10 +14,7 @@ const baseStyle = {
   padding: "20px",
   borderWidth: 2,
   borderRadius: 2,
-  borderColor: "#eeeeee",
   borderStyle: "dashed",
-  backgroundColor: "#fafafa",
-  color: "#bdbdbd",
   outline: "none",
   transition: "border .24s ease-in-out",
 };
@@ -50,10 +47,13 @@ const BookUpload = (props: BookUploadProps) => {
   const style = useMemo(
     () => ({
       ...baseStyle,
+      borderColor: theme.palette.secondary.main,
       ...(isFocused ? focusedStyle : {}),
       display: file ? "none" : "block",
+      color: theme.palette.text.secondary,
+      backgroundColor: theme.palette.background.paper,
     }),
-    [isFocused, focusedStyle, file]
+    [isFocused, focusedStyle, file, theme]
   );
 
   const uploadClicked = (event: MouseEvent) => {

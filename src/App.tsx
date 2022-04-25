@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
+import { CssBaseline } from "@mui/material";
 
 import Start from "./Start";
 import Book from "./book/Book";
-import BookUpload from "./book/BookUpload";
+import BookUpload from "./book/components/BookUpload";
 import pageTheme, { darkTheme } from "./themes/pageTheme";
 import VsThemeContext from "./themes/VsThemeContext";
 
@@ -53,12 +54,14 @@ export default function App() {
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
     >
       <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="start" element={<Start />} />
-            <Route path="*" element={<AppContainer></AppContainer>} />
-          </Routes>
-        </BrowserRouter>
+        <CssBaseline>
+          <BrowserRouter>
+            <Routes>
+              <Route path="start" element={<Start />} />
+              <Route path="*" element={<AppContainer></AppContainer>} />
+            </Routes>
+          </BrowserRouter>
+        </CssBaseline>
       </ThemeProvider>
     </VsThemeContext.Provider>
   );

@@ -13,7 +13,7 @@ type BookCoverProps = {
 
 const BookCover = (props: BookCoverProps) => {
   return (
-    <Paper style={{ height: "100%" }}>
+    <Paper>
       <h1>{props.bookRoot.name}</h1>
       <BookContents
         bookRoot={props.bookRoot}
