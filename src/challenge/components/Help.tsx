@@ -104,6 +104,17 @@ const Help = (props: HelpProps) => {
             <td>Stop debugging</td>
           </tr>
         </table>
+        <h4>Notes</h4>
+        <table>
+          <tr>
+            <td>Debugging requires breakpoints to be set.</td>
+          </tr>
+          <tr>
+            <td>
+              Run will ignore breakpoints but be quicker in execution time.
+            </td>
+          </tr>
+        </table>
       </Styled>
     </Fade>
   );

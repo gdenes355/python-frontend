@@ -3,6 +3,7 @@ import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
 import { DevicesFoldRounded } from "@mui/icons-material";
 import TestResultsIndicator from "../../components/TestResultIndicator";
 import { TestResults } from "../../models/Tests";
+import RunSplitButton from "./RunSplitButton";
 import ChallengeContext from "../ChallengeContext";
 
 type MainControlsProps = {
@@ -39,7 +40,17 @@ const MainControlsStack = (props: MainControlsProps) => {
           disabled={!props.canDebug}
           onClick={() => challengeContext?.actions["debug"]()}
         >
-          Debug
+          DEBUG
+        </Button>
+      </Box>
+      <Box>
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!props.canDebug}
+          onClick={() => challengeContext?.actions["debug"]("run")}
+        >
+          RUN
         </Button>
       </Box>
       {props.canSubmit ? (
@@ -68,14 +79,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
       <Grid item style={{ flexGrow: 1 }}>
         <Stack spacing={2} direction="row">
           <Box>
-            <Button
-              variant="contained"
-              color="primary"
-              disabled={!props.canDebug}
-              onClick={() => challengeContext?.actions["debug"]()}
-            >
-              Debug
-            </Button>
+            <RunSplitButton disabled={!props.canDebug} />
           </Box>
           {props.canSubmit ? (
             <Box>

@@ -109,6 +109,9 @@ class Challenge
       }
     });
     this.chContext.actions["restart-worker"]({ force: true });
+    this.setState({
+      typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+    });
   }
 
   componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
@@ -124,6 +127,11 @@ class Challenge
       this.chContext.actions["restart-worker"]({});
       this.chContext.actions["load-saved-code"]();
       this.setState({ testResults: [], testsPassing: null });
+    }
+    if (prevProps.typ !== this.props.typ) {
+      this.setState({
+        typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+      });
     }
     if (
       this.editorRef.current &&

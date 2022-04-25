@@ -4,6 +4,8 @@
 }
 
 .graphicsPane canvas {
-  background-color: #c4c4c4;
+  background-color: #f8f8f8;
   float: center;
+  border:black 1px solid;
+  margin:5px;
 }

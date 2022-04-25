@@ -148,9 +148,9 @@ class ChallengeContextClass {
     step: () => this.actions["continue"](true),
     "debug-finished": (data: DebugFinishedData) => {
       let msg = {
-        ok: "Program finished ok. Press debug to run again...",
+        ok: "Program finished ok. Press run/debug to run again...",
         error:
-          "Interrupted by error. Check the error message, then press debug to run again...",
+          "Interrupted by error. Check the error message, then press run/debug to execute again...",
         interrupt: "Interrupted...",
       }[data.reason];
       this.challenge.setState((state: IChallengeState) => {
@@ -225,21 +225,25 @@ class ChallengeContextClass {
       });
       this.actions["print-console"](msg);
     },
-    debug: () => {
+    debug: (mode: "debug" | "run" = "debug") => {
       if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
-          this.actions["debugpy"](code, []);
+          this.actions["debugpy"](code, [], mode);
         }
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let bkpts = this.challenge.editorRef.current?.getBreakpoints() || [];
         if (code || code === "") {
-          this.actions["debugpy"](code, bkpts);
+          this.actions["debugpy"](code, bkpts, mode);
         }
       }
     },
-    debugpy: (code: string, breakpoints: number[]) => {
+    debugpy: (
+      code: string,
+      breakpoints: number[],
+      mode: "debug" | "run" = "debug"
+    ) => {
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
           "",
@@ -251,7 +255,7 @@ class ChallengeContextClass {
           this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
         this.challenge.worker?.postMessage({
-          cmd: "debug",
+          cmd: mode,
           code: code,
           breakpoints: breakpoints,
         });
@@ -397,6 +401,8 @@ class ChallengeContextClass {
         } else {
           this.challenge.setState({ savedCode: null });
         }
+      } else {
+        this.challenge.setState({ savedCode: null });
       }
     },
     "handle-file-read": (e: ProgressEvent<FileReader>) => {

@@ -1,6 +1,13 @@
-import React, { useEffect, useRef, KeyboardEvent, MouseEvent } from "react";
+import React, {
+  useEffect,
+  useRef,
+  KeyboardEvent,
+  MouseEvent,
+  useContext,
+} from "react";
 import { Box } from "@mui/material";
 import "./Console.css";
+import VsThemeContext from "../themes/VsThemeContext";
 
 type ConsoleProps = {
   isInputEnabled: boolean;
@@ -15,6 +22,7 @@ const MAX_LENGTH = 1000000;
 const Console = (props: ConsoleProps) => {
   const containerEl = useRef<HTMLDivElement>(null);
   const inputFieldEl = useRef<HTMLInputElement>(null);
+  const vsThemeContext = useContext(VsThemeContext);
 
   const onKeyPressed = (event: KeyboardEvent) => {
     if (inputFieldEl.current && event.key === "Enter") {
@@ -53,7 +61,11 @@ const Console = (props: ConsoleProps) => {
 
   return (
     <Box sx={{ width: "100%", height: "100%", bgcolor: "black" }}>
-      <div className="console" ref={containerEl} onClick={onClick}>
+      <div
+        className={"console theme-" + vsThemeContext.theme}
+        ref={containerEl}
+        onClick={onClick}
+      >
         <span className="printed-span">
           {props.content.length > MAX_LENGTH
             ? props.content.replace("\n", "\r\n").slice(0, MAX_LENGTH)
