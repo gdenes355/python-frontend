@@ -9,12 +9,12 @@
   border: 0px solid black;
 }
 
-.theme-vs-dark {
+.console.theme-vs-dark {
   background-color: black;
   color: white;
 }
 
-.theme-vs-light {
+.console.theme-vs-light {
   background-color: white;
   color: black;
 }
@@ -35,7 +35,6 @@
     DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
   font-size: 15px;
   min-height: 1em;
-  color: white;
   outline: 0px solid transparent;
   border: 0px solid transparent;
   caret-color: transparent;
