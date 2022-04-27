@@ -10,6 +10,7 @@ import {
   Collapse,
   IconButton,
   CircularProgress,
+  Container,
 } from "@mui/material";
 
 import BookNodeModel from "../models/BookNodeModel";
@@ -176,7 +177,7 @@ const BookReport = (props: BookReportProps) => {
     return <p>Generating report...</p>;
   }
   return (
-    <Paper className="report">
+    <Container className="report">
       <h1>
         <IconButton onClick={props.onCloseReport}>
           <NavigateBeforeIcon />
@@ -208,7 +209,7 @@ const BookReport = (props: BookReportProps) => {
           </TableBody>
         </Table>
       </TableContainer>
-    </Paper>
+    </Container>
   );
 };
 
