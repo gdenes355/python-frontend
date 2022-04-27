@@ -9,9 +9,11 @@ import ChallengeContext from "../ChallengeContext";
 type MainControlsProps = {
   canDebug: boolean;
   canSubmit: boolean;
+  canPreview: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
   onGuideDisplayToggle: () => void;
+  onPreview?: () => void;
 };
 
 const MainControlsStack = (props: MainControlsProps) => {
@@ -64,10 +66,22 @@ const MainControlsStack = (props: MainControlsProps) => {
             Submit
           </Button>
         </Box>
-      ) : null}
+      ) : null}   
       <TestResultsIndicator
         testResults={props.testResults}
       ></TestResultsIndicator>
+      {props.canPreview ? (
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!props.canPreview}
+            onClick={() => props.onPreview && props.onPreview()}
+          >
+            Preview
+          </Button>
+        </Box>
+      ) : null}        
     </Stack>
   );
 };
@@ -96,6 +110,18 @@ const MainControlsGrid = (props: MainControlsProps) => {
           <TestResultsIndicator
             testResults={props.testResults}
           ></TestResultsIndicator>
+          {props.canPreview ? (
+            <Box>
+              <Button
+                variant="contained"
+                color="primary"
+                disabled={!props.canPreview}
+                onClick={() => props.onPreview && props.onPreview()}
+              >
+                Preview
+              </Button>
+            </Box>
+          ) : null}     
         </Stack>
       </Grid>
       <Grid item>

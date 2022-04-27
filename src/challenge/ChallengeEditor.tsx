@@ -213,6 +213,26 @@ class ChallengeEditor
     //.then((d) => console.log(encodeURIComponent(d)));
   };
 
+  previewAsZip = () => {
+    this.props.fetcher
+      .fetchBook()
+      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .then((zip) =>
+        zip.generateAsync({
+          type: "base64",
+          compression: "DEFLATE",
+          compressionOptions: {
+            level: 9,
+          },
+        })
+      )
+      .then((result) => {
+        const base64data = encodeURIComponent(result);                
+        window.open(`${window.location.href.split('?')[0]}?zip-data=${base64data}`);       
+      });
+    //.then((d) => console.log(encodeURIComponent(d)));
+  };  
+
   save = () => {
     // saving the code
     this.props.bookStore.store.save(
@@ -272,10 +292,10 @@ class ChallengeEditor
               })
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
-            canSubmit={
-              this.props.tests !== null || this.props.typ === "parsons"
-            }
+            canSubmit={false}
+            canPreview={true}
             testResults={[]}
+            onPreview={this.previewAsZip}
           />
         </CardContent>
       </Card>

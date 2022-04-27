@@ -17,11 +17,15 @@ import "./App.css";
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
+  const zipData = searchParams.get("zip-data");
   const [bookFile, setBookFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
   if (bookPath || bookFile) {
     return <Book zipFile={bookFile || undefined} />;
+  }
+  else if (zipData) {
+      return <Book />;
   } else {
     return (
       <BookUpload

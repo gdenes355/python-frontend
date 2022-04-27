@@ -299,6 +299,9 @@ class ChallengeContextClass {
       }
       this.actions["save-code"]({ code });
     },
+    preview: () => {
+   
+    },
     "breakpoints-updated": () => {
       if (
         this.challenge.editorRef.current &&

@@ -217,6 +217,7 @@ class Challenge
               this.props.tests !== null || this.props.typ === "parsons"
             }
             testResults={this.state.testResults}
+            canPreview={false}
           />
         </CardContent>
       </Card>
