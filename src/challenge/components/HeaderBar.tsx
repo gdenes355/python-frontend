@@ -74,7 +74,7 @@ const HeaderBar = (props: HeaderBarProps) => {
         </Grid>
         {props.showEditTools
           ? [
-              <Grid item>
+              <Grid item key="edit-toggle">
                 <FormControlLabel
                   control={
                     <Switch
@@ -89,12 +89,12 @@ const HeaderBar = (props: HeaderBarProps) => {
               </Grid>,
             ]
           : [
-              <Grid item>
+              <Grid item key="py-upload">
                 <FileUploadControl
                   onUpload={challengeContext?.actions["handle-code-upload"]}
                 />
               </Grid>,
-              <Grid item>
+              <Grid item key="py-download">
                 <IconButton
                   onClick={() => challengeContext?.actions["download-code"]()}
                 >
@@ -152,7 +152,10 @@ const HeaderBar = (props: HeaderBarProps) => {
             </MenuItem>
             {props.showEditTools
               ? [
-                  <MenuItem onClick={() => props.onBookDownload?.()}>
+                  <MenuItem
+                    onClick={() => props.onBookDownload?.()}
+                    key="zip-download"
+                  >
                     <ListItemIcon>
                       <FolderZipIcon />
                     </ListItemIcon>
