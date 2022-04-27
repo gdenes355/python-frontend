@@ -1,0 +1,176 @@
+{
+    "name": "Custom Challenges",
+    "id": "7294e23e-c5bf-4da5-841b-eae7e16864a1",
+    "children": [
+        {
+            "id": "08c062a0-7d9a-47e5-a4b8-aa438498814b",
+            "name": "Challenge 1",
+            "guide": "c01.md",
+            "py": "c01.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "7ba4c29b-1fa3-4e35-b41d-9ec49be71f29",
+            "name": "Challenge 2",
+            "guide": "c02.md",
+            "py": "c02.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "1b6519ae-d2fd-4284-bdc0-2580771c826b",
+            "name": "Challenge 3",
+            "guide": "c03.md",
+            "py": "c03.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "744b1eaf-a5aa-4819-9953-389eb2689e07",
+            "name": "Challenge 4",
+            "guide": "c04.md",
+            "py": "c04.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "f07a4147-581f-42fa-a759-9d7a615fe4d6",
+            "name": "Challenge 5",
+            "guide": "c05.md",
+            "py": "c05.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "03ceca96-ecd9-4b85-a52d-af2a0363419f",
+            "name": "Challenge 6",
+            "guide": "c06.md",
+            "py": "c06.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "0b1b92a5-5aa9-4637-964d-0dc26ad17d08",
+            "name": "Challenge 7",
+            "guide": "c07.md",
+            "py": "c07.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "bf7664f6-71f4-4086-87fc-bd7b3135ffbc",
+            "name": "Challenge 8",
+            "guide": "c08.md",
+            "py": "c08.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "e0ed9ba2-29c4-43d2-b62a-4b2ecd16a268",
+            "name": "Challenge 9",
+            "guide": "c09.md",
+            "py": "c09.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        },
+        {
+            "id": "a7a24c4a-a547-4a25-b26f-6cfa695c9d5d",
+            "name": "Challenge 10",
+            "guide": "c10.md",
+            "py": "c10.py",
+			"isExample": true,
+            "tests": [
+                {
+                    "in": "",
+                    "out": ""
+                },
+                {
+                    "in": "",
+                    "out": ""
+                }				
+            ]
+        }		
+    ]
+}
