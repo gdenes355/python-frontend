@@ -6,7 +6,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 
-import BookNodeModel from "../../models/BookNodeModel";
+import BookNodeModel, { extractIds } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 
 import "./BookContents.css";
@@ -51,23 +51,9 @@ function RecursiveItem({ node, allTestResults }: RecursiveArgs) {
   );
 }
 
-function extractAllIds(
-  node: BookNodeModel,
-  arr: string[],
-  dict: Map<string, BookNodeModel>
-) {
-  arr.push(node.id);
-  dict.set(node.id, node);
-  if (node.children) {
-    for (let child of node.children) {
-      extractAllIds(child, arr, dict);
-    }
-  }
-}
-
 const BookContents = (props: BookContentsProps) => {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
-  const [nodeMap] = useState<Map<string, BookNodeModel>>(new Map());
+  const [nodeMap, setNodeMap] = useState<Map<string, BookNodeModel>>(new Map());
 
   const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
     setExpandedIds(nodeIds);
@@ -75,17 +61,18 @@ const BookContents = (props: BookContentsProps) => {
 
   const handleSelect = (event: React.SyntheticEvent, nodeId: string) => {
     let selectedNode = nodeMap.get(nodeId);
-
     if (selectedNode) {
       props.onNodeSelected(selectedNode);
     }
   };
 
   useEffect(() => {
-    let ids: string[] = [];
-    extractAllIds(props.bookRoot, ids, nodeMap);
-    setExpandedIds(ids);
-  }, [props, nodeMap]);
+    setNodeMap(extractIds(props.bookRoot));
+  }, [props]);
+
+  useEffect(() => {
+    setExpandedIds([...nodeMap.keys()]);
+  }, [nodeMap]);
 
   return (
     <div className="book-contents">

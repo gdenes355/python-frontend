@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useMemo } from "react";
 
 import {
   Toolbar,
@@ -22,6 +22,7 @@ import FileUploadControl from "../../components/FileUploadControl";
 
 import ChallengeContext from "../ChallengeContext";
 import VsThemeContext from "../../themes/VsThemeContext";
+import { useLocation } from "react-router-dom";
 
 type HeaderBarProps = {
   title?: string;
@@ -39,6 +40,20 @@ type HeaderBarProps = {
 const HeaderBar = (props: HeaderBarProps) => {
   const themeContext = useContext(VsThemeContext);
   const challengeContext = useContext(ChallengeContext);
+  const location = useLocation();
+  const searchParams = useMemo(
+    () => new URLSearchParams(location.search),
+    [location]
+  );
+
+  const previewUrl = useMemo(() => {
+    let chid = searchParams.get("chid");
+    return (
+      location.pathname +
+      `?book=edit://edit/book.json&chid=${chid}&edit=preview`
+    );
+  }, [searchParams, location]);
+
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
@@ -74,6 +89,11 @@ const HeaderBar = (props: HeaderBarProps) => {
         </Grid>
         {props.showEditTools
           ? [
+              <Grid item key="edit-preview">
+                <a href={previewUrl} target="_blank" rel="noreferrer noopener">
+                  <Button>Preview</Button>
+                </a>
+              </Grid>,
               <Grid item key="edit-toggle">
                 <FormControlLabel
                   control={

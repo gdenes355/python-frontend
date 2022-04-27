@@ -21,6 +21,7 @@ import ErrorBounday from "../components/ErrorBoundary";
 import EditableBookStore, {
   createEditableBookStore,
 } from "./utils/EditableBookStore";
+import BookEditorDrawer from "./components/BookEditorDrawer";
 
 type BookProps = {
   zipFile?: File;
@@ -31,7 +32,7 @@ type PathsState = {
   pyPath: string | null;
 };
 
-type EditState = "cloning" | "editing" | "export" | undefined;
+type EditState = "cloning" | "editing" | "preview" | undefined;
 
 const Book = (props: BookProps) => {
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
@@ -61,7 +62,10 @@ const Book = (props: BookProps) => {
   const editParam = searchParams.get("edit");
 
   const bookFetcher = useMemo(() => {
-    if (editParam === "editing" && !editableBookStore) {
+    if (
+      (editParam === "editing" || editParam === "preview") &&
+      !editableBookStore
+    ) {
       let store = new EditableBookStore();
       setEditableBookStore(store);
       return store.fetcher;
@@ -125,8 +129,8 @@ const Book = (props: BookProps) => {
       return;
     }
 
-    if (editParam === "editing") {
-      setEditState("editing");
+    if (editParam === "editing" || editParam === "preview") {
+      setEditState(editParam);
     }
   }, [editParam, editState, rootNode, bookFetcher, bookClonedForEditing]);
 
@@ -248,7 +252,7 @@ const Book = (props: BookProps) => {
         />
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
-      if (!editState) {
+      if (!editState || editState === "preview") {
         return (
           <React.Fragment>
             <ErrorBounday>
@@ -304,14 +308,18 @@ const Book = (props: BookProps) => {
                 typ={activeNode.typ}
                 onBookModified={requestBookReload}
               />
-              <BookDrawer
+              <BookEditorDrawer
                 bookRoot={rootNode}
-                allTestResults={allTestResults}
+                bookNode={activeNode}
+                store={editableBookStore}
                 activePageId={bookChallengeId || undefined}
                 onRequestOpen={openDrawer}
                 onNodeSelected={openNode}
                 open={drawerOpen}
-                onOpenReport={() => openReport(true)}
+                onBookModified={() => {
+                  editableBookStore.store.saveBook();
+                  requestBookReload();
+                }}
               />
             </ErrorBounday>
           </React.Fragment>

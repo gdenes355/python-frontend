@@ -72,7 +72,7 @@ class EditableBookStore {
       }
     },
     getBookPathAbsolute: () => {
-      return "edit://book.json";
+      return "edit://edit/book.json";
     },
     fetchBook: () => {
       let allResults: AllTestResults = { passed: new Set(), failed: new Set() };

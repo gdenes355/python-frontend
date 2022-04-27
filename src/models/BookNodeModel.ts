@@ -34,6 +34,24 @@ const findBookNode: (
   return null;
 };
 
+const findParent: (
+  root: BookNodeModel,
+  child: BookNodeModel
+) => BookNodeModel | null = (root, child) => {
+  let workingStack: Array<BookNodeModel> = [root];
+  while (workingStack.length > 0) {
+    let node = workingStack.pop();
+    if (node?.children && node.children.length > 0) {
+      if (node.children.includes(child)) {
+        return node;
+      }
+
+      workingStack.push(...node.children);
+    }
+  }
+  return null;
+};
+
 const nextBookNode: (
   root: BookNodeModel,
   currentId: string,
@@ -89,5 +107,112 @@ const prevBookNode: (
   return root;
 };
 
+const deleteBookNode: (root: BookNodeModel, toDelete: BookNodeModel) => void = (
+  root,
+  toDelete
+) => {
+  let workingStack: Array<BookNodeModel> = [root];
+  if (toDelete === root) {
+    // root node cannot be deleted
+    return;
+  }
+  while (workingStack.length > 0) {
+    let currentNode = workingStack.pop();
+    if (currentNode?.children && currentNode.children.length > 0) {
+      // has children
+      if (currentNode.children.includes(toDelete)) {
+        currentNode.children.splice(currentNode.children.indexOf(toDelete), 1);
+        return; // deleted
+      }
+      workingStack.push(...currentNode.children);
+    }
+  }
+};
+
+type NodeParentPair = {
+  node: BookNodeModel;
+  parent?: BookNodeModel;
+};
+
+const promoteBookNode: (
+  root: BookNodeModel,
+  toPromote: BookNodeModel
+) => void = (root, toPromote) => {
+  let workingStack: Array<NodeParentPair> = [{ node: root, parent: undefined }];
+  while (workingStack.length > 0) {
+    let curr = workingStack.pop();
+    if (!curr) continue;
+    let { node, parent } = curr;
+    if (node.children && node.children.length > 0) {
+      if (node.children.includes(toPromote)) {
+        if (parent) {
+          parent.children?.splice(parent.children?.indexOf(node), 0, toPromote);
+          node.children.splice(node.children.indexOf(toPromote), 1);
+        }
+        return;
+      }
+      for (let child of node.children) {
+        workingStack.push({ node: child, parent: node });
+      }
+    }
+  }
+};
+
+const demoteBookNode: (root: BookNodeModel, toDemote: BookNodeModel) => void = (
+  root,
+  toDemote
+) => {
+  let workingStack: Array<BookNodeModel> = [root];
+  if (toDemote === root) {
+    // root node cannot be demoted
+    return;
+  }
+  while (workingStack.length > 0) {
+    let node = workingStack.pop();
+    if (node?.children && node.children.length > 0) {
+      // has children
+      if (node.children.includes(toDemote)) {
+        // see if we can demote this under the index before toDemote
+        let removeIdx = node.children.indexOf(toDemote);
+        if (removeIdx > 0) {
+          let parentCandidate = node.children[removeIdx - 1];
+          if (!parentCandidate.children) {
+            parentCandidate.children = [toDemote];
+          } else {
+            parentCandidate.children.push(toDemote);
+          }
+          node.children.splice(removeIdx, 1);
+        }
+        return; // finished
+      }
+      workingStack.push(...node.children);
+    }
+  }
+};
+
+const _extractIds = (node: BookNodeModel, dict: Map<string, BookNodeModel>) => {
+  dict.set(node.id, node);
+  if (node.children) {
+    for (let child of node.children) {
+      _extractIds(child, dict);
+    }
+  }
+};
+
+const extractIds = (node: BookNodeModel) => {
+  let map: Map<string, BookNodeModel> = new Map();
+  _extractIds(node, map);
+  return map;
+};
+
 export default BookNodeModel;
-export { findBookNode, nextBookNode, prevBookNode };
+export {
+  findBookNode,
+  nextBookNode,
+  prevBookNode,
+  extractIds,
+  deleteBookNode,
+  promoteBookNode,
+  demoteBookNode,
+  findParent,
+};
