@@ -1,10 +1,7 @@
-import React, { useContext, useRef, useImperativeHandle } from "react";
+import React, { useRef, useImperativeHandle } from "react";
 import { Box } from "@mui/material";
-import { ThemeProvider } from "@mui/material/styles";
 
 import TabbedView from "../../components/TabbedView";
-import pageTheme, { darkTheme } from "../../themes/pageTheme";
-import VsThemeContext from "../../themes/VsThemeContext";
 
 import PaneType from "../../models/PaneType";
 
@@ -20,7 +17,6 @@ type OutputsProps = {
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
-  const themeContext = useContext(VsThemeContext);
   const tabbedViewRef = useRef<TabbedView>(null);
 
   let panes = [
@@ -71,23 +67,19 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
   useImperativeHandle(ref, () => ({ focusPane }));
 
   return (
-    <ThemeProvider
-      theme={themeContext.theme === "vs-dark" ? darkTheme : pageTheme}
+    <Box
+      sx={{
+        width: "100%",
+        height: "100%",
+        bgcolor: "background.default",
+      }}
     >
-      <Box
-        sx={{
-          width: "100%",
-          height: "100%",
-          bgcolor: "background.default",
-        }}
-      >
-        {panes.length > 1 ? (
-          <TabbedView ref={tabbedViewRef} panes={panes} />
-        ) : (
-          props.console
-        )}
-      </Box>
-    </ThemeProvider>
+      {panes.length > 1 ? (
+        <TabbedView ref={tabbedViewRef} panes={panes} />
+      ) : (
+        props.console
+      )}
+    </Box>
   );
 });
 

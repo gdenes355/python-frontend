@@ -60,7 +60,7 @@ const Console = (props: ConsoleProps) => {
   }, [props.isInputEnabled]);
 
   return (
-    <Box sx={{ width: "100%", height: "100%", bgcolor: "black" }}>
+    <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }}>
       <div
         className={"console theme-" + vsThemeContext.theme}
         ref={containerEl}
