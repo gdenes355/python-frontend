@@ -76,6 +76,7 @@ class EditableBookStore {
     },
     fetchBook: () => {
       let allResults: AllTestResults = { passed: new Set(), failed: new Set() };
+      this.book = JSON.parse(JSON.stringify(this.book));
       return new Promise<IBookFetchResult>((r) =>
         r({ book: this.book, allResults })
       );

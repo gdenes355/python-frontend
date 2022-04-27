@@ -50,6 +50,9 @@ const Book = (props: BookProps) => {
   const [editableBookStore, setEditableBookStore] =
     useState<EditableBookStore | null>(null);
 
+  const [bookForceReload, setBookForceReload] = useState(0);
+  const requestBookReload = () => setBookForceReload((c) => c + 1);
+
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
@@ -140,7 +143,7 @@ const Book = (props: BookProps) => {
       setAllTestResults(result.allResults);
       setRootNode(result.book);
     });
-  }, [bookFetcher]);
+  }, [bookFetcher, bookForceReload]);
 
   /**
    * Getting the challenge within the book
@@ -299,10 +302,7 @@ const Book = (props: BookProps) => {
                 onTestsPassingChanged={activeTestsPassingChanged}
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
-                onBookNodeSaved={(n) => {
-                  requestNextChallenge();
-                  setTimeout(() => openNode(n), 500); // hack for now
-                }}
+                onBookModified={requestBookReload}
               />
               <BookDrawer
                 bookRoot={rootNode}
