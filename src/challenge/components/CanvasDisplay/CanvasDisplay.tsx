@@ -42,7 +42,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
 
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "reset") {
-        if (!turtleJustReset) {
+        if (!turtleJustReset.current) {
           turtleReset("standard");
         }
       } else if (turtleObj.action === "mode") {
