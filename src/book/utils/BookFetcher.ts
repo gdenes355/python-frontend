@@ -19,7 +19,6 @@ class BookFetcher implements IBookFetcher {
     } else {
       // is this within a zip?
       if (this.zipPath || this.zipData) {
-        console.log("ZIPDETECTED");
         this.bookPathAbsolute = new URL(bookPath, "pfzip://in.zip/").toString();
       } else {
         this.bookPathAbsolute = new URL(bookPath, document.baseURI).toString();

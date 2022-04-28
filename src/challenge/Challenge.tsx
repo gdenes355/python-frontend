@@ -276,7 +276,7 @@ class Challenge
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
               }
-              onBookUpload={() => {console.log("here");this.setState({showBookUpload:true})}}
+              onBookUpload={() => {this.setState({showBookUpload:true})}}
             />
 
             <Allotment className="h-100" defaultSizes={[650, 350]}>

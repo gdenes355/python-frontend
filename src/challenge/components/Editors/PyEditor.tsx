@@ -330,7 +330,6 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
           href={downloadUrl || undefined}
           ref={downloadEl}
         >
-          download
         </a>
       </div>
     );

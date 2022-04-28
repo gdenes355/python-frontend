@@ -1,6 +1,6 @@
 .console {
-  height: calc(100% - 10px);
-  width: calc(100% - 10px);
+  height: 100%;
+  width: 100%;
   overflow: auto;
   font-size: 15px;
   padding: 5px;
