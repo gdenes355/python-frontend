@@ -8,6 +8,8 @@ import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
 import BookFetcher from "./utils/BookFetcher";
 
+import ZipPathTransformer from "./utils/ZipPathTransformer";
+
 import { saveTestState } from "./utils/ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
 import BookNodeModel, {
@@ -57,9 +59,13 @@ const Book = (props: BookProps) => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
+  const zipPathTransformed = useMemo(
+    () => ZipPathTransformer.transformZipPath(zipPath),
+    [zipPath]
+  );
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
-  const editParam = searchParams.get("edit");
+  const editParam = searchParams.get("edit") || "";
 
   const bookFetcher = useMemo(() => {
     if (
@@ -73,8 +79,19 @@ const Book = (props: BookProps) => {
     if (editableBookStore) {
       return editableBookStore.fetcher;
     }
-    return new BookFetcher(bookPath, zipPath, zipData || props.zipFile);
-  }, [bookPath, zipPath, zipData, props.zipFile, editableBookStore, editParam]);
+    return new BookFetcher(
+      bookPath,
+      zipPathTransformed,
+      zipData || props.zipFile
+    );
+  }, [
+    bookPath,
+    zipPathTransformed,
+    zipData,
+    props.zipFile,
+    editableBookStore,
+    editParam,
+  ]);
   const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
