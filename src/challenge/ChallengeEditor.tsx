@@ -352,6 +352,7 @@ class ChallengeEditor
               title={this.props.title || this.props.bookNode?.name || ""}
               usingFixedInput={this.state.usesFixedInput}
               showEditTools={true}
+              showUploadBookZip={false}
               editingGuide={this.state.isEditingGuide}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}

@@ -29,6 +29,8 @@ import { TestCases } from "../models/Tests";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
+import BookUploadModal from "./components/BookUploadModal";
+
 
 import "./Challenge.css";
 
@@ -38,6 +40,7 @@ type ChallengeState = IChallengeState & {
   testsPassing: boolean | null;
   helpOpen: boolean;
   guideMinimised: boolean;
+  showBookUpload: boolean;
 };
 
 type ChallengeProps = IChallengeProps & {
@@ -48,6 +51,7 @@ type ChallengeProps = IChallengeProps & {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
+  onBookUploaded: (file:File) => void;
 };
 
 class Challenge
@@ -91,6 +95,7 @@ class Challenge
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
+    showBookUpload:false,
   };
 
   constructor(props: ChallengeProps) {
@@ -236,6 +241,11 @@ class Challenge
 
   render() {
     return (
+      <>
+      {this.state.showBookUpload ? 
+        <BookUploadModal visible={true} onClose={() => this.setState({showBookUpload: false})} onBookUploaded={(file) => this.props.onBookUploaded(file)}/>
+        : null
+      }
       <ChallengeContext.Provider value={this.chContext}>
         <Paper
           sx={{
@@ -259,12 +269,14 @@ class Challenge
               title={this.props.title || this.props.bookNode?.name || ""}
               usingFixedInput={this.state.usesFixedInput}
               showEditTools={false}
+              showUploadBookZip={true}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
               }
+              onBookUpload={() => {console.log("here");this.setState({showBookUpload:true})}}
             />
 
             <Allotment className="h-100" defaultSizes={[650, 350]}>
@@ -367,6 +379,7 @@ class Challenge
           </Box>
         </Paper>
       </ChallengeContext.Provider>
+      </>
     );
   }
 }

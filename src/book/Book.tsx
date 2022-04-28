@@ -24,6 +24,7 @@ import EditableBookStore, {
 
 type BookProps = {
   zipFile?: File;
+  onBookUploaded: (file:File) => void;
 };
 
 type PathsState = {
@@ -263,6 +264,7 @@ const Book = (props: BookProps) => {
                 onTestsPassingChanged={activeTestsPassingChanged}
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
+                onBookUploaded={(file) => props.onBookUploaded(file)}
               />
               <BookDrawer
                 bookRoot={rootNode}

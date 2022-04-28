@@ -16,6 +16,7 @@ import { FileDownload } from "@mui/icons-material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import ArticleIcon from '@mui/icons-material/Article';
 import FolderZipIcon from "@mui/icons-material/FolderZip";
 import Menu from "../../components/Menu";
 import FileUploadControl from "../../components/FileUploadControl";
@@ -27,6 +28,7 @@ type HeaderBarProps = {
   title?: string;
   usingFixedInput: boolean;
   showEditTools?: boolean;
+  showUploadBookZip: boolean;
   editingGuide?: boolean;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
   onEditingGuideChange?: (editingGuide: boolean) => void;
@@ -34,6 +36,7 @@ type HeaderBarProps = {
   canReset: boolean;
   canDebug: boolean;
   onBookDownload?: () => void;
+  onBookUpload?: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -160,6 +163,14 @@ const HeaderBar = (props: HeaderBarProps) => {
                   </MenuItem>,
                 ]
               : undefined}
+            {props.showUploadBookZip ?
+              <MenuItem onClick={() => props.onBookUpload && props.onBookUpload()}>
+                <ListItemIcon>
+                  <ArticleIcon />
+                </ListItemIcon>
+                Upload Book Zip
+              </MenuItem>
+            : null }    
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

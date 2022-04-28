@@ -22,10 +22,25 @@ const AppContainer = () => {
   const navigate = useNavigate();
 
   if (bookPath || bookFile) {
-    return <Book zipFile={bookFile || undefined} />;
+    return (
+    <Book 
+      zipFile={bookFile || undefined} 
+      onBookUploaded={(file) => {
+        setBookFile(file);
+        navigate({ search: "?book=book.json" });
+      }}
+    />
+    );
   }
   else if (zipData) {
-      return <Book />;
+    return (
+      <Book 
+        onBookUploaded={(file) => {
+          setBookFile(file);
+          navigate({ search: "?book=book.json" });
+        }}
+      />
+      );
   } else {
     return (
       <BookUpload
