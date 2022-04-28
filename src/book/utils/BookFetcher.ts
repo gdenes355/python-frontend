@@ -71,6 +71,8 @@ class BookFetcher implements IBookFetcher {
   private bookPath: string;
   private zip: JSZip | null = null;
 
+  private zipFetchingFromPath = false;
+
   async expandBookLinks(
     bookNode: BookNodeModel,
     mainUrl: string,
@@ -99,10 +101,15 @@ class BookFetcher implements IBookFetcher {
   }
 
   private async fetchZip() {
-    if (this.zip || (!this.zip && !this.zipData)) {
+    if (
+      this.zip ||
+      (!this.zipPath && !this.zipData) ||
+      this.zipFetchingFromPath
+    ) {
       return;
     }
     if (this.zipPath) {
+      this.zipFetchingFromPath = true;
       let response = await fetch(this.zipPath);
       if (response.status !== 200 && response.status !== 0) {
         console.error("Failed to fetch zip file", this.zipPath);
@@ -110,6 +117,7 @@ class BookFetcher implements IBookFetcher {
       }
       let blob = await response.blob();
       this.zip = await JSZip.loadAsync(blob);
+      this.zipFetchingFromPath = false;
     } else if (this.zipData) {
       this.zip = await JSZip.loadAsync(this.zipData, { base64: true });
     }
