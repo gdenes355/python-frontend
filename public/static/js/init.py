@@ -343,22 +343,42 @@ def pyexec(code, expected_input, expected_output):
 
     if len(test_inputs) == 1 and test_inputs[0] == '':
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it
-
-    # construct matching regex
-    expected_output = re.escape(test_outputs)  # initially escape everything
-    expected_output = expected_output.replace(
-        "\\\n", r"\n").replace("\.\*", ".*")  # restore \n and .*
-    expected_output += r"\n*$"  # allow any blank new lines before the end
+   
     js.console.log(str(expected_output))
     js.console.log(str(test_output.buffer))
-    if not re.match(expected_output, test_output.buffer):
-        js.console.log(str(test_outputs), "!=", str(test_output.buffer))
-        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
-    elif len(test_inputs) > 0:
-        js.console.log("inputs unconsumed: " + str(test_inputs))
-        return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
+
+    if test_outputs.startswith("{@") and expected_output.endswith("@}"):
+        # switch to contains and does not contain marking
+        failed = False
+        expected_msg = ""
+        for condition in expected_output[2:-2].split(","):
+            if condition.startswith("~"):
+                expected_msg += f"MUST NOT CONTAIN: {repr(condition[1:])}\n"
+                if condition[1:] in test_output.buffer:
+                    failed = True                    
+            else:
+                expected_msg += f"MUST CONTAIN: {repr(condition)}\n"
+                if condition not in test_output.buffer:
+                    failed = True
+        
+        if failed:
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(expected_msg), "actual": str(test_output.buffer), "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
     else:
-        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+        # reg-ex marking
+        # construct matching regex
+        expected_output = re.escape(test_outputs)  # initially escape everything
+        expected_output = expected_output.replace("\\\n", r"\n").replace("\.\*", ".*")  # restore \n and .*        
+        expected_output += r"\n*$"  # allow any blank new lines before the end
+        if not re.match(expected_output, test_output.buffer):
+            js.console.log(str(test_outputs), "!=", str(test_output.buffer))
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
+        elif len(test_inputs) > 0:
+            js.console.log("inputs unconsumed: " + str(test_inputs))
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
 
 def pydebug(code, breakpoints):

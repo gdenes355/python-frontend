@@ -29,7 +29,7 @@
             "tests": [
                 {
                     "in": "Joe",
-                    "out": ".*Hello Joe\n"
+                    "out": "{@Hello,Joe,~hello@}"
                 }
             ]
         },
