@@ -4,6 +4,8 @@
   "private": true,
   "proxy": "http://localhost:5000",
   "dependencies": {
+    "@dnd-kit/core": "^5.0.3",
+    "@dnd-kit/modifiers": "^5.0.0",
     "@emotion/react": "^11.8.1",
     "@emotion/styled": "^11.8.1",
     "@monaco-editor/react": "^4.3.1",

@@ -190,6 +190,23 @@ const demoteBookNode: (root: BookNodeModel, toDemote: BookNodeModel) => void = (
   }
 };
 
+const moveBookNodeAfter = (
+  root: BookNodeModel,
+  from: BookNodeModel,
+  to: BookNodeModel
+) => {
+  if (!from || !to || from === to) {
+    return;
+  }
+  let fromParent = findParent(root, from);
+  let toParent = findParent(root, to);
+  if (!fromParent || !toParent || !fromParent.children || !toParent.children) {
+    return;
+  }
+  fromParent.children.splice(fromParent.children.indexOf(from), 1);
+  toParent.children.splice(toParent.children.indexOf(to) + 1, 0, from);
+};
+
 const _extractIds = (node: BookNodeModel, dict: Map<string, BookNodeModel>) => {
   dict.set(node.id, node);
   if (node.children) {
@@ -215,4 +232,5 @@ export {
   promoteBookNode,
   demoteBookNode,
   findParent,
+  moveBookNodeAfter,
 };

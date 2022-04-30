@@ -24,7 +24,7 @@ type RecursiveArgs = {
 };
 
 function RecursiveItem({ node, allTestResults }: RecursiveArgs) {
-  const hasChildren = node.children && node.children.length;
+  const hasChildren = node.children && node.children.length > 0;
   return (
     <TreeItem
       label={

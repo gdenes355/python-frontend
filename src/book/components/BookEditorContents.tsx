@@ -1,9 +1,33 @@
 import React, { useEffect, useState, useImperativeHandle, useRef } from "react";
 
-import { Menu, MenuItem, MenuList, Divider } from "@mui/material";
+import {
+  Menu,
+  MenuItem,
+  MenuList,
+  Divider,
+  useTheme,
+  ListItemIcon,
+} from "@mui/material";
 import { TreeView, TreeItem } from "@mui/lab";
+
+import {
+  DndContext,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToVerticalAxis,
+  restrictToWindowEdges,
+} from "@dnd-kit/modifiers";
+
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import InputDialog from "../../components/dialogs/InputDialog";
 import DeleteDialog from "../../components/dialogs/DeleteDialog";
@@ -13,9 +37,15 @@ import BookNodeModel, {
   deleteBookNode,
   promoteBookNode,
   demoteBookNode,
+  moveBookNodeAfter,
 } from "../../models/BookNodeModel";
 
 import "./BookContents.css";
+import {
+  ArrowBack,
+  ArrowForward,
+  DriveFileRenameOutline,
+} from "@mui/icons-material";
 
 type BookEditorContentsProps = {
   bookRoot: BookNodeModel;
@@ -97,16 +127,28 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
           </MenuItem>
           <Divider />
           <MenuItem onClick={() => dispatchCommand(props.onRenameNode)}>
+            <ListItemIcon>
+              <DriveFileRenameOutline />
+            </ListItemIcon>
             Rename
           </MenuItem>
           <MenuItem onClick={() => dispatchCommand(props.onPromoteNode)}>
+            <ListItemIcon>
+              <ArrowBack />
+            </ListItemIcon>
             Promote subpage
           </MenuItem>
           <MenuItem onClick={() => dispatchCommand(props.onDemote)}>
+            <ListItemIcon>
+              <ArrowForward />
+            </ListItemIcon>
             Make subpage
           </MenuItem>
           <Divider />
           <MenuItem onClick={() => dispatchCommand(props.onDeleteNode)}>
+            <ListItemIcon>
+              <DeleteIcon />
+            </ListItemIcon>
             Delete
           </MenuItem>
         </MenuList>
@@ -123,18 +165,52 @@ type RecursiveItemProps = {
 function RecursiveItem(props: RecursiveItemProps) {
   const { node, menu } = props;
   const hasChildren = node.children && node.children.length > 0;
+  const theme = useTheme();
+
+  const { isOver, setNodeRef: setNodeDropRef } = useDroppable({
+    id: "drop-" + props.node.id,
+    data: props.node,
+  });
+
+  const {
+    attributes,
+    listeners,
+    setNodeRef: setNodeDragRef,
+    transform,
+  } = useDraggable({
+    id: "drag-" + props.node.id,
+    data: props.node,
+  });
+
+  const style = transform
+    ? {
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
+    : undefined;
+
+  const dropStyle: React.CSSProperties = {
+    borderBottomColor: isOver ? theme.palette.primary.main : "transparent",
+    borderBottomStyle: "solid",
+    borderBottomWidth: "2px",
+  };
 
   return (
-    <TreeItem
-      label={<div className="test-state-icon">{node.name}</div>}
-      nodeId={node.id}
-      onContextMenu={(e) => menu.current?.handleContextMenu(e, node)}
-    >
-      {hasChildren &&
-        node.children?.map((item) => (
-          <RecursiveItem key={item.id} node={item} menu={menu} />
-        ))}
-    </TreeItem>
+    <div style={dropStyle} ref={setNodeDropRef}>
+      <TreeItem
+        ref={setNodeDragRef}
+        style={style}
+        {...listeners}
+        {...attributes}
+        label={<div className="test-state-icon">{node.name}</div>}
+        nodeId={node.id}
+        onContextMenu={(e) => menu.current?.handleContextMenu(e, node)}
+      >
+        {hasChildren &&
+          node.children?.map((item) => (
+            <RecursiveItem key={item.id} node={item} menu={menu} />
+          ))}
+      </TreeItem>
+    </div>
   );
 }
 
@@ -207,44 +283,71 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
     }
   };
 
+  const activationConstraint = { distance: 15 };
+  const mouseSensor = useSensor(MouseSensor, {
+    activationConstraint,
+  });
+  const touchSensor = useSensor(TouchSensor, {
+    activationConstraint,
+  });
+  const sensors = useSensors(mouseSensor, touchSensor);
+  function handleDragEnd(event: DragEndEvent) {
+    let from = event.active.data.current;
+    let to = event.over?.data.current;
+    if (from && to) {
+      moveBookNodeAfter(
+        props.bookRoot,
+        from as BookNodeModel,
+        to as BookNodeModel
+      );
+      props.onBookModified();
+    }
+  }
+
   return (
     <div className="book-contents">
-      <TreeView
-        aria-label="multi-select"
-        defaultCollapseIcon={<ExpandMoreIcon />}
-        defaultExpandIcon={<ChevronRightIcon />}
-        expanded={expandedIds}
-        selected={props.activePageId}
-        onNodeToggle={handleToggle}
-        onNodeSelect={handleSelect}
-        sx={{ maxWidth: 400 }}
+      <DndContext
+        sensors={sensors}
+        onDragEnd={handleDragEnd}
+        modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
       >
-        <PopupMenu
-          ref={popupMenuRef}
-          onOpenNode={props.onNodeSelected}
-          onRenameNode={startRenameNode}
-          onDeleteNode={startDeleteNode}
-          onPromoteNode={promoteNode}
-          onDemote={demoteNode}
-        />
-        <RecursiveItem node={props.bookRoot} menu={popupMenuRef} />
-        <InputDialog
-          title="Rename"
-          defaultValue={dialogState?.node.name}
-          inputLabel="name"
-          onInputEntered={(data) => {
-            renameNode(dialogState?.node, data);
-          }}
-          open={dialogState?.typ === "rename"}
-          onClose={() => setDialogState(null)}
-        />
-        <DeleteDialog
-          open={dialogState?.typ === "delete"}
-          message={`Are you sure you want to delete "${dialogState?.node.name}?"`}
-          onClose={() => setDialogState(null)}
-          onDelete={() => deleteNode(dialogState?.node)}
-        />
-      </TreeView>
+        <TreeView
+          aria-label="multi-select"
+          defaultCollapseIcon={<ExpandMoreIcon />}
+          defaultExpandIcon={<ChevronRightIcon />}
+          expanded={expandedIds}
+          selected={props.activePageId}
+          onNodeToggle={handleToggle}
+          onNodeSelect={handleSelect}
+          sx={{ maxWidth: 400 }}
+        >
+          <RecursiveItem node={props.bookRoot} menu={popupMenuRef} />
+        </TreeView>
+      </DndContext>
+      <PopupMenu
+        ref={popupMenuRef}
+        onOpenNode={props.onNodeSelected}
+        onRenameNode={startRenameNode}
+        onDeleteNode={startDeleteNode}
+        onPromoteNode={promoteNode}
+        onDemote={demoteNode}
+      />
+      <InputDialog
+        title="Rename"
+        defaultValue={dialogState?.node.name}
+        inputLabel="name"
+        onInputEntered={(data) => {
+          renameNode(dialogState?.node, data);
+        }}
+        open={dialogState?.typ === "rename"}
+        onClose={() => setDialogState(null)}
+      />
+      <DeleteDialog
+        open={dialogState?.typ === "delete"}
+        message={`Are you sure you want to delete "${dialogState?.node.name}?"`}
+        onClose={() => setDialogState(null)}
+        onDelete={() => deleteNode(dialogState?.node)}
+      />
     </div>
   );
 };
