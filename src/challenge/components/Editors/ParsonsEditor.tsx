@@ -1,8 +1,18 @@
-import React, { useEffect, useState, useImperativeHandle, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useImperativeHandle,
+  useRef,
+  useContext,
+} from "react";
 import type ParsonsWidget from "jsparsons";
-import "./ParsonsEditor.css";
 
+import VsThemeContext from "../../../themes/VsThemeContext";
+
+import ParsonsEditorThemeWrapper from "./ParsonsEditorThemeWrapper";
 import { TestResults } from "../../../models/Tests";
+
+import "./ParsonsEditor.css";
 
 const loadJS = (url: string) =>
   new Promise<void>((r) => {
@@ -19,6 +29,7 @@ const loadJS = (url: string) =>
     }
   });
 
+/*
 const loadCss = (url: string) => {
   const tag = document.createElement("link");
   tag.rel = "stylesheet";
@@ -30,6 +41,7 @@ const loadCss = (url: string) => {
   }
   document.body.appendChild(tag);
 };
+*/
 
 type ParsonsEditorHandle = {
   getValue: () => string;
@@ -45,6 +57,8 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
   (props, ref) => {
     const [parsons, setParsons] = useState<ParsonsWidget | null>(null);
     const jsLoaded = useRef("unloaded");
+
+    const themeContext = useContext(VsThemeContext);
 
     const getValue = () => {
       let result = "";
@@ -83,8 +97,8 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
       jsLoaded.current = "loading";
       // iffe to load all js dependencies sequentially
       (async () => {
-        loadCss("js-parsons/parsons.css");
-        loadCss("js-parsons/lib/prettify.css");
+        //loadCss("js-parsons/parsons.css");
+        //loadCss("js-parsons/lib/prettify.css");
         await loadJS("js-parsons/lib/prettify.js");
         await loadJS("js-parsons/lib/jquery.min.js");
         await loadJS("js-parsons/lib/jquery-ui.min.js");
@@ -107,15 +121,22 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
       if (jsLoaded.current !== "loaded" || !parsons) {
         return;
       }
+      console.log(props.starterCode);
       parsons.init(props.starterCode);
       parsons.shuffleLines();
     }, [parsons, props.starterCode]);
 
     return (
-      <div>
-        <div id="sortableTrash" className="sortable-code"></div>
-        <div id="sortable" className="sortable-code"></div>
-      </div>
+      <ParsonsEditorThemeWrapper>
+        <div
+          id="sortableTrash"
+          className={"sortable-code " + themeContext.theme}
+        ></div>
+        <div
+          id="sortable"
+          className={"sortable-code " + themeContext.theme}
+        ></div>
+      </ParsonsEditorThemeWrapper>
     );
   }
 );
