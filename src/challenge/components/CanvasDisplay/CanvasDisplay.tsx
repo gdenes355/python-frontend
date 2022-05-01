@@ -9,7 +9,7 @@ import ChallengeContext from "../../ChallengeContext";
 type CanvasDisplayHandle = {
   turtleReset: (mode: "standard" | "logo") => void;
   runTurtleCommand: (msg: string) => void;
-  runCommand: (msg: string) => void;
+  runCommand: (commands: any[]) => void;
 };
 
 type CanvasDisplayProps = {
@@ -53,14 +53,14 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       }
     };
 
-    const runCommand = (msg: string) => {
+    const runCommand = (commands: any[]) => {
       const canvas: HTMLCanvasElement = document.getElementById(
         "canvasDisplay"
       ) as HTMLCanvasElement;
 
       const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-      const drawObjs = JSON.parse(msg);
-      for (let drawObj of drawObjs) {
+
+      for (let drawObj of commands) {
         processCanvasCommand(context, drawObj);
       }
     };
