@@ -1,3 +1,5 @@
+const imageCache = new Map<string, HTMLImageElement>();
+
 const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
   try {
     if (cmd.clearCanvas) {
@@ -105,14 +107,22 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
           context.strokeText(cmd.text, cmd.x, cmd.y, cmd.maxWidth);
         }
 
-        const img = new Image();
-        img.onload = function(){
-          context.drawImage(img, cmd.dx, cmd.dy, cmd.dwidth, cmd.dheight);
-        };
-        img.src = cmd.imageURI;        
+        let cachedImg = imageCache.get(cmd.imageURI);
+        if (cachedImg) {
+          // serve from local cache
+          context.drawImage(cachedImg, cmd.dx, cmd.dy, cmd.dwidth, cmd.dheight);
+        } else {
+          // create new image
+          const img = new Image();
+          img.onload = function () {
+            context.drawImage(img, cmd.dx, cmd.dy, cmd.dwidth, cmd.dheight);
+            imageCache.set(cmd.imageURI, img);
+          };
+          img.src = cmd.imageURI;
+        }
         break;
       case "reset":
-        break;    
+        break;
       default:
         console.log("unknown canvas draw action:");
         console.log(cmd);
