@@ -14,10 +14,12 @@ import DebugContext from "../../../models/DebugContext";
 import ChallengeContext from "../../ChallengeContext";
 import VsThemeContext from "../../../themes/VsThemeContext";
 
-loader.config({
-  paths: { vs: "/static/cdn-mirror/monaco-editor@0.28.1/min/vs" },
-});
-
+const STANDALONE_BUILD = false;
+if (STANDALONE_BUILD) {
+  loader.config({
+    paths: { vs: "/static/cdn-mirror/monaco-editor@0.28.1/min/vs" },
+  });
+}
 type PyEditorProps = {
   canRun: boolean;
   isOnBreakPoint: boolean;
