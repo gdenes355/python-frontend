@@ -82,7 +82,7 @@ class ChallengeContextClass {
     },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ !== ChallengeTypes.TYP_PY) {
+        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);

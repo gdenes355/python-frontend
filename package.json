@@ -1,6 +1,6 @@
 {
   "name": "coding-frontend",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "proxy": "http://localhost:5000",
   "description": "Client-side framework for learning Python and authoring Python challenges",
@@ -52,7 +52,8 @@
     "build": "node ./scripts/build.js",
     "build-standalone": "node ./scripts/build.js --standalone && xcopy \".\\build\\\" \".\\portable\\data\\\" /E /y",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "prestart": "node ./scripts/prestart.js"
   },
   "eslintConfig": {
     "extends": [
