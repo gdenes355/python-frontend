@@ -1,4 +1,5 @@
-importScripts('https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js')
+//importScripts('https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js')
+importScripts('/static/cdn-mirror/pyodide/v0.20.0/full/pyodide.js')
 
 // communication with the main site
 // there are two commands implemented at the moment:
@@ -59,7 +60,8 @@ onmessage = function (e) {
 // loading code
 const loadPyodideAsync = async () => {
   let initPyPromise = fetch("./init.py")
-  self.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/' })
+  //self.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/' })
+  self.pyodide = await loadPyodide({ indexURL: '/static/cdn-mirror/pyodide/v0.20.0/full/' })
   
   initPyCode = await (await initPyPromise).text()
 

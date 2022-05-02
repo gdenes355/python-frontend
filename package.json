@@ -3,6 +3,12 @@
   "version": "0.2.0",
   "private": true,
   "proxy": "http://localhost:5000",
+  "description":"Client-side framework for learning Python and authoring Python challenges",
+  "author": "Gyorgy Denes and Paul Baker",
+  "license": "MIT",
+  "repository":{
+    "url":"https://github.com/gdenes355/python-frontend"
+  },
   "dependencies": {
     "@dnd-kit/core": "^5.0.3",
     "@dnd-kit/modifiers": "^5.0.0",
