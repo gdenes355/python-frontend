@@ -42,3 +42,4 @@ coding-frontend/build/
 sandbox/*
 public/sandbox/*
 portable/
+public/static/js/pyworker_sw.js

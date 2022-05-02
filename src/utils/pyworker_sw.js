@@ -1,5 +1,12 @@
-//importScripts('https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js')
-importScripts('/static/cdn-mirror/pyodide/v0.20.0/full/pyodide.js')
+const STANDALONE_BUILD = false;
+const pyodideImportPath = STANDALONE_BUILD 
+  ?  '/static/cdn-mirror/pyodide/v0.20.0/full/pyodide.js' 
+  : 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js';
+const pyodideIndexUrl = STANDALONE_BUILD
+  ? '/static/cdn-mirror/pyodide/v0.20.0/full/'
+  : 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/';
+
+importScripts(pyodideImportPath)
 
 // communication with the main site
 // there are two commands implemented at the moment:
@@ -60,8 +67,7 @@ onmessage = function (e) {
 // loading code
 const loadPyodideAsync = async () => {
   let initPyPromise = fetch("./init.py")
-  //self.pyodide = await loadPyodide({ indexURL: 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/' })
-  self.pyodide = await loadPyodide({ indexURL: '/static/cdn-mirror/pyodide/v0.20.0/full/' })
+  self.pyodide = await loadPyodide({ indexURL: pyodideIndexUrl })
   
   initPyCode = await (await initPyPromise).text()
 
