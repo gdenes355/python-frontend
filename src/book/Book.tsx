@@ -27,7 +27,7 @@ import BookEditorDrawer from "./components/BookEditorDrawer";
 
 type BookProps = {
   zipFile?: File;
-  onBookUploaded: (file:File) => void;
+  onBookUploaded: (file: File, edit: boolean) => void;
 };
 
 type PathsState = {
@@ -288,7 +288,7 @@ const Book = (props: BookProps) => {
                 onTestsPassingChanged={activeTestsPassingChanged}
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
-                onBookUploaded={(file) => props.onBookUploaded(file)}
+                onBookUploaded={props.onBookUploaded}
               />
               <BookDrawer
                 bookRoot={rootNode}

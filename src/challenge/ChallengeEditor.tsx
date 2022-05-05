@@ -210,7 +210,6 @@ class ChallengeEditor
         })
       )
       .then((blob) => saveAs(blob, "challenges.zip"));
-    //.then((d) => console.log(encodeURIComponent(d)));
   };
 
   previewAsZip = () => {
@@ -234,7 +233,6 @@ class ChallengeEditor
           }?book=book.json&zip-data=${base64data}`
         );
       });
-    //.then((d) => console.log(encodeURIComponent(d)));
   };
 
   save = () => {

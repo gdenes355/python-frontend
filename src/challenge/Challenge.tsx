@@ -29,7 +29,7 @@ import { TestCases } from "../models/Tests";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
-import BookUploadModal from "./components/BookUploadModal";
+import BookUploadModal from "../book/components/BookUploadModal";
 
 import "./Challenge.css";
 
@@ -50,7 +50,7 @@ type ChallengeProps = IChallengeProps & {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookUploaded: (file: File) => void;
+  onBookUploaded: (file: File, edit: boolean) => void;
 };
 
 class Challenge
@@ -244,7 +244,7 @@ class Challenge
           <BookUploadModal
             visible={true}
             onClose={() => this.setState({ showBookUpload: false })}
-            onBookUploaded={(file) => this.props.onBookUploaded(file)}
+            onBookUploaded={this.props.onBookUploaded}
           />
         ) : null}
         <ChallengeContext.Provider value={this.chContext}>

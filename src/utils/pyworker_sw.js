@@ -51,7 +51,6 @@ onmessage = function (e) {
     self.postMessage({ cmd: 'debug-finished', reason })      
   } else if (e.data.cmd === 'test') {
     let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile' } })
-    console.log('running tests')
     try {
       const tests = e.data.tests
       results = tests.map((test) => self.pyodide.globals.get('pyexec')(e.data.code, test.in, test.out))

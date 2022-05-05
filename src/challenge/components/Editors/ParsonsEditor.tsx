@@ -121,7 +121,6 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
       if (jsLoaded.current !== "loaded" || !parsons) {
         return;
       }
-      console.log(props.starterCode);
       parsons.init(props.starterCode);
       parsons.shuffleLines();
     }, [parsons, props.starterCode]);
