@@ -65,9 +65,7 @@ const MainControlsStack = (props: MainControlsProps) => {
           </Button>
         </Box>
       ) : null}
-      <TestResultsIndicator
-        testResults={props.testResults}
-      ></TestResultsIndicator>
+      <TestResultsIndicator testResults={props.testResults} />
     </Stack>
   );
 };
@@ -93,9 +91,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
               </Button>
             </Box>
           ) : null}
-          <TestResultsIndicator
-            testResults={props.testResults}
-          ></TestResultsIndicator>
+          <TestResultsIndicator testResults={props.testResults} />
         </Stack>
       </Grid>
       <Grid item>

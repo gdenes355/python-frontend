@@ -210,7 +210,29 @@ class ChallengeEditor
         })
       )
       .then((blob) => saveAs(blob, "challenges.zip"));
-    //.then((d) => console.log(encodeURIComponent(d)));
+  };
+
+  previewAsZip = () => {
+    this.props.fetcher
+      .fetchBook()
+      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .then((zip) =>
+        zip.generateAsync({
+          type: "base64",
+          compression: "DEFLATE",
+          compressionOptions: {
+            level: 9,
+          },
+        })
+      )
+      .then((result) => {
+        const base64data = encodeURIComponent(result);
+        window.open(
+          `${
+            window.location.href.split("?")[0]
+          }?book=book.json&zip-data=${base64data}`
+        );
+      });
   };
 
   save = () => {
@@ -272,9 +294,7 @@ class ChallengeEditor
               })
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
-            canSubmit={
-              this.props.tests !== null || this.props.typ === "parsons"
-            }
+            canSubmit={false}
             testResults={[]}
           />
         </CardContent>
@@ -332,11 +352,13 @@ class ChallengeEditor
               title={this.props.title || this.props.bookNode?.name || ""}
               usingFixedInput={this.state.usesFixedInput}
               showEditTools={true}
+              showUploadBookZip={false}
               editingGuide={this.state.isEditingGuide}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
               onBookDownload={this.exportAsZip}
+              onBookExportAsUrl={this.previewAsZip}
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
               }

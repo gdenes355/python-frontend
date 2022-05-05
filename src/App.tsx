@@ -17,18 +17,24 @@ import "./App.css";
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
+  const isTeacher = searchParams.get("teacher") || "";
   const [bookFile, setBookFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
+  const openBookFromZip = (file: File, edit: boolean) => {
+    setBookFile(file);
+    navigate({ search: `?book=book.json${edit ? "&edit=clone" : ""}` });
+  };
+
   if (bookPath || bookFile) {
-    return <Book zipFile={bookFile || undefined} />;
+    return (
+      <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
+    );
   } else {
     return (
       <BookUpload
-        onBookUploaded={(file) => {
-          setBookFile(file);
-          navigate({ search: "?book=book.json" });
-        }}
+        isForEditing={isTeacher?.length > 0}
+        onBookUploaded={openBookFromZip}
       />
     );
   }

@@ -13,9 +13,10 @@ import {
 } from "@mui/material";
 
 import { FileDownload } from "@mui/icons-material";
-
+import LinkIcon from "@mui/icons-material/Link";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import ArticleIcon from "@mui/icons-material/Article";
 import FolderZipIcon from "@mui/icons-material/FolderZip";
 import Menu from "../../components/Menu";
 import FileUploadControl from "../../components/FileUploadControl";
@@ -28,6 +29,7 @@ type HeaderBarProps = {
   title?: string;
   usingFixedInput: boolean;
   showEditTools?: boolean;
+  showUploadBookZip: boolean;
   editingGuide?: boolean;
   onUsingFixedInputChange: (fixedInput: boolean) => void;
   onEditingGuideChange?: (editingGuide: boolean) => void;
@@ -35,6 +37,8 @@ type HeaderBarProps = {
   canReset: boolean;
   canDebug: boolean;
   onBookDownload?: () => void;
+  onBookExportAsUrl?: () => void;
+  onBookUpload?: () => void;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -179,10 +183,29 @@ const HeaderBar = (props: HeaderBarProps) => {
                     <ListItemIcon>
                       <FolderZipIcon />
                     </ListItemIcon>
-                    Export book
+                    Export as ZIP
+                  </MenuItem>,
+                  <MenuItem
+                    onClick={() => props.onBookExportAsUrl?.()}
+                    key="url-export"
+                  >
+                    <ListItemIcon>
+                      <LinkIcon />
+                    </ListItemIcon>
+                    Export as URL
                   </MenuItem>,
                 ]
               : undefined}
+            {props.showUploadBookZip ? (
+              <MenuItem
+                onClick={() => props.onBookUpload && props.onBookUpload()}
+              >
+                <ListItemIcon>
+                  <ArticleIcon />
+                </ListItemIcon>
+                Upload Book Zip
+              </MenuItem>
+            ) : null}
             <MenuItem onClick={() => props.onHelpOpen(true)}>
               <ListItemIcon>
                 <QuestionMarkIcon />

@@ -68,7 +68,6 @@ class ChallengeContextClass {
       const commands = JSON.parse(data.msg) as any[];
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
-          console.log(commands);
           if (commands.length === 1 && commands[0]?.action === "reset") {
             //ignore single initial reset if we are meant to be a standard
             // Python challenge
@@ -306,6 +305,7 @@ class ChallengeContextClass {
       }
       this.actions["save-code"]({ code });
     },
+    preview: () => {},
     "breakpoints-updated": () => {
       if (
         this.challenge.editorRef.current &&

@@ -4,7 +4,8 @@ import { Button, Card, CardContent, CardActions, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 
 type BookUploadProps = {
-  onBookUploaded: (zip: File) => void;
+  isForEditing?: boolean;
+  onBookUploaded: (zip: File, forEdit: boolean) => void;
 };
 
 const baseStyle = {
@@ -58,7 +59,7 @@ const BookUpload = (props: BookUploadProps) => {
 
   const uploadClicked = (event: MouseEvent) => {
     if (file) {
-      props.onBookUploaded(file);
+      props.onBookUploaded(file, props.isForEditing || false);
     }
   };
 
@@ -78,7 +79,7 @@ const BookUpload = (props: BookUploadProps) => {
       </CardContent>
       <CardActions>
         <Button onClick={uploadClicked} disabled={!file}>
-          Load
+          {props.isForEditing ? "Clone" : "Load"}
         </Button>
         <Button color="error" disabled={!file} onClick={() => setFile(null)}>
           Cancel
