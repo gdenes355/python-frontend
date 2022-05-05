@@ -227,11 +227,15 @@ class ChallengeEditor
         })
       )
       .then((result) => {
-        const base64data = encodeURIComponent(result);                
-        window.open(`${window.location.href.split('?')[0]}?zip-data=${base64data}`);       
+        const base64data = encodeURIComponent(result);
+        window.open(
+          `${
+            window.location.href.split("?")[0]
+          }?book=book.json&zip-data=${base64data}`
+        );
       });
     //.then((d) => console.log(encodeURIComponent(d)));
-  };  
+  };
 
   save = () => {
     // saving the code
@@ -293,9 +297,7 @@ class ChallengeEditor
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={false}
-            canPreview={true}
             testResults={[]}
-            onPreview={this.previewAsZip}
           />
         </CardContent>
       </Card>
@@ -358,6 +360,7 @@ class ChallengeEditor
               canDebug={this.state.editorState === ChallengeStatus.READY}
               canReset={this.state.editorState === ChallengeStatus.READY}
               onBookDownload={this.exportAsZip}
+              onBookExportAsUrl={this.previewAsZip}
               onUsingFixedInputChange={(fixedInput) =>
                 this.setState({ usesFixedInput: fixedInput })
               }

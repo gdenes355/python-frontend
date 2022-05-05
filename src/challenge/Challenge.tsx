@@ -31,7 +31,6 @@ import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 import BookUploadModal from "./components/BookUploadModal";
 
-
 import "./Challenge.css";
 
 type ChallengeState = IChallengeState & {
@@ -51,7 +50,7 @@ type ChallengeProps = IChallengeProps & {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookUploaded: (file:File) => void;
+  onBookUploaded: (file: File) => void;
 };
 
 class Challenge
@@ -95,7 +94,7 @@ class Challenge
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
-    showBookUpload:false,
+    showBookUpload: false,
   };
 
   constructor(props: ChallengeProps) {
@@ -222,7 +221,6 @@ class Challenge
               this.props.tests !== null || this.props.typ === "parsons"
             }
             testResults={this.state.testResults}
-            canPreview={false}
           />
         </CardContent>
       </Card>
@@ -242,143 +240,150 @@ class Challenge
   render() {
     return (
       <>
-      {this.state.showBookUpload ? 
-        <BookUploadModal visible={true} onClose={() => this.setState({showBookUpload: false})} onBookUploaded={(file) => this.props.onBookUploaded(file)}/>
-        : null
-      }
-      <ChallengeContext.Provider value={this.chContext}>
-        <Paper
-          sx={{
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            overflow: "hidden",
-            flexDirection: "row",
-          }}
-        >
-          <Box
+        {this.state.showBookUpload ? (
+          <BookUploadModal
+            visible={true}
+            onClose={() => this.setState({ showBookUpload: false })}
+            onBookUploaded={(file) => this.props.onBookUploaded(file)}
+          />
+        ) : null}
+        <ChallengeContext.Provider value={this.chContext}>
+          <Paper
             sx={{
               width: "100%",
               height: "100%",
               display: "flex",
               overflow: "hidden",
-              flexDirection: "column",
+              flexDirection: "row",
             }}
           >
-            <HeaderBar
-              title={this.props.title || this.props.bookNode?.name || ""}
-              usingFixedInput={this.state.usesFixedInput}
-              showEditTools={false}
-              showUploadBookZip={true}
-              onHelpOpen={(open) => this.setState({ helpOpen: open })}
-              canDebug={this.state.editorState === ChallengeStatus.READY}
-              canReset={this.state.editorState === ChallengeStatus.READY}
-              onUsingFixedInputChange={(fixedInput) =>
-                this.setState({ usesFixedInput: fixedInput })
-              }
-              onBookUpload={() => {this.setState({showBookUpload:true})}}
-            />
+            <Box
+              sx={{
+                width: "100%",
+                height: "100%",
+                display: "flex",
+                overflow: "hidden",
+                flexDirection: "column",
+              }}
+            >
+              <HeaderBar
+                title={this.props.title || this.props.bookNode?.name || ""}
+                usingFixedInput={this.state.usesFixedInput}
+                showEditTools={false}
+                showUploadBookZip={true}
+                onHelpOpen={(open) => this.setState({ helpOpen: open })}
+                canDebug={this.state.editorState === ChallengeStatus.READY}
+                canReset={this.state.editorState === ChallengeStatus.READY}
+                onUsingFixedInputChange={(fixedInput) =>
+                  this.setState({ usesFixedInput: fixedInput })
+                }
+                onBookUpload={() => {
+                  this.setState({ showBookUpload: true });
+                }}
+              />
 
-            <Allotment className="h-100" defaultSizes={[650, 350]}>
-              <Allotment.Pane>
-                <Allotment vertical defaultSizes={[650, 350]}>
-                  <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
-                  <Allotment.Pane
-                    visible={this.getVisibilityWithHack(
-                      !this.state.editorFullScreen
-                    )}
-                    maxSize={550}
-                    minSize={
-                      this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
-                    }
-                  >
-                    <Outputs
-                      ref={this.outputsRef}
-                      console={
-                        <ChallengeConsole
-                          content={this.state.consoleText}
-                          inputEnabled={
-                            this.state.editorState ===
-                            ChallengeStatus.AWAITING_INPUT
-                          }
-                        />
+              <Allotment className="h-100" defaultSizes={[650, 350]}>
+                <Allotment.Pane>
+                  <Allotment vertical defaultSizes={[650, 350]}>
+                    <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
+                    <Allotment.Pane
+                      visible={this.getVisibilityWithHack(
+                        !this.state.editorFullScreen
+                      )}
+                      maxSize={550}
+                      minSize={
+                        this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
                       }
-                      fixedInput={
-                        this.state.usesFixedInput ? (
-                          <FixedInputField ref={this.fixedInputFieldRef} />
-                        ) : undefined
-                      }
-                      canvas={
-                        this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                          <CanvasDisplay ref={this.canvasDisplayRef} />
-                        ) : undefined
-                      }
-                    />
-                  </Allotment.Pane>
-                </Allotment>
-              </Allotment.Pane>
-              <Allotment.Pane
-                visible={this.getVisibilityWithHack(
-                  !this.state.editorFullScreen && !this.state.guideMinimised
-                )}
-              >
-                <Allotment vertical className="challenge__right-pane">
-                  <Box
-                    sx={{
-                      paddingLeft: 2,
-                      paddingRight: 2,
-                      display: "flex",
-                      flexDirection: "column",
-                      height: "100%",
-                    }}
-                  >
-                    {this.renderMainControls()}
-                    {this.renderGuide()}
-                  </Box>
-                  <Allotment.Pane
-                    maxSize={350}
-                    minSize={150}
-                    snap={true}
-                    visible={
-                      this.state.editorState === ChallengeStatus.RUNNING ||
-                      this.state.editorState ===
-                        ChallengeStatus.ON_BREAKPOINT ||
-                      this.state.editorState === ChallengeStatus.AWAITING_INPUT
-                    }
-                    className="debug-pane"
-                  >
-                    <DebugPane
-                      canContinue={
-                        this.state.editorState === ChallengeStatus.ON_BREAKPOINT
-                      }
-                      canKill={
+                    >
+                      <Outputs
+                        ref={this.outputsRef}
+                        console={
+                          <ChallengeConsole
+                            content={this.state.consoleText}
+                            inputEnabled={
+                              this.state.editorState ===
+                              ChallengeStatus.AWAITING_INPUT
+                            }
+                          />
+                        }
+                        fixedInput={
+                          this.state.usesFixedInput ? (
+                            <FixedInputField ref={this.fixedInputFieldRef} />
+                          ) : undefined
+                        }
+                        canvas={
+                          this.state.typ === ChallengeTypes.TYP_CANVAS ? (
+                            <CanvasDisplay ref={this.canvasDisplayRef} />
+                          ) : undefined
+                        }
+                      />
+                    </Allotment.Pane>
+                  </Allotment>
+                </Allotment.Pane>
+                <Allotment.Pane
+                  visible={this.getVisibilityWithHack(
+                    !this.state.editorFullScreen && !this.state.guideMinimised
+                  )}
+                >
+                  <Allotment vertical className="challenge__right-pane">
+                    <Box
+                      sx={{
+                        paddingLeft: 2,
+                        paddingRight: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        height: "100%",
+                      }}
+                    >
+                      {this.renderMainControls()}
+                      {this.renderGuide()}
+                    </Box>
+                    <Allotment.Pane
+                      maxSize={350}
+                      minSize={150}
+                      snap={true}
+                      visible={
                         this.state.editorState === ChallengeStatus.RUNNING ||
                         this.state.editorState ===
                           ChallengeStatus.ON_BREAKPOINT ||
                         this.state.editorState ===
                           ChallengeStatus.AWAITING_INPUT
                       }
-                      debugContext={this.state.debugContext}
-                    />
-                  </Allotment.Pane>
-                </Allotment>
-              </Allotment.Pane>
-            </Allotment>
-            <BookControlFabs
-              onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-              onNavigateToNextPage={this.props.onRequestNextChallenge}
-              onOpenMenu={() => {
-                this.props.openBookDrawer?.(true);
-              }}
-            />
-          </Box>
-          <Box>
-            {!this.state.guideMinimised ? undefined : (
-              <div>{this.renderMainControls()}</div>
-            )}
-          </Box>
-        </Paper>
-      </ChallengeContext.Provider>
+                      className="debug-pane"
+                    >
+                      <DebugPane
+                        canContinue={
+                          this.state.editorState ===
+                          ChallengeStatus.ON_BREAKPOINT
+                        }
+                        canKill={
+                          this.state.editorState === ChallengeStatus.RUNNING ||
+                          this.state.editorState ===
+                            ChallengeStatus.ON_BREAKPOINT ||
+                          this.state.editorState ===
+                            ChallengeStatus.AWAITING_INPUT
+                        }
+                        debugContext={this.state.debugContext}
+                      />
+                    </Allotment.Pane>
+                  </Allotment>
+                </Allotment.Pane>
+              </Allotment>
+              <BookControlFabs
+                onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
+                onNavigateToNextPage={this.props.onRequestNextChallenge}
+                onOpenMenu={() => {
+                  this.props.openBookDrawer?.(true);
+                }}
+              />
+            </Box>
+            <Box>
+              {!this.state.guideMinimised ? undefined : (
+                <div>{this.renderMainControls()}</div>
+              )}
+            </Box>
+          </Paper>
+        </ChallengeContext.Provider>
       </>
     );
   }
