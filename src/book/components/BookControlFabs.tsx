@@ -18,6 +18,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
   if (props.onSave) {
     btns.push(
       <Fab
+        key="save"
         sx={{ m: 1 }}
         size="small"
         onClick={() => props.onSave?.()}
@@ -31,6 +32,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
   if (props.onNavigateToPrevPage) {
     btns.push(
       <Fab
+        key="prev"
         size="small"
         sx={{ m: 1 }}
         onClick={() => props.onNavigateToPrevPage?.()}
@@ -43,6 +45,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
   if (props.onNavigateToNextPage) {
     btns.push(
       <Fab
+        key="next"
         size="small"
         sx={{ m: 1 }}
         onClick={() => props.onNavigateToNextPage?.()}
@@ -55,6 +58,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
   if (props.onOpenMenu) {
     btns.push(
       <Fab
+        key="menu"
         size="small"
         sx={{ m: 1 }}
         color="primary"

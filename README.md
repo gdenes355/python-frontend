@@ -51,6 +51,16 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 
 You can host your static build on github pages or some other static web hosting for free.
 
+#### `npm run build-standalone`
+
+Builds the app for production into the `portable/data` folder.\
+It correctly bundles React in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.
+
+Your site is ready to run even if you don't have access to the internet.\
+For ease of use, on Windows you can just launch `portable/PythonSponge.bat` which makes use of [civetweb](https://github.com/civetweb/civetweb) to host the site locally.
+
 #### `npm run eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can't go back!**

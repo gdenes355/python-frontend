@@ -111,6 +111,17 @@ class DebugContext:
                     "y": y, "maxWidth": maxWidth, "clearCanvas": clearCanvas}
         self._add_command(json_map)
 
+    def reset(self):
+        self.__commands = []
+        self.double_buffering = False
+        json_map = {"action": "reset", "clearCanvas": True}
+        self._add_command(json_map)
+
+    def drawImage(self, imageURI, x, y, width, height):
+        json_map = {"action": "drawImage", "imageURI": imageURI, "dx": x,
+                    "dy": y, "dwidth": width, "dheight": height}
+        self._add_command(json_map)        
+
     def check_key(self, key_code):
         return js.workerCheckKeyDown(key_code)
 
@@ -324,6 +335,7 @@ def pyexec(code, expected_input, expected_output):
     sys.stderr = test_output
     sys.stdctx = debug_context
     debug_context.double_buffering = False  # assume single buffering
+    debug_context.reset()
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
@@ -370,6 +382,8 @@ def pydebug(code, breakpoints):
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context
+    debug_context.double_buffering = False  # assume single buffering
+    debug_context.reset()
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
@@ -405,6 +419,8 @@ def pyrun(code):
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context
+    debug_context.double_buffering = False  # assume single buffering
+    debug_context.reset()
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input

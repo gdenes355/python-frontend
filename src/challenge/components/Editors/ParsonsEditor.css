@@ -1,3 +1,112 @@
-.sortable-code {
-  width: 47% !important;
+/* light theme */
+.sortable-code.vs-light .prettyprint.lang-py .str {
+  color: #a31515;
+}
+.sortable-code.vs-light .prettyprint.lang-py .kwd {
+  color: #0000ff;
+}
+.sortable-code.vs-light .prettyprint.lang-py .com {
+  /* comment */
+  color: #008000;
+}
+.sortable-code.vs-light .prettyprint.lang-py .typ {
+  /* type declaration (e.g. class THIS ) */
+  color: #000;
+}
+.sortable-code.vs-light .prettyprint.lang-py .pun {
+  color: #000;
+}
+.sortable-code.vs-light .prettyprint.lang-py .pln {
+  /* plain text */
+  color: #000;
+}
+.sortable-code.vs-light .prettyprint.lang-py .lit {
+  /* number literal */
+  color: #000;
+}
+
+/* dark theme */
+.sortable-code.vs-dark .prettyprint.lang-py .str {
+  color: #ce9178;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .kwd {
+  color: #569cd6;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .com {
+  /* comment */
+  color: #608b4e;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .typ {
+  /* type declaration (e.g. class THIS ) */
+  color: #fff;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .pun {
+  color: #fff;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .pln {
+  /* plain text */
+  color: #fff;
+}
+.sortable-code.vs-dark .prettyprint.lang-py .lit {
+  /* number literal */
+  color: #fff;
+}
+
+/** couldn't trigger these from Python 
+.tag {
+  color: #008;
+}
+.atn {
+  color: #606;
+}
+.atv {
+  color: #080;
+}
+.dec {
+  color: #606;
+}
+*/
+
+/** disabled
+pre.prettyprint {
+  padding: 2px;
+  border: 1px solid #888;
+}
+*/
+
+@media print {
+  .str {
+    color: #060;
+  }
+  .kwd {
+    color: #006;
+    font-weight: bold;
+  }
+  .com {
+    color: #600;
+    font-style: italic;
+  }
+  .typ {
+    color: #404;
+    font-weight: bold;
+  }
+  .lit {
+    color: #044;
+  }
+  .pun {
+    color: #440;
+  }
+  .pln {
+    color: #000;
+  }
+  .tag {
+    color: #006;
+    font-weight: bold;
+  }
+  .atn {
+    color: #404;
+  }
+  .atv {
+    color: #060;
+  }
 }

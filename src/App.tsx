@@ -54,7 +54,7 @@ const AppContainer = () => {
 };
 
 export default function App() {
-  const [vsTheme, setVsTheme] = useState("vs-dark");
+  const [vsTheme, setVsTheme] = useState("vs-light");
 
   useEffect(() => {
     let previousTheme = Cookies.get("theme");

@@ -65,17 +65,24 @@ class ChallengeContextClass {
       this.challenge.printCallback();
     },
     draw: (data: DrawData) => {
+      const commands = JSON.parse(data.msg) as any[];
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
+        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+          console.log(commands);
+          if (commands.length === 1 && commands[0]?.action === "reset") {
+            //ignore single initial reset if we are meant to be a standard
+            // Python challenge
+            return;
+          }
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
-        this.challenge.canvasDisplayRef?.current?.runCommand(data.msg);
+        this.challenge.canvasDisplayRef?.current?.runCommand(commands);
       }
     },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
+        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);

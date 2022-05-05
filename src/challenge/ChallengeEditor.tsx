@@ -70,7 +70,7 @@ type ChallengeEditorProps = {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookNodeSaved: (node: BookNodeModel) => void;
+  onBookModified: () => void;
 };
 
 class ChallengeEditor
@@ -266,7 +266,7 @@ class ChallengeEditor
     }
     if (changed) {
       this.props.bookStore.store.saveBook();
-      this.props.onBookNodeSaved(this.props.bookNode);
+      this.props.onBookModified();
     }
   };
 
