@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Box,
   TableContainer,
   Table,
   TableBody,
@@ -177,39 +178,38 @@ const BookReport = (props: BookReportProps) => {
     return <p>Generating report...</p>;
   }
   return (
-    <Container className="report">
-      <h1>
+    <Box sx={{ overflowY: "auto", height: "100%" }}>
+      <Container className="report">
         <IconButton onClick={props.onCloseReport}>
           <NavigateBeforeIcon />
         </IconButton>
 
-        {props.bookRoot.name}
-      </h1>
-      <p>Report generated {new Date().toLocaleString()}</p>
-      <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell></TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell className="theader" />
-              <TableCell className="theader">
-                <DoneIcon color="success" />
-              </TableCell>
-              <TableCell className="theader">
-                <CancelIcon color="error" />
-              </TableCell>
-              <TableCell className="theader">
-                <QuestionMarkIcon color="warning" />
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <ResultRow node={decoratedRoot} />
-          </TableBody>
-        </Table>
-      </TableContainer>
-    </Container>
+        <p>Report generated {new Date().toLocaleString()}</p>
+        <TableContainer component={Paper}>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell className="theader" />
+                <TableCell className="theader">
+                  <DoneIcon color="success" />
+                </TableCell>
+                <TableCell className="theader">
+                  <CancelIcon color="error" />
+                </TableCell>
+                <TableCell className="theader">
+                  <QuestionMarkIcon color="warning" />
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <ResultRow node={decoratedRoot} />
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Container>
+    </Box>
   );
 };
 

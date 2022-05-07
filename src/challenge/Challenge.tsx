@@ -23,15 +23,17 @@ import FixedInputField, {
 import Guide from "../components/Guide";
 import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
-import HeaderBar from "./components/HeaderBar";
+import HeaderBar from "../components/HeaderBar";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases } from "../models/Tests";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 import BookUploadModal from "../book/components/BookUploadModal";
+import HeaderButtons from "./components/HeaderButtons";
 
 import "./Challenge.css";
+import HeaderMenu from "./components/HeaderMenu";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -268,19 +270,23 @@ class Challenge
             >
               <HeaderBar
                 title={this.props.title || this.props.bookNode?.name || ""}
-                usingFixedInput={this.state.usesFixedInput}
-                showEditTools={false}
-                showUploadBookZip={true}
                 onHelpOpen={(open) => this.setState({ helpOpen: open })}
-                canDebug={this.state.editorState === ChallengeStatus.READY}
-                canReset={this.state.editorState === ChallengeStatus.READY}
-                onUsingFixedInputChange={(fixedInput) =>
-                  this.setState({ usesFixedInput: fixedInput })
+                menuItems={
+                  <HeaderMenu
+                    onUsingFixedInputChange={(fixedInput) =>
+                      this.setState({ usesFixedInput: fixedInput })
+                    }
+                    usingFixedInput={this.state.usesFixedInput}
+                    onBookUpload={() => {
+                      this.setState({ showBookUpload: true });
+                    }}
+                  />
                 }
-                onBookUpload={() => {
-                  this.setState({ showBookUpload: true });
-                }}
-              />
+              >
+                <HeaderButtons
+                  canReset={this.state.editorState === ChallengeStatus.READY}
+                />
+              </HeaderBar>
 
               <Allotment className="h-100" defaultSizes={[650, 350]}>
                 <Allotment.Pane>

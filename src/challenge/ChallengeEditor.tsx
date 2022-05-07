@@ -17,7 +17,7 @@ import Guide from "../components/Guide";
 import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
 import { Allotment } from "allotment";
-import HeaderBar from "./components/HeaderBar";
+import HeaderBar from "../components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
@@ -37,6 +37,8 @@ import IBookFetcher from "../book/utils/IBookFetcher";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import BookZipper from "../book/utils/BookZipper";
+import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
+import HeaderMenuEditor from "./components/HeaderMenuEditor";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -350,22 +352,25 @@ class ChallengeEditor
           >
             <HeaderBar
               title={this.props.title || this.props.bookNode?.name || ""}
-              usingFixedInput={this.state.usesFixedInput}
-              showEditTools={true}
-              showUploadBookZip={false}
-              editingGuide={this.state.isEditingGuide}
               onHelpOpen={(open) => this.setState({ helpOpen: open })}
-              canDebug={this.state.editorState === ChallengeStatus.READY}
-              canReset={this.state.editorState === ChallengeStatus.READY}
-              onBookDownload={this.exportAsZip}
-              onBookExportAsUrl={this.previewAsZip}
-              onUsingFixedInputChange={(fixedInput) =>
-                this.setState({ usesFixedInput: fixedInput })
+              menuItems={
+                <HeaderMenuEditor
+                  onBookDownload={this.exportAsZip}
+                  onBookExportAsUrl={this.previewAsZip}
+                  onUsingFixedInputChange={(fixedInput) =>
+                    this.setState({ usesFixedInput: fixedInput })
+                  }
+                  usingFixedInput={this.state.usesFixedInput}
+                />
               }
-              onEditingGuideChange={(editing) =>
-                this.setState({ isEditingGuide: editing })
-              }
-            />
+            >
+              <HeaderButtonsEditor
+                editingGuide={this.state.isEditingGuide}
+                onEditingGuideChange={(editing) =>
+                  this.setState({ isEditingGuide: editing })
+                }
+              />
+            </HeaderBar>
 
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>

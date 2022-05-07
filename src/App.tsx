@@ -13,6 +13,7 @@ import VsThemeContext from "./themes/VsThemeContext";
 import Cookies from "js-cookie";
 
 import "./App.css";
+import HeaderBar from "./components/HeaderBar";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -32,10 +33,13 @@ const AppContainer = () => {
     );
   } else {
     return (
-      <BookUpload
-        isForEditing={isTeacher?.length > 0}
-        onBookUploaded={openBookFromZip}
-      />
+      <React.Fragment>
+        <HeaderBar />
+        <BookUpload
+          isForEditing={isTeacher?.length > 0}
+          onBookUploaded={openBookFromZip}
+        />
+      </React.Fragment>
     );
   }
 };

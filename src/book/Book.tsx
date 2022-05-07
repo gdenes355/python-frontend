@@ -7,6 +7,7 @@ import BookCover from "./BookCover";
 import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
 import BookFetcher from "./utils/BookFetcher";
+import { Box } from "@mui/material";
 
 import ZipPathTransformer from "./utils/ZipPathTransformer";
 
@@ -24,6 +25,7 @@ import EditableBookStore, {
   createEditableBookStore,
 } from "./utils/EditableBookStore";
 import BookEditorDrawer from "./components/BookEditorDrawer";
+import HeaderBar from "../components/HeaderBar";
 
 type BookProps = {
   zipFile?: File;
@@ -263,11 +265,22 @@ const Book = (props: BookProps) => {
   if (rootNode) {
     if (searchParams.get("report") === "full") {
       return (
-        <BookReport
-          bookRoot={rootNode}
-          allTestResults={allTestResults}
-          onCloseReport={() => openReport(false)}
-        />
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "column",
+          }}
+        >
+          <HeaderBar title={rootNode.name} />
+          <BookReport
+            bookRoot={rootNode}
+            allTestResults={allTestResults}
+            onCloseReport={() => openReport(false)}
+          />
+        </Box>
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
       if (!editState || editState === "preview") {
@@ -346,17 +359,31 @@ const Book = (props: BookProps) => {
       }
     } else {
       return (
-        <React.Fragment>
+        <Box
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "column",
+          }}
+        >
+          <HeaderBar title={rootNode.name} />
           <BookCover
             bookRoot={rootNode}
             allTestResults={allTestResults}
             onNodeSelected={openNode}
           />
-        </React.Fragment>
+        </Box>
       );
     }
   } else {
-    return <p>Loading book... </p>;
+    return (
+      <React.Fragment>
+        <HeaderBar />
+        <p>Loading book... </p>
+      </React.Fragment>
+    );
   }
 };
 

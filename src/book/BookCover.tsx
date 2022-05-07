@@ -1,5 +1,5 @@
 import React from "react";
-import { Container } from "@mui/material";
+import { Container, Box } from "@mui/material";
 
 import BookNodeModel from "../models/BookNodeModel";
 import { AllTestResults } from "../models/Tests";
@@ -13,14 +13,15 @@ type BookCoverProps = {
 
 const BookCover = (props: BookCoverProps) => {
   return (
-    <Container>
-      <h1>{props.bookRoot.name}</h1>
-      <BookContents
-        bookRoot={props.bookRoot}
-        onNodeSelected={props.onNodeSelected}
-        allTestResults={props.allTestResults}
-      />
-    </Container>
+    <Box sx={{ overflowY: "auto", height: "100%" }}>
+      <Container>
+        <BookContents
+          bookRoot={props.bookRoot}
+          onNodeSelected={props.onNodeSelected}
+          allTestResults={props.allTestResults}
+        />
+      </Container>
+    </Box>
   );
 };
 
