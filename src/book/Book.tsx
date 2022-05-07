@@ -324,7 +324,7 @@ const Book = (props: BookProps) => {
             </ErrorBounday>
           </React.Fragment>
         );
-      } else if (editState === "cloning") {
+      } else if (editState === "cloning" || editParam === "clone") {
         return <p>Cloning this book for editing... Please wait...</p>;
       } else if (!editableBookStore) {
         return <p>Something went wrong. Please refresh the page</p>;
