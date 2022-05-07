@@ -220,7 +220,8 @@ class Challenge
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={
-              this.props.tests !== null || this.props.typ === "parsons"
+              !this.props.isExample &&
+              (this.props.tests !== null || this.props.typ === "parsons")
             }
             testResults={this.state.testResults}
           />
