@@ -35,9 +35,10 @@ function TabPanel(props: TabPanelProps) {
       sx={{
         p: 3,
         width: "100%",
+        height: "100%",
         padding: "0px",
         flexGrow: 1,
-        overflow: "auto",
+        overflow: "hidden",
       }}
     >
       {children}

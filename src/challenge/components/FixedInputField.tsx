@@ -20,19 +20,19 @@ const FixedInputField = React.forwardRef<
   useImperativeHandle(ref, () => ({ getValue, clear }));
 
   return (
-    <Box sx={{ paddingLeft: 1, paddingRight: 1 }}>
-      <Box sx={{ width: "100%", height: "100%" }}>
-        <TextField
-          placeholder="add fixed inputs here..."
-          multiline
-          margin="dense"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-          sx={{ width: "100%", height: "100%" }}
-        />
-      </Box>
+    <Box
+      sx={{ paddingLeft: 1, paddingRight: 1, height: "100%", ovrflow: "auto" }}
+    >
+      <TextField
+        placeholder="add fixed inputs here..."
+        multiline
+        margin="dense"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        variant="standard"
+        InputProps={{ disableUnderline: true }}
+        sx={{ width: "100%", height: "100%", overflow: "auto" }}
+      />
     </Box>
   );
 });
