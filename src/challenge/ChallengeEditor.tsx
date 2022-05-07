@@ -39,6 +39,7 @@ import EditableBookStore from "../book/utils/EditableBookStore";
 import BookZipper from "../book/utils/BookZipper";
 import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
 import HeaderMenuEditor from "./components/HeaderMenuEditor";
+import InfoDialog from "../components/dialogs/InfoDialog";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -55,6 +56,7 @@ type ChallengeEditorState = {
   typ: ChallengeTypes; // use this in favour of the props.typ
   usesFixedInput: boolean;
   isEditingGuide: boolean;
+  dialogInfoText?: string;
 };
 
 type ChallengeEditorProps = {
@@ -119,6 +121,7 @@ class ChallengeEditor
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     isEditingGuide: false,
+    dialogInfoText: undefined,
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -229,11 +232,11 @@ class ChallengeEditor
       )
       .then((result) => {
         const base64data = encodeURIComponent(result);
-        window.open(
-          `${
+        this.setState({
+          dialogInfoText: `${
             window.location.href.split("?")[0]
-          }?book=book.json&zip-data=${base64data}`
-        );
+          }?book=book.json&zip-data=${base64data}`,
+        });
       });
   };
 
@@ -506,6 +509,12 @@ class ChallengeEditor
             )}
           </Box>
         </Paper>
+        <InfoDialog
+          title="Export as URL"
+          open={this.state.dialogInfoText ? true : false}
+          text={this.state.dialogInfoText}
+          onClose={() => this.setState({ dialogInfoText: undefined })}
+        />
       </ChallengeContext.Provider>
     );
   }
