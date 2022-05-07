@@ -272,7 +272,9 @@ const Book = (props: BookProps) => {
   };
 
   if (rootNode) {
-    if (searchParams.get("report") === "full") {
+    if (editState === "cloning" || editParam === "clone") {
+      return <p>Cloning this book for editing... Please wait...</p>;
+    } else if (searchParams.get("report") === "full") {
       return (
         <Box
           sx={{
@@ -324,8 +326,6 @@ const Book = (props: BookProps) => {
             </ErrorBounday>
           </React.Fragment>
         );
-      } else if (editState === "cloning" || editParam === "clone") {
-        return <p>Cloning this book for editing... Please wait...</p>;
       } else if (!editableBookStore) {
         return <p>Something went wrong. Please refresh the page</p>;
       } else {
