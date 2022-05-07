@@ -1,4 +1,4 @@
-import BookNodeModel from "../../models/BookNodeModel";
+import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import BookFetcher from "./BookFetcher";
 import { v4 as uuidv4 } from "uuid";
 import { absolutisePath } from "../../utils/pathTools";
@@ -78,7 +78,11 @@ class EditableBookStore {
       let allResults: AllTestResults = { passed: new Set(), failed: new Set() };
       this.book = JSON.parse(JSON.stringify(this.book));
       return new Promise<IBookFetchResult>((r) =>
-        r({ book: this.book, allResults })
+        r({
+          book: this.book,
+          allResults,
+          singlePageBook: getSinglePage(this.book),
+        })
       );
     },
   };

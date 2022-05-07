@@ -69,6 +69,31 @@ const Book = (props: BookProps) => {
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
   const editParam = searchParams.get("edit") || "";
+  const navigate = useNavigate();
+
+  const openNode = useMemo(
+    () => (node: BookNodeModel) => {
+      if (editState === "cloning" || editParam === "clone") {
+        return;
+      }
+      let newSearchParams = new URLSearchParams({
+        book: bookPath,
+        chid: node.id,
+        ...(zipPath && { "zip-path": zipPath }),
+        ...(zipData && { "zip-data": zipData }),
+        ...(editParam && { edit: editParam }),
+      });
+      if (!node.children || node.children.length === 0) {
+        navigate(
+          {
+            search: "?" + newSearchParams.toString(),
+          },
+          { replace: false }
+        );
+      }
+    },
+    [bookPath, editParam, navigate, zipData, zipPath, editState]
+  );
 
   const bookFetcher = useMemo(() => {
     if (
@@ -95,7 +120,6 @@ const Book = (props: BookProps) => {
     editableBookStore,
     editParam,
   ]);
-  const navigate = useNavigate();
 
   const activeTestsPassingChanged = (newTestState: boolean | null) => {
     if (!activeNode) {
@@ -166,8 +190,11 @@ const Book = (props: BookProps) => {
     bookFetcher.fetchBook().then((result) => {
       setAllTestResults(result.allResults);
       setRootNode(result.book);
+      if (result.singlePageBook) {
+        openNode(result.singlePageBook);
+      }
     });
-  }, [bookFetcher, bookForceReload]);
+  }, [bookFetcher, bookForceReload, openNode]);
 
   /**
    * Getting the challenge within the book
@@ -198,24 +225,6 @@ const Book = (props: BookProps) => {
       setPaths({ guidePath: null, pyPath: null });
     }
   }, [rootNode, bookChallengeId, bookFetcher]);
-
-  const openNode = (node: BookNodeModel) => {
-    let newSearchParams = new URLSearchParams({
-      book: bookPath,
-      chid: node.id,
-      "zip-path": zipPath || "",
-      "zip-data": zipData || "",
-      edit: editParam || "",
-    });
-    if (!node.children || node.children.length === 0) {
-      navigate(
-        {
-          search: "?" + newSearchParams.toString(),
-        },
-        { replace: false }
-      );
-    }
-  };
 
   const openDrawer = (open: boolean) => {
     setDrawerOpen(open);

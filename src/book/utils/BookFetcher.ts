@@ -1,6 +1,6 @@
 import { isAbsoluteAddress, absolutisePath } from "../../utils/pathTools";
 import JSZip from "jszip";
-import BookNodeModel from "../../models/BookNodeModel";
+import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
@@ -61,7 +61,7 @@ class BookFetcher implements IBookFetcher {
             true
           )
         )
-        .then((res) => r(res));
+        .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }));
     });
   }
 

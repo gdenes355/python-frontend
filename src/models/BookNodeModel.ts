@@ -16,6 +16,19 @@ type BookNodeModel = {
   bookMainUrl?: string;
 };
 
+const getSinglePage: (root: BookNodeModel) => BookNodeModel | null = (root) => {
+  let node = root;
+  while (true) {
+    if (node.children && node.children.length === 1) {
+      node = node.children[0];
+    } else if (!node.children || node.children.length === 0) {
+      return node;
+    } else {
+      return null;
+    }
+  }
+};
+
 const findBookNode: (
   node: BookNodeModel,
   id: String
@@ -233,4 +246,5 @@ export {
   demoteBookNode,
   findParent,
   moveBookNodeAfter,
+  getSinglePage,
 };

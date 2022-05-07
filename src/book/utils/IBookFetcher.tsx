@@ -4,6 +4,7 @@ import { AllTestResults } from "../../models/Tests";
 type IBookFetchResult = {
   book: BookNodeModel;
   allResults: AllTestResults;
+  singlePageBook: BookNodeModel | null;
 };
 
 interface IBookFetcher {

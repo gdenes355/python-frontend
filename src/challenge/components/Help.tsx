@@ -42,79 +42,75 @@ const Help = (props: HelpProps) => {
         <h1>Help</h1>
         <h3>Code editor keyboard shortcuts</h3>
         <table>
-          <tr>
-            <td>
-              <code>F1</code>
-            </td>
-            <td>Show commands</td>
-          </tr>
-          <tr>
-            <td>
-              <code>F11</code>
-            </td>
-            <td>Toggle fullscreen</td>
-          </tr>
-          <tr>
-            <td>
-              <code>F5</code>
-            </td>
-            <td>Start debugging</td>
-          </tr>
-          <tr>
-            <td>
-              <code>F9</code>
-            </td>
-            <td>Toggle breakpoint on active line</td>
-          </tr>
-          <tr>
-            <td>
-              <code>Alt</code>
-              <code>&#8593;</code>
-            </td>
-            <td>Move line up</td>
-          </tr>
-          <tr>
-            <td>
-              <code>Alt</code>
-              <code>&#8595;</code>
-            </td>
-            <td>Move line down</td>
-          </tr>
-          <tr>
-            <td>
-              <code>Ctrl</code>
-              <code>/</code>
-            </td>
-            <td>Add/remove comment</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td>
+                <code>F1</code>
+              </td>
+              <td>Show commands</td>
+            </tr>
+            <tr>
+              <td>
+                <code>F11</code>
+              </td>
+              <td>Toggle fullscreen</td>
+            </tr>
+            <tr>
+              <td>
+                <code>F5</code>
+              </td>
+              <td>Start debugging</td>
+            </tr>
+            <tr>
+              <td>
+                <code>F9</code>
+              </td>
+              <td>Toggle breakpoint on active line</td>
+            </tr>
+            <tr>
+              <td>
+                <code>Alt</code>
+                <code>&#8593;</code>
+              </td>
+              <td>Move line up</td>
+            </tr>
+            <tr>
+              <td>
+                <code>Alt</code>
+                <code>&#8595;</code>
+              </td>
+              <td>Move line down</td>
+            </tr>
+            <tr>
+              <td>
+                <code>Ctrl</code>
+                <code>/</code>
+              </td>
+              <td>Add/remove comment</td>
+            </tr>
+          </tbody>
         </table>
         <h4>During debugging</h4>
         <table>
-          <tr>
-            <td>
-              <code>F10</code>
-            </td>
-            <td>Step to next command</td>
-          </tr>
-          <tr>
-            <td>
-              <code>Shift</code>
-              <code>F5</code>
-            </td>
-            <td>Stop debugging</td>
-          </tr>
+          <tbody>
+            <tr>
+              <td>
+                <code>F10</code>
+              </td>
+              <td>Step to next command</td>
+            </tr>
+            <tr>
+              <td>
+                <code>Shift</code>
+                <code>F5</code>
+              </td>
+              <td>Stop debugging</td>
+            </tr>
+          </tbody>
         </table>
         <h4>Notes</h4>
-        <table>
-          <tr>
-            <td>Debugging requires breakpoints to be set.</td>
-          </tr>
-          <tr>
-            <td>
-              Run will ignore breakpoints but be quicker in execution time.
-            </td>
-          </tr>
-        </table>
+        <p>Debugging requires breakpoints to be set.</p>
+        <p>Run will ignore breakpoints but be quicker in execution time.</p>
       </Styled>
     </Fade>
   );
