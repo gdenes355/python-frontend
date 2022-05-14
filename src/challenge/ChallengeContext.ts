@@ -23,6 +23,10 @@ type TurtleData = {
   msg: string;
 };
 
+type AudioData = {
+  msg: string;
+};
+
 type InputData = {
   input: string | null;
 };
@@ -79,6 +83,14 @@ class ChallengeContextClass {
         this.challenge.canvasDisplayRef?.current?.runCommand(commands);
       }
     },
+    audio: (data: AudioData) => {
+      if (this.challenge.state.editorState !== ChallengeStatus.READY) {
+        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+        }
+        this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
+      }
+    },    
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {

@@ -9,6 +9,9 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
       case "fill":
         context.fill(cmd.fillRule);
         break;
+      case "rect":
+        context.rect(cmd.x, cmd.y, cmd.width, cmd.height);
+        break;     
       case "fillRect":
         context.fillRect(cmd.x, cmd.y, cmd.width, cmd.height);
         break;
@@ -17,13 +20,7 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
         break;
       case "clearRect":
         context.clearRect(cmd.x, cmd.y, cmd.width, cmd.height);
-        break;
-      case "moveTo":
-        context.moveTo(cmd.x, cmd.y);
-        break;
-      case "lineTo":
-        context.lineTo(cmd.x, cmd.y);
-        break;
+        break;             
       case "fillStyle":
         context.fillStyle = cmd.color;
         break;
@@ -33,6 +30,21 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
       case "lineWidth":
         context.lineWidth = cmd.value;
         break;
+      case "lineCap":
+        context.lineCap = cmd.value;
+        break;
+      case "lineJoin":
+        context.lineJoin = cmd.value;
+        break;         
+      case "miterLimit":
+        context.miterLimit = cmd.value;
+        break;
+      case "setLineDash":
+        context.setLineDash(cmd.value);
+        break;
+      case "lineDashOffset":
+        context.lineDashOffset = cmd.value;
+        break;                      
       case "font":
         context.font = cmd.value;
         break;
@@ -42,6 +54,21 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
       case "textBaseline":
         context.textBaseline = cmd.value;
         break;
+      case "direction":
+        context.direction = cmd.value;
+        break;
+      case "shadowBlur":
+        context.shadowBlur = cmd.value;
+        break;
+      case "shadowColor":
+        context.shadowColor = cmd.value;
+        break;
+      case "shadowOffsetX":
+        context.shadowOffsetX = cmd.value;
+        break;
+      case "shadowOffsetY":
+        context.shadowOffsetY = cmd.value;
+        break;                                
       case "beginPath":
         context.beginPath();
         break;
@@ -51,6 +78,30 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
       case "stroke":
         context.stroke();
         break;
+      case "moveTo":
+        context.moveTo(cmd.x, cmd.y);
+        break;
+      case "lineTo":
+        context.lineTo(cmd.x, cmd.y);
+        break;
+      case "bezierCurveTo":
+        context.bezierCurveTo(
+          cmd.cp1x, 
+          cmd.cp1y,
+          cmd.cp2x,
+          cmd.cp2y,
+          cmd.x,
+          cmd.y
+        );
+        break;
+      case "quadraticCurveTo":
+        context.quadraticCurveTo(
+          cmd.cpx, 
+          cmd.cpy,
+          cmd.x,
+          cmd.y
+        );
+        break;         
       case "arc":
         context.arc(
           cmd.x,
@@ -59,6 +110,15 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
           cmd.startAngle,
           cmd.endAngle,
           cmd.counterclockwise
+        );
+        break;
+      case "arcTo":
+        context.arcTo(
+          cmd.x1, 
+          cmd.y1, 
+          cmd.x2, 
+          cmd.y2, 
+          cmd.radius
         );
         break;
       case "ellipse":
@@ -73,19 +133,18 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
           cmd.counterclockwise
         );
         break;
-      case "arcTo":
-        context.arcTo(cmd.x1, cmd.y1, cmd.x2, cmd.y2, cmd.radius);
+      case "filter":
+        context.filter = cmd.value;
+        break;        
+      case "clip":
+        context.clip();
         break;
-      case "bezierCurveTo":
-        context.bezierCurveTo(
-          cmd.cp1x,
-          cmd.cp1y,
-          cmd.cp2x,
-          cmd.cp2y,
-          cmd.x,
-          cmd.y
-        );
-        break;
+      case "save":
+        context.save();
+        break;  
+      case "restore":
+        context.restore();
+        break;                             
       case "fillText":
         if (cmd.maxWidth === "") {
           context.fillText(cmd.text, cmd.x, cmd.y);
@@ -122,6 +181,9 @@ const processCanvasCommand = (context: CanvasRenderingContext2D, cmd: any) => {
         }
         break;
       case "reset":
+        context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+        const width = context.canvas.width;
+        context.canvas.width = width; // to trigger reset of all settings
         break;
       default:
         console.log("unknown canvas draw action:");

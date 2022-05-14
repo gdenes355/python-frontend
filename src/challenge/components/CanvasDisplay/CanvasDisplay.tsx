@@ -9,6 +9,7 @@ import ChallengeContext from "../../ChallengeContext";
 type CanvasDisplayHandle = {
   turtleReset: (mode: "standard" | "logo") => void;
   runTurtleCommand: (msg: string) => void;
+  runAudioCommand: (msg: string) => void;  
   runCommand: (commands: any[]) => void;
 };
 
@@ -53,6 +54,26 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       }
     };
 
+    const runAudioCommand = (msg: string) => {
+      const audio: HTMLAudioElement = document.getElementById(
+        "audio"
+      ) as HTMLAudioElement;
+
+      const audioSource: HTMLSourceElement = document.getElementById(
+        "audioSource"
+      ) as HTMLSourceElement;      
+
+      const audioObj = JSON.parse(msg);
+
+      if(audioObj.action === "load") {
+        audioSource.src = audioObj.source;
+        audio.load();
+      } else if(audioObj.action === "load") {
+        audio.play();
+      }
+
+    };    
+
     const runCommand = (commands: any[]) => {
       const canvas: HTMLCanvasElement = document.getElementById(
         "canvasDisplay"
@@ -68,6 +89,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
+      runAudioCommand,
       turtleReset,
     }));
 
@@ -83,6 +105,10 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           tabIndex={1}
           style={{ outline: "none" }}
         />
+        <audio style={{display:'none'}} id="audio">
+          <source id="audioSource" src=""></source>
+          Your browser does not support the audio element.
+        </audio>
       </div>
     );
   }
