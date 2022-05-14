@@ -40,6 +40,7 @@ import BookZipper from "../book/utils/BookZipper";
 import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
 import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
+import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -56,7 +57,9 @@ type ChallengeEditorState = {
   typ: ChallengeTypes; // use this in favour of the props.typ
   usesFixedInput: boolean;
   isEditingGuide: boolean;
+  hasEdited: boolean;
   dialogInfoText?: string;
+  saveDialogProps?: SaveDialogProps;
 };
 
 type ChallengeEditorProps = {
@@ -122,6 +125,8 @@ class ChallengeEditor
     usesFixedInput: false,
     isEditingGuide: false,
     dialogInfoText: undefined,
+    hasEdited: false,
+    saveDialogProps: undefined,
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -129,6 +134,7 @@ class ChallengeEditor
     this.getVisibilityWithHack.bind(this);
     this.exportAsZip.bind(this);
     this.save.bind(this);
+    this.actionWithSaveCheck.bind(this);
   }
 
   nodeToJson(node: BookNodeModel) {
@@ -160,6 +166,7 @@ class ChallengeEditor
   ) {
     if (prevProps.guidePath !== this.props.guidePath) {
       this.chContext.actions["fetch-guide"](); // from local storage
+      this.setState({ hasEdited: false });
     }
 
     if (prevProps.codePath !== this.props.codePath) {
@@ -169,6 +176,7 @@ class ChallengeEditor
       });
       this.chContext.actions["restart-worker"]({});
       this.setState({ testResults: [], testsPassing: null });
+      this.setState({ hasEdited: false });
     }
     if (
       this.editorRef.current &&
@@ -275,6 +283,31 @@ class ChallengeEditor
       this.props.bookStore.store.saveBook();
       this.props.onBookModified();
     }
+    this.setState({ hasEdited: false });
+  };
+
+  actionWithSaveCheck = (action: (() => void) | undefined) => () => {
+    if (!action) {
+      return;
+    }
+    if (!this.state.hasEdited) {
+      action();
+      return;
+    }
+    this.setState({
+      saveDialogProps: {
+        open: true,
+        onSave: () => {
+          this.save();
+          action();
+          this.setState({ saveDialogProps: undefined });
+        },
+        onClose: () => {
+          action();
+          this.setState({ saveDialogProps: undefined });
+        },
+      },
+    });
   };
 
   getVisibilityWithHack = (visible: boolean) => {
@@ -370,7 +403,10 @@ class ChallengeEditor
               <HeaderButtonsEditor
                 editingGuide={this.state.isEditingGuide}
                 onEditingGuideChange={(editing) =>
-                  this.setState({ isEditingGuide: editing })
+                  this.setState({
+                    isEditingGuide: editing,
+                    hasEdited: this.state.hasEdited || editing,
+                  })
                 }
               />
             </HeaderBar>
@@ -495,8 +531,12 @@ class ChallengeEditor
               </Allotment.Pane>
             </Allotment>
             <BookControlFabs
-              onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-              onNavigateToNextPage={this.props.onRequestNextChallenge}
+              onNavigateToPrevPage={this.actionWithSaveCheck(
+                this.props.onRequestPreviousChallenge
+              )}
+              onNavigateToNextPage={this.actionWithSaveCheck(
+                this.props.onRequestNextChallenge
+              )}
               onOpenMenu={() => {
                 this.props.openBookDrawer?.(true);
               }}
@@ -515,6 +555,13 @@ class ChallengeEditor
           text={this.state.dialogInfoText}
           onClose={() => this.setState({ dialogInfoText: undefined })}
         />
+        <SaveDialog
+          open={this.state.saveDialogProps ? true : false}
+          onSave={this.state.saveDialogProps?.onSave || (() => {})}
+          onClose={this.state.saveDialogProps?.onClose || (() => {})}
+          message="You might have unsaved changes on this page. Would you like to save first?"
+          cancelText="Don't save"
+        ></SaveDialog>
       </ChallengeContext.Provider>
     );
   }
