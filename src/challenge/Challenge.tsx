@@ -109,11 +109,6 @@ class Challenge
     this.chContext.actions["load-saved-code"]();
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
-    navigator.serviceWorker.register("pysw.js").then(function (reg) {
-      if (navigator.serviceWorker.controller === null || !reg.active) {
-        window.location.reload();
-      }
-    });
     this.chContext.actions["restart-worker"]({ force: true });
     this.setState({
       typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,

@@ -151,11 +151,6 @@ class ChallengeEditor
     console.log("crossOriginIsolated", window.crossOriginIsolated);
     this.chContext.actions["fetch-code"](); // from local storage
     this.chContext.actions["fetch-guide"](); // from local storage
-    navigator.serviceWorker.register("pysw.js").then(function (reg) {
-      if (navigator.serviceWorker.controller === null || !reg.active) {
-        window.location.reload();
-      }
-    });
     this.chContext.actions["restart-worker"]({ force: true });
     this.jsonEditorRef.current?.setValue(this.nodeToJson(this.props.bookNode));
   }

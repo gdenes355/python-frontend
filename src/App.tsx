@@ -27,6 +27,14 @@ const AppContainer = () => {
     navigate({ search: `?book=book.json${edit ? "&edit=clone" : ""}` });
   };
 
+  useEffect(() => {
+    navigator.serviceWorker.register("pysw.js").then(function (reg) {
+      if (navigator.serviceWorker.controller === null || !reg.active) {
+        window.location.reload();
+      }
+    });
+  }, []);
+
   if (bookPath || bookFile) {
     return (
       <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
