@@ -39,21 +39,39 @@ const StartPage = () => {
             <a href="/?book=./progsoc/book.json">/?book=./progsoc/book.json</a>
           </li>
           <li>
-            You can also specify a library of books:&nbsp;
+            Or a library which contains both of the above:&nbsp;
             <a href="/?book=./library.json">/?book=./library.json</a>
           </li>
         </ul>
         <p>
-          You can now generate a progress report using&nbsp;
+          You can generate a progress report from within the book, or just
+          using&nbsp;
           <a href="/?book=./library.json&report=full">
             /?book=./library.json&report=full
           </a>
         </p>
         <p>
-          To clone a book for editing:
-          <a href="?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
+          If you would like to upload a zip file, just go to{" "}
+          <a href="/?coop=1">/</a>
+        </p>
+        <h3>For content creators</h3>
+        <p>
+          To clone a book for editing, you can just append{" "}
+          <code>clone=true</code> in the query path. E.g.:
+          <a href="/?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
             ?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
           </a>
+          .
+          <p>
+            Or you can upload the zip file as well to the landing page{" "}
+            <a href="/?teacher=true&coop=1">/?teacher=true&coop=1</a>
+          </p>
+          <p>
+            You can also just use a simple template to get started&nbsp;
+            <a href="/?book=/booktemplates/singlepage/book.json&edit=clone">
+              /?book=/booktemplates/singlepage/book.json&edit=clone
+            </a>
+          </p>
         </p>
       </div>
     </Container>

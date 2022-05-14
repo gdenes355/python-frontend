@@ -31,7 +31,7 @@ Installs all npm dependencies. Might take some time; must be run before first la
 
 #### `npm start`
 
-Runs the app in the development mode. Open [http://localhost:3000](http://localhost:3000) to view it in your browser. [http://localhost:3000/start](http://localhost:3000/start) has some code demos.
+Runs the app in the development mode. Open [http://localhost:3000?coop=1](http://localhost:3000?coop=1) to view it in your browser. [http://localhost:3000/start](http://localhost:3000/start) has some code demos.
 The page will reload when you make changes. You may also see any lint errors in the console.
 
 #### `npm test`
