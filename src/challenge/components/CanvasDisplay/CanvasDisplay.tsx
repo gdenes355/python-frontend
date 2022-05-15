@@ -68,7 +68,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       if(audioObj.action === "load") {
         audioSource.src = audioObj.source;
         audio.load();
-      } else if(audioObj.action === "load") {
+      } else if(audioObj.action === "play") {
         audio.play();
       }
 
@@ -105,7 +105,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           tabIndex={1}
           style={{ outline: "none" }}
         />
-        <audio style={{display:'none'}} id="audio">
+        <audio style={{display:'none'}} id="audio" crossOrigin="anonymous">
           <source id="audioSource" src=""></source>
           Your browser does not support the audio element.
         </audio>
