@@ -12,16 +12,34 @@ from pyodide import to_js
 
 print(sys.version)
 
+class DebugAudio:
+    def load(self, source):
+        json_map = {"action": "load", "source": source}
+        post_message({"cmd": "audio", "msg": json.dumps(json_map)})
+    def play(self):
+        json_map = {"action": "play"}
+        post_message({"cmd": "audio", "msg": json.dumps(json_map)})           
 
 class DebugContext:
 
     def __init__(self):
+        self.width = 500 # fixed
+        self.height = 400 # fixed
         self._fillStyle = "black"
         self._strokeStyle = "black"
         self._font = "10px sans-serif"
         self._lineWidth = 1.0
         self._textAlign = "start"
         self._textBaseline = "alphabetic"
+        self._lineCap = "butt"
+        self._lineJoin = "miter"
+        self._miterLimit = 10
+        self._lineDashOffset = 0.0
+        self._direction = "inherit"
+        self._shadowBlur = 0
+        self._shadowColor  = "fully-transparent black"
+        self._shadowOffsetX = 0
+        self._shadowOffsetY = 0        
         self.__commands = []
         # when double buffering is enabled, draw calls are batched
         # and only committed when calling present()
@@ -46,6 +64,11 @@ class DebugContext:
                     "width": width, "height": height, "clearCanvas": clearCanvas}
         self._add_command(json_map)
 
+    def rect(self, x, y, width, height):
+        json_map = {"action": "rect", "x": x, "y": y,
+                    "width": width, "height": height}
+        self._add_command(json_map)        
+
     def strokeRect(self, x, y, width, height, clearCanvas=False):
         json_map = {"action": "strokeRect", "x": x, "y": y,
                     "width": width, "height": height, "clearCanvas": clearCanvas}
@@ -68,6 +91,18 @@ class DebugContext:
         json_map = {"action": "stroke"}
         self._add_command(json_map)
 
+    def clip(self):
+        json_map = {"action": "clip"}
+        self._add_command(json_map)
+
+    def save(self):
+        json_map = {"action": "save"}
+        self._add_command(json_map)
+
+    def restore(self):
+        json_map = {"action": "restore"}
+        self._add_command(json_map)     
+
     def arc(self, x, y, radius, startAngle, endAngle, counterclockwise=False):
         json_map = {"action": "arc", "x": x, "y": y, "radius": radius,
                     "startAngle": startAngle, "endAngle": endAngle, "counterclockwise": counterclockwise}
@@ -88,6 +123,11 @@ class DebugContext:
                     "cp1y": cp1y, "cp2x": cp2x, "cp2y": cp2y, "x": x, "y": y}
         self._add_command(json_map)
 
+    def quadraticCurveTo(self, cpx, cpy, x, y):
+        json_map = {"action": "quadraticCurveTo", "cpx": cpx,
+                    "cpy": cpy, "x": x, "y": y}
+        self._add_command(json_map)  
+
     def moveTo(self, x, y):
         json_map = {"action": "moveTo", "x": x, "y": y}
         self._add_command(json_map)
@@ -100,6 +140,10 @@ class DebugContext:
     def lineTo(self, x, y):
         json_map = {"action": "lineTo", "x": x, "y": y}
         self._add_command(json_map)
+
+    def setLineDash(self, value):
+        json_map = {"action": "setLineDash", "value": value}
+        self._add_command(json_map)                                           
 
     def fillText(self, text, x, y, maxWidth="", clearCanvas=False):
         json_map = {"action": "fillText", "text": text, "x": x,
@@ -193,6 +237,106 @@ class DebugContext:
         json_map = {"action": "textBaseline", "value": value}
         self._add_command(json_map)
 
+    @property
+    def lineCap(self):
+        return self._lineCap
+
+    @lineCap.setter
+    def lineCap(self, value):
+        self._lineCap = value
+        json_map = {"action": "lineCap", "value": value}
+        self._add_command(json_map)
+
+    @property
+    def lineJoin(self):
+        return self._lineJoin
+
+    @lineJoin.setter
+    def lineJoin(self, value):
+        self._lineJoin = value
+        json_map = {"action": "lineJoin", "value": value}
+        self._add_command(json_map)   
+
+    @property
+    def miterLimit(self):
+        return self._miterLimit
+
+    @miterLimit.setter
+    def miterLimit(self, value):
+        self._miterLimit = value
+        json_map = {"action": "miterLimit", "value": value}
+        self._add_command(json_map)   
+
+    @property
+    def lineDashOffset(self):
+        return self._lineDashOffset
+
+    @lineDashOffset.setter
+    def lineDashOffset(self, value):
+        self._lineDashOffset = value
+        json_map = {"action": "lineDashOffset", "value": value}
+        self._add_command(json_map)
+
+    @property
+    def direction(self):
+        return self._direction
+
+    @direction.setter
+    def direction(self, value):
+        self._direction = value
+        json_map = {"action": "direction", "value": value}
+        self._add_command(json_map)                                                
+
+    @property
+    def shadowBlur(self):
+        return self._shadowBlur
+
+    @shadowBlur.setter
+    def shadowBlur(self, value):
+        self._shadowBlur = value
+        json_map = {"action": "shadowBlur", "value": value}
+        self._add_command(json_map)   
+
+    @property
+    def shadowColor(self):
+        return self._shadowColor
+
+    @shadowColor.setter
+    def shadowColor(self, value):
+        self._shadowColor = value
+        json_map = {"action": "shadowColor", "value": value}
+        self._add_command(json_map)
+
+    @property
+    def shadowOffsetX(self):
+        return self._shadowOffsetX
+
+    @shadowOffsetX.setter
+    def shadowOffsetX(self, value):
+        self._shadowOffsetX = value
+        json_map = {"action": "shadowOffsetX", "value": value}
+        self._add_command(json_map)   
+
+    @property
+    def shadowOffsetY(self):
+        return self._shadowOffsetY
+
+    @shadowOffsetY.setter
+    def shadowOffsetY(self, value):
+        self._shadowOffsetY = value
+        json_map = {"action": "shadowOffsetY", "value": value}
+        self._add_command(json_map)   
+
+    @property
+    def filter(self):
+        return self._filter
+
+    @filter.setter
+    def filter(self, value):
+        self._filter = value
+        json_map = {"action": "filter", "value": value}
+        self._add_command(json_map)     
+
 
 class DebugOutput:
     def write(self, text):
@@ -212,6 +356,7 @@ class TestOutput:
 
 debug_output = DebugOutput()
 debug_context = DebugContext()
+debug_audio = DebugAudio()
 test_output = TestOutput()
 
 active_breakpoints = set()
@@ -336,6 +481,7 @@ def pyexec(code, expected_input, expected_output):
     sys.stdctx = debug_context
     debug_context.double_buffering = False  # assume single buffering
     debug_context.reset()
+    sys.stdaud = debug_audio
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
@@ -384,6 +530,7 @@ def pydebug(code, breakpoints):
     sys.stdctx = debug_context
     debug_context.double_buffering = False  # assume single buffering
     debug_context.reset()
+    sys.stdaud = debug_audio
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
@@ -421,6 +568,7 @@ def pyrun(code):
     sys.stdctx = debug_context
     debug_context.double_buffering = False  # assume single buffering
     debug_context.reset()
+    sys.stdaud = debug_audio
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
