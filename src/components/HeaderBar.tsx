@@ -89,7 +89,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                 label="Dark mode"
               />
             </MenuItem>
-            {props.menuItems}
+            {props.menuItems}                        
             {props.onHelpOpen ? (
               <MenuItem onClick={() => props.onHelpOpen?.(true)}>
                 <ListItemIcon>
