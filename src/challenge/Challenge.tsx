@@ -34,6 +34,8 @@ import HeaderButtons from "./components/HeaderButtons";
 
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
+import InfoDialog from "../components/dialogs/InfoDialog";
+import InputDialog from "../components/dialogs/InputDialog";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -42,6 +44,8 @@ type ChallengeState = IChallengeState & {
   helpOpen: boolean;
   guideMinimised: boolean;
   showBookUpload: boolean;
+  dialogInfoText?: string;
+  showInputDialog: boolean;
 };
 
 type ChallengeProps = IChallengeProps & {
@@ -97,11 +101,14 @@ class Challenge
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     showBookUpload: false,
+    dialogInfoText: undefined,
+    showInputDialog: false
   };
 
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
+    this.shareProgress.bind(this);
   }
 
   componentDidMount() {
@@ -165,6 +172,50 @@ class Challenge
       ? undefined
       : visible;
   };
+
+  shareProgress = () => {
+
+    let code:string|undefined = "";
+
+    if (this.state.typ === ChallengeTypes.TYP_PARSONS) {
+      code = this.parsonsEditorRef.current?.getValue();
+
+    } else {
+      code = this.editorRef.current?.getValue();
+    }
+    
+    if(code) {
+      this.chContext.actions["save-code"]({ code });
+      const data = JSON.stringify({
+        uid: this.props.uid,
+        code: code
+      })
+      const base64data = encodeURIComponent(data);
+      this.setState({
+        dialogInfoText: base64data
+      });       
+    }    
+
+  }
+
+  importProgress = (data:string) => {
+    const progress = JSON.parse(decodeURIComponent(data));
+    if (progress.code && progress.uid) {
+      localStorage.setItem(
+        "code-" + encodeURIComponent(progress.uid),
+        progress.code
+      );
+      if(progress.uid === this.props.uid){
+        this.editorRef.current?.setValue(
+          progress.code
+        );      
+      }
+    }
+
+    console.log(progress.uid);
+    console.log(progress.code);
+    this.setState({ showInputDialog: false });
+  }
 
   renderEditor() {
     if (this.props.typ === "parsons") {
@@ -276,6 +327,14 @@ class Challenge
                     onBookUpload={() => {
                       this.setState({ showBookUpload: true });
                     }}
+                    onShareProgress={() => {
+                      this.shareProgress();
+                    }}
+                    onLoadProgress={() => {
+                      this.setState({
+                        showInputDialog: true
+                      }); 
+                    }}
                   />
                 }
               >
@@ -385,6 +444,18 @@ class Challenge
               )}
             </Box>
           </Paper>
+          <InfoDialog
+            title="Share Progress"
+            open={this.state.dialogInfoText ? true : false}
+            text={this.state.dialogInfoText}
+            onClose={() => this.setState({ dialogInfoText: undefined })}
+          />
+          <InputDialog
+            title="Load Progress"
+            open={this.state.showInputDialog}
+            onInputEntered={this.importProgress}
+            onClose={() => this.setState({ showInputDialog: false })}
+          />          
         </ChallengeContext.Provider>
       </>
     );
