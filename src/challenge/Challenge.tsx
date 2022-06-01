@@ -173,28 +173,41 @@ class Challenge
       : visible;
   };
 
-  shareProgress = () => {
-
-    let code:string|undefined = "";
-
-    if (this.state.typ === ChallengeTypes.TYP_PARSONS) {
-      code = this.parsonsEditorRef.current?.getValue();
-
-    } else {
-      code = this.editorRef.current?.getValue();
+  loadIds = (nd:BookNodeModel, arr:Array<string>) => {
+    if(nd.py) {
+      arr.push(nd.id);
     }
+    for(const child of nd.children||[]) {
+      this.loadIds(child, arr);
+    }  
+  }
+
+  shareProgress = () => {  
+
+    this.props.fetcher
+      .fetchBook()
+      .then((bfr) => {
+        let idsArray:Array<string> = [];
+        this.loadIds(bfr.book, idsArray); 
+        const progressData : Array<Object> = [];    
+        for(const id of idsArray) {
+          let savedCode = localStorage.getItem(
+            "code-" + encodeURIComponent(id)
+          );
+          console.log("code-" + encodeURIComponent(bfr.book.bookMainUrl + id));
+          if (savedCode) {
+            progressData.push({
+              uid: id,
+              code: savedCode
+            });
+          }
+        }
     
-    if(code) {
-      this.chContext.actions["save-code"]({ code });
-      const data = JSON.stringify({
-        uid: this.props.uid,
-        code: code
-      })
-      const base64data = encodeURIComponent(data);
-      this.setState({
-        dialogInfoText: base64data
-      });       
-    }    
+        const progress = JSON.stringify(progressData); 
+        const base64data = encodeURIComponent(progress);
+        this.setState({dialogInfoText: base64data });  
+        
+      });     
 
   }
 
