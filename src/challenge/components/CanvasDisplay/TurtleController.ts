@@ -34,8 +34,8 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
         break;
       case "setposition":
         turtle.setPosition(
-          cmd.x + turtle.canvas.width / 2,
-          cmd.y + turtle.canvas.height / 2
+          turtle.canvas.width / 2 + cmd.x,
+          turtle.canvas.height / 2 - cmd.y
         );
         break;
       case "penup":
