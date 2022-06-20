@@ -7,17 +7,21 @@ const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_STANDARD_MODE_BEARING = 90;
 
-const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
+const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
+  if (!turtle) {
+    console.log("no turtle to use for command", cmd);
+    return null;
+  }
   try {
     switch (cmd.action) {
       case "forward":
-        turtle.forward(cmd.value);
+        await turtle.forward(cmd.value);
         break;
       case "backward":
-        turtle.back(cmd.value);
+        await turtle.back(cmd.value);
         break;
       case "right":
-        turtle.right(cmd.value);
+        await turtle.right(cmd.value);
         turtle.options.mode === "logo"
           ? (turtle.options.state.heading =
               turtle.options.state.heading + cmd.value)
@@ -25,7 +29,7 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
               (turtle.options.state.heading || 0) - cmd.value);
         break;
       case "left":
-        turtle.left(cmd.value);
+        await turtle.left(cmd.value);
         turtle.options.mode === "logo"
           ? (turtle.options.state.heading =
               (turtle.options.state.heading || 0) - cmd.value)
@@ -33,49 +37,49 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
               turtle.options.state.heading + cmd.value);
         break;
       case "setposition":
-        turtle.setPosition(
+        await turtle.setPosition(
           turtle.canvas.width / 2 + cmd.x,
           turtle.canvas.height / 2 - cmd.y
         );
         break;
       case "penup":
-        turtle.penUp();
+        await turtle.penUp();
         break;
       case "pendown":
-        turtle.penDown();
+        await turtle.penDown();
         break;
       case "pensize":
-        turtle.setLineWidth(cmd.value);
+        await turtle.setLineWidth(cmd.value);
         break;
       case "setheading":
         const turn = cmd.value - (turtle.options.state.heading || 0);
         if (turn !== 0) {
           if (turtle.options.mode === "logo") {
-            turtle.right(turn);
+            await turtle.right(turn);
           } else {
             // standard
-            turtle.left(turn);
+            await turtle.left(turn);
           }
           turtle.options.state.heading = cmd.value;
         }
         break;
       case "hideturtle":
-        turtle.setSize(0);
+        await turtle.setSize(0);
         break;
       case "showturtle":
-        turtle.setSize(TURTLE_SIZE_DEFAULT); // default
+        await turtle.setSize(TURTLE_SIZE_DEFAULT); // default
         break;
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.setStrokeStyle(cmd.value); // a named color as string or html code
+          await turtle.setStrokeStyle(cmd.value); // a named color as string or html code
         } else {
-          turtle.setStrokeStyle(
+          await turtle.setStrokeStyle(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
         break;
       case "circle":
-        turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
+        await turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
         turtle.options.mode === "logo"
           ? (turtle.options.state.heading =
               (turtle.options.state.heading || 0) - cmd.extent)
@@ -83,17 +87,17 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
               (turtle.options.state.heading || 0) + cmd.extent);
         break;
       case "begin_fill":
-        turtle.beginPath();
+        await turtle.beginPath();
         break;
       case "end_fill":
-        turtle.closePath();
-        turtle.fill();
+        await turtle.closePath();
+        await turtle.fill();
         break;
       case "fillcolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.setFillStyle(cmd.value); // a named color as string or html code
+          await turtle.setFillStyle(cmd.value); // a named color as string or html code
         } else {
-          turtle.setFillStyle(
+          await turtle.setFillStyle(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
@@ -120,7 +124,7 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
             speed_val = cmd.value === 0 ? 1 : cmd.value / 10;
         }
 
-        turtle.setSpeed(speed_val);
+        await turtle.setSpeed(speed_val);
         break;
     }
   } catch (err) {
@@ -128,26 +132,30 @@ const processTurtleCommand = (turtle: RealTurtle, cmd: any) => {
     console.log(cmd);
     console.log(err);
   }
+  return turtle;
 };
 
 const initialiseTurtle: (
   canvas: HTMLCanvasElement,
   mode: "standard" | "logo"
-) => RealTurtle = (canvas, mode) => {
+) => Promise<RealTurtle> = async (canvas, mode) => {
+  console.log("initialising turtle");
+  canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
   let turtle = new RealTurtle(canvas, {
-    autoStart: true,
     state: {},
+    async: true,
+    autoStart: false,
   }) as RealTurtle;
-  turtle.setPosition(canvas.width / 2, canvas.height / 2);
+  await turtle.setPosition(canvas.width / 2, canvas.height / 2);
   if (mode === "standard") {
-    turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
+    await turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
   }
   turtle.options.state.heading = 0;
   turtle.options.mode = mode;
-  turtle.setSize(mode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
-  turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
-  turtle.setSpeed(TURTLE_SPEED_DEFAULT);
-  turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
+  await turtle.setSize(mode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
+  await turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
+  await turtle.setSpeed(TURTLE_SPEED_DEFAULT);
+  await turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
   return turtle;
 };
 

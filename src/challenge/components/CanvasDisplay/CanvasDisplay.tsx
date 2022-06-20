@@ -5,11 +5,12 @@ import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, initialiseTurtle } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
+import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
   turtleReset: (mode: "standard" | "logo") => void;
   runTurtleCommand: (msg: string) => void;
-  runAudioCommand: (msg: string) => void;  
+  runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
 
@@ -23,34 +24,29 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
 
-    const turtle = useRef<RealTurtle | null>(null);
-    const turtleJustReset = useRef(false); // the turtle has been just reset, so no need to do this right now
+    const turtleInstructionQueue = useRef<AsyncQueue<RealTurtle>>(
+      new AsyncQueue<RealTurtle>()
+    );
 
     const turtleReset = (mode: "standard" | "logo") => {
-      const canvas = canvasEl.current as HTMLCanvasElement;
-      turtle.current = initialiseTurtle(canvas, mode);
-      turtleJustReset.current = true;
+      turtleInstructionQueue.current.reset(() =>
+        initialiseTurtle(canvasEl.current as HTMLCanvasElement, mode)
+      );
     };
 
     const runTurtleCommand = (msg: string) => {
-      if (!turtle.current || turtle.current?.fake) {
-        turtleReset("standard");
-      }
-      if (!turtle.current) {
-        console.log("error?");
-        return; // impossible to reach, reset should have created a turtle
-      }
-
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "reset") {
-        if (!turtleJustReset.current) {
+        if (!turtleInstructionQueue.current.isFresh()) {
           turtleReset("standard");
         }
       } else if (turtleObj.action === "mode") {
+        console.log("mode?");
         turtleReset(turtleObj.value);
       } else {
-        turtleJustReset.current = false;
-        processTurtleCommand(turtle.current, turtleObj);
+        turtleInstructionQueue.current.addItem((t) =>
+          processTurtleCommand(t, turtleObj)
+        );
       }
     };
 
@@ -61,18 +57,17 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
 
       const audioSource: HTMLSourceElement = document.getElementById(
         "audioSource"
-      ) as HTMLSourceElement;      
+      ) as HTMLSourceElement;
 
       const audioObj = JSON.parse(msg);
 
-      if(audioObj.action === "load") {
+      if (audioObj.action === "load") {
         audioSource.src = audioObj.source;
         audio.load();
-      } else if(audioObj.action === "play") {
+      } else if (audioObj.action === "play") {
         audio.play();
       }
-
-    };    
+    };
 
     const runCommand = (commands: any[]) => {
       const canvas: HTMLCanvasElement = document.getElementById(
@@ -105,7 +100,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           tabIndex={1}
           style={{ outline: "none" }}
         />
-        <audio style={{display:'none'}} id="audio" crossOrigin="anonymous">
+        <audio style={{ display: "none" }} id="audio" crossOrigin="anonymous">
           <source id="audioSource" src=""></source>
           Your browser does not support the audio element.
         </audio>
