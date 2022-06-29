@@ -1,6 +1,9 @@
-import React, { useMemo } from "react";
-import { Grid, Button, Switch, FormControlLabel } from "@mui/material";
+import React, { useMemo, useContext } from "react";
+import { Grid, Button, Switch, FormControlLabel, IconButton } from "@mui/material";
 import { useLocation } from "react-router-dom";
+import FileUploadControl from "../../components/FileUploadControl";
+import { FileDownload } from "@mui/icons-material";
+import ChallengeContext from "../ChallengeContext";
 
 type HeaderButtonsEditorProps = {
   editingGuide?: boolean;
@@ -8,6 +11,7 @@ type HeaderButtonsEditorProps = {
 };
 
 const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
+  const challengeContext = useContext(ChallengeContext);
   const location = useLocation();
   const searchParams = useMemo(
     () => new URLSearchParams(location.search),
@@ -22,6 +26,18 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
   }, [searchParams, location]);
   return (
     <React.Fragment>
+      <Grid item key="py-upload">
+        <FileUploadControl
+          onUpload={challengeContext?.actions["handle-code-upload"]}
+        />
+      </Grid>
+      <Grid item key="py-download">
+        <IconButton
+          onClick={() => challengeContext?.actions["download-code"]()}
+        >
+          <FileDownload />
+        </IconButton>
+      </Grid>
       <Grid item key="edit-preview">
         <a href={previewUrl} target="_blank" rel="noreferrer noopener">
           <Button>Preview</Button>
