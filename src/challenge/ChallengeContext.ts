@@ -1,7 +1,7 @@
 import React, { createContext } from "react";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
-import DebugContext from "../models/DebugContext";
+//import DebugContext from "../models/DebugContext";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import PaneType from "../models/PaneType";
@@ -48,6 +48,13 @@ type SaveCodeData = {
   code: string | null;
 };
 
+// C# cannot pass back a dict at the moment, so it's
+// best to take env as a string and take care of parsing here
+type CSDebugContext = {
+  lineno: number;
+  env: string;
+};
+
 class ChallengeContextClass {
   constructor(challenge: IChallenge) {
     this.challenge = challenge;
@@ -90,7 +97,7 @@ class ChallengeContextClass {
         }
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
-    },    
+    },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
@@ -122,6 +129,7 @@ class ChallengeContextClass {
       x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
       x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
       let input = data?.input == null ? "" : data.input;
+
       try {
         x.send(
           JSON.stringify({
@@ -218,7 +226,7 @@ class ChallengeContextClass {
         return; // we can just issue an interrupt, no need to kill worker
       }
       this.challenge.worker?.terminate();
-      let worker = new Worker("/static/js/pyworker_sw.js");
+      let worker = new Worker("/static/js/mono/csworker_sw.js");
       worker.addEventListener("message", (msg: MessageEvent<WorkerResponse>) =>
         // @ts-ignore  dybamic dispatch from worker
         this.actions[msg.data.cmd](msg.data)
@@ -346,11 +354,12 @@ class ChallengeContextClass {
     /*this.challenge.jsonEditorRef.current?.setValue(
         this.challenge.JSON_DEFAULT
       ),*/
-    breakpt: (data: DebugContext) => {
+    breakpt: (data: CSDebugContext) => {
+      let env = new Map(Object.entries(JSON.parse(data.env)));
       this.challenge.setState({
         debugContext: {
           lineno: data.lineno,
-          env: new Map([...data.env.entries()].sort()),
+          env: new Map([...env.entries()].sort()),
         },
         editorState: ChallengeStatus.ON_BREAKPOINT,
       });

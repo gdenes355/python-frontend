@@ -3,7 +3,7 @@
   "version": "0.3.0",
   "private": true,
   "proxy": "http://localhost:5000",
-  "description": "Client-side framework for learning Python and authoring Python challenges",
+  "description": "Client-side framework for learning Python/C# and authoring Python/C# challenges",
   "author": "Gyorgy Denes and Paul Baker",
   "license": "MIT",
   "repository": {

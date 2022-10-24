@@ -7,11 +7,11 @@ if (STANDALONE_BUILD) {
 
 console.log("Transforming and copying python worker")
 const fs = require('fs');
-let workerContents = fs.readFileSync('src/utils/pyworker_sw.js', 'utf8');
+let workerContents = fs.readFileSync('src/utils/csworker_sw.js', 'utf8');
 if (STANDALONE_BUILD) {
   workerContents = workerContents.replace('const STANDALONE_BUILD = false', 'const STANDALONE_BUILD = true')
 }
-fs.writeFileSync('public/static/js/pyworker_sw.js', workerContents, 'utf8')
+fs.writeFileSync('public/static/js/mono/csworker_sw.js', workerContents, 'utf8')
 
 
 

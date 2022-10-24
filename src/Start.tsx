@@ -15,6 +15,18 @@ const StartPage = () => {
           Github
         </a>
       </p>
+      <h3>C#</h3>
+      <p>
+        This branch of PythonSponge is actually running C# using{" "}
+        <a href="https://github.com/mono/mono/blob/main/sdks/wasm/README.md">
+          Mono's WASM SDK
+        </a>
+      </p>
+      <p>
+        To see a C# example book, go to{" "}
+        <a href="/?book=./csbook/book.json">/?book=./csbook/book.json</a>
+      </p>
+      <h3>Original starter page content...</h3>
       <p>
         To see the UI in action and to learn a bit of Python programming, visit{" "}
         <a

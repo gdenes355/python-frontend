@@ -1,0 +1,12 @@
+{
+  "name": "Example challenges",
+  "id": "e3e7fffe-d2fd-4748-bb16-51e76033afbe",
+  "children": [
+      {
+          "id": "efa85285-fba5-4886-9fbe-7f3b388f4555",
+          "name": "Hello world",
+          "guide": "c01.md",
+          "py": "c01.cs"
+      }
+  ]
+}

@@ -200,7 +200,7 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
         },
       });
 
-      monaco.languages.registerHoverProvider("python", {
+      monaco.languages.registerHoverProvider("csharp", {
         provideHover: (model, position) => {
           // Log the current word in the console, you probably want to do something else here.
           if (props.isOnBreakPoint) {
@@ -315,7 +315,7 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
           className={"theme-" + themeContext.theme}
           width="100%"
           height="100%"
-          defaultLanguage="python"
+          defaultLanguage="csharp"
           value={props.starterCode}
           onMount={handleEditorDidMount}
           theme={themeContext.theme}
