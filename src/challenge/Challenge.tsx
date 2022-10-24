@@ -339,6 +339,15 @@ class Challenge
                     >
                       {this.renderMainControls()}
                       {this.renderGuide()}
+                      <BookControlFabs
+                        onNavigateToPrevPage={
+                          this.props.onRequestPreviousChallenge
+                        }
+                        onNavigateToNextPage={this.props.onRequestNextChallenge}
+                        onOpenMenu={() => {
+                          this.props.openBookDrawer?.(true);
+                        }}
+                      />
                     </Box>
                     <Allotment.Pane
                       maxSize={350}
@@ -371,13 +380,6 @@ class Challenge
                   </Allotment>
                 </Allotment.Pane>
               </Allotment>
-              <BookControlFabs
-                onNavigateToPrevPage={this.props.onRequestPreviousChallenge}
-                onNavigateToNextPage={this.props.onRequestNextChallenge}
-                onOpenMenu={() => {
-                  this.props.openBookDrawer?.(true);
-                }}
-              />
             </Box>
             <Box>
               {!this.state.guideMinimised ? undefined : (
