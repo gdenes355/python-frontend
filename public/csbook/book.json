@@ -10,9 +10,9 @@
       },
       {
           "id": "48266406-8df7-4557-ac35-d9a8f6bba9e1",
-          "name": "Hello turtl",
+          "name": "Hello turtle",
           "guide": "c02.md",
-          "py": "c02.py"
+          "py": "c02.cs"
       }
   ]
 }
