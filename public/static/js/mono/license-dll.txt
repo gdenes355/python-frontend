@@ -1,0 +1,85 @@
+/*!
+ * Microsoft.CodeAnalysis.CSharp.dll
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp/
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+
+/*!
+ * Microsoft.CodeAnalysis.dll
+ * Copyright (c) Microsoft Corporation. All rights reserved.
+ * https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp/
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+
+/*!
+ * Mono.Security.dll
+ * https://github.com/mono/mono
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * mscorlib.dll
+ * https://github.com/mono/mono
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * netstandard.dll
+ * https://github.com/mono/mono
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * Newtonsoft.Json.dll
+ * https://www.nuget.org/packages/Newtonsoft.Json
+ * Copyright © James Newton-King 2008
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * Sponge.Compiler.dll
+ * https://github.com/gdenes355/python-frontend
+ * Copyright © Gyorgy Denes and Paul Baker 2022
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * All System*.dll files
+ * https://github.com/mono/mono
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
+ 
+/*!
+ * All WebAssembly*.dll files
+ * https://github.com/mono/mono,
+ * https://github.com/mono/mono/tree/main/sdks/wasm
+ * This source code is licensed under the MIT license found in the
+ * LICENSE.md file in the root directory of this source tree.
+ *
+ * @license MIT
+ */
