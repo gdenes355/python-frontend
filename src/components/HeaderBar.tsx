@@ -13,10 +13,12 @@ import {
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import Menu from "./Menu";
 
 import VsThemeContext from "../themes/VsThemeContext";
+import AuthContext from "../auth/AuthContext";
 
 type HeaderBarProps = {
   title?: string;
@@ -27,6 +29,7 @@ type HeaderBarProps = {
 
 const HeaderBar = (props: HeaderBarProps) => {
   const themeContext = useContext(VsThemeContext);
+  const authContext = useContext(AuthContext);
 
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
@@ -96,6 +99,14 @@ const HeaderBar = (props: HeaderBarProps) => {
                   <QuestionMarkIcon />
                 </ListItemIcon>
                 Help
+              </MenuItem>
+            ) : undefined}
+            {authContext.isLoggedIn() ? (
+              <MenuItem onClick={() => authContext.logout()}>
+                <ListItemIcon>
+                  <LogoutIcon />
+                </ListItemIcon>
+                Log out
               </MenuItem>
             ) : undefined}
           </Menu>

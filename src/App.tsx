@@ -15,12 +15,7 @@ import Cookies from "js-cookie";
 import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
-import { PublicClientApplication } from "@azure/msal-browser";
-import { MsalProvider } from "@azure/msal-react";
-import { msalConfig } from "./auth/authConfig";
-import SignInButton from "./auth/SignInButton";
-
-const msalInstance = new PublicClientApplication(msalConfig);
+import AuthWrapper from "./auth/AuthWrapper";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -54,7 +49,6 @@ const AppContainer = () => {
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
-        <SignInButton />
       </React.Fragment>
     );
   }
@@ -79,18 +73,18 @@ export default function App() {
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
     >
-      <MsalProvider instance={msalInstance}>
-        <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
-          <CssBaseline>
+      <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
+        <CssBaseline>
+          <AuthWrapper>
             <BrowserRouter>
               <Routes>
                 <Route path="start" element={<Start />} />
                 <Route path="*" element={<AppContainer></AppContainer>} />
               </Routes>
             </BrowserRouter>
-          </CssBaseline>
-        </ThemeProvider>
-      </MsalProvider>
+          </AuthWrapper>
+        </CssBaseline>
+      </ThemeProvider>
     </VsThemeContext.Provider>
   );
 }
