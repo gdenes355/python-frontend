@@ -10,6 +10,7 @@
     "url": "https://github.com/gdenes355/python-frontend"
   },
   "dependencies": {
+    "@azure/msal-react": "^1.5.2",
     "@dnd-kit/core": "^5.0.3",
     "@dnd-kit/modifiers": "^5.0.0",
     "@emotion/react": "^11.8.1",

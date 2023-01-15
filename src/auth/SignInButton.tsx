@@ -1,7 +1,6 @@
 import React from "react";
 import {
   useMsal,
-  useIsAuthenticated,
   AuthenticatedTemplate,
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
@@ -10,7 +9,6 @@ import { Button } from "@mui/material";
 
 const SignInButton = () => {
   const { instance, accounts } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
 
   const handleLogin = (loginType: string) => {
     if (loginType === "popup") {
