@@ -2,7 +2,7 @@ export const msalConfig = {
   auth: {
     clientId: "dd23f40a-aa7c-4201-b7ff-970ebf4d4570",
     authority: "https://login.microsoftonline.com/common", // This is a URL (e.g. https://login.microsoftonline.com/{your tenant ID})
-    redirectUri: "https://gdenes355-python-frontend.netlify.app/",
+    redirectUri: "https://msal--gdenes355-python-frontend.netlify.app/",
   },
   cache: {
     cacheLocation: "sessionStorage", // This configures where your cache will be stored
