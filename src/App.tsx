@@ -44,23 +44,18 @@ const AppContainer = () => {
 
   if (bookPath || bookFile) {
     return (
-      <MsalProvider instance={msalInstance}>
-        <Book
-          zipFile={bookFile || undefined}
-          onBookUploaded={openBookFromZip}
-        />
-      </MsalProvider>
+      <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
     );
   } else {
     return (
-      <MsalProvider instance={msalInstance}>
+      <React.Fragment>
         <HeaderBar />
         <BookUpload
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
         <SignInButton />
-      </MsalProvider>
+      </React.Fragment>
     );
   }
 };
@@ -84,16 +79,18 @@ export default function App() {
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
     >
-      <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
-        <CssBaseline>
-          <BrowserRouter>
-            <Routes>
-              <Route path="start" element={<Start />} />
-              <Route path="*" element={<AppContainer></AppContainer>} />
-            </Routes>
-          </BrowserRouter>
-        </CssBaseline>
-      </ThemeProvider>
+      <MsalProvider instance={msalInstance}>
+        <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
+          <CssBaseline>
+            <BrowserRouter>
+              <Routes>
+                <Route path="start" element={<Start />} />
+                <Route path="*" element={<AppContainer></AppContainer>} />
+              </Routes>
+            </BrowserRouter>
+          </CssBaseline>
+        </ThemeProvider>
+      </MsalProvider>
     </VsThemeContext.Provider>
   );
 }
