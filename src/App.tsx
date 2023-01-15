@@ -15,6 +15,13 @@ import Cookies from "js-cookie";
 import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
+import { PublicClientApplication } from "@azure/msal-browser";
+import { MsalProvider } from "@azure/msal-react";
+import { msalConfig } from "./auth/authConfig";
+import SignInButton from "./auth/SignInButton";
+
+const msalInstance = new PublicClientApplication(msalConfig);
+
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("book");
@@ -24,7 +31,7 @@ const AppContainer = () => {
 
   const openBookFromZip = (file: File, edit: boolean) => {
     setBookFile(file);
-    navigate({ search: `?book=book.json${edit ? "&edit=clone" : ""}` });
+    navigate({ search: `?boo=book.json${edit ? "&edit=clone" : ""}` });
   };
 
   useEffect(() => {
@@ -37,17 +44,23 @@ const AppContainer = () => {
 
   if (bookPath || bookFile) {
     return (
-      <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
+      <MsalProvider instance={msalInstance}>
+        <Book
+          zipFile={bookFile || undefined}
+          onBookUploaded={openBookFromZip}
+        />
+      </MsalProvider>
     );
   } else {
     return (
-      <React.Fragment>
+      <MsalProvider instance={msalInstance}>
         <HeaderBar />
         <BookUpload
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
-      </React.Fragment>
+        <SignInButton />
+      </MsalProvider>
     );
   }
 };
