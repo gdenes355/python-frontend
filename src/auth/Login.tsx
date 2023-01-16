@@ -62,12 +62,9 @@ const MsalLogin = (props: LoginProps) => {
   }, [accessToken, authContext, info]);
 
   const onLoginClick = () => {
-    instance
-      .loginPopup(loginRequest)
-      .catch((e) => {
-        console.log(e);
-      })
-      .then(console.log);
+    instance.loginPopup(loginRequest).catch((e) => {
+      console.log(e);
+    });
   };
 
   return (
