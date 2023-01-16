@@ -73,6 +73,7 @@ type ChallengeEditorProps = {
   tests?: TestCases | null;
   isExample?: boolean;
   fetcher: IBookFetcher;
+  authToken: string;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -206,8 +207,13 @@ class ChallengeEditor
 
   exportAsZip = () => {
     this.props.fetcher
-      .fetchBook()
-      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .fetchBook("")
+      .then((bfr) =>
+        new BookZipper(this.props.fetcher).zipBook(
+          bfr.book,
+          this.props.authToken
+        )
+      )
       .then((zip) =>
         zip.generateAsync({
           type: "blob",
@@ -222,8 +228,13 @@ class ChallengeEditor
 
   previewAsZip = () => {
     this.props.fetcher
-      .fetchBook()
-      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .fetchBook("")
+      .then((bfr) =>
+        new BookZipper(this.props.fetcher).zipBook(
+          bfr.book,
+          this.props.authToken
+        )
+      )
       .then((zip) =>
         zip.generateAsync({
           type: "base64",
@@ -238,7 +249,7 @@ class ChallengeEditor
         this.setState({
           dialogInfoText: `${
             window.location.href.split("?")[0]
-          }?book=book.json&zip-data=${base64data}`,
+          }?bk=book.json&zip-data=${base64data}`,
         });
       });
   };

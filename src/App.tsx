@@ -16,10 +16,15 @@ import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
 import AuthWrapper from "./auth/AuthWrapper";
+import { MsalProvider } from "@azure/msal-react";
+import { PublicClientApplication } from "@azure/msal-browser";
+import { msalConfig } from "./auth/authConfig";
+
+const msalInstance = new PublicClientApplication(msalConfig);
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book");
+  const bookPath = searchParams.get("bk") || searchParams.get("book");
   const isTeacher = searchParams.get("teacher") || "";
   const [bookFile, setBookFile] = useState<File | null>(null);
   const navigate = useNavigate();
@@ -70,21 +75,23 @@ export default function App() {
   };
 
   return (
-    <VsThemeContext.Provider
-      value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
-    >
-      <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
-        <CssBaseline>
-          <AuthWrapper>
-            <BrowserRouter>
-              <Routes>
-                <Route path="start" element={<Start />} />
-                <Route path="*" element={<AppContainer></AppContainer>} />
-              </Routes>
-            </BrowserRouter>
-          </AuthWrapper>
-        </CssBaseline>
-      </ThemeProvider>
-    </VsThemeContext.Provider>
+    <MsalProvider instance={msalInstance}>
+      <VsThemeContext.Provider
+        value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
+      >
+        <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
+          <CssBaseline>
+            <AuthWrapper>
+              <BrowserRouter>
+                <Routes>
+                  <Route path="start" element={<Start />} />
+                  <Route path="*" element={<AppContainer></AppContainer>} />
+                </Routes>
+              </BrowserRouter>
+            </AuthWrapper>
+          </CssBaseline>
+        </ThemeProvider>
+      </VsThemeContext.Provider>
+    </MsalProvider>
   );
 }

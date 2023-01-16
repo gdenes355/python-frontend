@@ -97,7 +97,7 @@ const Login = (props: LoginProps) => {
     return <p>Loading login screen. Please wait...</p>;
   }
 
-  return <MsalLogin />;
+  return <MsalLogin info={info} />;
 };
 
 export default Login;

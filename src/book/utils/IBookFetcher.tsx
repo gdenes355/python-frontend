@@ -9,8 +9,8 @@ type IBookFetchResult = {
 
 interface IBookFetcher {
   getBookPathAbsolute: () => string;
-  fetch(url: string): Promise<Response>;
-  fetchBook: () => Promise<IBookFetchResult>;
+  fetch(url: string, authToken: string): Promise<Response>;
+  fetchBook: (authToken: string) => Promise<IBookFetchResult>;
 }
 
 export default IBookFetcher;

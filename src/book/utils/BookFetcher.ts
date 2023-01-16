@@ -35,7 +35,7 @@ class BookFetcher implements IBookFetcher {
     return this.bookPathAbsolute;
   }
 
-  public async fetch(url: string) {
+  public async fetch(url: string, authToken: string) {
     if (this.usesLocalZip()) {
       if (!this.zip) {
         await this.fetchZip();
@@ -45,14 +45,18 @@ class BookFetcher implements IBookFetcher {
         ?.async("blob");
       return new Response(blob, { status: 200 });
     } else {
-      return await fetch(url);
+      let headers = new Headers();
+      if (authToken) {
+        headers.append("Authorization", `Bearer ${authToken}`);
+      }
+      return await fetch(url, { headers: headers });
     }
   }
 
-  public fetchBook(): Promise<IBookFetchResult> {
+  public fetchBook(authToken: string): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-      this.fetch(this.bookPathAbsolute).then((response) =>
+      this.fetch(this.bookPathAbsolute, authToken).then((response) =>
         response
           .json()
           .then((data) => ({ code: response.status, data }))
@@ -74,7 +78,8 @@ class BookFetcher implements IBookFetcher {
               data,
               this.getBookPathAbsolute(),
               allRes,
-              true
+              true,
+              authToken
             );
           })
           .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }))
@@ -94,7 +99,8 @@ class BookFetcher implements IBookFetcher {
     bookNode: BookNodeModel,
     mainUrl: string,
     allRes: AllTestResults,
-    fileRoot: boolean
+    fileRoot: boolean,
+    authToken: string
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
@@ -104,15 +110,15 @@ class BookFetcher implements IBookFetcher {
     }
     if (bookNode.children) {
       for (const child of bookNode.children) {
-        await this.expandBookLinks(child, mainUrl, allRes, false);
+        await this.expandBookLinks(child, mainUrl, allRes, false, authToken);
       }
     }
     if (bookNode.bookLink) {
       let path = absolutisePath(bookNode.bookLink, mainUrl);
-      let response = await this.fetch(path);
+      let response = await this.fetch(path, authToken);
       let bookData = await response.json();
       bookNode.children = bookData.children;
-      await this.expandBookLinks(bookData, path, allRes, true);
+      await this.expandBookLinks(bookData, path, allRes, true, authToken);
     }
     return { book: bookNode, allResults: allRes };
   }

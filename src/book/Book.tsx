@@ -63,7 +63,8 @@ const Book = (props: BookProps) => {
   const requestBookReload = () => setBookForceReload((c) => c + 1);
 
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book") || "book.json";
+  const bookPath =
+    searchParams.get("bk") || searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
   const zipPathTransformed = useMemo(
     () => ZipPathTransformer.transformZipPath(zipPath),
@@ -80,7 +81,7 @@ const Book = (props: BookProps) => {
         return;
       }
       let newSearchParams = new URLSearchParams({
-        book: bookPath,
+        bk: bookPath,
         chid: node.id,
         ...(zipPath && { "zip-path": zipPath }),
         ...(zipData && { "zip-data": zipData }),
@@ -155,7 +156,7 @@ const Book = (props: BookProps) => {
         search:
           "?" +
           new URLSearchParams({
-            book: "edit://edit/book.json",
+            bk: "edit://edit/book.json",
             chid: activeNode?.id || "",
             edit: "editing",
           }),
@@ -172,14 +173,23 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
-      createEditableBookStore(rootNode, bookFetcher).then(bookClonedForEditing);
+      createEditableBookStore(rootNode, bookFetcher, authContext.token).then(
+        bookClonedForEditing
+      );
       return;
     }
 
     if (editParam === "editing" || editParam === "preview") {
       setEditState(editParam);
     }
-  }, [editParam, editState, rootNode, bookFetcher, bookClonedForEditing]);
+  }, [
+    editParam,
+    editState,
+    rootNode,
+    bookFetcher,
+    bookClonedForEditing,
+    authContext.token,
+  ]);
 
   /**
    * Getting the book to open
@@ -191,7 +201,7 @@ const Book = (props: BookProps) => {
     }
     if (authContext.requiresAuth && !authContext.isLoggedIn()) return;
     bookFetcher
-      .fetchBook()
+      .fetchBook(authContext.token)
       .then((result) => {
         setAllTestResults(result.allResults);
         setRootNode(result.book);
@@ -246,7 +256,7 @@ const Book = (props: BookProps) => {
         search:
           "?" +
           new URLSearchParams({
-            book: bookPath,
+            bk: bookPath,
             report: open ? "full" : "",
             chid: bookChallengeId || "",
             "zip-path": zipPath || "",
@@ -323,6 +333,7 @@ const Book = (props: BookProps) => {
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
+                authToken={authContext.token}
               />
               <BookDrawer
                 bookRoot={rootNode}
@@ -358,6 +369,7 @@ const Book = (props: BookProps) => {
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookModified={requestBookReload}
+                authToken={authContext.token}
               />
               <BookEditorDrawer
                 bookRoot={rootNode}

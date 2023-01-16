@@ -19,6 +19,7 @@ type IChallengeProps = {
   codePath: string;
   fetcher: IBookFetcher;
   typ?: "py" | "parsons" | "canvas";
+  authToken: string;
 };
 
 type IChallengeState = {

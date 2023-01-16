@@ -1,12 +1,8 @@
+import { useMsal } from "@azure/msal-react";
 import React, { useState } from "react";
 import AuthContext from "./AuthContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
-import { PublicClientApplication } from "@azure/msal-browser";
-import { msalConfig } from "./authConfig";
-import { MsalProvider } from "@azure/msal-react";
-
-const msalInstance = new PublicClientApplication(msalConfig);
 
 type AuthWrapperProps = {
   children?: React.ReactNode;
@@ -14,6 +10,7 @@ type AuthWrapperProps = {
 
 const AuthWrapper = (props: AuthWrapperProps) => {
   const { children } = props;
+  const { instance } = useMsal();
 
   const [token, setToken] = useState<string>(
     localStorage.getItem("jwt-token") || ""
@@ -25,15 +22,15 @@ const AuthWrapper = (props: AuthWrapperProps) => {
 
   const login = (info: LoginInfo) => {
     if (!info) return;
+    setRequiresAuth(true);
     setToken("");
     setLoginInfo(info);
-    setRequiresAuth(true);
   };
   const logout = () => {
     localStorage.setItem("jwt-token", "");
     setToken("");
     setLoginInfo(undefined);
-    msalInstance.logoutPopup({
+    instance.logoutPopup({
       postLogoutRedirectUri: "/",
       mainWindowRedirectUri: "/", // redirects the top level app after logout
     });
@@ -58,13 +55,7 @@ const AuthWrapper = (props: AuthWrapperProps) => {
         isLoggedIn,
       }}
     >
-      {!requiresAuth ? (
-        children
-      ) : (
-        <MsalProvider instance={msalInstance}>
-          {token ? children : <Login info={loginInfo} />}
-        </MsalProvider>
-      )}
+      {requiresAuth && token === "" ? <Login info={loginInfo} /> : children}
     </AuthContext.Provider>
   );
 };

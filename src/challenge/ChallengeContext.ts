@@ -90,7 +90,7 @@ class ChallengeContextClass {
         }
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
-    },    
+    },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
@@ -390,7 +390,7 @@ class ChallengeContextClass {
     },
     "fetch-guide": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.guidePath)
+        .fetch(this.challenge.props.guidePath, this.challenge.props.authToken)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load guide");
@@ -401,7 +401,7 @@ class ChallengeContextClass {
     },
     "fetch-code": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.codePath)
+        .fetch(this.challenge.props.codePath, this.challenge.props.authToken)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load Python code");

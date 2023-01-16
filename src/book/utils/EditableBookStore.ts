@@ -5,14 +5,18 @@ import { absolutisePath } from "../../utils/pathTools";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import { AllTestResults } from "../../models/Tests";
 
-async function addNode(node: BookNodeModel, fetcher: BookFetcher) {
+async function addNode(
+  node: BookNodeModel,
+  fetcher: BookFetcher,
+  authToken: string
+) {
   node.id = uuidv4(); // update UUID so this becomes a unique book
   if (node.guide) {
     let absPath = absolutisePath(
       node.guide,
       node.bookMainUrl || fetcher.getBookPathAbsolute()
     );
-    let resp = await fetcher.fetch(absPath);
+    let resp = await fetcher.fetch(absPath, authToken);
     if (resp.ok) {
       localStorage.setItem("edit://edit/" + node.guide, await resp.text());
     }
@@ -22,14 +26,14 @@ async function addNode(node: BookNodeModel, fetcher: BookFetcher) {
       node.py,
       node.bookMainUrl || fetcher.getBookPathAbsolute()
     );
-    let resp = await fetcher.fetch(absPath);
+    let resp = await fetcher.fetch(absPath, authToken);
     if (resp.ok) {
       localStorage.setItem("edit://edit/" + node.py, await resp.text());
     }
   }
   if (node.children) {
     for (let child of node.children) {
-      await addNode(child, fetcher);
+      await addNode(child, fetcher, authToken);
     }
   }
   node.bookMainUrl = "edit://edit/book.json";
@@ -38,9 +42,10 @@ async function addNode(node: BookNodeModel, fetcher: BookFetcher) {
 
 async function createEditableBookStore(
   book: BookNodeModel,
-  originalFetcher: BookFetcher
+  originalFetcher: BookFetcher,
+  authToken: string
 ) {
-  await addNode(book, originalFetcher);
+  await addNode(book, originalFetcher, authToken);
   localStorage.setItem("edit://edit/book.json", JSON.stringify(book));
   return new EditableBookStore(book);
 }
