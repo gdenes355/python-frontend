@@ -4,6 +4,7 @@ import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
+import UnauthorisedError from "../../auth/UnauthorisedException";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -51,17 +52,33 @@ class BookFetcher implements IBookFetcher {
   public fetchBook(): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-      this.fetch(this.bookPathAbsolute)
-        .then((response) => response.json())
-        .then((bookData) =>
-          this.expandBookLinks(
-            bookData,
-            this.getBookPathAbsolute(),
-            allRes,
-            true
-          )
-        )
-        .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }));
+      this.fetch(this.bookPathAbsolute).then((response) =>
+        response
+          .json()
+          .then((data) => ({ code: response.status, data }))
+          .then(({ code, data }) => {
+            if (code === 401 && data.error === "get-jwt") {
+              e(
+                new UnauthorisedError({
+                  clientId: data.clientId,
+                  jwtEndpoint: data.jwtEndpoint,
+                })
+              );
+            }
+
+            if (code !== 200) {
+              e(new Error("Book cannot be found"));
+            }
+
+            return this.expandBookLinks(
+              data,
+              this.getBookPathAbsolute(),
+              allRes,
+              true
+            );
+          })
+          .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }))
+      );
     });
   }
 

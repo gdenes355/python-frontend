@@ -18,18 +18,15 @@ const AuthWrapper = (props: AuthWrapperProps) => {
   const [token, setToken] = useState<string>(
     localStorage.getItem("jwt-token") || ""
   );
-  const [requiresAuth, setRequiresAuth] = useState<boolean>(true);
+  const [requiresAuth, setRequiresAuth] = useState<boolean>(false);
 
   // MSAL
-  const [loginInfo, setLoginInfo] = useState<LoginInfo | undefined>({
-    clientId: "dd23f40a-aa7c-4201-b7ff-970ebf4d4570",
-    jwtEndpoint: "https://www.pythonsponge.com/token",
-  });
+  const [loginInfo, setLoginInfo] = useState<LoginInfo | undefined>(undefined);
 
   const login = (info: LoginInfo) => {
     if (!info) return;
     setToken("");
-    setLoginInfo(loginInfo);
+    setLoginInfo(info);
     setRequiresAuth(true);
   };
   const logout = () => {

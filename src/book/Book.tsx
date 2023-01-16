@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import Challenge from "../challenge/Challenge";
@@ -26,6 +26,8 @@ import EditableBookStore, {
 } from "./utils/EditableBookStore";
 import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
+import UnauthorisedError from "../auth/UnauthorisedException";
+import AuthContext from "../auth/AuthContext";
 
 type BookProps = {
   zipFile?: File;
@@ -40,6 +42,7 @@ type PathsState = {
 type EditState = "cloning" | "editing" | "preview" | undefined;
 
 const Book = (props: BookProps) => {
+  const authContext = useContext(AuthContext);
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
@@ -186,15 +189,22 @@ const Book = (props: BookProps) => {
       setAllTestResults({ passed: new Set(), failed: new Set() });
       return;
     }
-
-    bookFetcher.fetchBook().then((result) => {
-      setAllTestResults(result.allResults);
-      setRootNode(result.book);
-      if (result.singlePageBook) {
-        openNode(result.singlePageBook);
-      }
-    });
-  }, [bookFetcher, bookForceReload, openNode]);
+    if (authContext.requiresAuth && !authContext.isLoggedIn()) return;
+    bookFetcher
+      .fetchBook()
+      .then((result) => {
+        setAllTestResults(result.allResults);
+        setRootNode(result.book);
+        if (result.singlePageBook) {
+          openNode(result.singlePageBook);
+        }
+      })
+      .catch((e) => {
+        if (e instanceof UnauthorisedError) {
+          authContext.login(e.getInfo());
+        }
+      });
+  }, [bookFetcher, bookForceReload, openNode, authContext]);
 
   /**
    * Getting the challenge within the book

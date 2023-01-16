@@ -4,7 +4,6 @@ import LoginInfo from "./LoginInfo";
 import {
   useMsal,
   AuthenticatedTemplate,
-  MsalProvider,
   UnauthenticatedTemplate,
 } from "@azure/msal-react";
 import { loginRequest } from "./authConfig";
@@ -19,6 +18,7 @@ const MsalLogin = (props: LoginProps) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
   const authContext = useContext(AuthContext);
+  const { info } = props;
 
   useEffect(() => {
     if (accounts.length > 0) {
@@ -40,15 +40,34 @@ const MsalLogin = (props: LoginProps) => {
   }, [accounts, instance]);
 
   useEffect(() => {
-    if (!accessToken || !authContext) return;
-
-    authContext.setToken(accessToken);
-  }, [accessToken, authContext]);
+    if (!accessToken || !authContext || !info) return;
+    fetch(info.jwtEndpoint, {
+      method: "POST",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ msal_access_token: accessToken }),
+    })
+      .then((result) => result.json())
+      .then((data) => {
+        if (data.access_token) {
+          authContext.setToken(data.access_token);
+        } else {
+          console.log(data);
+        }
+      })
+      .catch(console.log);
+    //authContext.setToken(accessToken);
+  }, [accessToken, authContext, info]);
 
   const onLoginClick = () => {
-    instance.loginPopup(loginRequest).catch((e) => {
-      console.log(e);
-    });
+    instance
+      .loginPopup(loginRequest)
+      .catch((e) => {
+        console.log(e);
+      })
+      .then(console.log);
   };
 
   return (
