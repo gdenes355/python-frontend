@@ -4,6 +4,8 @@ import LoginInfo from "./LoginInfo";
 type AuthContextType = {
   token: string;
   requiresAuth: boolean;
+  bookPath: string;
+  resultsEndpoint: string;
   logout: () => void;
   login: (info: LoginInfo) => void;
   setToken: (token: string) => void;
@@ -12,6 +14,8 @@ type AuthContextType = {
 const defContext: AuthContextType = {
   token: "",
   requiresAuth: false,
+  bookPath: "",
+  resultsEndpoint: "",
   logout: () => {},
   login: (info: LoginInfo) => {},
   setToken: (token: string) => {},

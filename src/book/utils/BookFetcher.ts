@@ -75,6 +75,8 @@ class BookFetcher implements IBookFetcher {
                   clientId: data.clientId,
                   jwtEndpoint: data.jwtEndpoint,
                   startUrl: this.bookPathAbsolute,
+                  resultsEndpoint: data.resultsEndpoint,
+                  bookPath: this.bookPath,
                 })
               );
             }

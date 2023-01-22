@@ -28,6 +28,7 @@ import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
 import AuthContext from "../auth/AuthContext";
+import { io, Socket } from "socket.io-client";
 
 type BookProps = {
   zipFile?: File;
@@ -74,6 +75,10 @@ const Book = (props: BookProps) => {
   const bookChallengeId = searchParams.get("chid");
   const editParam = searchParams.get("edit") || "";
   const navigate = useNavigate();
+
+  const [resultsConnection, setResultsConnection] = useState<
+    Socket | undefined
+  >(undefined);
 
   const openNode = useMemo(
     () => (node: BookNodeModel) => {
@@ -136,6 +141,10 @@ const Book = (props: BookProps) => {
       allTestResults.passed.delete(activeNode.id);
       allTestResults.failed.add(activeNode.id);
     }
+    console.log(resultsConnection, activeNode.id + newTestState);
+    if (resultsConnection) {
+      resultsConnection.emit("data", activeNode.id + newTestState);
+    }
     /*else {
             // unlikely that we want to delete an old test result this way
             allTestResults.passed.delete(bookChallengeId);
@@ -144,6 +153,17 @@ const Book = (props: BookProps) => {
     setAllTestResults(allTestResults); // trigger update
     saveTestState(activeNode, newTestState); // persist
   };
+
+  /**
+   * if book path doesn't match auth, then force logout
+   */
+  useEffect(() => {
+    if (bookPath !== authContext.bookPath) {
+      if (authContext.isLoggedIn()) {
+        authContext.logout();
+      }
+    }
+  }, [bookPath, authContext]);
 
   /**
    * Managing edit state
@@ -190,6 +210,23 @@ const Book = (props: BookProps) => {
     bookClonedForEditing,
     authContext,
   ]);
+
+  /**
+   * Establish results store
+   */
+  useEffect(() => {
+    if (!authContext.resultsEndpoint) {
+      setResultsConnection(undefined);
+      return;
+    }
+
+    setResultsConnection(
+      io(authContext.resultsEndpoint, {
+        transports: ["websocket"],
+        auth: { Authorization: authContext.token },
+      })
+    );
+  }, [authContext.resultsEndpoint, authContext.token]);
 
   /**
    * Getting the book to open
