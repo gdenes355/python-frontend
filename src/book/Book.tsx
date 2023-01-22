@@ -173,7 +173,7 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
-      createEditableBookStore(rootNode, bookFetcher, authContext.token).then(
+      createEditableBookStore(rootNode, bookFetcher, authContext).then(
         bookClonedForEditing
       );
       return;
@@ -188,7 +188,7 @@ const Book = (props: BookProps) => {
     rootNode,
     bookFetcher,
     bookClonedForEditing,
-    authContext.token,
+    authContext,
   ]);
 
   /**
@@ -201,7 +201,7 @@ const Book = (props: BookProps) => {
     }
     if (authContext.requiresAuth && !authContext.isLoggedIn()) return;
     bookFetcher
-      .fetchBook(authContext.token)
+      .fetchBook(authContext)
       .then((result) => {
         setAllTestResults(result.allResults);
         setRootNode(result.book);
@@ -214,7 +214,10 @@ const Book = (props: BookProps) => {
           authContext.login(e.getInfo());
         }
       });
-  }, [bookFetcher, bookForceReload, openNode, authContext]);
+    // ignore missing authContext, as this should not change in a meaningful
+    // manner (or at least its changes should not trigger a book refetch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookFetcher, bookForceReload, openNode]);
 
   /**
    * Getting the challenge within the book
@@ -333,7 +336,7 @@ const Book = (props: BookProps) => {
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
-                authToken={authContext.token}
+                authContext={authContext}
               />
               <BookDrawer
                 bookRoot={rootNode}
@@ -369,7 +372,7 @@ const Book = (props: BookProps) => {
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookModified={requestBookReload}
-                authToken={authContext.token}
+                authContext={authContext}
               />
               <BookEditorDrawer
                 bookRoot={rootNode}

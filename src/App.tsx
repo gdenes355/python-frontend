@@ -16,11 +16,6 @@ import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
 import AuthWrapper from "./auth/AuthWrapper";
-import { MsalProvider } from "@azure/msal-react";
-import { PublicClientApplication } from "@azure/msal-browser";
-import { msalConfig } from "./auth/authConfig";
-
-const msalInstance = new PublicClientApplication(msalConfig);
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -75,23 +70,21 @@ export default function App() {
   };
 
   return (
-    <MsalProvider instance={msalInstance}>
-      <VsThemeContext.Provider
-        value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
-      >
-        <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
-          <CssBaseline>
-            <AuthWrapper>
-              <BrowserRouter>
-                <Routes>
-                  <Route path="start" element={<Start />} />
-                  <Route path="*" element={<AppContainer></AppContainer>} />
-                </Routes>
-              </BrowserRouter>
-            </AuthWrapper>
-          </CssBaseline>
-        </ThemeProvider>
-      </VsThemeContext.Provider>
-    </MsalProvider>
+    <VsThemeContext.Provider
+      value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
+    >
+      <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
+        <CssBaseline>
+          <AuthWrapper>
+            <BrowserRouter>
+              <Routes>
+                <Route path="start" element={<Start />} />
+                <Route path="*" element={<AppContainer></AppContainer>} />
+              </Routes>
+            </BrowserRouter>
+          </AuthWrapper>
+        </CssBaseline>
+      </ThemeProvider>
+    </VsThemeContext.Provider>
   );
 }

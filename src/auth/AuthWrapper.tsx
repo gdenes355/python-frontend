@@ -1,4 +1,3 @@
-import { useMsal } from "@azure/msal-react";
 import React, { useState } from "react";
 import AuthContext from "./AuthContext";
 import Login from "./Login";
@@ -10,14 +9,12 @@ type AuthWrapperProps = {
 
 const AuthWrapper = (props: AuthWrapperProps) => {
   const { children } = props;
-  const { instance } = useMsal();
 
   const [token, setToken] = useState<string>(
     localStorage.getItem("jwt-token") || ""
   );
   const [requiresAuth, setRequiresAuth] = useState<boolean>(false);
 
-  // MSAL
   const [loginInfo, setLoginInfo] = useState<LoginInfo | undefined>(undefined);
 
   const login = (info: LoginInfo) => {
@@ -30,18 +27,14 @@ const AuthWrapper = (props: AuthWrapperProps) => {
     localStorage.setItem("jwt-token", "");
     setToken("");
     setLoginInfo(undefined);
-    instance.logoutPopup({
-      postLogoutRedirectUri: "/",
-      mainWindowRedirectUri: "/", // redirects the top level app after logout
-    });
   };
   const isLoggedIn = () => {
     return token !== "";
   };
 
-  const setAuthToken = (token: string) => {
-    localStorage.setItem("jwt-token", token);
-    setToken(token);
+  const setAuthToken = (newToken: string) => {
+    localStorage.setItem("jwt-token", newToken);
+    setToken(newToken);
   };
 
   return (

@@ -1,5 +1,6 @@
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
+import { AuthContextType } from "../../auth/AuthContext";
 
 type IBookFetchResult = {
   book: BookNodeModel;
@@ -9,8 +10,8 @@ type IBookFetchResult = {
 
 interface IBookFetcher {
   getBookPathAbsolute: () => string;
-  fetch(url: string, authToken: string): Promise<Response>;
-  fetchBook: (authToken: string) => Promise<IBookFetchResult>;
+  fetch(url: string, authContext?: AuthContextType): Promise<Response>;
+  fetchBook: (authContext?: AuthContextType) => Promise<IBookFetchResult>;
 }
 
 export default IBookFetcher;

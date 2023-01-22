@@ -5,6 +5,7 @@ import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
+import { AuthContextType } from "../../auth/AuthContext";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -35,7 +36,7 @@ class BookFetcher implements IBookFetcher {
     return this.bookPathAbsolute;
   }
 
-  public async fetch(url: string, authToken: string) {
+  public async fetch(url: string, authContext?: AuthContextType) {
     if (this.usesLocalZip()) {
       if (!this.zip) {
         await this.fetchZip();
@@ -46,17 +47,24 @@ class BookFetcher implements IBookFetcher {
       return new Response(blob, { status: 200 });
     } else {
       let headers = new Headers();
-      if (authToken) {
-        headers.append("Authorization", `Bearer ${authToken}`);
+      if (authContext?.token) {
+        headers.append("Authorization", `Bearer ${authContext.token}`);
       }
-      return await fetch(url, { headers: headers });
+      let res = await fetch(url, { headers: headers });
+      if (authContext?.token) {
+        let newToken = res.headers.get("new-token");
+        if (newToken) {
+          authContext.setToken(newToken);
+        }
+      }
+      return res;
     }
   }
 
-  public fetchBook(authToken: string): Promise<IBookFetchResult> {
+  public fetchBook(authContext?: AuthContextType): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-      this.fetch(this.bookPathAbsolute, authToken).then((response) =>
+      this.fetch(this.bookPathAbsolute, authContext).then((response) =>
         response
           .json()
           .then((data) => ({ code: response.status, data }))
@@ -66,6 +74,7 @@ class BookFetcher implements IBookFetcher {
                 new UnauthorisedError({
                   clientId: data.clientId,
                   jwtEndpoint: data.jwtEndpoint,
+                  startUrl: this.bookPathAbsolute,
                 })
               );
             }
@@ -79,7 +88,7 @@ class BookFetcher implements IBookFetcher {
               this.getBookPathAbsolute(),
               allRes,
               true,
-              authToken
+              authContext
             );
           })
           .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }))
@@ -100,7 +109,7 @@ class BookFetcher implements IBookFetcher {
     mainUrl: string,
     allRes: AllTestResults,
     fileRoot: boolean,
-    authToken: string
+    authContext?: AuthContextType
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
@@ -110,15 +119,15 @@ class BookFetcher implements IBookFetcher {
     }
     if (bookNode.children) {
       for (const child of bookNode.children) {
-        await this.expandBookLinks(child, mainUrl, allRes, false, authToken);
+        await this.expandBookLinks(child, mainUrl, allRes, false, authContext);
       }
     }
     if (bookNode.bookLink) {
       let path = absolutisePath(bookNode.bookLink, mainUrl);
-      let response = await this.fetch(path, authToken);
+      let response = await this.fetch(path, authContext);
       let bookData = await response.json();
       bookNode.children = bookData.children;
-      await this.expandBookLinks(bookData, path, allRes, true, authToken);
+      await this.expandBookLinks(bookData, path, allRes, true, authContext);
     }
     return { book: bookNode, allResults: allRes };
   }

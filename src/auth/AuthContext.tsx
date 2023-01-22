@@ -1,7 +1,7 @@
 import { createContext } from "react";
 import LoginInfo from "./LoginInfo";
 
-type contextType = {
+type AuthContextType = {
   token: string;
   requiresAuth: boolean;
   logout: () => void;
@@ -9,7 +9,7 @@ type contextType = {
   setToken: (token: string) => void;
   isLoggedIn: () => boolean;
 };
-const defContext: contextType = {
+const defContext: AuthContextType = {
   token: "",
   requiresAuth: false,
   logout: () => {},
@@ -21,3 +21,4 @@ const defContext: contextType = {
 const AuthContext = createContext(defContext);
 
 export default AuthContext;
+export { AuthContextType };

@@ -390,7 +390,7 @@ class ChallengeContextClass {
     },
     "fetch-guide": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.guidePath, this.challenge.props.authToken)
+        .fetch(this.challenge.props.guidePath, this.challenge.props.authContext)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load guide");
@@ -401,7 +401,7 @@ class ChallengeContextClass {
     },
     "fetch-code": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.codePath, this.challenge.props.authToken)
+        .fetch(this.challenge.props.codePath, this.challenge.props.authContext)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load Python code");

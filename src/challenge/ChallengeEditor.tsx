@@ -41,6 +41,7 @@ import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
 import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
+import { AuthContextType } from "../auth/AuthContext";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -73,7 +74,7 @@ type ChallengeEditorProps = {
   tests?: TestCases | null;
   isExample?: boolean;
   fetcher: IBookFetcher;
-  authToken: string;
+  authContext: AuthContextType;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
@@ -207,11 +208,11 @@ class ChallengeEditor
 
   exportAsZip = () => {
     this.props.fetcher
-      .fetchBook("")
+      .fetchBook(this.props.authContext)
       .then((bfr) =>
         new BookZipper(this.props.fetcher).zipBook(
           bfr.book,
-          this.props.authToken
+          this.props.authContext
         )
       )
       .then((zip) =>
@@ -228,11 +229,11 @@ class ChallengeEditor
 
   previewAsZip = () => {
     this.props.fetcher
-      .fetchBook("")
+      .fetchBook(undefined)
       .then((bfr) =>
         new BookZipper(this.props.fetcher).zipBook(
           bfr.book,
-          this.props.authToken
+          this.props.authContext
         )
       )
       .then((zip) =>
