@@ -110,6 +110,8 @@ const Login = (props: LoginProps) => {
 
     let config = { ...msalConfig };
     config.auth.clientId = info.clientId;
+
+    config.auth.redirectUri = window.location.origin + window.location.pathname;
     setMsalInstance(new PublicClientApplication(config));
   }, [info]);
 
