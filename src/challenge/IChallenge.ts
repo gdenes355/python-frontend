@@ -48,6 +48,7 @@ interface IChallenge {
 
   currentConsoleText: string;
   currentFixedUserInput: string[];
+  workerFullyInitialised: boolean;
 
   props: IChallengeProps;
   state: IChallengeState;

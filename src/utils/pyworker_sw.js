@@ -1,10 +1,10 @@
 const STANDALONE_BUILD = false;
 const pyodideImportPath = STANDALONE_BUILD 
-  ?  '/static/cdn-mirror/pyodide/v0.20.0/full/pyodide.js' 
-  : 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js';
+  ?  '/static/cdn-mirror/pyodide/v0.22.1/full/pyodide.js' 
+  : 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js';
 const pyodideIndexUrl = STANDALONE_BUILD
-  ? '/static/cdn-mirror/pyodide/v0.20.0/full/'
-  : 'https://cdn.jsdelivr.net/pyodide/v0.20.0/full/';
+  ? '/static/cdn-mirror/pyodide/v0.22.1/full/'
+  : 'https://cdn.jsdelivr.net/pyodide/v0.22.1/full/';
 
 importScripts(pyodideImportPath)
 

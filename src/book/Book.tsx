@@ -330,40 +330,38 @@ const Book = (props: BookProps) => {
         return <p>Something went wrong. Please refresh the page</p>;
       } else {
         return (
-          <React.Fragment>
-            <ErrorBounday>
-              <ChallengeEditor
-                bookStore={editableBookStore}
-                fetcher={bookFetcher}
-                guidePath={paths.guidePath}
-                codePath={paths.pyPath}
-                tests={tests && tests.length > 0 ? tests : null}
-                bookNode={activeNode}
-                title={rootNode.name}
-                openBookDrawer={openDrawer}
-                onRequestPreviousChallenge={requestPreviousChallenge}
-                onRequestNextChallenge={requestNextChallenge}
-                uid={bookPath + bookChallengeId}
-                onTestsPassingChanged={activeTestsPassingChanged}
-                isExample={activeNode.isExample}
-                typ={activeNode.typ}
-                onBookModified={requestBookReload}
-              />
-              <BookEditorDrawer
-                bookRoot={rootNode}
-                bookNode={activeNode}
-                store={editableBookStore}
-                activePageId={bookChallengeId || undefined}
-                onRequestOpen={openDrawer}
-                onNodeSelected={openNode}
-                open={drawerOpen}
-                onBookModified={() => {
-                  editableBookStore.store.saveBook();
-                  requestBookReload();
-                }}
-              />
-            </ErrorBounday>
-          </React.Fragment>
+          <ErrorBounday>
+            <ChallengeEditor
+              bookStore={editableBookStore}
+              fetcher={bookFetcher}
+              guidePath={paths.guidePath}
+              codePath={paths.pyPath}
+              tests={tests && tests.length > 0 ? tests : null}
+              bookNode={activeNode}
+              title={rootNode.name}
+              openBookDrawer={openDrawer}
+              onRequestPreviousChallenge={requestPreviousChallenge}
+              onRequestNextChallenge={requestNextChallenge}
+              uid={bookPath + bookChallengeId}
+              onTestsPassingChanged={activeTestsPassingChanged}
+              isExample={activeNode.isExample}
+              typ={activeNode.typ}
+              onBookModified={requestBookReload}
+            />
+            <BookEditorDrawer
+              bookRoot={rootNode}
+              bookNode={activeNode}
+              store={editableBookStore}
+              activePageId={bookChallengeId || undefined}
+              onRequestOpen={openDrawer}
+              onNodeSelected={openNode}
+              open={drawerOpen}
+              onBookModified={() => {
+                editableBookStore.store.saveBook();
+                requestBookReload();
+              }}
+            />
+          </ErrorBounday>
         );
       }
     } else {

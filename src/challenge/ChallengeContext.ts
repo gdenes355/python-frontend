@@ -57,8 +57,10 @@ class ChallengeContextClass {
   private fileReader: FileReader | null = null;
 
   public actions = {
-    "init-done": () =>
-      this.challenge.setState({ editorState: ChallengeStatus.READY }),
+    "init-done": () => {
+      this.challenge.workerFullyInitialised = true;
+      this.challenge.setState({ editorState: ChallengeStatus.READY });
+    },
     print: (data: PrintData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         this.actions["print-console"](data.msg);
@@ -90,7 +92,7 @@ class ChallengeContextClass {
         }
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
-    },    
+    },
     turtle: (data: TurtleData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
@@ -204,7 +206,11 @@ class ChallengeContextClass {
       ) {
         return; // in ready state already
       }
-      if (this.challenge.worker && this.challenge.interruptBuffer) {
+      if (
+        this.challenge.worker &&
+        this.challenge.interruptBuffer &&
+        this.challenge.workerFullyInitialised
+      ) {
         this.challenge.interruptBuffer[0] = 2;
         let x = new XMLHttpRequest();
         x.open("post", "/@reset@/reset.js");
@@ -227,6 +233,7 @@ class ChallengeContextClass {
       let keyDownBuffer: Uint8Array | null = null;
       if (window.crossOriginIsolated && window.SharedArrayBuffer) {
         interruptBuffer = new Uint8Array(new window.SharedArrayBuffer(1));
+        interruptBuffer[0] = 0;
         keyDownBuffer = new Uint8Array(new window.SharedArrayBuffer(256));
         worker.postMessage({
           cmd: "setSharedBuffers",

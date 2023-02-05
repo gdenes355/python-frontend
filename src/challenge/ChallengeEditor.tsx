@@ -101,6 +101,7 @@ class ChallengeEditor
   // non-UI (non-React) internal state
   breakpointsChanged: boolean = false;
   worker: Worker | null = null;
+  workerFullyInitialised: boolean = false;
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
 
