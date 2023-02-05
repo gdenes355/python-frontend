@@ -20,6 +20,7 @@ type DrawData = {
 };
 
 type TurtleData = {
+  id: number;
   msg: string;
 };
 
@@ -99,7 +100,10 @@ class ChallengeContextClass {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
-        this.challenge.canvasDisplayRef?.current?.runTurtleCommand(data.msg);
+        this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
+          data.id,
+          data.msg
+        );
       }
     },
     cls: () => {
@@ -259,6 +263,7 @@ class ChallengeContextClass {
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let bkpts = this.challenge.editorRef.current?.getBreakpoints() || [];
+        this.challenge.canvasDisplayRef?.current?.turtleClear();
         if (code || code === "") {
           this.actions["debugpy"](code, bkpts, mode);
         }

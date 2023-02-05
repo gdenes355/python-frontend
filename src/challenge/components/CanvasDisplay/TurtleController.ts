@@ -7,10 +7,34 @@ const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_STANDARD_MODE_BEARING = 90;
 
-const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
+var turtles = new Map<number, RealTurtle>();
+var turtleMode: "standard" | "logo" = "standard";
+
+const processTurtleCommand = async (
+  id: number,
+  cmd: any,
+  canvas: HTMLCanvasElement
+) => {
+  id = 0; // turns out that real-turtle doesn't like multiple turtles
+  if (cmd.action === "mode") {
+    // reset the canvas!
+    turtleMode = cmd.value;
+    turtles.clear();
+    return undefined;
+  }
+  let turtle = turtles.get(id);
+  if (!turtle && cmd.action === "reset") {
+    // ignore turtle reset if turtle doesn't exist
+    return undefined;
+  }
   if (!turtle) {
-    console.log("no turtle to use for command", cmd);
-    return null;
+    turtle = await initialiseTurtle(canvas);
+    turtles.set(id, turtle);
+  }
+
+  if (!turtle.options.state.hasMoved) {
+    turtle.options.state.hasMoved = true;
+    await turtle.setSize(turtleMode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
   }
   try {
     switch (cmd.action) {
@@ -22,7 +46,7 @@ const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
         break;
       case "right":
         await turtle.right(cmd.value);
-        turtle.options.mode === "logo"
+        turtleMode === "logo"
           ? (turtle.options.state.heading =
               turtle.options.state.heading + cmd.value)
           : (turtle.options.state.heading =
@@ -30,7 +54,7 @@ const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
         break;
       case "left":
         await turtle.left(cmd.value);
-        turtle.options.mode === "logo"
+        turtleMode === "logo"
           ? (turtle.options.state.heading =
               (turtle.options.state.heading || 0) - cmd.value)
           : (turtle.options.state.heading =
@@ -54,7 +78,7 @@ const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
       case "setheading":
         const turn = cmd.value - (turtle.options.state.heading || 0);
         if (turn !== 0) {
-          if (turtle.options.mode === "logo") {
+          if (turtleMode === "logo") {
             await turtle.right(turn);
           } else {
             // standard
@@ -80,7 +104,7 @@ const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
         break;
       case "circle":
         await turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
-        turtle.options.mode === "logo"
+        turtleMode === "logo"
           ? (turtle.options.state.heading =
               (turtle.options.state.heading || 0) - cmd.extent)
           : (turtle.options.state.heading =
@@ -132,31 +156,33 @@ const processTurtleCommand = async (turtle: RealTurtle | null, cmd: any) => {
     console.log(cmd);
     console.log(err);
   }
-  return turtle;
+  return undefined;
 };
 
 const initialiseTurtle: (
-  canvas: HTMLCanvasElement,
-  mode: "standard" | "logo"
-) => Promise<RealTurtle> = async (canvas, mode) => {
-  console.log("initialising turtle");
-  canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
+  canvas: HTMLCanvasElement
+) => Promise<RealTurtle> = async (canvas) => {
   let turtle = new RealTurtle(canvas, {
-    state: {},
+    state: { size: 0 },
     async: true,
     autoStart: false,
   }) as RealTurtle;
   await turtle.setPosition(canvas.width / 2, canvas.height / 2);
-  if (mode === "standard") {
+  if (turtleMode === "standard") {
     await turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
   }
   turtle.options.state.heading = 0;
-  turtle.options.mode = mode;
-  await turtle.setSize(mode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
+  turtle.options.state.hasMoved = false;
+  await turtle.setSize(0);
   await turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
   await turtle.setSpeed(TURTLE_SPEED_DEFAULT);
   await turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
   return turtle;
 };
 
-export { processTurtleCommand, initialiseTurtle };
+const clearTurtle = (canvas: HTMLCanvasElement) => {
+  turtles.clear();
+  canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
+};
+
+export { processTurtleCommand, clearTurtle };

@@ -368,108 +368,65 @@ step_into = False
 
 with open("turtle.py", "w") as file:
     file.write('''
-
 import js
-import json
 from pyodide import to_js
-
+import json as J
+import inspect
+_A = "action"
+_V = "value"
+_idc = 0
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
-
 def mode(mode_type):
-    json_map = {"action":"mode", "value":mode_type}
-    post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-
-def done():
-    pass # no need to do anything
-
+    msg = {_A:"mode", _V:mode_type}
+    post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+def done():pass # no need to do anything
 class Turtle:
+    def send(self, msg=None):
+      arg = {"cmd": "turtle", "id": self.__id}
+      if msg: arg["msg"] = J.dumps(msg)
+      post_message(arg)  
     def __init__(self):
-        json_map = {"action":"reset"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
-    def forward(self, dist):
-        json_map = {"action":"forward", "value":dist}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)}) 
-    def fd(self, dist):
-        self.forward(dist)
-    def setposition(self, x, y):
-        json_map = {"action":"setposition", "x":x, "y":y}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def setpos(self, x, y):
-        self.setposition(x, y)
-    def goto(self, x, y):
-        self.setposition(x, y)          
-    def right(self, angle):
-        json_map = {"action":"right", "value":angle}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def rt(self, angle):
-        self.right(angle)       
-    def left(self, angle):
-        json_map = {"action":"left", "value":angle}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def lt(self, angle):
-        self.left(angle)
-    def backward(self, dist):
-        json_map = {"action":"backward", "value":dist}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def back(self, angle):
-        self.backward(dist) 
-    def bk(self, angle):
-        self.backward(dist)
-    def penup(self):
-        json_map = {"action":"penup"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def pu(self):
-        self.penup()
-    def up(self):
-        self.penup()
-    def pendown(self):
-        json_map = {"action":"pendown"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def pd(self):
-        self.pendown()
-    def down(self):
-        self.pendown()
-    def speed(self, speed_value):
-        json_map = {"action":"speed", "value":speed_value}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def reset(self):
-        json_map = {"action":"reset"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def hideturtle(self):
-        json_map = {"action":"hideturtle"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def showturtle(self):
-        json_map = {"action":"showturtle"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def home(self):
-        self.setposition(0, 0)
-    def pencolor(self, color):
-        json_map = {"action":"pencolor", "value":color}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def setheading(self, angle):
-        json_map = {"action":"setheading", "value":angle}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})           
-    def color(self, color):
-        self.pencolor(color)      
-    def pensize(self, size):
-        json_map = {"action":"pensize", "value":size}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def width(self, size):
-        self.pensize(size)
-    def circle(self, radius, extent = 360):
-        json_map = {"action":"circle", "radius":radius, "extent": extent}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def begin_fill (self):
-        json_map = {"action":"begin_fill"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})
-    def end_fill(self):
-        json_map = {"action":"end_fill"}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})        
-    def fillcolor(self, color):
-        json_map = {"action":"fillcolor", "value":color}
-        post_message({"cmd": "turtle", "msg": json.dumps(json_map)})                                                   
-     
+      global _idc
+      self.__id=_idc;_idc+=1;
+      self.send({_A:"reset"})
+    def forward(self, dist):self.send({_A:"forward", _V:dist})
+    def fd(self, dist):self.forward(dist)
+    def setposition(self, x, y):self.send({_A:"setposition", "x":x, "y":y})
+    def setpos(self, x, y):self.setposition(x, y)
+    def goto(self, x, y):self.setposition(x, y)
+    def right(self, angle):self.send({_A:"right", _V:angle})
+    def rt(self, angle):self.right(angle)
+    def left(self, angle):self.send({_A:"left", _V:angle})
+    def lt(self, angle):self.left(angle)
+    def backward(self, dist):self.send({_A:"backward", _V:dist})
+    def back(self, dist):self.backward(dist)
+    def bk(self, dist):self.backward(dist)
+    def penup(self):self.send({_A:"penup"})
+    def pu(self):self.penup()
+    def up(self):self.penup()
+    def pendown(self):self.send({_A:"pendown"})
+    def pd(self):self.pendown()
+    def down(self):self.pendown()
+    def speed(self, speed_value):self.send({_A:"speed", _V:speed_value})
+    def reset(self):self.send({_A:"reset"})
+    def hideturtle(self):self.send({_A:"hideturtle"})
+    def showturtle(self):self.send({_A:"showturtle"})
+    def home(self):self.setposition(0, 0)
+    def pencolor(self, color):self.send({_A:"pencolor", _V:color})
+    def setheading(self, angle):self.send({_A:"setheading", _V:angle})
+    def color(self, color):self.pencolor(color)
+    def pensize(self, size):self.send({_A:"pensize", _V:size})
+    def width(self, size):self.pensize(size)
+    def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
+    def begin_fill (self):self.send({_A:"begin_fill"})
+    def end_fill(self):self.send({_A:"end_fill"})
+    def fillcolor(self, color):self.send({_A:"fillcolor", _V:color})
+_t0 = Turtle()
+for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
+  args = str(inspect.signature(eval(f"Turtle.{m}")))
+  args = args.replace("self, ", "").replace("self", "")
+  exec(f"def {m}{args}: _t0.{m}{args}")
 ''')
 
 
@@ -535,6 +492,7 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -572,6 +530,7 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
     exec(code, global_vars)    
 
 
