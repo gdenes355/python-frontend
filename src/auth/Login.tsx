@@ -9,9 +9,18 @@ import {
 } from "@azure/msal-react";
 import { PublicClientApplication } from "@azure/msal-browser";
 import { loginRequest } from "./authConfig";
-import { Button } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardActions,
+  CardContent,
+  Typography,
+} from "@mui/material";
 import AuthContext from "./AuthContext";
 import { msalConfig } from "./authConfig";
+
+import "./Login.css";
+import { pad } from "lodash";
 
 type LoginProps = {
   info?: LoginInfo;
@@ -24,10 +33,13 @@ type MsalLoginProps = {
 const MsalLogin = (props: MsalLoginProps) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
+  const [userHasInteracted, setUserHasInteracted] = useState<boolean>(false);
   const authContext = useContext(AuthContext);
   const { info } = props;
 
+  /// acquire access token from MS
   useEffect(() => {
+    if (!userHasInteracted) return;
     if (accounts.length > 0) {
       const request = {
         ...loginRequest,
@@ -44,8 +56,21 @@ const MsalLogin = (props: MsalLoginProps) => {
           console.log(e);
         });
     }
-  }, [accounts, instance]);
+  }, [accounts, instance, userHasInteracted]);
 
+  /// Manual interaction
+  const onManualApproval = () => {
+    setUserHasInteracted(true);
+  };
+
+  const onCancel = () => {
+    sessionStorage.setItem("msal-login-query", "");
+    instance.logoutRedirect().catch((e) => {
+      console.log(e);
+    });
+  };
+
+  /// Exchange MS access token for JWT token
   useEffect(() => {
     if (!accessToken || !authContext) return;
     fetch(info.jwtEndpoint, {
@@ -70,29 +95,81 @@ const MsalLogin = (props: MsalLoginProps) => {
       .catch(console.log);
   }, [accessToken, authContext, info, instance, accounts]);
 
+  /// Manual start of the login flow
   const onLoginClick = () => {
-    instance.loginPopup(loginRequest).catch((e) => {
+    sessionStorage.setItem("msal-login-query", window.location.search);
+    instance.loginRedirect(loginRequest).catch((e) => {
       console.log(e);
     });
   };
 
   return (
-    <React.Fragment>
-      <AuthenticatedTemplate>
-        {accessToken
-          ? "Waiting for the session to begin. Please wait..."
-          : "Waiting for MSAL authentication token..."}
-      </AuthenticatedTemplate>
-      <UnauthenticatedTemplate>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => onLoginClick()}
-        >
-          Sign in
-        </Button>
-      </UnauthenticatedTemplate>
-    </React.Fragment>
+    <div className="login-container">
+      <Card
+        variant="outlined"
+        sx={{ maxWidth: 500, p: 3 }}
+        className="login-card"
+      >
+        <CardContent>
+          <Typography gutterBottom variant="h5" component="div">
+            PythonSponge login
+          </Typography>
+        </CardContent>
+
+        <AuthenticatedTemplate>
+          {userHasInteracted ? (
+            accessToken ? (
+              "Waiting for the session to begin. Please wait..."
+            ) : (
+              "Waiting for MSAL authentication token..."
+            )
+          ) : accounts.length > 0 ? (
+            <React.Fragment>
+              <CardContent>
+                You are logging in as {accounts[0].name?.toString()} (
+                {accounts[0].username}). PythonSponge will share your name and
+                email address with the following server to save and track your
+                progress: {info.resultsEndpoint}. Would you like to allow this?
+              </CardContent>
+              <CardActions className="login-card-actions">
+                <Button
+                  variant="outlined"
+                  color="error"
+                  onClick={() => onCancel()}
+                  sx={{ mr: 3 }}
+                >
+                  No
+                </Button>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => onManualApproval()}
+                >
+                  Yes
+                </Button>
+              </CardActions>
+            </React.Fragment>
+          ) : (
+            "Waiting for authentication"
+          )}
+        </AuthenticatedTemplate>
+        <UnauthenticatedTemplate>
+          <CardContent>
+            This book is protected; you can access it once you have logged in
+            with your Microsoft Account.
+          </CardContent>
+          <CardActions disableSpacing className="login-card-actions">
+            <Button
+              color="primary"
+              variant="contained"
+              onClick={() => onLoginClick()}
+            >
+              Sign in
+            </Button>
+          </CardActions>
+        </UnauthenticatedTemplate>
+      </Card>
+    </div>
   );
 };
 
@@ -110,8 +187,8 @@ const Login = (props: LoginProps) => {
 
     let config = { ...msalConfig };
     config.auth.clientId = info.clientId;
-
-    config.auth.redirectUri = window.location.origin + window.location.pathname;
+    config.auth.redirectUri =
+      window.location.pathname.replace(/\/+$/, "") + "/auth-callback";
     setMsalInstance(new PublicClientApplication(config));
   }, [info]);
 

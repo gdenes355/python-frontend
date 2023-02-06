@@ -16,6 +16,7 @@ import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
 import AuthWrapper from "./auth/AuthWrapper";
+import AuthCallbackPage from "./auth/AuthCallbackPage";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -79,7 +80,8 @@ export default function App() {
             <BrowserRouter>
               <Routes>
                 <Route path="start" element={<Start />} />
-                <Route path="*" element={<AppContainer></AppContainer>} />
+                <Route path="auth-callback" element={<AuthCallbackPage />} />
+                <Route path="*" element={<AppContainer />} />
               </Routes>
             </BrowserRouter>
           </AuthWrapper>

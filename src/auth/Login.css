@@ -1,0 +1,14 @@
+.login-container {
+  align-items: center !important;
+  height: 100%;
+  display: flex;
+}
+
+.login-card {
+  margin: auto;
+}
+
+.login-card-actions {
+  display: flex;
+  justify-content: flex-end;
+}
