@@ -1,15 +1,14 @@
 import React, { useContext, useRef, useImperativeHandle } from "react";
 import "./CanvasDisplay.css";
-import RealTurtle from "real-turtle";
 import { processCanvasCommand } from "./CanvasController";
-import { processTurtleCommand, initialiseTurtle } from "./TurtleController";
+import { processTurtleCommand, clearTurtle } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
 import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
-  turtleReset: (mode: "standard" | "logo") => void;
-  runTurtleCommand: (msg: string) => void;
+  turtleClear: () => void;
+  runTurtleCommand: (id: number, msg: string) => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
@@ -24,30 +23,22 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
 
-    const turtleInstructionQueue = useRef<AsyncQueue<RealTurtle>>(
-      new AsyncQueue<RealTurtle>()
-    );
+    const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
 
-    const turtleReset = (mode: "standard" | "logo") => {
-      turtleInstructionQueue.current.reset(() =>
-        initialiseTurtle(canvasEl.current as HTMLCanvasElement, mode)
-      );
+    const turtleClear = () => {
+      turtleInstructionQueue.current?.reset();
+      clearTurtle(canvasEl.current as HTMLCanvasElement);
     };
 
-    const runTurtleCommand = (msg: string) => {
+    const runTurtleCommand = (id: number, msg: string) => {
       const turtleObj = JSON.parse(msg);
-      if (turtleObj.action === "reset") {
-        if (!turtleInstructionQueue.current.isFresh()) {
-          turtleReset("standard");
-        }
-      } else if (turtleObj.action === "mode") {
-        console.log("mode?");
-        turtleReset(turtleObj.value);
-      } else {
-        turtleInstructionQueue.current.addItem((t) =>
-          processTurtleCommand(t, turtleObj)
-        );
-      }
+      turtleInstructionQueue.current.addItem(() =>
+        processTurtleCommand(
+          id,
+          turtleObj,
+          canvasEl.current as HTMLCanvasElement
+        )
+      );
     };
 
     const runAudioCommand = (msg: string) => {
@@ -85,7 +76,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       runCommand,
       runTurtleCommand,
       runAudioCommand,
-      turtleReset,
+      turtleClear,
     }));
 
     return (

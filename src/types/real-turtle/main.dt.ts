@@ -9,6 +9,7 @@ declare module "real-turtle" {
     size?: number;
     speed?: number;
     heading?: number; // added for Python frontend
+    hasMoved?: boolean; // added for Python frontend
   };
   export type RealTurtleOptions = {
     autoStart?: boolean;

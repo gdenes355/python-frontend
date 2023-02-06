@@ -51,11 +51,11 @@ const Guide = ({ md }: GuideProps) => {
               return !inline && match ? (
                 <SyntaxHighlighter
                   children={String(children).replace(/\n$/, "")}
-                  style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
                   customStyle={{ fontSize: "1.05em" }}
                   language={match[1]}
                   PreTag="div"
                   {...props}
+                  style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
                 />
               ) : (
                 <code className={className} {...props}>

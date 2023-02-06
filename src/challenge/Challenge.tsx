@@ -76,6 +76,7 @@ class Challenge
   worker: Worker | null = null;
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
+  workerFullyInitialised: boolean = false;
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),

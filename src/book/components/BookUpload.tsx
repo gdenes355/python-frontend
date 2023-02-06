@@ -23,7 +23,9 @@ const baseStyle = {
 const BookUpload = (props: BookUploadProps) => {
   const { acceptedFiles, getRootProps, getInputProps, isFocused } = useDropzone(
     {
-      accept: "application/zip,.zip",
+      accept: {
+        "application/zip": [".zip"]
+      },
       maxFiles: 1,
     }
   );

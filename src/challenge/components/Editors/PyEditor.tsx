@@ -17,7 +17,7 @@ import VsThemeContext from "../../../themes/VsThemeContext";
 const STANDALONE_BUILD = false;
 if (STANDALONE_BUILD) {
   loader.config({
-    paths: { vs: "/static/cdn-mirror/monaco-editor@0.28.1/min/vs" },
+    paths: { vs: "/static/cdn-mirror/monaco-editor@0.34.1/min/vs" },
   });
 }
 type PyEditorProps = {

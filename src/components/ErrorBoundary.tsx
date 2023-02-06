@@ -1,17 +1,28 @@
 import React from "react";
 
+type ErrorBoundaryProps = {
+  children?: React.ReactNode;
+}
+
 type ErrorBoundayState = {
   error?: string;
 };
 
-class ErrorBounday extends React.Component<ErrorBoundayState> {
+class ErrorBounday extends React.Component<ErrorBoundaryProps, ErrorBoundayState> {
   state: ErrorBoundayState = {};
+  props: ErrorBoundaryProps= {};
+
+  constructor(props: any) {
+    super(props);
+    this.props = props;
+    this.state = { error: undefined };
+  }
 
   componentDidCatch(error: Error) {
     console.error("error within boundary:", error);
   }
 
-  public static getDerivedStateFromError(error: Error): ErrorBoundayState {
+  static getDerivedStateFromError(error: Error): ErrorBoundayState {
     return { error: error.message };
   }
 
