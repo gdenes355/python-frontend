@@ -141,9 +141,11 @@ const Book = (props: BookProps) => {
       allTestResults.passed.delete(activeNode.id);
       allTestResults.failed.add(activeNode.id);
     }
-    console.log(resultsConnection, activeNode.id + newTestState);
     if (resultsConnection) {
-      resultsConnection.emit("data", activeNode.id + newTestState);
+      resultsConnection.emit("data", {
+        id: activeNode.id,
+        outcome: newTestState,
+      });
     }
     /*else {
             // unlikely that we want to delete an old test result this way
