@@ -5,7 +5,7 @@ import { AllTestResults } from "../../models/Tests";
 import { loadTestState } from "./ResultsStore";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
-import { AuthContextType } from "../../auth/AuthContext";
+import { SessionContextType } from "../../auth/SessionContext";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -36,7 +36,7 @@ class BookFetcher implements IBookFetcher {
     return this.bookPathAbsolute;
   }
 
-  public async fetch(url: string, authContext?: AuthContextType) {
+  public async fetch(url: string, authContext?: SessionContextType) {
     if (this.usesLocalZip()) {
       if (!this.zip) {
         await this.fetchZip();
@@ -54,6 +54,7 @@ class BookFetcher implements IBookFetcher {
       if (authContext?.token) {
         let newToken = res.headers.get("new-token");
         if (newToken) {
+          console.log("receiving new jwt token from server");
           authContext.setToken(newToken);
         }
       }
@@ -61,7 +62,9 @@ class BookFetcher implements IBookFetcher {
     }
   }
 
-  public fetchBook(authContext?: AuthContextType): Promise<IBookFetchResult> {
+  public fetchBook(
+    authContext?: SessionContextType
+  ): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
       this.fetch(this.bookPathAbsolute, authContext).then((response) =>
@@ -76,6 +79,7 @@ class BookFetcher implements IBookFetcher {
                   jwtEndpoint: data.jwtEndpoint,
                   startUrl: this.bookPathAbsolute,
                   resultsEndpoint: data.resultsEndpoint,
+                  resultsProtocol: data.resultsProtocol,
                   bookPath: this.bookPath,
                 })
               );
@@ -111,7 +115,7 @@ class BookFetcher implements IBookFetcher {
     mainUrl: string,
     allRes: AllTestResults,
     fileRoot: boolean,
-    authContext?: AuthContextType
+    authContext?: SessionContextType
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import AuthContext from "./AuthContext";
+import SessionContext from "./SessionContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
 
-type AuthWrapperProps = {
+type SessionWrapperProps = {
   children?: React.ReactNode;
 };
 
-const AuthWrapper = (props: AuthWrapperProps) => {
+const SessionWrapper = (props: SessionWrapperProps) => {
   const { children } = props;
 
   const [token, setToken] = useState<string>(
@@ -18,12 +18,21 @@ const AuthWrapper = (props: AuthWrapperProps) => {
   const [loginInfo, setLoginInfo] = useState<LoginInfo | undefined>(undefined);
 
   const [bookPath, setBookPath] = useState<string>(
-    localStorage.getItem("jwt-book") || ""
+    localStorage.getItem("session-book") || ""
   );
 
   const [resultsEndpoint, setResultsEndpoint] = useState<string>(
-    localStorage.getItem("jwt-results") || ""
+    localStorage.getItem("session-results-endpoint") || ""
   );
+
+  const [resultsProtocol, setResultsProtocol] = useState<"REST" | "ws">(() => {
+    let v = localStorage.getItem("session-results-protocol");
+    if (v === "REST" || v === "ws") {
+      return v;
+    } else {
+      return "REST";
+    }
+  });
 
   const login = (info: LoginInfo) => {
     if (!info) return;
@@ -32,14 +41,17 @@ const AuthWrapper = (props: AuthWrapperProps) => {
     setLoginInfo(info);
     setBookPath(info.bookPath);
     setResultsEndpoint(info.resultsEndpoint);
-    localStorage.setItem("jwt-book", info.bookPath);
-    localStorage.setItem("jwt-results", info.resultsEndpoint);
+    setResultsProtocol(info.resultsProtocol);
+    localStorage.setItem("session-book", info.bookPath);
+    localStorage.setItem("session-results-endpoint", info.resultsEndpoint);
+    localStorage.setItem("session-results-protocol", info.resultsProtocol);
   };
 
   const logout = () => {
     localStorage.setItem("jwt-token", "");
-    localStorage.setItem("jwt-book", "");
-    localStorage.setItem("jwt-results", "");
+    localStorage.setItem("session-book", "");
+    localStorage.setItem("session-results-endpoint", "");
+    localStorage.setItem("session-results-protocol", "");
     setToken("");
     setLoginInfo(undefined);
   };
@@ -53,7 +65,7 @@ const AuthWrapper = (props: AuthWrapperProps) => {
   };
 
   return (
-    <AuthContext.Provider
+    <SessionContext.Provider
       value={{
         token,
         requiresAuth,
@@ -63,11 +75,12 @@ const AuthWrapper = (props: AuthWrapperProps) => {
         isLoggedIn,
         bookPath,
         resultsEndpoint,
+        resultsProtocol,
       }}
     >
       {requiresAuth && token === "" ? <Login info={loginInfo} /> : children}
-    </AuthContext.Provider>
+    </SessionContext.Provider>
   );
 };
 
-export default AuthWrapper;
+export default SessionWrapper;

@@ -18,7 +18,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import Menu from "./Menu";
 
 import VsThemeContext from "../themes/VsThemeContext";
-import AuthContext from "../auth/AuthContext";
+import SessionContext from "../auth/SessionContext";
 
 type HeaderBarProps = {
   title?: string;
@@ -29,7 +29,7 @@ type HeaderBarProps = {
 
 const HeaderBar = (props: HeaderBarProps) => {
   const themeContext = useContext(VsThemeContext);
-  const authContext = useContext(AuthContext);
+  const authContext = useContext(SessionContext);
 
   return (
     <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>

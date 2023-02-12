@@ -16,11 +16,10 @@ import {
   CardContent,
   Typography,
 } from "@mui/material";
-import AuthContext from "./AuthContext";
+import SessionContext from "./SessionContext";
 import { msalConfig } from "./authConfig";
 
 import "./Login.css";
-import { pad } from "lodash";
 
 type LoginProps = {
   info?: LoginInfo;
@@ -34,7 +33,7 @@ const MsalLogin = (props: MsalLoginProps) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
   const [userHasInteracted, setUserHasInteracted] = useState<boolean>(false);
-  const authContext = useContext(AuthContext);
+  const authContext = useContext(SessionContext);
   const { info } = props;
 
   /// acquire access token from MS

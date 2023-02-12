@@ -27,8 +27,8 @@ import EditableBookStore, {
 import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
-import AuthContext from "../auth/AuthContext";
-import { io, Socket } from "socket.io-client";
+import SessionContext from "../auth/SessionContext";
+import { useResultsStorage } from "./utils/ResultsStorage";
 
 type BookProps = {
   zipFile?: File;
@@ -43,7 +43,7 @@ type PathsState = {
 type EditState = "cloning" | "editing" | "preview" | undefined;
 
 const Book = (props: BookProps) => {
-  const authContext = useContext(AuthContext);
+  const authContext = useContext(SessionContext);
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
@@ -76,9 +76,7 @@ const Book = (props: BookProps) => {
   const editParam = searchParams.get("edit") || "";
   const navigate = useNavigate();
 
-  const [resultsConnection, setResultsConnection] = useState<
-    Socket | undefined
-  >(undefined);
+  const setTestResult = useResultsStorage();
 
   const openNode = useMemo(
     () => (node: BookNodeModel) => {
@@ -137,21 +135,18 @@ const Book = (props: BookProps) => {
     if (newTestState === true) {
       allTestResults.passed.add(activeNode.id);
       allTestResults.failed.delete(activeNode.id);
+      setTestResult(bookPath, activeNode.id, newTestState);
     } else if (newTestState === false) {
       allTestResults.passed.delete(activeNode.id);
       allTestResults.failed.add(activeNode.id);
+      setTestResult(bookPath, activeNode.id, newTestState);
     }
-    if (resultsConnection) {
-      resultsConnection.emit("data", {
-        id: activeNode.id,
-        outcome: newTestState,
-      });
-    }
+
     /*else {
-            // unlikely that we want to delete an old test result this way
-            allTestResults.passed.delete(bookChallengeId);
-            allTestResults.failed.delete(bookChallengeId);            
-        }*/
+        // unlikely that we want to delete an old test result this way
+        allTestResults.passed.delete(bookChallengeId);
+        allTestResults.failed.delete(bookChallengeId);            
+    }*/
     setAllTestResults(allTestResults); // trigger update
     saveTestState(activeNode, newTestState); // persist
   };
@@ -212,23 +207,6 @@ const Book = (props: BookProps) => {
     bookClonedForEditing,
     authContext,
   ]);
-
-  /**
-   * Establish results store
-   */
-  useEffect(() => {
-    if (!authContext.resultsEndpoint) {
-      setResultsConnection(undefined);
-      return;
-    }
-
-    setResultsConnection(
-      io(authContext.resultsEndpoint, {
-        transports: ["websocket"],
-        auth: { Authorization: authContext.token },
-      })
-    );
-  }, [authContext.resultsEndpoint, authContext.token]);
 
   /**
    * Getting the book to open

@@ -2,14 +2,14 @@ import BookNodeModel from "../../models/BookNodeModel";
 import JSZip from "jszip";
 import { absolutisePath } from "../../utils/pathTools";
 import IBookFetcher from "./IBookFetcher";
-import { AuthContextType } from "../../auth/AuthContext";
+import { SessionContextType } from "../../auth/SessionContext";
 
 export default class BookZipper {
   constructor(fetcher: IBookFetcher) {
     this.fetcher = fetcher;
   }
 
-  public async zipBook(book: BookNodeModel, authContext: AuthContextType) {
+  public async zipBook(book: BookNodeModel, authContext: SessionContextType) {
     this.zip.file("book.json", JSON.stringify(book));
     await this.addNode(book, authContext);
     return this.zip;
@@ -18,7 +18,7 @@ export default class BookZipper {
   private zip = new JSZip();
   private fetcher: IBookFetcher;
 
-  private async addNode(node: BookNodeModel, authContext: AuthContextType) {
+  private async addNode(node: BookNodeModel, authContext: SessionContextType) {
     if (node.guide) {
       let absPath = absolutisePath(
         node.guide,

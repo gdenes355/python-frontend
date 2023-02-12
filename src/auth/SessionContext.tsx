@@ -1,28 +1,31 @@
 import { createContext } from "react";
 import LoginInfo from "./LoginInfo";
 
-type AuthContextType = {
+type SessionContextType = {
   token: string;
   requiresAuth: boolean;
   bookPath: string;
   resultsEndpoint: string;
+  resultsProtocol: "REST" | "ws";
   logout: () => void;
   login: (info: LoginInfo) => void;
   setToken: (token: string) => void;
   isLoggedIn: () => boolean;
 };
-const defContext: AuthContextType = {
+
+const defContext: SessionContextType = {
   token: "",
   requiresAuth: false,
   bookPath: "",
   resultsEndpoint: "",
+  resultsProtocol: "REST",
   logout: () => {},
   login: (info: LoginInfo) => {},
   setToken: (token: string) => {},
   isLoggedIn: () => false,
 };
 
-const AuthContext = createContext(defContext);
+const SessionContext = createContext(defContext);
 
-export default AuthContext;
-export { AuthContextType };
+export default SessionContext;
+export { SessionContextType as SessionContextType };

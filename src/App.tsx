@@ -15,7 +15,7 @@ import Cookies from "js-cookie";
 import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
-import AuthWrapper from "./auth/AuthWrapper";
+import SessionWrapper from "./auth/SessionWrapper";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
 
 const AppContainer = () => {
@@ -76,7 +76,7 @@ export default function App() {
     >
       <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
         <CssBaseline>
-          <AuthWrapper>
+          <SessionWrapper>
             <BrowserRouter>
               <Routes>
                 <Route path="start" element={<Start />} />
@@ -84,7 +84,7 @@ export default function App() {
                 <Route path="*" element={<AppContainer />} />
               </Routes>
             </BrowserRouter>
-          </AuthWrapper>
+          </SessionWrapper>
         </CssBaseline>
       </ThemeProvider>
     </VsThemeContext.Provider>

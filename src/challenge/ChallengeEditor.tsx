@@ -41,7 +41,7 @@ import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
 import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
-import { AuthContextType } from "../auth/AuthContext";
+import { SessionContextType } from "../auth/SessionContext";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -74,7 +74,7 @@ type ChallengeEditorProps = {
   tests?: TestCases | null;
   isExample?: boolean;
   fetcher: IBookFetcher;
-  authContext: AuthContextType;
+  authContext: SessionContextType;
   onTestsPassingChanged?: (passing: boolean | null) => void;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;

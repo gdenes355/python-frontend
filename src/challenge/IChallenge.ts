@@ -10,7 +10,7 @@ import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
 import DebugContext from "../models/DebugContext";
 import IBookFetcher from "../book/utils/IBookFetcher";
-import { AuthContextType } from "../auth/AuthContext";
+import { SessionContextType } from "../auth/SessionContext";
 
 type IChallengeProps = {
   uid: string;
@@ -20,7 +20,7 @@ type IChallengeProps = {
   codePath: string;
   fetcher: IBookFetcher;
   typ?: "py" | "parsons" | "canvas";
-  authContext: AuthContextType;
+  authContext: SessionContextType;
 };
 
 type IChallengeState = {
