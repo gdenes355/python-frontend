@@ -99,13 +99,13 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
       (async () => {
         //loadCss("js-parsons/parsons.css");
         //loadCss("js-parsons/lib/prettify.css");
-        await loadJS("js-parsons/lib/prettify.js");
-        await loadJS("js-parsons/lib/jquery.min.js");
-        await loadJS("js-parsons/lib/jquery-ui.min.js");
-        await loadJS("js-parsons/lib/jquery.ui.touch-punch.min.js");
-        await loadJS("js-parsons/lib/underscore-min.js");
-        await loadJS("js-parsons/lib/lis.js");
-        await loadJS("js-parsons/parsons.js");
+        await loadJS("static/js-parsons/lib/prettify.js");
+        await loadJS("static/js-parsons/lib/jquery.min.js");
+        await loadJS("static/js-parsons/lib/jquery-ui.min.js");
+        await loadJS("static/js-parsons/lib/jquery.ui.touch-punch.min.js");
+        await loadJS("static/js-parsons/lib/underscore-min.js");
+        await loadJS("static/js-parsons/lib/lis.js");
+        await loadJS("static/js-parsons/parsons.js");
         jsLoaded.current = "loaded";
         // @ts-ignore
         let newParsons = new ParsonsWidget({
