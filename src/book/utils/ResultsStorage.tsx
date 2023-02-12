@@ -1,60 +1,45 @@
 import { useContext, useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+import useWebSocket, { ReadyState } from "react-use-websocket";
 import SessionContext from "../../auth/SessionContext";
 
-const useResultsStorage = () => {
+const useResultsStorage = (bookPath: string) => {
   const sessionContext = useContext(SessionContext);
 
-  const [wsConnection, setWsConnection] = useState<Socket | undefined>(
-    undefined
-  );
   const [wsConnectionUrl, setWsConnectionUrl] = useState<string>("");
+  const { sendMessage, readyState } = useWebSocket(wsConnectionUrl);
 
   useEffect(() => {
     if (!sessionContext.resultsEndpoint) {
-      if (wsConnection) {
-        wsConnection.close();
-      }
-      setWsConnection(undefined);
       setWsConnectionUrl("");
       return;
     }
 
     if (sessionContext.resultsProtocol === "ws") {
-      if (
-        wsConnection?.active &&
-        wsConnectionUrl === sessionContext.resultsEndpoint
-      ) {
+      if (wsConnectionUrl === sessionContext.resultsEndpoint) {
         return; // we already have an active connection
       }
-      setWsConnection(
-        io(sessionContext.resultsEndpoint, {
-          transports: ["websocket"],
-          auth: { Authorization: sessionContext.token },
-        })
-      );
       setWsConnectionUrl(sessionContext.resultsEndpoint);
     }
   }, [
     sessionContext.resultsEndpoint,
     sessionContext.token,
     sessionContext.resultsProtocol,
-    wsConnection,
     wsConnectionUrl,
   ]);
 
   useEffect(() => {
-    return () => {
-      if (wsConnection) wsConnection.close();
-      setWsConnection(undefined);
-    };
-  });
+    if (readyState === ReadyState.OPEN) {
+      sendMessage(
+        JSON.stringify({
+          Authorization: sessionContext.token,
+          book: bookPath,
+        })
+      );
+    }
+    console.log(readyState);
+  }, [readyState, bookPath, sendMessage, sessionContext.token]);
 
-  const setResult = (
-    bookPath: string,
-    challengeId: string,
-    outcome: boolean
-  ) => {
+  const setResult = (challengeId: string, outcome: boolean) => {
     if (!sessionContext.isLoggedIn() || !sessionContext.resultsEndpoint) return;
     if (sessionContext.resultsProtocol === "REST") {
       fetch(sessionContext.resultsEndpoint, {
@@ -71,12 +56,13 @@ const useResultsStorage = () => {
         }),
       });
     } else if (sessionContext.resultsProtocol === "ws") {
-      if (wsConnection) {
-        wsConnection.emit("data", {
-          book: bookPath,
-          id: challengeId,
-          outcome: outcome,
-        });
+      if (readyState === ReadyState.OPEN) {
+        sendMessage(
+          JSON.stringify({
+            id: challengeId,
+            outcome: outcome,
+          })
+        );
       }
     }
   };

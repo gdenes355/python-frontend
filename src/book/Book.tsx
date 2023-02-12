@@ -76,7 +76,7 @@ const Book = (props: BookProps) => {
   const editParam = searchParams.get("edit") || "";
   const navigate = useNavigate();
 
-  const setTestResult = useResultsStorage();
+  const setTestResult = useResultsStorage(bookPath);
 
   const openNode = useMemo(
     () => (node: BookNodeModel) => {
@@ -135,11 +135,11 @@ const Book = (props: BookProps) => {
     if (newTestState === true) {
       allTestResults.passed.add(activeNode.id);
       allTestResults.failed.delete(activeNode.id);
-      setTestResult(bookPath, activeNode.id, newTestState);
+      setTestResult(activeNode.id, newTestState);
     } else if (newTestState === false) {
       allTestResults.passed.delete(activeNode.id);
       allTestResults.failed.add(activeNode.id);
-      setTestResult(bookPath, activeNode.id, newTestState);
+      setTestResult(activeNode.id, newTestState);
     }
 
     /*else {

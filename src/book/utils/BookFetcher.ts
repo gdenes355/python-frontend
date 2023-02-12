@@ -54,7 +54,6 @@ class BookFetcher implements IBookFetcher {
       if (authContext?.token) {
         let newToken = res.headers.get("new-token");
         if (newToken) {
-          console.log("receiving new jwt token from server");
           authContext.setToken(newToken);
         }
       }
