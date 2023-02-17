@@ -63,6 +63,8 @@ const Book = (props: BookProps) => {
   const [bookForceReload, setBookForceReload] = useState(0);
   const requestBookReload = () => setBookForceReload((c) => c + 1);
 
+  const [error, setError] = useState<string | undefined>(undefined);
+
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath =
     searchParams.get("bk") || searchParams.get("book") || "book.json";
@@ -229,6 +231,8 @@ const Book = (props: BookProps) => {
       .catch((e) => {
         if (e instanceof UnauthorisedError) {
           authContext.login(e.getInfo());
+        } else {
+          setError(e.toString());
         }
       });
     // ignore missing authContext, as this should not change in a meaningful
@@ -427,6 +431,18 @@ const Book = (props: BookProps) => {
       );
     }
   } else {
+    if (error) {
+      return (
+        <React.Fragment>
+          <HeaderBar />
+          <p>
+            Failed to load book, please check the link. You can also look at the
+            error message below
+          </p>
+          <p>{error}</p>
+        </React.Fragment>
+      );
+    }
     return (
       <React.Fragment>
         <HeaderBar />

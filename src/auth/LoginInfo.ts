@@ -4,7 +4,7 @@ type LoginInfo = {
   ended?: boolean;
   startUrl: string;
   resultsEndpoint: string;
-  resultsProtocol: "REST" | "ws";
+  wsEndPoint: string;
   bookPath: string;
 };
 

@@ -6,6 +6,8 @@ import { loadTestState } from "./ResultsStore";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
 import { SessionContextType } from "../../auth/SessionContext";
+import NotFoundError from "./NotFoundError";
+import { ReadyState } from "react-use-websocket";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -36,8 +38,9 @@ class BookFetcher implements IBookFetcher {
     return this.bookPathAbsolute;
   }
 
-  public async fetch(url: string, authContext?: SessionContextType) {
+  public async fetch(url: string, sessionContext?: SessionContextType) {
     if (this.usesLocalZip()) {
+      // use a local ZIP file
       if (!this.zip) {
         await this.fetchZip();
       }
@@ -45,20 +48,53 @@ class BookFetcher implements IBookFetcher {
         ?.file(url.replace("pfzip://in.zip/", ""))
         ?.async("blob");
       return new Response(blob, { status: 200 });
-    } else {
-      let headers = new Headers();
-      if (authContext?.token) {
-        headers.append("Authorization", `Bearer ${authContext.token}`);
-      }
-      let res = await fetch(url, { headers: headers });
-      if (authContext?.token) {
-        let newToken = res.headers.get("new-token");
-        if (newToken) {
-          authContext.setToken(newToken);
+    } else if (
+      sessionContext?.wsState === ReadyState.OPEN &&
+      sessionContext?.wsSend
+    ) {
+      // use Websockets
+      let response: any = undefined;
+
+      await sessionContext.wsSend(
+        {
+          cmd: "fetch",
+          path: url,
+        },
+        (msg: any) => {
+          response = msg;
         }
+      );
+      if (response.res === "succ") {
+        return new Response(response.data);
       }
-      return res;
     }
+
+    // fall back to HTTP fetch
+    let headers = new Headers();
+    if (sessionContext?.token) {
+      headers.append("Authorization", `Bearer ${sessionContext.token}`);
+    }
+    let res = await fetch(url, { headers: headers });
+    if (res.status === 401) {
+      let data = await res.json();
+      throw new UnauthorisedError({
+        clientId: data.clientId,
+        jwtEndpoint: data.jwtEndpoint,
+        startUrl: this.bookPathAbsolute,
+        resultsEndpoint: data.resultsEndpoint,
+        wsEndPoint: data.wsEndPoint,
+        bookPath: this.bookPath,
+      });
+    } else if (res.status === 404) {
+      throw new NotFoundError(url);
+    } else if (sessionContext?.token) {
+      let newToken = res.headers.get("new-token");
+      if (newToken) {
+        console.log("refresh token");
+        sessionContext.setToken(newToken);
+      }
+    }
+    return res;
   }
 
   public fetchBook(
@@ -66,38 +102,35 @@ class BookFetcher implements IBookFetcher {
   ): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
-      this.fetch(this.bookPathAbsolute, authContext).then((response) =>
-        response
-          .json()
-          .then((data) => ({ code: response.status, data }))
-          .then(({ code, data }) => {
-            if (code === 401 && data.error === "get-jwt") {
-              e(
-                new UnauthorisedError({
-                  clientId: data.clientId,
-                  jwtEndpoint: data.jwtEndpoint,
-                  startUrl: this.bookPathAbsolute,
-                  resultsEndpoint: data.resultsEndpoint,
-                  resultsProtocol: data.resultsProtocol,
-                  bookPath: this.bookPath,
-                })
+      this.fetch(this.bookPathAbsolute, authContext)
+        .then((response) =>
+          response
+            .json()
+            .then((data) => ({ code: response.status, data }))
+            .then(({ code, data }) => {
+              if (code !== 200) {
+                e(new Error("Book cannot be found"));
+              }
+
+              return this.expandBookLinks(
+                data,
+                this.getBookPathAbsolute(),
+                allRes,
+                true,
+                authContext
               );
-            }
-
-            if (code !== 200) {
-              e(new Error("Book cannot be found"));
-            }
-
-            return this.expandBookLinks(
-              data,
-              this.getBookPathAbsolute(),
-              allRes,
-              true,
-              authContext
-            );
-          })
-          .then((res) => r({ ...res, singlePageBook: getSinglePage(res.book) }))
-      );
+            })
+            .then((res) =>
+              r({ ...res, singlePageBook: getSinglePage(res.book) })
+            )
+        )
+        .catch((t) => {
+          if (t instanceof UnauthorisedError) {
+            e(t);
+          } else if (t instanceof NotFoundError) {
+            e(t);
+          }
+        });
     });
   }
 

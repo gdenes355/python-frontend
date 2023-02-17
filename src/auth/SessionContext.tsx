@@ -1,16 +1,20 @@
 import { createContext } from "react";
+import { ReadyState } from "react-use-websocket";
 import LoginInfo from "./LoginInfo";
+
+type WsResponse = (msg: string) => void;
 
 type SessionContextType = {
   token: string;
   requiresAuth: boolean;
   bookPath: string;
   resultsEndpoint: string;
-  resultsProtocol: "REST" | "ws";
   logout: () => void;
   login: (info: LoginInfo) => void;
   setToken: (token: string) => void;
   isLoggedIn: () => boolean;
+  wsState: ReadyState;
+  wsSend?: (msg: any, then?: WsResponse) => void;
 };
 
 const defContext: SessionContextType = {
@@ -18,14 +22,14 @@ const defContext: SessionContextType = {
   requiresAuth: false,
   bookPath: "",
   resultsEndpoint: "",
-  resultsProtocol: "REST",
   logout: () => {},
   login: (info: LoginInfo) => {},
   setToken: (token: string) => {},
   isLoggedIn: () => false,
+  wsState: ReadyState.UNINSTANTIATED,
 };
 
 const SessionContext = createContext(defContext);
 
 export default SessionContext;
-export { SessionContextType as SessionContextType };
+export { SessionContextType, WsResponse };
