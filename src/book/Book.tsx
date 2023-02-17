@@ -10,15 +10,13 @@ import BookFetcher from "./utils/BookFetcher";
 import { Box } from "@mui/material";
 
 import ZipPathTransformer from "./utils/ZipPathTransformer";
-
-import { saveTestState } from "./utils/ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
 import BookNodeModel, {
   findBookNode,
   nextBookNode,
   prevBookNode,
 } from "../models/BookNodeModel";
-import { TestCases, AllTestResults } from "../models/Tests";
+import { TestCases } from "../models/Tests";
 
 import ErrorBounday from "../components/ErrorBoundary";
 import EditableBookStore, {
@@ -28,7 +26,7 @@ import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
 import SessionContext from "../auth/SessionContext";
-import { useResultsStorage } from "./utils/ResultsStorage";
+import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 
 type BookProps = {
   zipFile?: File;
@@ -52,10 +50,7 @@ const Book = (props: BookProps) => {
   const [activeNode, setActiveNode] = useState<BookNodeModel | null>(null);
   const [tests, setTests] = useState<TestCases | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [allTestResults, setAllTestResults] = useState<AllTestResults>({
-    passed: new Set(),
-    failed: new Set(),
-  });
+
   const [editState, setEditState] = useState<EditState>(undefined);
   const [editableBookStore, setEditableBookStore] =
     useState<EditableBookStore | null>(null);
@@ -78,7 +73,7 @@ const Book = (props: BookProps) => {
   const editParam = searchParams.get("edit") || "";
   const navigate = useNavigate();
 
-  const setTestResult = useResultsStorage(bookPath);
+  const progressStorage: ProgressStorage = useProgressStorage(bookPath);
 
   const openNode = useMemo(
     () => (node: BookNodeModel) => {
@@ -129,29 +124,6 @@ const Book = (props: BookProps) => {
     editableBookStore,
     editParam,
   ]);
-
-  const activeTestsPassingChanged = (newTestState: boolean | null) => {
-    if (!activeNode) {
-      return;
-    }
-    if (newTestState === true) {
-      allTestResults.passed.add(activeNode.id);
-      allTestResults.failed.delete(activeNode.id);
-      setTestResult(activeNode.id, newTestState);
-    } else if (newTestState === false) {
-      allTestResults.passed.delete(activeNode.id);
-      allTestResults.failed.add(activeNode.id);
-      setTestResult(activeNode.id, newTestState);
-    }
-
-    /*else {
-        // unlikely that we want to delete an old test result this way
-        allTestResults.passed.delete(bookChallengeId);
-        allTestResults.failed.delete(bookChallengeId);            
-    }*/
-    setAllTestResults(allTestResults); // trigger update
-    saveTestState(activeNode, newTestState); // persist
-  };
 
   /**
    * if book path doesn't match auth, then force logout
@@ -215,14 +187,13 @@ const Book = (props: BookProps) => {
    */
   useEffect(() => {
     if (!bookFetcher) {
-      setAllTestResults({ passed: new Set(), failed: new Set() });
       return;
     }
     if (authContext.requiresAuth && !authContext.isLoggedIn()) return;
     bookFetcher
       .fetchBook(authContext)
       .then((result) => {
-        setAllTestResults(result.allResults);
+        progressStorage.updateResults(result.allResults);
         setRootNode(result.book);
         if (result.singlePageBook) {
           openNode(result.singlePageBook);
@@ -332,7 +303,7 @@ const Book = (props: BookProps) => {
           <HeaderBar title={rootNode.name} />
           <BookReport
             bookRoot={rootNode}
-            allTestResults={allTestResults}
+            allTestResults={progressStorage.allTestResults}
             onCloseReport={() => openReport(false)}
           />
         </Box>
@@ -353,7 +324,7 @@ const Book = (props: BookProps) => {
                 onRequestPreviousChallenge={requestPreviousChallenge}
                 onRequestNextChallenge={requestNextChallenge}
                 uid={bookPath + bookChallengeId}
-                onTestsPassingChanged={activeTestsPassingChanged}
+                progressStorage={progressStorage}
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
@@ -361,7 +332,7 @@ const Book = (props: BookProps) => {
               />
               <BookDrawer
                 bookRoot={rootNode}
-                allTestResults={allTestResults}
+                allTestResults={progressStorage.allTestResults}
                 activePageId={bookChallengeId || undefined}
                 onRequestOpen={openDrawer}
                 onNodeSelected={openNode}
@@ -388,7 +359,7 @@ const Book = (props: BookProps) => {
               onRequestPreviousChallenge={requestPreviousChallenge}
               onRequestNextChallenge={requestNextChallenge}
               uid={bookPath + bookChallengeId}
-              onTestsPassingChanged={activeTestsPassingChanged}
+              progressStorage={progressStorage}
               isExample={activeNode.isExample}
               typ={activeNode.typ}
               onBookModified={requestBookReload}
@@ -424,7 +395,7 @@ const Book = (props: BookProps) => {
           <HeaderBar title={rootNode.name} />
           <BookCover
             bookRoot={rootNode}
-            allTestResults={allTestResults}
+            allTestResults={progressStorage.allTestResults}
             onNodeSelected={openNode}
           />
         </Box>

@@ -2,7 +2,7 @@ import { isAbsoluteAddress, absolutisePath } from "../../utils/pathTools";
 import JSZip from "jszip";
 import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
-import { loadTestState } from "./ResultsStore";
+import { loadTestStateLocal } from "./ProgressStorage";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
 import { SessionContextType } from "../../auth/SessionContext";
@@ -151,7 +151,7 @@ class BookFetcher implements IBookFetcher {
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
-      let localRes = loadTestState(bookNode);
+      let localRes = loadTestStateLocal(bookNode);
       allRes.passed = new Set([...allRes.passed, ...localRes.passed]);
       allRes.failed = new Set([...allRes.failed, ...localRes.failed]);
     }
