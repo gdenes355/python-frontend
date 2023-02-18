@@ -30,6 +30,7 @@ import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 
 type BookProps = {
   zipFile?: File;
+  localFolder?: FileSystemDirectoryHandle;
   onBookUploaded: (file: File, edit: boolean) => void;
 };
 
@@ -114,7 +115,8 @@ const Book = (props: BookProps) => {
     return new BookFetcher(
       bookPath,
       zipPathTransformed,
-      zipData || props.zipFile
+      zipData || props.zipFile,
+      props.localFolder
     );
   }, [
     bookPath,
@@ -123,6 +125,7 @@ const Book = (props: BookProps) => {
     props.zipFile,
     editableBookStore,
     editParam,
+    props.localFolder,
   ]);
 
   /**

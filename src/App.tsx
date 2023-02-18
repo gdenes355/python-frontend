@@ -17,17 +17,26 @@ import HeaderBar from "./components/HeaderBar";
 
 import SessionWrapper from "./auth/SessionWrapper";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
+import FolderPicker from "./components/FolderPicker";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const bookPath = searchParams.get("bk") || searchParams.get("book");
   const isTeacher = searchParams.get("teacher") || "";
   const [bookFile, setBookFile] = useState<File | null>(null);
+  const [localFolder, setLocalFolder] = useState<
+    FileSystemDirectoryHandle | undefined
+  >();
   const navigate = useNavigate();
 
   const openBookFromZip = (file: File, edit: boolean) => {
     setBookFile(file);
-    navigate({ search: `?boo=book.json${edit ? "&edit=clone" : ""}` });
+    navigate({ search: `?bk=book.json${edit ? "&edit=clone" : ""}` });
+  };
+
+  const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
+    setLocalFolder(folder);
+    navigate({ search: "?bk=book.json" });
   };
 
   useEffect(() => {
@@ -40,7 +49,11 @@ const AppContainer = () => {
 
   if (bookPath || bookFile) {
     return (
-      <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
+      <Book
+        zipFile={bookFile || undefined}
+        localFolder={localFolder}
+        onBookUploaded={openBookFromZip}
+      />
     );
   } else {
     return (
@@ -50,6 +63,7 @@ const AppContainer = () => {
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
+        <FolderPicker onFolderPicked={openLocalFolder} />
       </React.Fragment>
     );
   }

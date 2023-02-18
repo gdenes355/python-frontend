@@ -1,4 +1,8 @@
-import { isAbsoluteAddress, absolutisePath } from "../../utils/pathTools";
+import {
+  isAbsoluteAddress,
+  absolutisePath,
+  splitToParts,
+} from "../../utils/pathTools";
 import JSZip from "jszip";
 import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
@@ -8,22 +12,28 @@ import UnauthorisedError from "../../auth/UnauthorisedException";
 import { SessionContextType } from "../../auth/SessionContext";
 import NotFoundError from "./NotFoundError";
 import { ReadyState } from "react-use-websocket";
+import path from "path";
 
 class BookFetcher implements IBookFetcher {
   constructor(
     bookPath: string,
     zipPath?: string | null,
-    zipData?: string | File
+    zipData?: string | File,
+    localFolder?: FileSystemDirectoryHandle
   ) {
+    this.localFolder = localFolder;
     this.zipPath = zipPath || undefined;
     this.zipData = zipData || undefined;
     this.bookPath = bookPath;
     if (isAbsoluteAddress(bookPath)) {
       this.bookPathAbsolute = this.bookPath;
     } else {
-      // is this within a zip?
       if (this.zipPath || this.zipData) {
+        // is this within a zip?
         this.bookPathAbsolute = new URL(bookPath, "pfzip://in.zip/").toString();
+      } else if (this.localFolder) {
+        // is this within a local folder?
+        this.bookPathAbsolute = new URL(bookPath, "pfdir://in.dir/").toString();
       } else {
         this.bookPathAbsolute = new URL(bookPath, document.baseURI).toString();
       }
@@ -39,7 +49,17 @@ class BookFetcher implements IBookFetcher {
   }
 
   public async fetch(url: string, sessionContext?: SessionContextType) {
-    if (this.usesLocalZip()) {
+    if (this.localFolder) {
+      let pathParts = splitToParts(url.replace("pfdir://in.dir/", ""));
+      let folder = this.localFolder;
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        folder = await folder.getDirectoryHandle(pathParts[i]);
+      }
+      let fh = await folder.getFileHandle(pathParts[pathParts.length - 1]);
+      let file = await fh.getFile();
+      let text = await file.text();
+      return new Response(text, { status: 200 });
+    } else if (this.usesLocalZip()) {
       // use a local ZIP file
       if (!this.zip) {
         await this.fetchZip();
@@ -139,6 +159,8 @@ class BookFetcher implements IBookFetcher {
   private bookPathAbsolute: string;
   private bookPath: string;
   private zip: JSZip | null = null;
+
+  private localFolder?: FileSystemDirectoryHandle;
 
   private zipFetchingFromPath = false;
 
