@@ -1,0 +1,51 @@
+version: 2.1
+general:
+  branches:
+    only:
+     - msal
+
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: cimg/node:16.13.2
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "60:d8:50:a6:fa:55:c8:43:73:72:f6:51:0a:e5:7e:04"
+      - run:
+          name: "add host"
+          command: "ssh-keyscan 35.227.124.183 >> ~/.ssh/known_hosts"
+      - run:
+          name: Update NPM
+          command: "sudo npm install -g npm"
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install Dependencies
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package-lock.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: Build React App
+          command: npm run build
+      - save_cache:
+          key: app-build-cache-{{ .Branch }}
+          paths:
+            - ./build
+      - run:
+          name: Deploy to server
+          command: scp -r build/* gdenes355@35.227.124.183:~/deployed/app
+
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - build:
+          filters:
+            branches:
+              only:
+                - msal
