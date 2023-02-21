@@ -96,7 +96,10 @@ const MsalLogin = (props: MsalLoginProps) => {
 
   /// Manual start of the login flow
   const onLoginClick = () => {
-    sessionStorage.setItem("msal-login-query", window.location.search);
+    sessionStorage.setItem(
+      "msal-login-query",
+      window.location.pathname + window.location.search
+    );
     instance.loginRedirect(loginRequest).catch((e) => {
       console.log(e);
     });
@@ -186,8 +189,7 @@ const Login = (props: LoginProps) => {
 
     let config = { ...msalConfig };
     config.auth.clientId = info.clientId;
-    config.auth.redirectUri =
-      window.location.pathname.replace(/\/+$/, "") + "/auth-callback";
+    config.auth.redirectUri = window.location.origin + "/auth-callback";
     setMsalInstance(new PublicClientApplication(config));
   }, [info]);
 

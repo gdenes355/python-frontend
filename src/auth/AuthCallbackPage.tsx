@@ -3,15 +3,15 @@ import { useNavigate } from "react-router-dom";
 
 const AuthCallbackPage = () => {
   const navigate = useNavigate();
-  const redirectQuery = sessionStorage.getItem("msal-login-query");
+  const redirect = sessionStorage.getItem("msal-login-query");
 
   useEffect(() => {
-    if (redirectQuery) {
-      navigate("/" + redirectQuery + window.location.hash);
+    if (redirect) {
+      navigate(redirect + window.location.hash);
     } else {
       navigate("/");
     }
-  }, [navigate, redirectQuery]);
+  }, [navigate, redirect]);
 
   return <p>Redirecting soon...</p>;
 };

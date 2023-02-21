@@ -94,7 +94,7 @@ class BookFetcher implements IBookFetcher {
     if (sessionContext?.token) {
       headers.append("Authorization", `Bearer ${sessionContext.token}`);
     }
-    let res = await fetch(url, { headers: headers });
+    let res = await fetch(url, { headers });
     if (res.status === 401) {
       let data = await res.json();
       throw new UnauthorisedError({

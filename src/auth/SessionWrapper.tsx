@@ -38,7 +38,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const [wsConnectionUrl, setWsConnectionUrl] = useState<string>("");
 
   useEffect(() => {
-    if (queryBookPath !== bookPath && token !== "") {
+    if (queryBookPath && queryBookPath !== bookPath && token !== "") {
       // so this session now needs to end...
       logout();
     }

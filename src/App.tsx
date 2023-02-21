@@ -18,6 +18,9 @@ import HeaderBar from "./components/HeaderBar";
 import SessionWrapper from "./auth/SessionWrapper";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
 import FolderPicker from "./components/FolderPicker";
+import AdminWrapper from "./auth/AdminWrapper";
+import Groups from "./teacher/Groups";
+import TeacherIndex from "./teacher/TeacherIndex";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -83,7 +86,6 @@ export default function App() {
     setVsTheme(theme);
     Cookies.set("theme", theme);
   };
-
   return (
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
@@ -95,6 +97,14 @@ export default function App() {
               <Routes>
                 <Route path="start" element={<Start />} />
                 <Route path="auth-callback" element={<AuthCallbackPage />} />
+                <Route
+                  path="teacher"
+                  element={
+                    <AdminWrapper>
+                      <TeacherIndex />
+                    </AdminWrapper>
+                  }
+                />
                 <Route path="*" element={<AppContainer />} />
               </Routes>
             </BrowserRouter>
