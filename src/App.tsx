@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
@@ -86,10 +86,8 @@ export default function App() {
     Cookies.set("theme", theme);
   };
 
-  const adminUrlBase = useMemo(
-    () => new URLSearchParams(window.location.search).get("adminUrl") || "",
-    [window.location]
-  );
+  const adminUrlBase =
+    new URLSearchParams(window.location.search).get("adminUrl") || "";
 
   return (
     <VsThemeContext.Provider

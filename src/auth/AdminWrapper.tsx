@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import SessionContext from "./SessionContext";
 
 type AdminWrapperProps = {
@@ -37,7 +37,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             }
           })
     );
-  }, [session, authorised]);
+  }, [session, authorised, props.urlBase]);
 
   if (authorised) {
     return <React.Fragment>{props.children}</React.Fragment>;
