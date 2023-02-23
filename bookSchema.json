@@ -1,0 +1,132 @@
+{
+  "title": "Python Sponge book",
+  "description": "schema for Python Sponge books. Defined the challenges and associated tests",
+  "type": "object",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {},
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "comment": {
+          "$ref": "#/$defs/comment"
+        },
+        "children": {
+          "$ref": "#/$defs/children"
+        },
+        "bookMainUrl": {
+          "$ref": "#/$defs/bookMainUrl"
+        }
+      },
+      "required": ["name", "id", "children"],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "$schema": {},
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "$ref": "#/$defs/name"
+        },
+        "guide": {
+          "$ref": "#/$defs/guide"
+        },
+        "py": {
+          "$ref": "#/$defs/py"
+        },
+        "typ": {
+          "$ref": "#/$defs/typ"
+        },
+        "isExample": {
+          "$ref": "#/$defs/isExample"
+        },
+        "tests": {
+          "$ref": "#/$defs/tests"
+        },
+        "comment": {
+          "$ref": "#/$defs/comment"
+        },
+        "bookMainUrl": {
+          "$ref": "#/$defs/bookMainUrl"
+        }
+      },
+      "required": ["name", "id"],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "id": {
+      "description": "unique ID",
+      "type": "string",
+      "format": "uuid"
+    },
+    "name": {
+      "description": "section or challenge name",
+      "type": "string"
+    },
+    "guide": {
+      "description": "relative path to guide markdown file",
+      "type": "string",
+      "pattern": "^(.*\\.md)$"
+    },
+    "py": {
+      "description": "relative path to code file",
+      "type": "string",
+      "pattern": "^(.*\\.py)$"
+    },
+    "typ": {
+      "description": "Challenge type",
+      "type": "string",
+      "enum": ["canvas", "parsons", "py"]
+    },
+    "isExample": {
+      "description": "is this just an example code? Students need to debug example challenges, but no changes are required",
+      "type": "boolean"
+    },
+    "tests": {
+      "description": "optional list of tests",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "in": {
+            "description": "stdin. Use \n for line breaks",
+            "type": "string"
+          },
+          "out": {
+            "description": "stdout to compare to. Use .* to match a line (but not the new line). Use \n for line breaks.",
+            "type": "string"
+          },
+          "comment": {
+            "$ref": "#/$defs/comment"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "children": {
+      "description": "array of children nodes, which allows a recursive structure",
+      "type": "array",
+      "items": {
+        "$ref": "#"
+      }
+    },
+    "comment": {
+      "description": "optional comment; this is not shown to students",
+      "type": "string"
+    },
+    "bookMainUrl": {
+      "readOnly": true,
+      "description": "cache; do not use",
+      "hidden": true
+    }
+  }
+}
