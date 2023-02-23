@@ -38,11 +38,7 @@ const HeaderBar = (props: HeaderBarProps) => {
           <Box id="logo">
             {/* placeholder if container site wants to replace it */}
             <a href="/">
-              <img
-                src="/static/img/header.png"
-                alt="logo"
-                style={{ width: "40px" }}
-              />
+              <img src="/logo40.png" alt="logo" style={{ width: "40px" }} />
             </a>
           </Box>
         </Grid>
