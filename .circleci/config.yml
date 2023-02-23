@@ -2,7 +2,7 @@ version: 2.1
 general:
   branches:
     only:
-     - msal
+     - perse
 
 jobs:
   build:
@@ -14,9 +14,6 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - "60:d8:50:a6:fa:55:c8:43:73:72:f6:51:0a:e5:7e:04"
-      - run:
-          name: "add host"
-          command: "ssh-keyscan 35.227.124.183 >> ~/.ssh/known_hosts"
       - run:
           name: Update NPM
           command: "sudo npm install -g npm"
@@ -38,7 +35,11 @@ jobs:
             - ./build
       - run:
           name: Deploy to server
-          command: scp -r build/* gdenes355@35.227.124.183:~/deployed/app
+          command: |
+            SERVER_IP=$(curl -H "Authorization: $UTILS_PW" $IP_ENDPOINT)
+            echo "server's IP is $SERVER_IP"
+            ssh-keyscan $SERVER_IP >> ~/.ssh/known_hosts
+            scp -r build/* gdenes355@$SERVER_IP:~/deployed/app
 
 workflows:
   version: 2
@@ -48,4 +49,4 @@ workflows:
           filters:
             branches:
               only:
-                - msal
+                - perse

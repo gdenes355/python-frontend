@@ -12,7 +12,6 @@ import UnauthorisedError from "../../auth/UnauthorisedException";
 import { SessionContextType } from "../../auth/SessionContext";
 import NotFoundError from "./NotFoundError";
 import { ReadyState } from "react-use-websocket";
-import path from "path";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -105,7 +104,7 @@ class BookFetcher implements IBookFetcher {
         wsEndPoint: data.wsEndPoint,
         bookPath: this.bookPath,
       });
-    } else if (res.status === 404) {
+    } else if (res.status === 404 || res.status === 500) {
       throw new NotFoundError(url);
     } else if (sessionContext?.token) {
       let newToken = res.headers.get("new-token");

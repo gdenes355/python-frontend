@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { ThemeProvider } from "@mui/material/styles";
@@ -19,8 +19,7 @@ import SessionWrapper from "./auth/SessionWrapper";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
 import FolderPicker from "./components/FolderPicker";
 import AdminWrapper from "./auth/AdminWrapper";
-import Groups from "./teacher/Groups";
-import TeacherIndex from "./teacher/TeacherIndex";
+import TeacherAdmin from "./teacher/TeacherAdmin";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -86,6 +85,12 @@ export default function App() {
     setVsTheme(theme);
     Cookies.set("theme", theme);
   };
+
+  const adminUrlBase = useMemo(
+    () => new URLSearchParams(window.location.search).get("adminUrl") || "",
+    [window.location]
+  );
+
   return (
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
@@ -100,8 +105,8 @@ export default function App() {
                 <Route
                   path="teacher"
                   element={
-                    <AdminWrapper>
-                      <TeacherIndex />
+                    <AdminWrapper urlBase={adminUrlBase}>
+                      <TeacherAdmin baseUrl={adminUrlBase} />
                     </AdminWrapper>
                   }
                 />

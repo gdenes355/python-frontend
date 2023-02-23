@@ -82,7 +82,6 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     }
   };
   const onWsError = (event: WebSocketEventMap["error"]) => {
-    console.log(event);
     wsMap.forEach((then) => then({ res: "error" }));
   };
   const onWsOpen = (event: WebSocketEventMap["open"]) => {

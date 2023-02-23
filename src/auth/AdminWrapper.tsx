@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import SessionContext from "./SessionContext";
-import UnauthorisedError from "./UnauthorisedException";
 
 type AdminWrapperProps = {
+  urlBase: string;
   children?: React.ReactNode;
 };
 
@@ -11,9 +11,10 @@ const AdminWrapper = (props: AdminWrapperProps) => {
   const [authorised, setAuthorised] = useState(false);
 
   useEffect(() => {
+    if (authorised) return;
     let headers = new Headers();
     headers.append("Authorization", `Bearer ${session.token}`);
-    fetch("http://localhost:5001/api/admin/token-test/", { headers }).then(
+    fetch(`${props.urlBase}/api/admin/token-test/`, { headers }).then(
       (response) =>
         response
           .json()
@@ -36,7 +37,8 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             }
           })
     );
-  }, []);
+  }, [session, authorised]);
+
   if (authorised) {
     return <React.Fragment>{props.children}</React.Fragment>;
   } else {
