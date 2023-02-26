@@ -1,21 +1,24 @@
 .res-container {
-  width: 500px;
+  width: 100%;
 }
 
 .res-container span {
-  width: 1%;
   height: 1em;
   display: inline-block;
 }
 
-.res-undefined {
+.res-0 {
   background-color: gainsboro;
 }
 
-.res-false {
-  background-color: red;
+.res--1 {
+  background-color: #aa0000;
 }
 
-.res-true {
-  background-color: green;
+.res-1 {
+  background-color: #00bb00;
+}
+
+.res-2 {
+  background-color: #00ee00;
 }

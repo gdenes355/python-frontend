@@ -7,10 +7,13 @@ type ClassModel = {
 
 type ChallengeResultComplexModel = {
   correct: boolean;
-  //wrong-code?: string;
-  //wrong-date?: Date;
-  //correct-code?: string;
-  //correct-date?: Date;
+  "wrong-code"?: string;
+  "wrong-date"?: string;
+  "correct-code"?: string;
+  "correct-date"?: string;
+  id?: string;
+  student?: string;
+  title?: string;
 };
 
 type ChallengeResultModel = boolean | ChallengeResultComplexModel;
@@ -18,8 +21,8 @@ type ChallengeResultModel = boolean | ChallengeResultComplexModel;
 type ResultsModel = {
   user: string;
   book: string;
-  results?: Map<string, ChallengeResultModel>;
-  // and all the other fields are
+  //results?: Map<string, ChallengeResultModel>;
+  // and all the other fields are string keys
 };
 
 export {
