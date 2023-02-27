@@ -31,6 +31,7 @@ type ResultsTableProps = {
   bookTitle?: string;
   book?: BookNodeModel;
   results?: Array<ResultsModel>;
+  updateCtr: number;
   onResultsSelected: (res: ChallengeResultComplexModel[]) => void;
   onResultSelected: (res: ChallengeResultComplexModel) => void;
   onResultAdd: (res: ChallengeResultComplexModel) => void;

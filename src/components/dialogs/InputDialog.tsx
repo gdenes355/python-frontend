@@ -44,16 +44,25 @@ const InputDialog = (props: InputDialogProps) => {
           onKeyPress={(ev) => {
             if (ev.key === "Enter") {
               props.onInputEntered(value);
+              setValue(props.defaultValue || "");
               ev.preventDefault();
             }
           }}
         />
       </DialogContent>
       <DialogActions>
-        <Button onClick={props.onClose}>Cancel</Button>
+        <Button
+          onClick={() => {
+            setValue(props.defaultValue || "");
+            props.onClose();
+          }}
+        >
+          Cancel
+        </Button>
         <Button
           onClick={() => {
             props.onInputEntered(value);
+            setValue(props.defaultValue || "");
           }}
         >
           {props.okButtonLabel || "Ok"}

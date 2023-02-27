@@ -5,6 +5,7 @@ import {
   Button,
   CircularProgress,
   Grid,
+  IconButton,
   Stack,
   TextField,
 } from "@mui/material";
@@ -19,6 +20,7 @@ import React, {
 } from "react";
 import SessionContext from "../auth/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
+import InputDialog from "../components/dialogs/InputDialog";
 import HeaderBar from "../components/HeaderBar";
 import BookNodeModel from "../models/BookNodeModel";
 import {
@@ -28,6 +30,7 @@ import {
 } from "./Models";
 import ResultCodePane from "./ResultCodePane";
 import ResultsTable from "./ResultsTable";
+import AddIcon from "@mui/icons-material/Add";
 
 type TeacherAdminProps = {
   baseUrl: string;
@@ -41,6 +44,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const [activeGroup, setActiveGroup] = useState<ClassModel | undefined>(
     undefined
   );
+  const [updateCtr, setUpdateCtr] = useState<number>(0);
+  const forceUpdate = () => setUpdateCtr((c) => c + 1);
 
   const [bookTitles, setBookTitles] = useState<Array<string>>([]);
   const [bookTitle, setBookTitle] = useState<string | undefined>(undefined);
@@ -50,6 +55,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const [bookFetcher, setBookFetcher] = useState<BookFetcher | undefined>(
     undefined
   );
+
+  const [dialogState, setDialogState] = useState<string>("");
 
   const [results, setResults] = useState<Array<ResultsModel>>([]);
 
@@ -147,6 +154,27 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     setStagedResults(newMap);
   }, []);
 
+  const onAddStudent = (username: string) => {
+    setDialogState("");
+    if (!activeGroup || !username) return;
+    if (activeGroup.students.includes(username)) return;
+
+    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
+      method: "post",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionContext.token}`,
+      },
+      body: JSON.stringify({ user: username }),
+    }).then((resp) => {
+      if (resp.status === 200) {
+        activeGroup?.students.push(username);
+        forceUpdate();
+      }
+    });
+  };
+
   return (
     <div className="h-100">
       <Box
@@ -173,6 +201,15 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             </Grid>
           </React.Fragment>
         </HeaderBar>
+        <InputDialog
+          title="Add student"
+          defaultValue=""
+          inputLabel="username"
+          onInputEntered={onAddStudent}
+          okButtonLabel="Add"
+          open={dialogState === "addStudent"}
+          onClose={() => setDialogState("")}
+        />
         <Allotment defaultSizes={[650, 350]} minSize={3} ref={allotmentRef}>
           <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
             {groups.length ? (
@@ -214,11 +251,21 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   book={book}
                   bookTitle={bookTitle}
                   group={activeGroup}
+                  updateCtr={updateCtr}
                   results={results}
                   onResultSelected={onResultSet}
                   onResultAdd={onResultAdd}
                   onResultsSelected={onResultsSet}
                 />
+                {activeGroup && book ? (
+                  <IconButton
+                    size="small"
+                    onClick={() => setDialogState("addStudent")}
+                  >
+                    <AddIcon />
+                    Add student
+                  </IconButton>
+                ) : undefined}
               </React.Fragment>
             )}
           </Container>
