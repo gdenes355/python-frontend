@@ -1,5 +1,4 @@
 import { useContext, useEffect, useState } from "react";
-import { ReadyState } from "react-use-websocket";
 import SessionContext from "../../auth/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
@@ -116,7 +115,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
 
     // check for ws
-    if (sessionContext.wsState === ReadyState.OPEN && sessionContext.wsSend) {
+    if (sessionContext.wsOpen && sessionContext.wsSend) {
       sessionContext.wsSend({
         cmd: "set-result",
         id: challenge.id,

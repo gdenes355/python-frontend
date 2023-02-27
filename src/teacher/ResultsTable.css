@@ -2,9 +2,15 @@
   width: 100%;
 }
 
-.res-container span {
+.res-container .res {
   height: 1em;
   display: inline-block;
+  cursor: pointer;
+}
+
+.res-container .res:hover {
+  border-style: solid;
+  border-width: 1px;
 }
 
 .res-0 {

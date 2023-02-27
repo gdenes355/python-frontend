@@ -11,7 +11,6 @@ import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
 import { SessionContextType } from "../../auth/SessionContext";
 import NotFoundError from "./NotFoundError";
-import { ReadyState } from "react-use-websocket";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -67,10 +66,7 @@ class BookFetcher implements IBookFetcher {
         ?.file(url.replace("pfzip://in.zip/", ""))
         ?.async("blob");
       return new Response(blob, { status: 200 });
-    } else if (
-      sessionContext?.wsState === ReadyState.OPEN &&
-      sessionContext?.wsSend
-    ) {
+    } else if (sessionContext?.wsOpen && sessionContext?.wsSend) {
       // use Websockets
       let response: any = undefined;
 

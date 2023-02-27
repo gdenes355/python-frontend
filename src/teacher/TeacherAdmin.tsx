@@ -34,7 +34,6 @@ type TeacherAdminProps = {
 };
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
-  console.log("drawing TeacherAdmin");
   const sessionContext = useContext(SessionContext);
 
   const [groups, setGroups] = useState<Array<ClassModel>>([]);
@@ -64,10 +63,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const request = useCallback(
     (req: string) =>
       new Promise<any>((res, rej) => {
-        console.log("fetching " + req);
         let cached = requestRef.current.get(req);
         if (cached) {
-          console.log("from cache");
           res(cached);
         }
         let headers = new Headers();
@@ -84,25 +81,16 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   );
 
   useEffect(() => {
-    console.log("[request]", request);
     request("api/admin/classes").then((data) => setGroups(data));
   }, [request]);
 
   useEffect(() => {
-    console.log("[activeGroup]", activeGroup);
     if (!activeGroup) return;
     setBookTitles(activeGroup?.books || []);
     setBookTitle(undefined);
   }, [activeGroup]);
 
   useEffect(() => {
-    console.log(
-      "[bookTitle,request,activeGroup,sessionContext]",
-      bookTitle,
-      activeGroup,
-      request,
-      sessionContext
-    );
     setError(undefined);
 
     if (!bookTitle || !activeGroup) {
@@ -110,6 +98,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       setResults([]);
       return;
     }
+
+    setBook(undefined);
 
     setBookFetcher(new BookFetcher(bookTitle));
     request(
@@ -119,22 +109,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     )
       .then(setResults)
       .catch((e) => setError(e.reason));
-  }, [bookTitle, request, activeGroup, sessionContext]);
+  }, [bookTitle, request, activeGroup]);
 
   useEffect(() => {
-    console.log(
-      "[bookFetcher, sessionContext, error]",
-      sessionContext,
-      error,
-      bookFetcher
-    );
     if (!bookFetcher) {
-      console.log("No book fetcher");
       setBook(undefined);
       return;
     }
     if (error) {
-      console.log("there is an error");
       return;
     }
     bookFetcher
@@ -183,6 +165,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
               <Button
                 onClick={() => {
                   allotmentRef.current?.reset();
+                  onResultsSet([]);
                 }}
               >
                 Reset view

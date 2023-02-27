@@ -1,5 +1,6 @@
 import {
   IconButton,
+  Skeleton,
   styled,
   Table,
   TableBody,
@@ -80,6 +81,8 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
   const [myResults, setMyResults] = useState<ResultsModel | undefined>(
     undefined
   );
+  const [hasResults, setHasResults] = useState<boolean | undefined>(undefined);
+
   const correctCount = useMemo(() => {
     if (!myResults || !props.challengeInfo?.ids) return undefined;
     let count = 0;
@@ -97,17 +100,19 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
   }, [myResults, props.challengeInfo]);
 
   useEffect(() => {
-    if (!props.results) {
+    if (!props.results?.length) {
       setMyResults(undefined);
+      setHasResults(undefined);
       return;
     }
     for (const res of props.results) {
       if (res.user === props.student) {
         setMyResults(res);
+        setHasResults(true);
         return;
       }
     }
-    return undefined;
+    setHasResults(false);
   }, [props.results, props.student]);
 
   const resultToCode = (
@@ -179,21 +184,29 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
       </TableCell>
       <TableCell>
         <div className="res-container">
-          {myResults
-            ? props.challengeInfo?.ids?.map((id) => {
-                let p = passed(id);
-                return (
-                  <Tooltip
-                    key={id}
-                    className={" res-" + p}
-                    title={props.challengeInfo?.map.get(id)?.name}
-                    onClick={(e) => onIndividialResultClicked(e, id)}
-                  >
-                    <StyledResCell />
-                  </Tooltip>
-                );
-              })
-            : undefined}
+          {hasResults === true && props.challengeInfo ? (
+            props.challengeInfo?.ids?.map((id) => {
+              let p = passed(id);
+              return (
+                <Tooltip
+                  key={id}
+                  className={" res res-" + p}
+                  title={props.challengeInfo?.map.get(id)?.name}
+                  onClick={(e) => onIndividialResultClicked(e, id)}
+                >
+                  <StyledResCell />
+                </Tooltip>
+              );
+            })
+          ) : hasResults === undefined || !props.challengeInfo ? (
+            <Skeleton
+              animation="wave"
+              sx={{ width: "100%" }}
+              variant="rectangular"
+            />
+          ) : (
+            <span>no results</span>
+          )}
         </div>
       </TableCell>
       <TableCell>
@@ -210,7 +223,6 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
 };
 
 const ResultsTable = (props: ResultsTableProps) => {
-  console.log("drawing ResultsTable");
   const [challengeInfo, setChallengeInfo] = useState<ChallengeInfo | undefined>(
     undefined
   );

@@ -1,6 +1,6 @@
 import React from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent, Paper } from "@mui/material";
+import { Box, Card, CardContent, Grid, Paper } from "@mui/material";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
@@ -35,6 +35,7 @@ import HeaderButtons from "./components/HeaderButtons";
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
+import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -294,6 +295,12 @@ class Challenge
                   />
                 }
               >
+                {this.props.authContext.token ? (
+                  <Grid item>
+                    <SessionWsStateIndicator />
+                  </Grid>
+                ) : undefined}
+
                 <HeaderButtons
                   canReset={this.state.editorState === ChallengeStatus.READY}
                 />

@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import SessionContext, { WsResponse } from "./SessionContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
-import useWebSocket from "react-use-websocket";
 
 type SessionWrapperProps = {
   children?: React.ReactNode;
@@ -74,33 +73,51 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     setToken(newToken);
   };
 
-  const onWsMessage = (event: WebSocketEventMap["message"]) => {
-    let msg = JSON.parse(event.data);
-    if (msg.i && wsMap.has(msg.i)) {
-      let future = wsMap.get(msg.i);
-      if (future) future(msg);
-    }
-  };
-  const onWsError = (event: WebSocketEventMap["error"]) => {
-    wsMap.forEach((then) => then({ res: "error" }));
-  };
-  const onWsOpen = (event: WebSocketEventMap["open"]) => {
-    if (bookPath && token) {
-      ws.sendMessage(
-        JSON.stringify({
-          cmd: "welcome",
-          Authorization: token,
-          book: bookPath,
-        })
-      );
-      wsCounter = 0;
-    }
-  };
-  const ws = useWebSocket(
-    wsConnectionUrl,
-    { onMessage: onWsMessage, onError: onWsError, onOpen: onWsOpen },
-    !!wsConnectionUrl
+  const onWsMessage = useMemo(
+    () => (event: WebSocketEventMap["message"]) => {
+      let msg = JSON.parse(event.data);
+
+      if (msg.i !== undefined && wsMap.has(msg.i)) {
+        let future = wsMap.get(msg.i);
+        if (future) {
+          future(msg);
+        }
+      }
+    },
+    []
   );
+  const onWsError = useMemo(
+    () => (event: WebSocketEventMap["error"]) => {
+      wsMap.forEach((then) => then({ res: "error" }));
+    },
+    []
+  );
+  const onWsOpen = useMemo(
+    () => (event: WebSocketEventMap["open"]) => {
+      if (bookPath && token) {
+        setWsOpen(true);
+        ws.current?.send(
+          JSON.stringify({
+            cmd: "welcome",
+            Authorization: token,
+            book: bookPath,
+          })
+        );
+        wsCounter = 0;
+      }
+    },
+    [bookPath, token]
+  );
+  const onWsClose = useMemo(
+    () => (event: WebSocketEventMap["close"]) => {
+      wsMap.forEach((then) => then({ res: "error" }));
+      setWsOpen(false);
+    },
+    []
+  );
+  const ws = useRef<WebSocket | undefined>(undefined);
+  const [wsOpen, setWsOpen] = useState<boolean>(false);
+
   useEffect(() => {
     if (!wsEndPoint || !token) {
       setWsConnectionUrl("");
@@ -109,6 +126,19 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     if (wsEndPoint === wsConnectionUrl) return;
     setWsConnectionUrl(wsEndPoint);
   }, [wsConnectionUrl, wsEndPoint, token]);
+
+  useEffect(() => {
+    if (!wsConnectionUrl) {
+      ws.current = undefined;
+      setWsOpen(false);
+      return;
+    }
+    ws.current = new WebSocket(wsConnectionUrl);
+    ws.current.onmessage = onWsMessage;
+    ws.current.onerror = onWsError;
+    ws.current.onopen = onWsOpen;
+    ws.current.onclose = onWsClose;
+  }, [wsConnectionUrl, onWsError, onWsOpen, onWsMessage, onWsClose]);
 
   const wsSend = (msg: any, then: WsResponse | undefined = undefined) => {
     let res = undefined;
@@ -119,7 +149,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         wsMap.set(msg.i, resp);
       }).then(then);
     }
-    ws.sendMessage(JSON.stringify(msg));
+    ws.current?.send(JSON.stringify(msg));
     return res;
   };
 
@@ -134,7 +164,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         isLoggedIn,
         bookPath,
         resultsEndpoint,
-        wsState: ws.readyState,
+        wsOpen,
         wsSend,
       }}
     >

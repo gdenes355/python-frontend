@@ -1,5 +1,4 @@
 import { createContext } from "react";
-import { ReadyState } from "react-use-websocket";
 import LoginInfo from "./LoginInfo";
 
 type WsResponse = (msg: string) => void;
@@ -13,7 +12,7 @@ type SessionContextType = {
   login: (info: LoginInfo) => void;
   setToken: (token: string) => void;
   isLoggedIn: () => boolean;
-  wsState: ReadyState;
+  wsOpen: boolean;
   wsSend?: (msg: any, then?: WsResponse) => void;
 };
 
@@ -26,7 +25,7 @@ const defContext: SessionContextType = {
   login: (info: LoginInfo) => {},
   setToken: (token: string) => {},
   isLoggedIn: () => false,
-  wsState: ReadyState.UNINSTANTIATED,
+  wsOpen: false,
 };
 
 const SessionContext = createContext(defContext);
