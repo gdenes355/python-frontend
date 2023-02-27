@@ -100,9 +100,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       "[bookTitle,request,activeGroup]",
       bookTitle,
       activeGroup,
-      request,
-      session.token,
-      props.baseUrl
+      request
     );
     setError(undefined);
 
