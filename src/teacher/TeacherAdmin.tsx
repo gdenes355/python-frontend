@@ -121,7 +121,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   }, [bookTitle, request, activeGroup]);
 
   useEffect(() => {
-    console.log("[bookFetcher, session, error]");
+    console.log("[bookFetcher, session, error]", session, error, bookFetcher);
     if (!bookFetcher) {
       setBook(undefined);
       return;
