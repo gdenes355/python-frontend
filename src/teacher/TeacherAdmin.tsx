@@ -96,13 +96,18 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   }, [activeGroup]);
 
   useEffect(() => {
-    console.log("[bookTitle,request,activeGroup]");
+    console.log(
+      "[bookTitle,request,activeGroup]",
+      bookTitle,
+      activeGroup,
+      request,
+      session.token,
+      props.baseUrl
+    );
     setError(undefined);
-    setBook(undefined);
 
     if (!bookTitle || !activeGroup) {
       setBookFetcher(undefined);
-      setBook(undefined);
       setResults([]);
       return;
     }
@@ -121,7 +126,6 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     console.log("[bookFetcher, session, error]");
     if (!bookFetcher) {
       setBook(undefined);
-      setError(undefined);
       return;
     }
     if (error) {
@@ -136,26 +140,29 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       });
   }, [bookFetcher, session, error]);
 
-  const onResultAdd = (res: ChallengeResultComplexModel) => {
-    let key = `${res.student}-${res.id}`;
-    if (stagedResults.has(key)) return;
-    stagedResults.set(key, res);
-    setStagedResults(new Map(stagedResults)); // trigger update
-  };
+  const onResultAdd = useCallback(
+    (res: ChallengeResultComplexModel) => {
+      let key = `${res.student}-${res.id}`;
+      if (stagedResults.has(key)) return;
+      stagedResults.set(key, res);
+      setStagedResults(new Map(stagedResults)); // trigger update
+    },
+    [stagedResults]
+  );
 
-  const onResultSet = (res: ChallengeResultComplexModel) => {
+  const onResultSet = useCallback((res: ChallengeResultComplexModel) => {
     let key = `${res.student}-${res.id}`;
     setStagedResults(new Map().set(key, res));
-  };
+  }, []);
 
-  const onResultsSet = (ress: ChallengeResultComplexModel[]) => {
+  const onResultsSet = useCallback((ress: ChallengeResultComplexModel[]) => {
     let newMap = new Map<string, ChallengeResultComplexModel>();
     for (let res of ress) {
       let key = `${res.student}-${res.id}`;
       newMap.set(key, res);
     }
     setStagedResults(newMap);
-  };
+  }, []);
 
   return (
     <div className="h-100">
