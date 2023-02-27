@@ -7,13 +7,13 @@ type AdminWrapperProps = {
 };
 
 const AdminWrapper = (props: AdminWrapperProps) => {
-  const session = useContext(SessionContext);
+  const sessionContext = useContext(SessionContext);
   const [authorised, setAuthorised] = useState(false);
 
   useEffect(() => {
     if (authorised) return;
     let headers = new Headers();
-    headers.append("Authorization", `Bearer ${session.token}`);
+    headers.append("Authorization", `Bearer ${sessionContext.token}`);
     fetch(`${props.urlBase}/api/admin/token-test/`, { headers }).then(
       (response) =>
         response
@@ -23,7 +23,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             if (code === 200) {
               setAuthorised(true);
             } else if (code === 401) {
-              session.login({
+              sessionContext.login({
                 clientId: data.clientId,
                 jwtEndpoint: data.jwtEndpoint,
                 startUrl: "admin",
@@ -33,11 +33,11 @@ const AdminWrapper = (props: AdminWrapperProps) => {
               });
             } else if (code === 403) {
               // you weren't an admin
-              session.logout();
+              sessionContext.logout();
             }
           })
     );
-  }, [session, authorised, props.urlBase]);
+  }, [sessionContext, authorised, props.urlBase]);
 
   if (authorised) {
     return <React.Fragment>{props.children}</React.Fragment>;

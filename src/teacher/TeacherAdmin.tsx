@@ -35,7 +35,7 @@ type TeacherAdminProps = {
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
   console.log("drawing TeacherAdmin");
-  const session = useContext(SessionContext);
+  const sessionContext = useContext(SessionContext);
 
   const [groups, setGroups] = useState<Array<ClassModel>>([]);
   const [groupInputValue, setGroupInputValue] = React.useState("");
@@ -71,7 +71,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
           res(cached);
         }
         let headers = new Headers();
-        headers.append("Authorization", `Bearer ${session.token}`);
+        headers.append("Authorization", `Bearer ${sessionContext.token}`);
         fetch(`${props.baseUrl}/${req}`, { headers })
           .then((data) => data.json())
           .then((data) => {
@@ -80,7 +80,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
           })
           .catch((e) => rej(`Failed to fetch ${req}`));
       }),
-    [session.token, props.baseUrl]
+    [sessionContext.token, props.baseUrl]
   );
 
   useEffect(() => {
@@ -97,10 +97,11 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   useEffect(() => {
     console.log(
-      "[bookTitle,request,activeGroup]",
+      "[bookTitle,request,activeGroup,sessionContext]",
       bookTitle,
       activeGroup,
-      request
+      request,
+      sessionContext
     );
     setError(undefined);
 
@@ -118,35 +119,37 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     )
       .then(setResults)
       .catch((e) => setError(e.reason));
-  }, [bookTitle, request, activeGroup]);
+  }, [bookTitle, request, activeGroup, sessionContext]);
 
   useEffect(() => {
-    console.log("[bookFetcher, session, error]", session, error, bookFetcher);
+    console.log(
+      "[bookFetcher, sessionContext, error]",
+      sessionContext,
+      error,
+      bookFetcher
+    );
     if (!bookFetcher) {
+      console.log("No book fetcher");
       setBook(undefined);
       return;
     }
     if (error) {
+      console.log("there is an error");
       return;
     }
     bookFetcher
-      .fetchBook(session)
+      .fetchBook(sessionContext)
       .then((res) => setBook(res.book))
       .catch((e) => {
         setBook(undefined);
         setError("Failed to load book from server");
       });
-  }, [bookFetcher, session, error]);
+  }, [bookFetcher, sessionContext, error]);
 
-  const onResultAdd = useCallback(
-    (res: ChallengeResultComplexModel) => {
-      let key = `${res.student}-${res.id}`;
-      if (stagedResults.has(key)) return;
-      stagedResults.set(key, res);
-      setStagedResults(new Map(stagedResults)); // trigger update
-    },
-    [stagedResults]
-  );
+  const onResultAdd = useCallback((res: ChallengeResultComplexModel) => {
+    let key = `${res.student}-${res.id}`;
+    setStagedResults((stagedResults) => new Map(stagedResults).set(key, res)); // trigger update
+  }, []);
 
   const onResultSet = useCallback((res: ChallengeResultComplexModel) => {
     let key = `${res.student}-${res.id}`;
