@@ -88,6 +88,7 @@ export default function App() {
 
   const adminUrlBase =
     new URLSearchParams(window.location.search).get("adminUrl") || "";
+  if (adminUrlBase) console.log(adminUrlBase);
 
   return (
     <VsThemeContext.Provider

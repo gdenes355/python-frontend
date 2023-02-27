@@ -59,7 +59,6 @@ const ResultCard = (props: ResultCardProps) => {
     }
   }, [outcome, themeContext]);
 
-  console.log(date);
   return (
     <Box sx={{ backgroundColor, paddingLeft: 1, paddingRight: 1 }}>
       <Grid container spacing={2} style={{ display: "flex" }}>

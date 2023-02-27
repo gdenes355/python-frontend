@@ -34,6 +34,7 @@ type TeacherAdminProps = {
 };
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
+  console.log("drawing TeacherAdmin");
   const session = useContext(SessionContext);
 
   const [groups, setGroups] = useState<Array<ClassModel>>([]);
@@ -83,16 +84,19 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   );
 
   useEffect(() => {
+    console.log("[request]", request);
     request("api/admin/classes").then((data) => setGroups(data));
   }, [request]);
 
   useEffect(() => {
+    console.log("[activeGroup]", activeGroup);
     if (!activeGroup) return;
     setBookTitles(activeGroup?.books || []);
     setBookTitle(undefined);
   }, [activeGroup]);
 
   useEffect(() => {
+    console.log("[bookTitle,request,activeGroup]");
     setError(undefined);
     setBook(undefined);
 
@@ -114,6 +118,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   }, [bookTitle, request, activeGroup]);
 
   useEffect(() => {
+    console.log("[bookFetcher, session, error]");
     if (!bookFetcher) {
       setBook(undefined);
       setError(undefined);

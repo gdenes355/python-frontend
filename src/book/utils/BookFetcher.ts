@@ -148,6 +148,8 @@ class BookFetcher implements IBookFetcher {
             e(t);
           } else if (t instanceof NotFoundError) {
             e(t);
+          } else {
+            e(t);
           }
         });
     });

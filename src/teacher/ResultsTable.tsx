@@ -210,6 +210,7 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
 };
 
 const ResultsTable = (props: ResultsTableProps) => {
+  console.log("drawing ResultsTable");
   const [challengeInfo, setChallengeInfo] = useState<ChallengeInfo | undefined>(
     undefined
   );
