@@ -31,6 +31,7 @@ import {
 import ResultCodePane from "./ResultCodePane";
 import ResultsTable from "./ResultsTable";
 import AddIcon from "@mui/icons-material/Add";
+import AddGroupDialog from "./AddGroupDialog";
 
 type TeacherAdminProps = {
   baseUrl: string;
@@ -48,7 +49,10 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const forceUpdate = () => setUpdateCtr((c) => c + 1);
 
   const [bookTitles, setBookTitles] = useState<Array<string>>([]);
-  const [bookTitle, setBookTitle] = useState<string | undefined>(undefined);
+  const [bookTitlesInGroup, setBookTitlesInGroup] = useState<Array<string>>([]);
+  const [activeBookTitle, setActiveBookTitle] = useState<string | undefined>(
+    undefined
+  );
 
   const [book, setBook] = useState<BookNodeModel | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -89,18 +93,19 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   useEffect(() => {
     request("api/admin/classes").then((data) => setGroups(data));
+    request("api/admin/books").then((data) => setBookTitles(data));
   }, [request]);
 
   useEffect(() => {
     if (!activeGroup) return;
-    setBookTitles(activeGroup?.books || []);
-    setBookTitle(undefined);
+    setBookTitlesInGroup(activeGroup?.books || []);
+    setActiveBookTitle(undefined);
   }, [activeGroup]);
 
   useEffect(() => {
     setError(undefined);
 
-    if (!bookTitle || !activeGroup) {
+    if (!activeBookTitle || !activeGroup) {
       setBookFetcher(undefined);
       setResults([]);
       return;
@@ -108,15 +113,15 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
     setBook(undefined);
 
-    setBookFetcher(new BookFetcher(bookTitle));
+    setBookFetcher(new BookFetcher(activeBookTitle));
     request(
       `api/admin/classes/${activeGroup.name}/books/${encodeURIComponent(
-        bookTitle
+        activeBookTitle
       )}/results`
     )
       .then(setResults)
       .catch((e) => setError(e.reason));
-  }, [bookTitle, request, activeGroup]);
+  }, [activeBookTitle, request, activeGroup]);
 
   useEffect(() => {
     if (!bookFetcher) {
@@ -153,6 +158,53 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     }
     setStagedResults(newMap);
   }, []);
+
+  const onAddBook = (bookTitle: string) => {
+    setDialogState("");
+    if (!activeGroup || !bookTitle) return;
+    if (activeGroup.books?.includes(bookTitle)) return;
+    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/books`, {
+      method: "post",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionContext.token}`,
+      },
+      body: JSON.stringify({ book: bookTitle }),
+    }).then((resp) => {
+      if (resp.status === 200) {
+        activeGroup.books?.push(bookTitle);
+        setActiveBookTitle(bookTitle);
+        forceUpdate();
+      }
+    });
+  };
+
+  const onAddGroup = (groupName: string) => {
+    setDialogState("");
+    if (!groupName) return;
+    for (let group of groups) {
+      if (group.name === groupName) {
+        return; // group already exists
+      }
+    }
+
+    fetch(`${props.baseUrl}/api/admin/classes`, {
+      method: "post",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionContext.token}`,
+      },
+      body: JSON.stringify({ class: groupName }),
+    }).then((resp) => {
+      if (resp.status === 200) {
+        groups.push({ name: groupName, students: [] });
+        setActiveGroup(groups[groups.length - 1]);
+        forceUpdate();
+      }
+    });
+  };
 
   const onAddStudent = (username: string) => {
     setDialogState("");
@@ -210,33 +262,85 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
           open={dialogState === "addStudent"}
           onClose={() => setDialogState("")}
         />
+        <InputDialog
+          type="combo"
+          options={bookTitles}
+          disabledOptions={bookTitlesInGroup}
+          title="Add book"
+          inputLabel="Book"
+          onInputEntered={onAddBook}
+          okButtonLabel="Add"
+          open={dialogState === "addBook"}
+          onClose={() => setDialogState("")}
+          fullWidth
+        />
+        <AddGroupDialog
+          groups={groups}
+          onInputEntered={onAddGroup}
+          open={dialogState === "addGroup"}
+          onClose={() => setDialogState("")}
+        />
         <Allotment defaultSizes={[650, 350]} minSize={3} ref={allotmentRef}>
           <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
             {groups.length ? (
               <Stack spacing={2}>
-                <Autocomplete
-                  size="small"
-                  value={activeGroup || null}
-                  onChange={(e, n) => setActiveGroup(n || undefined)}
-                  inputValue={groupInputValue}
-                  onInputChange={(e, newValue) => setGroupInputValue(newValue)}
-                  options={groups}
-                  getOptionLabel={(option) => (option ? option.name : "")}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Group" />
-                  )}
-                />
+                <Grid direction="row" container>
+                  <Grid
+                    item
+                    sx={{
+                      flexGrow: 1,
+                    }}
+                  >
+                    <Autocomplete
+                      size="small"
+                      value={activeGroup || null}
+                      onChange={(e, n) => setActiveGroup(n || undefined)}
+                      inputValue={groupInputValue}
+                      onInputChange={(e, newValue) =>
+                        setGroupInputValue(newValue)
+                      }
+                      options={groups}
+                      getOptionLabel={(option) => (option ? option.name : "")}
+                      renderInput={(params) => (
+                        <TextField {...params} label="Group" />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item>
+                    <IconButton onClick={() => setDialogState("addGroup")}>
+                      <AddIcon />
+                    </IconButton>
+                  </Grid>
+                </Grid>
 
-                <Autocomplete
-                  size="small"
-                  value={bookTitle || null}
-                  onChange={(e, n) => setBookTitle(n || undefined)}
-                  options={bookTitles}
-                  getOptionLabel={(option) => (option ? option : "")}
-                  renderInput={(params) => (
-                    <TextField {...params} label="Book" />
-                  )}
-                />
+                <Grid direction="row" container>
+                  <Grid
+                    item
+                    sx={{
+                      flexGrow: 1,
+                    }}
+                  >
+                    <Autocomplete
+                      size="small"
+                      value={activeBookTitle || null}
+                      onChange={(e, n) => setActiveBookTitle(n || undefined)}
+                      options={bookTitlesInGroup}
+                      getOptionLabel={(option) => (option ? option : "")}
+                      renderInput={(params) => (
+                        <TextField {...params} label="Book" />
+                      )}
+                      disabled={!activeGroup}
+                    />
+                  </Grid>
+                  <Grid item>
+                    <IconButton
+                      disabled={!activeGroup}
+                      onClick={() => setDialogState("addBook")}
+                    >
+                      <AddIcon />
+                    </IconButton>
+                  </Grid>
+                </Grid>
               </Stack>
             ) : (
               <CircularProgress />
@@ -249,7 +353,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                 <h2>{book?.name}&nbsp;</h2>
                 <ResultsTable
                   book={book}
-                  bookTitle={bookTitle}
+                  bookTitle={activeBookTitle}
                   group={activeGroup}
                   updateCtr={updateCtr}
                   results={results}
