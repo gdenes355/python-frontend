@@ -82,7 +82,7 @@ addEventListener('fetch', e => {
     }))
   } else if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') {
 
-  } else if (e.request.url.includes('book=') || (e.request.url.includes('coop=1')) || e.request.url.includes('pyworker_sw.js') || u.pathname?.startsWith("/static")) {
+  } else if (e.request.url.includes('bk=') || e.request.url.includes('book=') || (e.request.url.includes('coop=1')) || e.request.url.includes('pyworker_sw.js') || u.pathname?.startsWith("/static")) {
     e.respondWith(
       fetch(e.request)
 		  .then(function (response) {

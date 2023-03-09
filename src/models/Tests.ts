@@ -17,7 +17,7 @@ type TestResults = Array<TestResult>;
 
 type AllTestResults = {
   passed: Set<string>;
-  failed: Set<String>;
+  failed: Set<string>;
 };
 
 export { TestCase, TestCases, TestResult, TestResults, AllTestResults };

@@ -254,6 +254,13 @@ class ChallengeContextClass {
       });
       this.actions["print-console"](msg);
     },
+    "get-code": () => {
+      if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
+        return this.challenge.parsonsEditorRef.current?.getValue();
+      } else {
+        return this.challenge.editorRef.current?.getValue();
+      }
+    },
     debug: (mode: "debug" | "run" = "debug") => {
       if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
@@ -402,7 +409,7 @@ class ChallengeContextClass {
     },
     "fetch-guide": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.guidePath)
+        .fetch(this.challenge.props.guidePath, this.challenge.props.authContext)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load guide");
@@ -413,7 +420,7 @@ class ChallengeContextClass {
     },
     "fetch-code": () => {
       this.challenge.props.fetcher
-        .fetch(this.challenge.props.codePath)
+        .fetch(this.challenge.props.codePath, this.challenge.props.authContext)
         .then((response) => {
           if (!response.ok) {
             throw Error("Failed to load Python code");

@@ -13,4 +13,9 @@ function absolutisePath(filePath: string, rootPath: string | URL) {
   }
 }
 
-export { isAbsoluteAddress, absolutisePath };
+function splitToParts(path: string) {
+  let parts = path.split("/");
+  return parts.filter((x) => x !== "." && x);
+}
+
+export { isAbsoluteAddress, absolutisePath, splitToParts };

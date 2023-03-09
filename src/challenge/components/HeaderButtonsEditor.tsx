@@ -1,5 +1,11 @@
 import React, { useMemo, useContext } from "react";
-import { Grid, Button, Switch, FormControlLabel, IconButton } from "@mui/material";
+import {
+  Grid,
+  Button,
+  Switch,
+  FormControlLabel,
+  IconButton,
+} from "@mui/material";
 import { useLocation } from "react-router-dom";
 import FileUploadControl from "../../components/FileUploadControl";
 import { FileDownload } from "@mui/icons-material";
@@ -20,8 +26,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
   const previewUrl = useMemo(() => {
     let chid = searchParams.get("chid");
     return (
-      location.pathname +
-      `?book=edit://edit/book.json&chid=${chid}&edit=preview`
+      location.pathname + `?bk=edit://edit/book.json&chid=${chid}&edit=preview`
     );
   }, [searchParams, location]);
   return (

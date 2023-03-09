@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import Challenge from "../challenge/Challenge";
@@ -10,15 +10,13 @@ import BookFetcher from "./utils/BookFetcher";
 import { Box } from "@mui/material";
 
 import ZipPathTransformer from "./utils/ZipPathTransformer";
-
-import { saveTestState } from "./utils/ResultsStore";
 import { absolutisePath } from "../utils/pathTools";
 import BookNodeModel, {
   findBookNode,
   nextBookNode,
   prevBookNode,
 } from "../models/BookNodeModel";
-import { TestCases, AllTestResults } from "../models/Tests";
+import { TestCases } from "../models/Tests";
 
 import ErrorBounday from "../components/ErrorBoundary";
 import EditableBookStore, {
@@ -26,9 +24,13 @@ import EditableBookStore, {
 } from "./utils/EditableBookStore";
 import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
+import UnauthorisedError from "../auth/UnauthorisedException";
+import SessionContext from "../auth/SessionContext";
+import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 
 type BookProps = {
   zipFile?: File;
+  localFolder?: FileSystemDirectoryHandle;
   onBookUploaded: (file: File, edit: boolean) => void;
 };
 
@@ -40,6 +42,7 @@ type PathsState = {
 type EditState = "cloning" | "editing" | "preview" | undefined;
 
 const Book = (props: BookProps) => {
+  const authContext = useContext(SessionContext);
   const [rootNode, setRootNode] = useState<BookNodeModel | null>(null);
   const [paths, setPaths] = useState<PathsState>({
     guidePath: null,
@@ -48,10 +51,7 @@ const Book = (props: BookProps) => {
   const [activeNode, setActiveNode] = useState<BookNodeModel | null>(null);
   const [tests, setTests] = useState<TestCases | null>(null);
   const [drawerOpen, setDrawerOpen] = React.useState(false);
-  const [allTestResults, setAllTestResults] = useState<AllTestResults>({
-    passed: new Set(),
-    failed: new Set(),
-  });
+
   const [editState, setEditState] = useState<EditState>(undefined);
   const [editableBookStore, setEditableBookStore] =
     useState<EditableBookStore | null>(null);
@@ -59,8 +59,11 @@ const Book = (props: BookProps) => {
   const [bookForceReload, setBookForceReload] = useState(0);
   const requestBookReload = () => setBookForceReload((c) => c + 1);
 
+  const [error, setError] = useState<string | undefined>(undefined);
+
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book") || "book.json";
+  const bookPath =
+    searchParams.get("bk") || searchParams.get("book") || "book.json";
   const zipPath = searchParams.get("zip-path");
   const zipPathTransformed = useMemo(
     () => ZipPathTransformer.transformZipPath(zipPath),
@@ -71,13 +74,15 @@ const Book = (props: BookProps) => {
   const editParam = searchParams.get("edit") || "";
   const navigate = useNavigate();
 
+  const progressStorage: ProgressStorage = useProgressStorage(bookPath);
+
   const openNode = useMemo(
     () => (node: BookNodeModel) => {
       if (editState === "cloning" || editParam === "clone") {
         return;
       }
       let newSearchParams = new URLSearchParams({
-        book: bookPath,
+        bk: bookPath,
         chid: node.id,
         ...(zipPath && { "zip-path": zipPath }),
         ...(zipData && { "zip-data": zipData }),
@@ -110,7 +115,8 @@ const Book = (props: BookProps) => {
     return new BookFetcher(
       bookPath,
       zipPathTransformed,
-      zipData || props.zipFile
+      zipData || props.zipFile,
+      props.localFolder
     );
   }, [
     bookPath,
@@ -119,27 +125,19 @@ const Book = (props: BookProps) => {
     props.zipFile,
     editableBookStore,
     editParam,
+    props.localFolder,
   ]);
 
-  const activeTestsPassingChanged = (newTestState: boolean | null) => {
-    if (!activeNode) {
-      return;
+  /**
+   * if book path doesn't match auth, then force logout
+   */
+  useEffect(() => {
+    if (bookPath !== authContext.bookPath) {
+      if (authContext.isLoggedIn()) {
+        authContext.logout();
+      }
     }
-    if (newTestState === true) {
-      allTestResults.passed.add(activeNode.id);
-      allTestResults.failed.delete(activeNode.id);
-    } else if (newTestState === false) {
-      allTestResults.passed.delete(activeNode.id);
-      allTestResults.failed.add(activeNode.id);
-    }
-    /*else {
-            // unlikely that we want to delete an old test result this way
-            allTestResults.passed.delete(bookChallengeId);
-            allTestResults.failed.delete(bookChallengeId);            
-        }*/
-    setAllTestResults(allTestResults); // trigger update
-    saveTestState(activeNode, newTestState); // persist
-  };
+  }, [bookPath, authContext]);
 
   /**
    * Managing edit state
@@ -152,7 +150,7 @@ const Book = (props: BookProps) => {
         search:
           "?" +
           new URLSearchParams({
-            book: "edit://edit/book.json",
+            bk: "edit://edit/book.json",
             chid: activeNode?.id || "",
             edit: "editing",
           }),
@@ -169,31 +167,51 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
-      createEditableBookStore(rootNode, bookFetcher).then(bookClonedForEditing);
+      createEditableBookStore(rootNode, bookFetcher, authContext).then(
+        bookClonedForEditing
+      );
       return;
     }
 
     if (editParam === "editing" || editParam === "preview") {
       setEditState(editParam);
     }
-  }, [editParam, editState, rootNode, bookFetcher, bookClonedForEditing]);
+  }, [
+    editParam,
+    editState,
+    rootNode,
+    bookFetcher,
+    bookClonedForEditing,
+    authContext,
+  ]);
 
   /**
    * Getting the book to open
    */
   useEffect(() => {
     if (!bookFetcher) {
-      setAllTestResults({ passed: new Set(), failed: new Set() });
       return;
     }
-
-    bookFetcher.fetchBook().then((result) => {
-      setAllTestResults(result.allResults);
-      setRootNode(result.book);
-      if (result.singlePageBook) {
-        openNode(result.singlePageBook);
-      }
-    });
+    if (authContext.requiresAuth && !authContext.isLoggedIn()) return;
+    bookFetcher
+      .fetchBook(authContext)
+      .then((result) => {
+        progressStorage.updateResults(result.allResults);
+        setRootNode(result.book);
+        if (result.singlePageBook) {
+          openNode(result.singlePageBook);
+        }
+      })
+      .catch((e) => {
+        if (e instanceof UnauthorisedError) {
+          authContext.login(e.getInfo());
+        } else {
+          setError(e.toString());
+        }
+      });
+    // ignore missing authContext, as this should not change in a meaningful
+    // manner (or at least its changes should not trigger a book refetch)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookFetcher, bookForceReload, openNode]);
 
   /**
@@ -236,7 +254,7 @@ const Book = (props: BookProps) => {
         search:
           "?" +
           new URLSearchParams({
-            book: bookPath,
+            bk: bookPath,
             report: open ? "full" : "",
             chid: bookChallengeId || "",
             "zip-path": zipPath || "",
@@ -288,7 +306,7 @@ const Book = (props: BookProps) => {
           <HeaderBar title={rootNode.name} />
           <BookReport
             bookRoot={rootNode}
-            allTestResults={allTestResults}
+            allTestResults={progressStorage.allTestResults}
             onCloseReport={() => openReport(false)}
           />
         </Box>
@@ -309,14 +327,15 @@ const Book = (props: BookProps) => {
                 onRequestPreviousChallenge={requestPreviousChallenge}
                 onRequestNextChallenge={requestNextChallenge}
                 uid={bookPath + bookChallengeId}
-                onTestsPassingChanged={activeTestsPassingChanged}
+                progressStorage={progressStorage}
                 isExample={activeNode.isExample}
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
+                authContext={authContext}
               />
               <BookDrawer
                 bookRoot={rootNode}
-                allTestResults={allTestResults}
+                allTestResults={progressStorage.allTestResults}
                 activePageId={bookChallengeId || undefined}
                 onRequestOpen={openDrawer}
                 onNodeSelected={openNode}
@@ -343,10 +362,11 @@ const Book = (props: BookProps) => {
               onRequestPreviousChallenge={requestPreviousChallenge}
               onRequestNextChallenge={requestNextChallenge}
               uid={bookPath + bookChallengeId}
-              onTestsPassingChanged={activeTestsPassingChanged}
+              progressStorage={progressStorage}
               isExample={activeNode.isExample}
               typ={activeNode.typ}
               onBookModified={requestBookReload}
+              authContext={authContext}
             />
             <BookEditorDrawer
               bookRoot={rootNode}
@@ -378,13 +398,25 @@ const Book = (props: BookProps) => {
           <HeaderBar title={rootNode.name} />
           <BookCover
             bookRoot={rootNode}
-            allTestResults={allTestResults}
+            allTestResults={progressStorage.allTestResults}
             onNodeSelected={openNode}
           />
         </Box>
       );
     }
   } else {
+    if (error) {
+      return (
+        <React.Fragment>
+          <HeaderBar />
+          <p>
+            Failed to load book, please check the link. You can also look at the
+            error message below
+          </p>
+          <p>{error}</p>
+        </React.Fragment>
+      );
+    }
     return (
       <React.Fragment>
         <HeaderBar />

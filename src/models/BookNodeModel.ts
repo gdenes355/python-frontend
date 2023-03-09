@@ -235,12 +235,31 @@ const extractIds = (node: BookNodeModel) => {
   return map;
 };
 
+const _extractIdsWithTestsInOrder = (
+  node: BookNodeModel,
+  arr: Array<string>
+) => {
+  if (node.isExample || node.tests || node.typ === "parsons") arr.push(node.id);
+  if (node.children) {
+    for (let child of node.children) {
+      _extractIdsWithTestsInOrder(child, arr);
+    }
+  }
+};
+
+const extractIdsWithTestsInOrder = (node: BookNodeModel) => {
+  let arr: Array<string> = [];
+  _extractIdsWithTestsInOrder(node, arr);
+  return arr;
+};
+
 export default BookNodeModel;
 export {
   findBookNode,
   nextBookNode,
   prevBookNode,
   extractIds,
+  extractIdsWithTestsInOrder,
   deleteBookNode,
   promoteBookNode,
   demoteBookNode,

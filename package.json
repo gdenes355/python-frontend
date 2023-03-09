@@ -1,6 +1,6 @@
 {
-  "name": "coding-frontend",
-  "version": "0.4.1",
+  "name": "python-sponge",
+  "version": "0.5.0",
   "private": true,
   "proxy": "http://localhost:5000/",
   "description": "Client-side framework for learning Python and authoring Python challenges",
@@ -10,6 +10,7 @@
     "url": "https://github.com/gdenes355/python-frontend"
   },
   "dependencies": {
+    "@azure/msal-react": "^1.5.2",
     "@dnd-kit/core": "^6.0.7",
     "@dnd-kit/modifiers": "^6.0.1",
     "@emotion/react": "^11.10.5",
@@ -26,6 +27,7 @@
     "@types/react": "^18.0.27",
     "@types/react-dom": "^18.0.10",
     "@types/react-syntax-highlighter": "^15.5.0",
+    "@types/wicg-file-system-access": "^2020.9.5",
     "allotment": "^1.18.0",
     "clipboard-copy": "^4.0.1",
     "file-saver": "^2.0.5",
@@ -43,8 +45,8 @@
     "react-syntax-highlighter": "^15.5.0",
     "real-turtle": "^1.1.6",
     "rewire": "^6.0.0",
-    "typescript": "^4.9.5",
-    "web-vitals": "^3.1.1"
+    "typescript": "^4.6.2",
+    "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",

@@ -1,0 +1,30 @@
+.res-container {
+  width: 100%;
+}
+
+.res-container .res {
+  height: 1em;
+  display: inline-block;
+  cursor: pointer;
+}
+
+.res-container .res:hover {
+  border-style: solid;
+  border-width: 1px;
+}
+
+.res-0 {
+  background-color: gainsboro;
+}
+
+.res--1 {
+  background-color: #aa0000;
+}
+
+.res-1 {
+  background-color: #00bb00;
+}
+
+.res-2 {
+  background-color: #00ee00;
+}

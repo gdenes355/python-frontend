@@ -41,6 +41,8 @@ import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
 import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
+import { SessionContextType } from "../auth/SessionContext";
+import { ProgressStorage } from "../book/utils/ProgressStorage";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -51,7 +53,7 @@ type ChallengeEditorState = {
   consoleText: string;
   editorState: ChallengeStatus;
   testResults: TestResults;
-  testsPassing: boolean | null;
+  testsPassing: boolean | undefined;
   helpOpen: boolean;
   guideMinimised: boolean;
   typ: ChallengeTypes; // use this in favour of the props.typ
@@ -73,7 +75,8 @@ type ChallengeEditorProps = {
   tests?: TestCases | null;
   isExample?: boolean;
   fetcher: IBookFetcher;
-  onTestsPassingChanged?: (passing: boolean | null) => void;
+  authContext: SessionContextType;
+  progressStorage: ProgressStorage;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
@@ -119,7 +122,7 @@ class ChallengeEditor
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],
-    testsPassing: null,
+    testsPassing: undefined,
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
@@ -171,7 +174,7 @@ class ChallengeEditor
         typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
       });
       this.chContext.actions["restart-worker"]({});
-      this.setState({ testResults: [], testsPassing: null });
+      this.setState({ testResults: [], testsPassing: undefined });
       this.setState({ hasEdited: false });
     }
     if (
@@ -186,15 +189,19 @@ class ChallengeEditor
     if (this.state.testResults !== prevState.testResults) {
       let newTestResult =
         this.state.testResults.length === 0
-          ? null
+          ? undefined
           : this.state.testResults.filter((x) => x.outcome !== true).length ===
             0;
       this.setState({ testsPassing: newTestResult });
     }
 
     if (this.state.testsPassing !== prevState.testsPassing) {
-      if (this.props.onTestsPassingChanged) {
-        this.props.onTestsPassingChanged(this.state.testsPassing);
+      if (this.props.progressStorage) {
+        this.props.progressStorage.setResult(
+          this.props.bookNode,
+          this.state.testsPassing,
+          this.chContext.actions["get-code"]()
+        );
       }
     }
 
@@ -207,8 +214,13 @@ class ChallengeEditor
 
   exportAsZip = () => {
     this.props.fetcher
-      .fetchBook()
-      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .fetchBook(this.props.authContext)
+      .then((bfr) =>
+        new BookZipper(this.props.fetcher).zipBook(
+          bfr.book,
+          this.props.authContext
+        )
+      )
       .then((zip) =>
         zip.generateAsync({
           type: "blob",
@@ -223,8 +235,13 @@ class ChallengeEditor
 
   previewAsZip = () => {
     this.props.fetcher
-      .fetchBook()
-      .then((bfr) => new BookZipper(this.props.fetcher).zipBook(bfr.book))
+      .fetchBook(undefined)
+      .then((bfr) =>
+        new BookZipper(this.props.fetcher).zipBook(
+          bfr.book,
+          this.props.authContext
+        )
+      )
       .then((zip) =>
         zip.generateAsync({
           type: "base64",
@@ -239,7 +256,7 @@ class ChallengeEditor
         this.setState({
           dialogInfoText: `${
             window.location.href.split("?")[0]
-          }?book=book.json&zip-data=${base64data}`,
+          }?bk=book.json&zip-data=${base64data}`,
         });
       });
   };

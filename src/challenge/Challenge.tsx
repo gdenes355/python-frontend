@@ -1,6 +1,6 @@
 import React from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent, Paper } from "@mui/material";
+import { Box, Card, CardContent, Grid, Paper } from "@mui/material";
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
@@ -34,11 +34,13 @@ import HeaderButtons from "./components/HeaderButtons";
 
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
+import { ProgressStorage } from "../book/utils/ProgressStorage";
+import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
   editorFullScreen: boolean;
-  testsPassing: boolean | null;
+  testsPassing: boolean | undefined;
   helpOpen: boolean;
   guideMinimised: boolean;
   showBookUpload: boolean;
@@ -48,7 +50,7 @@ type ChallengeProps = IChallengeProps & {
   bookNode?: BookNodeModel;
   title?: string;
   tests?: TestCases | null;
-  onTestsPassingChanged?: (passing: boolean | null) => void;
+  progressStorage: ProgressStorage;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
@@ -92,7 +94,7 @@ class Challenge
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],
-    testsPassing: null,
+    testsPassing: undefined,
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
@@ -128,7 +130,13 @@ class Challenge
       });
       this.chContext.actions["restart-worker"]({});
       this.chContext.actions["load-saved-code"]();
-      this.setState({ testResults: [], testsPassing: null });
+      let testRes = this.props.bookNode
+        ? this.props.progressStorage.getResult(this.props.bookNode)
+        : undefined;
+      this.setState({
+        testResults: testRes === undefined ? [] : [{ outcome: testRes }],
+        testsPassing: testRes,
+      });
     }
     if (prevProps.typ !== this.props.typ) {
       this.setState({
@@ -147,15 +155,22 @@ class Challenge
     if (this.state.testResults !== prevState.testResults) {
       let newTestResult =
         this.state.testResults.length === 0
-          ? null
+          ? undefined
           : this.state.testResults.filter((x) => x.outcome !== true).length ===
             0;
       this.setState({ testsPassing: newTestResult });
     }
 
-    if (this.state.testsPassing !== prevState.testsPassing) {
-      if (this.props.onTestsPassingChanged) {
-        this.props.onTestsPassingChanged(this.state.testsPassing);
+    if (
+      this.props.bookNode &&
+      this.state.testsPassing !== prevState.testsPassing
+    ) {
+      if (this.props.progressStorage) {
+        this.props.progressStorage.setResult(
+          this.props.bookNode,
+          this.state.testsPassing,
+          this.chContext.actions["get-code"]()
+        );
       }
     }
   }
@@ -280,6 +295,12 @@ class Challenge
                   />
                 }
               >
+                {this.props.authContext.token ? (
+                  <Grid item>
+                    <SessionWsStateIndicator />
+                  </Grid>
+                ) : undefined}
+
                 <HeaderButtons
                   canReset={this.state.editorState === ChallengeStatus.READY}
                 />

@@ -30,24 +30,22 @@ const StartPage = () => {
         <ul>
           <li>
             Simple examples with test cases:&nbsp;
-            <a href="/?book=./examples/book.json">
-              /?book=./examples/book.json
-            </a>
+            <a href="/?bk=./examples/book.json">/?bk=./examples/book.json</a>
           </li>
           <li>
             Fun tasks:&nbsp;
-            <a href="/?book=./progsoc/book.json">/?book=./progsoc/book.json</a>
+            <a href="/?bk=./progsoc/book.json">/?bk=./progsoc/book.json</a>
           </li>
           <li>
             Or a library which contains both of the above:&nbsp;
-            <a href="/?book=./library.json">/?book=./library.json</a>
+            <a href="/?bk=./library.json">/?bk=./library.json</a>
           </li>
         </ul>
         <p>
           You can generate a progress report from within the book, or just
           using&nbsp;
-          <a href="/?book=./library.json&report=full">
-            /?book=./library.json&report=full
+          <a href="/?bk=./library.json&report=full">
+            /?bk=./library.json&report=full
           </a>
         </p>
         <p>
@@ -58,8 +56,8 @@ const StartPage = () => {
         <p>
           To clone a book for editing, you can just append{" "}
           <code>clone=true</code> in the query path. E.g.:
-          <a href="/?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
-            ?book=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
+          <a href="/?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
+            ?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
           </a>
           .
           <p>
@@ -68,8 +66,8 @@ const StartPage = () => {
           </p>
           <p>
             You can also just use a simple template to get started&nbsp;
-            <a href="/?book=/booktemplates/singlepage/book.json&edit=clone">
-              /?book=/booktemplates/singlepage/book.json&edit=clone
+            <a href="/?bk=/booktemplates/singlepage/book.json&edit=clone">
+              /?bk=/booktemplates/singlepage/book.json&edit=clone
             </a>
           </p>
         </p>

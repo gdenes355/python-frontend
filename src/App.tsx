@@ -15,16 +15,30 @@ import Cookies from "js-cookie";
 import "./App.css";
 import HeaderBar from "./components/HeaderBar";
 
+import SessionWrapper from "./auth/SessionWrapper";
+import AuthCallbackPage from "./auth/AuthCallbackPage";
+import FolderPicker from "./components/FolderPicker";
+import AdminWrapper from "./auth/AdminWrapper";
+import TeacherAdmin from "./teacher/TeacherAdmin";
+
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
-  const bookPath = searchParams.get("book");
+  const bookPath = searchParams.get("bk") || searchParams.get("book");
   const isTeacher = searchParams.get("teacher") || "";
   const [bookFile, setBookFile] = useState<File | null>(null);
+  const [localFolder, setLocalFolder] = useState<
+    FileSystemDirectoryHandle | undefined
+  >();
   const navigate = useNavigate();
 
   const openBookFromZip = (file: File, edit: boolean) => {
     setBookFile(file);
-    navigate({ search: `?book=book.json${edit ? "&edit=clone" : ""}` });
+    navigate({ search: `?bk=book.json${edit ? "&edit=clone" : ""}` });
+  };
+
+  const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
+    setLocalFolder(folder);
+    navigate({ search: "?bk=book.json" });
   };
 
   useEffect(() => {
@@ -37,7 +51,11 @@ const AppContainer = () => {
 
   if (bookPath || bookFile) {
     return (
-      <Book zipFile={bookFile || undefined} onBookUploaded={openBookFromZip} />
+      <Book
+        zipFile={bookFile || undefined}
+        localFolder={localFolder}
+        onBookUploaded={openBookFromZip}
+      />
     );
   } else {
     return (
@@ -47,6 +65,7 @@ const AppContainer = () => {
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
+        <FolderPicker onFolderPicked={openLocalFolder} />
       </React.Fragment>
     );
   }
@@ -67,18 +86,33 @@ export default function App() {
     Cookies.set("theme", theme);
   };
 
+  const adminUrlBase =
+    new URLSearchParams(window.location.search).get("adminUrl") || "";
+  if (adminUrlBase) console.log(adminUrlBase);
+
   return (
     <VsThemeContext.Provider
       value={{ theme: vsTheme, handleThemeChange: handleThemeChange }}
     >
       <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
         <CssBaseline>
-          <BrowserRouter>
-            <Routes>
-              <Route path="start" element={<Start />} />
-              <Route path="*" element={<AppContainer></AppContainer>} />
-            </Routes>
-          </BrowserRouter>
+          <SessionWrapper>
+            <BrowserRouter>
+              <Routes>
+                <Route path="start" element={<Start />} />
+                <Route path="auth-callback" element={<AuthCallbackPage />} />
+                <Route
+                  path="teacher"
+                  element={
+                    <AdminWrapper urlBase={adminUrlBase}>
+                      <TeacherAdmin baseUrl={adminUrlBase} />
+                    </AdminWrapper>
+                  }
+                />
+                <Route path="*" element={<AppContainer />} />
+              </Routes>
+            </BrowserRouter>
+          </SessionWrapper>
         </CssBaseline>
       </ThemeProvider>
     </VsThemeContext.Provider>
