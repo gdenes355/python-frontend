@@ -1,5 +1,6 @@
 type LoginInfo = {
   clientId: string;
+  tenantId: string;
   jwtEndpoint: string;
   ended?: boolean;
   startUrl: string;

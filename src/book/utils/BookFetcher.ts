@@ -94,6 +94,7 @@ class BookFetcher implements IBookFetcher {
       let data = await res.json();
       throw new UnauthorisedError({
         clientId: data.clientId,
+        tenantId: data.tenantId || "common",
         jwtEndpoint: data.jwtEndpoint,
         startUrl: this.bookPathAbsolute,
         resultsEndpoint: data.resultsEndpoint,

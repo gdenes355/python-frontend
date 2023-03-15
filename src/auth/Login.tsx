@@ -189,6 +189,7 @@ const Login = (props: LoginProps) => {
 
     let config = { ...msalConfig };
     config.auth.clientId = info.clientId;
+    config.auth.authority = `https://login.microsoftonline.com/${info.tenantId}/`;
     config.auth.redirectUri = window.location.origin + "/auth-callback";
     setMsalInstance(new PublicClientApplication(config));
   }, [info]);
