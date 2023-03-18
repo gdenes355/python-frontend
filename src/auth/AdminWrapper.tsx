@@ -25,6 +25,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             } else if (code === 401) {
               sessionContext.login({
                 clientId: data.clientId,
+                tenantId: data.tenantId || "common",
                 jwtEndpoint: data.jwtEndpoint,
                 startUrl: "admin",
                 resultsEndpoint: data.resultsEndpoint,
