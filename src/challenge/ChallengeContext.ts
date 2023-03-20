@@ -6,6 +6,7 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import PaneType from "../models/PaneType";
 import IChallenge, { IChallengeState } from "./IChallenge";
+import BookNodeModel from "../models/BookNodeModel";
 
 type WorkerResponse = {
   cmd: string;
@@ -38,6 +39,8 @@ type DebugFinishedData = {
 
 type TestFinishedData = {
   results: TestResults;
+  bookNode: BookNodeModel;
+  code: string;
 };
 
 type RestartWorkerData = {
@@ -193,6 +196,7 @@ class ChallengeContextClass {
         force: true,
       }),
     "test-finished": (data: TestFinishedData) => {
+      this.actions["report-result"](data.results, data.code, data.bookNode);
       this.challenge.setState({
         testResults: data.results,
         editorState: ChallengeStatus.READY,
@@ -306,16 +310,37 @@ class ChallengeContextClass {
     },
     test: () => {
       if (this.challenge.state.typ === "parsons") {
+        let newResults =
+          this.challenge.parsonsEditorRef.current?.runTests() || [];
+        let code = this.challenge.parsonsEditorRef.current?.getValue() || "";
+        let bookNode = this.challenge.props.bookNode;
         this.challenge.setState({
-          testResults:
-            this.challenge.parsonsEditorRef.current?.runTests() || [],
+          testResults: newResults,
         });
+        this.actions["report-result"](newResults, code, bookNode);
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let tests = this.challenge.props.tests;
         if (code && tests) {
           this.actions["testpy"](code, tests);
         }
+      }
+    },
+    "report-result": (
+      results: TestResults,
+      code: string,
+      bookNode: BookNodeModel
+    ) => {
+      let newTestOutcome =
+        results.length === 0
+          ? undefined
+          : results.filter((x) => x.outcome !== true).length === 0;
+      if (this.challenge.props.progressStorage) {
+        this.challenge.props.progressStorage.setResult(
+          bookNode,
+          newTestOutcome,
+          code
+        );
       }
     },
     testpy: (code: string, tests: TestCases) => {
@@ -330,6 +355,7 @@ class ChallengeContextClass {
           cmd: "test",
           code: code,
           tests: tests,
+          bookNode: this.challenge.props.bookNode,
         });
         this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
         this.actions["cls"]();

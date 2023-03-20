@@ -11,6 +11,8 @@ import { OutputsHandle } from "./components/Outputs";
 import DebugContext from "../models/DebugContext";
 import IBookFetcher from "../book/utils/IBookFetcher";
 import { SessionContextType } from "../auth/SessionContext";
+import { ProgressStorage } from "../book/utils/ProgressStorage";
+import BookNodeModel from "../models/BookNodeModel";
 
 type IChallengeProps = {
   uid: string;
@@ -21,6 +23,8 @@ type IChallengeProps = {
   fetcher: IBookFetcher;
   typ?: "py" | "parsons" | "canvas";
   authContext: SessionContextType;
+  progressStorage: ProgressStorage;
+  bookNode: BookNodeModel;
 };
 
 type IChallengeState = {

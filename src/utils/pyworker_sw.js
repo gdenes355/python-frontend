@@ -50,16 +50,16 @@ onmessage = function (e) {
     }
     self.postMessage({ cmd: 'debug-finished', reason })      
   } else if (e.data.cmd === 'test') {
-    let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile' } })
+    let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile', code: e.data.code, bookNode:e.data.bookNode } })
     try {
       const tests = e.data.tests
       results = tests.map((test) => self.pyodide.globals.get('pyexec')(e.data.code, test.in, test.out))
     } catch (err) {
       if (err.message.includes('KeyboardInterrupt')) {
-        results = e.data.tests.map((t) => { return { outcome: false, err: 'Interrupted' } })
+        results = e.data.tests.map((t) => { return { outcome: false, err: 'Interrupted', code: e.data.code, bookNode:e.data.bookNode } })
       }
     }
-    self.postMessage({ cmd: 'test-finished', results })
+    self.postMessage({ cmd: 'test-finished', results, code: e.data.code, bookNode:e.data.bookNode })
   }
 }
 

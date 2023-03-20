@@ -26,7 +26,6 @@ import BookControlFabs from "../book/components/BookControlFabs";
 import HeaderBar from "../components/HeaderBar";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases } from "../models/Tests";
-import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 import BookUploadModal from "../book/components/BookUploadModal";
@@ -34,7 +33,6 @@ import HeaderButtons from "./components/HeaderButtons";
 
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
-import { ProgressStorage } from "../book/utils/ProgressStorage";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 
 type ChallengeState = IChallengeState & {
@@ -47,10 +45,8 @@ type ChallengeState = IChallengeState & {
 };
 
 type ChallengeProps = IChallengeProps & {
-  bookNode?: BookNodeModel;
   title?: string;
   tests?: TestCases | null;
-  progressStorage: ProgressStorage;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
@@ -159,19 +155,6 @@ class Challenge
           : this.state.testResults.filter((x) => x.outcome !== true).length ===
             0;
       this.setState({ testsPassing: newTestResult });
-    }
-
-    if (
-      this.props.bookNode &&
-      this.state.testsPassing !== prevState.testsPassing
-    ) {
-      if (this.props.progressStorage) {
-        this.props.progressStorage.setResult(
-          this.props.bookNode,
-          this.state.testsPassing,
-          this.chContext.actions["get-code"]()
-        );
-      }
     }
   }
 

@@ -21,7 +21,7 @@ import HeaderBar from "../components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
-import { TestCases, TestResults } from "../models/Tests";
+import { TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
@@ -32,8 +32,7 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
-import IChallenge from "./IChallenge";
-import IBookFetcher from "../book/utils/IBookFetcher";
+import IChallenge, { IChallengeProps } from "./IChallenge";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import BookZipper from "../book/utils/BookZipper";
@@ -42,7 +41,6 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
-import { ProgressStorage } from "../book/utils/ProgressStorage";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -64,19 +62,11 @@ type ChallengeEditorState = {
   saveDialogProps?: SaveDialogProps;
 };
 
-type ChallengeEditorProps = {
-  uid: string;
+type ChallengeEditorProps = IChallengeProps & {
   bookStore: EditableBookStore;
-  guidePath: string;
-  codePath: string;
-  bookNode: BookNodeModel;
   title?: string;
-  typ?: "py" | "parsons" | "canvas";
-  tests?: TestCases | null;
   isExample?: boolean;
-  fetcher: IBookFetcher;
   authContext: SessionContextType;
-  progressStorage: ProgressStorage;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
