@@ -109,9 +109,9 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
 
     if (!sessionContext.isLoggedIn()) return;
 
-    // if code is too long, trim it to 200 characters
-    if (code && code.length > 200) {
-      code = code.substring(0, 200);
+    // if code is too long, trim it to 4000 characters
+    if (code && code.length > 4000) {
+      code = code.substring(0, 4000);
     }
 
     // check for ws
