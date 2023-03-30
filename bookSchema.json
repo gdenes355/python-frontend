@@ -51,6 +51,9 @@
         "tests": {
           "$ref": "#/$defs/tests"
         },
+        "files": {
+          "$ref": "#/$defs/files"
+        },        
         "comment": {
           "$ref": "#/$defs/comment"
         },
@@ -109,6 +112,28 @@
             "$ref": "#/$defs/comment"
           }
         },
+        "additionalProperties": false
+      }
+    },
+    "files": {
+      "description": "optional list of files",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "description": "name of file inc. extension to be found within the challenge folder or zip",
+            "type": "string"
+          },
+          "visible": {
+            "description": "whether file contents can be viewed as separate tab when challenge is open (default false)",
+            "type": "boolean"
+          },
+          "comment": {
+            "$ref": "#/$defs/comment"
+          }
+        },
+        "required": ["filename"],
         "additionalProperties": false
       }
     },
