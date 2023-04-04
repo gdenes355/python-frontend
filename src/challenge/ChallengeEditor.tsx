@@ -22,6 +22,7 @@ import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestResults } from "../models/Tests";
+import { AdditionalFiles } from "../models/AdditionalFiles";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
@@ -137,6 +138,7 @@ class ChallengeEditor
       isExample: node.isExample,
       typ: node.typ,
       tests: node.tests,
+      additionalFiles: node.additionalFiles,
     };
     return JSON.stringify(proxy, null, 2);
   }
@@ -282,6 +284,10 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
     }
+    if (editedNode.additionalFiles !== this.props.additionalFiles) {
+      changed = true;
+      this.props.bookNode.additionalFiles = editedNode.additionalFiles;
+    }    
     if (changed) {
       this.props.bookStore.store.saveBook();
       this.props.onBookModified();

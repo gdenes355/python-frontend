@@ -3,6 +3,7 @@ import { DebouncedFunc } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { TestCases, TestResults } from "../models/Tests";
+import { AdditionalFiles } from "../models/AdditionalFiles";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -17,6 +18,7 @@ import BookNodeModel from "../models/BookNodeModel";
 type IChallengeProps = {
   uid: string;
   tests?: TestCases | null;
+  additionalFiles?: AdditionalFiles | null;
   isExample?: boolean;
   guidePath: string;
   codePath: string;

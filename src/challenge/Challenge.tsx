@@ -26,6 +26,7 @@ import BookControlFabs from "../book/components/BookControlFabs";
 import HeaderBar from "../components/HeaderBar";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases } from "../models/Tests";
+import { AdditionalFiles } from "../models/AdditionalFiles";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 import BookUploadModal from "../book/components/BookUploadModal";
@@ -47,6 +48,7 @@ type ChallengeState = IChallengeState & {
 type ChallengeProps = IChallengeProps & {
   title?: string;
   tests?: TestCases | null;
+  additionalFiles?: AdditionalFiles | null;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;

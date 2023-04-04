@@ -28,6 +28,7 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
       id,
       name: "New page",
       tests: [],
+      additionalFiles: [],
       py: `${id}.py`,
       guide: `${id}.md`,
     };
