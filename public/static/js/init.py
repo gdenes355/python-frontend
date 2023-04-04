@@ -379,8 +379,14 @@ def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
-    post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+    post_message({"cmd": "turtle", "id":-1, "msg": J.dumps(msg)})
 def done():pass # no need to do anything
+def Screen():return ScreenStub()
+class ScreenStub:
+    def setup(self, width, height):
+        arg = {"cmd": "turtle"}
+        arg["msg"] = J.dumps({_A:"setup", "width":width, "height":height})
+        post_message(arg)
 class Turtle:
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}

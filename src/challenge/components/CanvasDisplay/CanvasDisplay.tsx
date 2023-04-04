@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useImperativeHandle } from "react";
+import React, { useContext, useRef, useImperativeHandle} from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
@@ -16,12 +16,16 @@ type CanvasDisplayHandle = {
 type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
   onKeyUp?: React.KeyboardEventHandler;
+  initialWidth: number;
+  initialHeight: number;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
+
+    const [state, setState] = React.useState({ canvasWidth: props.initialWidth, canvasHeight: props.initialHeight });
 
     const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
 
@@ -32,13 +36,17 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
 
     const runTurtleCommand = (id: number, msg: string) => {
       const turtleObj = JSON.parse(msg);
-      turtleInstructionQueue.current.addItem(() =>
-        processTurtleCommand(
-          id,
-          turtleObj,
-          canvasEl.current as HTMLCanvasElement
-        )
-      );
+      if (turtleObj.action === "setup") {
+        setState({canvasWidth: turtleObj.width, canvasHeight: turtleObj.height});
+      } else {
+        turtleInstructionQueue.current.addItem(() =>
+          processTurtleCommand(
+            id,
+            turtleObj,
+            canvasEl.current as HTMLCanvasElement
+          )
+        );
+      }
     };
 
     const runAudioCommand = (msg: string) => {
@@ -83,8 +91,8 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
         <canvas
           id="canvasDisplay"
-          width={500}
-          height={400}
+          width={state.canvasWidth}
+          height={state.canvasHeight}
           ref={canvasEl}
           onKeyDown={challengeContext?.actions["canvas-keydown"]}
           onKeyUp={challengeContext?.actions["canvas-keyup"]}
