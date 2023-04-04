@@ -13,10 +13,12 @@ import IBookFetcher from "../book/utils/IBookFetcher";
 import { SessionContextType } from "../auth/SessionContext";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
 import BookNodeModel from "../models/BookNodeModel";
+import { AdvancedTestCases } from "../models/AdvancedTests";
 
 type IChallengeProps = {
   uid: string;
   tests?: TestCases | null;
+  advancedTests?: AdvancedTestCases | null;
   isExample?: boolean;
   guidePath: string;
   codePath: string;

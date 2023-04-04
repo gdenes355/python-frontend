@@ -1,4 +1,5 @@
 import { TestCases } from "./Tests";
+import { AdvancedTestCases } from "./AdvancedTests";
 
 type BookNodeModel = {
   name: string;
@@ -7,6 +8,7 @@ type BookNodeModel = {
   py?: string;
   guide?: string;
   tests: TestCases;
+  advancedTests: AdvancedTestCases;
   bookLink?: string;
   isExample?: boolean;
   typ?: "py" | "parsons" | "canvas";
@@ -239,7 +241,7 @@ const _extractIdsWithTestsInOrder = (
   node: BookNodeModel,
   arr: Array<string>
 ) => {
-  if (node.isExample || node.tests || node.typ === "parsons") arr.push(node.id);
+  if (node.isExample || node.tests || node.advancedTests || node.typ === "parsons") arr.push(node.id);
   if (node.children) {
     for (let child of node.children) {
       _extractIdsWithTestsInOrder(child, arr);
