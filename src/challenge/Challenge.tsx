@@ -320,7 +320,7 @@ class Challenge
                         }
                         canvas={
                           this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                            <CanvasDisplay ref={this.canvasDisplayRef} />
+                            <CanvasDisplay ref={this.canvasDisplayRef} initialWidth={500} initialHeight={400} />
                           ) : undefined
                         }
                       />
