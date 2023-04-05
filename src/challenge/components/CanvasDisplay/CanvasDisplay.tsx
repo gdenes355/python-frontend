@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useImperativeHandle} from "react";
+import React, { useContext, useRef, useImperativeHandle, useState} from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
@@ -25,7 +25,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
 
-    const [state, setState] = React.useState({ canvasWidth: props.initialWidth, canvasHeight: props.initialHeight });
+    const [dimensions, setDimensions] = useState({ canvasWidth: props.initialWidth, canvasHeight: props.initialHeight });
 
     const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
 
@@ -37,7 +37,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const runTurtleCommand = (id: number, msg: string) => {
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "setup") {
-        setState({canvasWidth: turtleObj.width, canvasHeight: turtleObj.height});
+        setDimensions({canvasWidth: turtleObj.width, canvasHeight: turtleObj.height});
       } else {
         turtleInstructionQueue.current.addItem(() =>
           processTurtleCommand(
@@ -91,8 +91,8 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
         <canvas
           id="canvasDisplay"
-          width={state.canvasWidth}
-          height={state.canvasHeight}
+          width={dimensions.canvasWidth}
+          height={dimensions.canvasHeight}
           ref={canvasEl}
           onKeyDown={challengeContext?.actions["canvas-keydown"]}
           onKeyUp={challengeContext?.actions["canvas-keyup"]}

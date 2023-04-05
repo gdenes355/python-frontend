@@ -9,6 +9,7 @@ const TURTLE_STANDARD_MODE_BEARING = 90;
 
 var turtles = new Map<number, RealTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
+var colorMode: 1.0 | 255.0 = 1.0;
 
 const processTurtleCommand = async (
   id: number,
@@ -96,10 +97,14 @@ const processTurtleCommand = async (
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
           await turtle.setStrokeStyle(cmd.value); // a named color as string or html code
-        } else {
-          await turtle.setStrokeStyle(
-            `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
-          ); // color tuple
+        } else {          
+          if (cmd.value[0] >= 0.0 && cmd.value[0] <= colorMode 
+            && cmd.value[1] >= 0.0 && cmd.value[1] <= colorMode 
+            && cmd.value[2] >= 0.0 && cmd.value[2] <= colorMode){
+            await turtle.setStrokeStyle(
+              `rgb(${cmd.value[0] / colorMode * 255.0},${cmd.value[1] / colorMode * 255.0},${cmd.value[2] / colorMode * 255.0})`
+            ); // color tuple
+          }
         }
         break;
       case "circle":
@@ -121,9 +126,13 @@ const processTurtleCommand = async (
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
           await turtle.setFillStyle(cmd.value); // a named color as string or html code
         } else {
-          await turtle.setFillStyle(
-            `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
-          ); // color tuple
+          if (cmd.value[0] >= 0.0 && cmd.value[0] <= colorMode 
+            && cmd.value[1] >= 0.0 && cmd.value[1] <= colorMode 
+            && cmd.value[2] >= 0.0 && cmd.value[2] <= colorMode){           
+            await turtle.setFillStyle(
+              `rgb(${cmd.value[0] / colorMode * 255.0},${cmd.value[1] / colorMode * 255.0},${cmd.value[2] / colorMode * 255.0})`
+            ); // color tuple
+          }          
         }
         break;
       case "speed":
@@ -150,6 +159,11 @@ const processTurtleCommand = async (
 
         await turtle.setSpeed(speed_val);
         break;
+      case "colormode":
+        if(cmd.value === 255.0 || cmd.value === 1.0){
+          colorMode = cmd.value;
+        }
+        break
     }
   } catch (err) {
     console.log("error processing canvas turtle action:");

@@ -382,11 +382,17 @@ def mode(mode_type):
     post_message({"cmd": "turtle", "id":-1, "msg": J.dumps(msg)})
 def done():pass # no need to do anything
 def Screen():return ScreenStub()
+
 class ScreenStub:
     def setup(self, width, height):
         arg = {"cmd": "turtle"}
         arg["msg"] = J.dumps({_A:"setup", "width":width, "height":height})
         post_message(arg)
+    def colormode(self, mode):
+        arg = {"cmd": "turtle"}
+        arg["msg"] = J.dumps({_A:"colormode", _V:mode})
+        post_message(arg)    
+    
 class Turtle:
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
@@ -419,15 +425,26 @@ class Turtle:
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, color):self.send({_A:"pencolor", _V:color})
+    def pencolor(self, *args):
+        if len(args) == 3: 
+            col = (args[0], args[1], args[2])
+        else:
+            col = args[0]
+        self.send({_A:"pencolor", _V:col})
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
-    def color(self, color):self.pencolor(color)
+    def color(self, *args):self.pencolor(*args)
+    def colormode(self, mode):self.send({_A:"colormode", _V:mode})
     def pensize(self, size):self.send({_A:"pensize", _V:size})
     def width(self, size):self.pensize(size)
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, color):self.send({_A:"fillcolor", _V:color})
+    def fillcolor(self, *args):
+        if len(args) == 3: 
+            col = (args[0], args[1], args[2])
+        else:
+            col = args[0]
+        self.send({_A:"fillcolor", _V:col})
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
