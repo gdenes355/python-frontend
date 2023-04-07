@@ -215,7 +215,7 @@ class Challenge
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={
               !this.props.isExample &&
-              (this.props.tests !== null || this.props.typ === "parsons")
+              (this.props.tests !== null || this.props.typ === "parsons" || this.props.typ === "canvas")
             }
             testResults={this.state.testResults}
           />

@@ -7,6 +7,7 @@ import ChallengeContext from "../../ChallengeContext";
 import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
+  getValue: () => string;
   turtleClear: () => void;
   runTurtleCommand: (id: number, msg: string) => void;
   runAudioCommand: (msg: string) => void;
@@ -22,6 +23,10 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
+
+    const getValue = () => {
+      return canvasEl?.current?.toDataURL() || "n/a";
+    };    
 
     const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
 
@@ -73,6 +78,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     };
 
     useImperativeHandle(ref, () => ({
+      getValue,
       runCommand,
       runTurtleCommand,
       runAudioCommand,

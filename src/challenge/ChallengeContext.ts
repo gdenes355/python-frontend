@@ -318,6 +318,27 @@ class ChallengeContextClass {
           testResults: newResults,
         });
         this.actions["report-result"](newResults, code, bookNode);
+      }
+      else if (this.challenge.state.typ === "canvas") {        
+        const canvData = this.challenge.canvasDisplayRef.current?.getValue();
+        let tests = this.challenge.props.tests;
+        let newResults = [];
+        if (tests && canvData === tests[0].out) {
+          newResults = [{ outcome: true }];
+        }
+        else {
+          newResults = [{ outcome: false, err: "The canvas output does not match the test-case. Make sure you have run the code to generate a final canvas before submitting." }];
+        }
+        
+        this.challenge.setState({
+          testResults: newResults,
+        });
+        let code = this.challenge.parsonsEditorRef.current?.getValue() || "";
+        let bookNode = this.challenge.props.bookNode;
+        this.challenge.setState({
+          testResults: newResults,
+        });
+        this.actions["report-result"](newResults, code, bookNode);        
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let tests = this.challenge.props.tests;
