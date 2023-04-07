@@ -9,6 +9,9 @@ import {
 } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import VsThemeContext from "../themes/VsThemeContext";
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
 
 type GuideProps = {
   md: string;
@@ -41,6 +44,7 @@ const Guide = ({ md }: GuideProps) => {
     }
     setLocalMd(parts.join("```"));
   }, [md]);
+
   return (
     <StyledGuide>
       <Box>
@@ -64,9 +68,12 @@ const Guide = ({ md }: GuideProps) => {
               );
             },
           }}
+          remarkPlugins={[ remarkMath ]}
+          rehypePlugins={[ rehypeKatex ]}
         >
           {localMd}
-        </ReactMarkdown>
+        </ReactMarkdown> 
+
       </Box>
     </StyledGuide>
   );
