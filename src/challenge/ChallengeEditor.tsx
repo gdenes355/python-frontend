@@ -22,7 +22,6 @@ import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestResults } from "../models/Tests";
-import { AdditionalFiles } from "../models/AdditionalFiles";
 import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
@@ -287,7 +286,7 @@ class ChallengeEditor
     if (editedNode.additionalFiles !== this.props.additionalFiles) {
       changed = true;
       this.props.bookNode.additionalFiles = editedNode.additionalFiles;
-    }    
+    }
     if (changed) {
       this.props.bookStore.store.saveBook();
       this.props.onBookModified();
