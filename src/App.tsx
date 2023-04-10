@@ -38,7 +38,7 @@ const AppContainer = () => {
 
   const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
     setLocalFolder(folder);
-    navigate({ search: "?bk=book.json" });
+    navigate({ search: "?bk=book.json&edit=localpreview" });
   };
 
   useEffect(() => {

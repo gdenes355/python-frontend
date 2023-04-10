@@ -444,7 +444,7 @@ class ChallengeContextClass {
         })
         .then((text) => this.challenge.setState({ guideMd: text }));
     },
-    "fetch-code": () => {
+    "fetch-code": (overrideWorkingCopy: boolean = false) => {
       this.challenge.props.fetcher
         .fetch(this.challenge.props.codePath, this.challenge.props.authContext)
         .then((response) => {
@@ -453,7 +453,12 @@ class ChallengeContextClass {
           }
           return response.text();
         })
-        .then((text) => this.challenge.setState({ starterCode: text }));
+        .then((text) => {
+          this.challenge.setState({ starterCode: text });
+          if (overrideWorkingCopy) {
+            this.actions["reset-code"]();
+          }
+        });
     },
     "load-saved-code": () => {
       let savedCode = localStorage.getItem(
