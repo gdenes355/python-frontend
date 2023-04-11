@@ -444,6 +444,7 @@ def pyexec(code, expected_input, expected_output):
     os.system = test_shell
     input = test_input
     
+    # prepare inputs
     if not expected_input:
         test_inputs = []  # no input for this test case
     elif isinstance(expected_input, str):
@@ -451,8 +452,7 @@ def pyexec(code, expected_input, expected_output):
     else:
         test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
     
-
-
+    # run test
     test_output.clear()
     parsed_stmts = ast.parse(code)
     try:
@@ -468,20 +468,63 @@ def pyexec(code, expected_input, expected_output):
     if len(test_inputs) == 1 and test_inputs[0] == '':
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it
 
-    # construct matching regex
-    original_expected_output = expected_output
-    expected_output = re.escape(expected_output)  # initially escape everything
-    expected_output = expected_output.replace(
-        "\\\n", r"\n").replace("\.\*", ".*")  # restore \n and .*
-    expected_output += r"\n*$"  # allow any blank new lines before the end
-    js.console.log(str(expected_output))
-    js.console.log(str(test_output.buffer))
+    # start output validation
     if len(test_inputs) > 0:
         return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
-    elif not re.match(expected_output, test_output.buffer):
-        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(original_expected_output), "actual": str(test_output.buffer), "ins": expected_input}))
+
+    original_expected_output = expected_output
+
+    if isinstance(expected_output, str):
+        # Simple case: just a string. We respect \n and .* as special characters and ignore \n* at the end
+        expected_output = re.escape(expected_output).replace("\\\n", r"\n").replace("\.\*", ".*") + r"\n*$"        
+        if not re.match(expected_output, test_output.buffer):
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(original_expected_output), "actual": str(test_output.buffer), "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
     else:
-        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+        # Must be a list of requirements
+        criteria_outcomes = []
+        for requirement in expected_output:
+            requirement = requirement.as_object_map()
+            actual_output = test_output.buffer
+            pattern = requirement["pattern"]  # the pattern to match. Must be present
+            typ = requirement.get("typ", "+")
+            ignore = requirement.get("ignore", "")
+            expected_count = int(requirement.get("count", -1))
+
+            # first, deal with the tricky ignore cases  w: whitespace, c: case, p: punctuation
+            flags = re.IGNORECASE if "c" in ignore else 0
+            if "w" in ignore:  
+                # no lib support for this, so we just strip whitespaces from both the actual and the expected
+                # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
+                # But then really they shouldn't write a regex that tests for whitespace and ask us to ignore white space
+                actual_output = re.sub(r"\s+", "", actual_output)
+                pattern = re.sub(r"\s+", "", pattern)
+            
+            if "p" in ignore:
+                # similar to whitespace, this is a bit of a hack
+                # remove all punctuations from the actual
+                actual_output = re.sub(r"[^\w*\s]", "", actual_output)
+                # from expected, do a quick hack to remove a few common punctuations including .,?!::;"'
+                # This is not a perfect solution, but it's good enough for most cases
+                pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
+            actual_count = len(re.findall(pattern, actual_output, flags))
+            outcome = True
+            if typ == "+":
+                if actual_count == 0 or ((expected_count != -1) and (expected_count != actual_count)):
+                    outcome = False
+            elif typ == "-":
+                if actual_count > 0 or (expected_count != -1 and expected_count == actual_count):
+                    outcome = False
+            criteria_outcomes.append(outcome)
+        # Yay, We got this far without failing!
+        if False in criteria_outcomes:
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": str(test_output.buffer), "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+
+                    
+
 
 
 def pydebug(code, breakpoints):

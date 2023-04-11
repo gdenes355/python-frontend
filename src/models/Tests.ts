@@ -15,9 +15,10 @@ type TestCases = Array<TestCase>;
 type TestResult = {
   outcome: boolean;
   err?: string;
-  expected?: string;
+  expected?: string | Array<AdvancedOutRequirement>;
+  criteriaOutcomes?: Array<boolean>;
   actual?: string;
-  ins?: string;
+  ins?: string | Array<string | number>;
 };
 
 type TestResults = Array<TestResult>;

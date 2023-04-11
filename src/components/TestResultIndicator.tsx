@@ -13,7 +13,7 @@ import { TooltipProps, tooltipClasses } from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
-import { TestResults } from "../models/Tests";
+import { TestResults, TestResult } from "../models/Tests";
 
 type TestResultsIndicatorProps = {
   testResults: TestResults;
@@ -30,6 +30,97 @@ const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
     border: "1px solid #dadde9",
   },
 }));
+
+const InputDisplay = (props: TestResult) => {
+  const { ins } = props;
+  if (!ins) {
+    return <span></span>;
+  }
+
+  // string with \n in it
+  if (typeof ins === "string") {
+    return (
+      <span>
+        {ins.split("\n").map((x, j) => (
+          <span key={j}>
+            {x}
+            <br />
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  // must be an array now
+  return (
+    <span>
+      {ins.map((x, j) => (
+        <span key={j}>
+          {x}
+          <br />
+        </span>
+      ))}
+    </span>
+  );
+};
+
+type OptionalSpanProps = {
+  children: React.ReactNode;
+  visible: boolean;
+};
+const OptionalSpan = (props: OptionalSpanProps) => {
+  if (!props.visible) {
+    return <span></span>;
+  }
+
+  return <span>{props.children}</span>;
+};
+
+const ExpectedDisplay = (props: TestResult) => {
+  const { expected, criteriaOutcomes } = props;
+  if (!expected) {
+    return <span></span>;
+  }
+
+  // string with \n in it
+  if (typeof expected === "string") {
+    return (
+      <span>
+        {expected.split("\n").map((x, j) => (
+          <span key={j}>
+            {x}
+            <br />
+          </span>
+        ))}
+      </span>
+    );
+  }
+
+  // must be an array now
+  return (
+    <span>
+      {expected.map((x, j) => (
+        <span key={j}>
+          <span>
+            {criteriaOutcomes?.at(j) ? (
+              <DoneIcon color="success" sx={{ fontSize: "0.8em" }} />
+            ) : (
+              <CancelIcon color="error" sx={{ fontSize: "0.8em" }} />
+            )}
+          </span>{" "}
+          must <OptionalSpan visible={x.typ === "-"}>not </OptionalSpan>
+          contain: <code>{x.pattern}</code>
+          <OptionalSpan visible={x.count !== undefined && x.count != -1}>
+            {" "}
+            {x.count} time{x.count != undefined && x.count > 1 ? "s" : ""}
+          </OptionalSpan>
+          <OptionalSpan visible={!!x.ignore}> ({x.ignore})</OptionalSpan>
+          <br />
+        </span>
+      ))}
+    </span>
+  );
+};
 
 const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
   const [allPassing, setAllPassing] = useState<boolean | null>(null);
@@ -88,20 +179,10 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
                         </TableCell>
                         <TableCell>{tr.err}</TableCell>
                         <TableCell>
-                          {tr.ins?.split("\n").map((x, j) => (
-                            <span key={j}>
-                              {x}
-                              <br />
-                            </span>
-                          ))}
+                          <InputDisplay {...tr} />
                         </TableCell>
                         <TableCell>
-                          {tr.expected?.split("\n").map((x, j) => (
-                            <span key={j}>
-                              {x}
-                              <br />
-                            </span>
-                          ))}
+                          <ExpectedDisplay {...tr} />
                         </TableCell>
                         <TableCell>
                           {tr.actual?.split("\n").map((x, j) => (
