@@ -8,9 +8,12 @@ import os
 import json
 import re
 from collections import deque
-from pyodide import to_js
+from pyodide.ffi import to_js
 
 print(sys.version)
+
+class NotEnoughInputsError(Exception):
+    pass
 
 class DebugAudio:
     def load(self, source):
@@ -361,7 +364,6 @@ test_output = TestOutput()
 
 active_breakpoints = set()
 test_inputs = []
-test_outputs = []
 step_into = False
 
 # setup turtle library
@@ -369,7 +371,7 @@ step_into = False
 with open("turtle.py", "w") as file:
     file.write('''
 import js
-from pyodide import to_js
+from pyodide.ffi import to_js
 import json as J
 import inspect
 _A = "action"
@@ -432,7 +434,6 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
 
 def pyexec(code, expected_input, expected_output):
     global test_inputs
-    global test_outputs
     sys.stdout = test_output
     sys.stderr = test_output
     sys.stdctx = debug_context
@@ -450,7 +451,7 @@ def pyexec(code, expected_input, expected_output):
     else:
         test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
     
-    test_outputs = expected_output
+
 
     test_output.clear()
     parsed_stmts = ast.parse(code)
@@ -459,6 +460,8 @@ def pyexec(code, expected_input, expected_output):
                        'traceback': traceback, 'input': test_input}
         exec(compile(parsed_stmts, filename="YourPythonCode.py",
              mode="exec"), global_vars)
+    except NotEnoughInputsError:
+        return js.Object.fromEntries(to_js({"err": "You've requested too many inputs", "ins": expected_input}))
     except Exception as e:
         return js.Object.fromEntries(to_js({"err": "Runtime error", "ins": expected_input}))
 
@@ -466,18 +469,17 @@ def pyexec(code, expected_input, expected_output):
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it
 
     # construct matching regex
-    expected_output = re.escape(test_outputs)  # initially escape everything
+    original_expected_output = expected_output
+    expected_output = re.escape(expected_output)  # initially escape everything
     expected_output = expected_output.replace(
         "\\\n", r"\n").replace("\.\*", ".*")  # restore \n and .*
     expected_output += r"\n*$"  # allow any blank new lines before the end
     js.console.log(str(expected_output))
     js.console.log(str(test_output.buffer))
-    if not re.match(expected_output, test_output.buffer):
-        js.console.log(str(test_outputs), "!=", str(test_output.buffer))
-        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
-    elif len(test_inputs) > 0:
-        js.console.log("inputs unconsumed: " + str(test_inputs))
+    if len(test_inputs) > 0:
         return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
+    elif not re.match(expected_output, test_output.buffer):
+        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(original_expected_output), "actual": str(test_output.buffer), "ins": expected_input}))
     else:
         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
@@ -573,6 +575,8 @@ def debug_input(prompt=""):
 def test_input(prompt=""):
     if prompt:
         print(prompt, end="")
+    if len(test_inputs) == 0:
+        raise NotEnoughInputsError()
     return test_inputs.pop(0)
 
 # cls
