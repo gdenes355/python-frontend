@@ -442,7 +442,7 @@ def pyexec(code, expected_input, expected_output):
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
-
+    
     if not expected_input:
         test_inputs = []  # no input for this test case
     elif isinstance(expected_input, str):

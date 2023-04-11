@@ -116,8 +116,11 @@
             ]
           },
           "out": {
-            "description": "stdout to compare to. Use .* to match a line (but not the new line). Use \n for line breaks.",
-            "type": "string"
+            "oneOf": [{
+              "description": "stdout to compare to. Use .* to match a line (but not the new line). Use \n for line breaks.",
+              "type": "string"
+            },
+                      {"$ref": "#/$defs/advancedOutRequirement"}]
           },
           "comment": {
             "$ref": "#/$defs/comment"
@@ -163,6 +166,40 @@
       "readOnly": true,
       "description": "cache; do not use",
       "hidden": true
+    },
+    "advancedOutRequirement": {
+      "description": "output requirement with more control",
+      "type": "array",
+      "items": {
+        "type": "object",
+          "properties": {
+          	"pattern": {
+              "type": "string",
+              "description": "regex pattern to match"
+            },
+            "typ": {
+              "type": "string",
+              "description": "should the output match this requirement or not",
+              "enum": ["+", "-"],
+              "default": "+"
+            },
+            "ignore": {
+            	"type": "string",
+                  "description": "ignore common failures including white spaces, capitalisation(casing), punctionation. Use some combination of wcp",
+                    "default": "",
+                      "enum": ["" , "w" , "c" , "p" , "wc" , "wp" , "cp" , "wcp"]
+                  
+            },
+              "count": {
+                "type": "number",
+                  "default": -1,
+                    "description": "The output must occur (-: not occur) exactly `count` number of times. -1, which is the default, means we don't care."
+              
+              }
+          },
+         "additionalProperties": false,
+         "required": ["pattern"]
+      }
     }
   }
 }

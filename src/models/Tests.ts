@@ -1,6 +1,13 @@
+type AdvancedOutRequirement = {
+  pattern: string;
+  typ?: "+" | "-";
+  ignore?: "" | "w" | "c" | "p" | "wc" | "wp" | "cp" | "wcp";
+  count?: number;
+};
+
 type TestCase = {
   in: string | Array<string | number>;
-  out: string;
+  out: string | Array<AdvancedOutRequirement>;
 };
 
 type TestCases = Array<TestCase>;
