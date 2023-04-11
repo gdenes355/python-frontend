@@ -505,7 +505,7 @@ def pyexec(code, expected_input, expected_output):
                 # similar to whitespace, this is a bit of a hack
                 # remove all punctuations from the actual
                 actual_output = re.sub(r"[^\w*\s]", "", actual_output)
-                # from expected, do a quick hack to remove a few common punctuations including .,?!::;"'
+                # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
                 # This is not a perfect solution, but it's good enough for most cases
                 pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
             actual_count = len(re.findall(pattern, actual_output, flags))

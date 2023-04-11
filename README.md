@@ -190,6 +190,36 @@ An updated test case might look like this:
 The `"in"` property can be a string, such as `"in": "Alice"`. If you pick this option, then you can use the `\n` character to enter multiple lines of text.
 However, `"in"` can be also provided as a list of string/numerical values, such as `"in": ["Joe", 5, 2, "yes"]`.
 
+The `"out"` property can be a string, such as `"Hello Alice"`. If you pick this option, then you can use the `\n` to match new lines and `.*` to match anything up to the end of a line. Blank new lines at the end of the output are ignored. Comparison is case sensitive.
+
+However, `"out"` can be also provided as a list of matching requirements, where each requirement contains a
+* `pattern` is a regular expression. Note that `\` needs to be escaped in json, so `\\d` means a digit.
+* optional `typ`:
+  * `+` means output must match this requirement (default)
+  * `-` means output must match this requirement
+* optional `ignore`: each output requirement can include `ignore` flags so that tests can pass with slight differences to the expected output, as students can make small mistakes that are not relevant to the overall pass/fail result. 3 classes of errors that can be ignored are **w**hitespace, **p**unctuation and **c**apitalization (case) of text. If the difference between the expected and actual output fall into an ignore class, then the test should pass. This is given as a string of flag initial letter.
+* `count`: interpreted to mean that the output must occur exactly `count` number of times. If not given, this defaults to -1, which means we don't care how many times the match occured. A `count` with a type `–` means that the string must not occur **exactly** `count` times.
+
+E.g.
+
+```json
+"tests": [
+  {
+    "in": [4, 5],
+    "out": [
+      {"pattern":"Enter    a;", "ignore":"wcp"},
+      {"pattern":"Enter b:"},
+      {"typ":"-", "pattern":"Hello 3"},
+      {"typ":"+", "pattern":"Hello \\d", "count":2, "ignore":"w"},
+      {"pattern": "sum.*9", "ignore": "wc"}
+    ]
+  }
+]
+```
+
+*potential caveat: these advanced output requirements support regexes, but the use of the ignore flags can conflict with complex expressions. Regex supports case insensitive comparisons, but white space ignores are achieved by stripping white spaces and punctuation ignores are achieved by stripping punctuations. To avoid any conflicts, avoid using additional punctuations in your regex when using these flags. E.g. `Hello .* how are you` is fine, but `Hello .*, how are you` is risky.*
+
+
 # Contributing to the project
 We welcome code additions to this github repo via PRs as long as they are in-line with the original design intentions of the project:
 * lightweight in-browser client-side code execution
