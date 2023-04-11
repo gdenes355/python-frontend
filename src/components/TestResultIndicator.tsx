@@ -110,9 +110,9 @@ const ExpectedDisplay = (props: TestResult) => {
           </span>{" "}
           must <OptionalSpan visible={x.typ === "-"}>not </OptionalSpan>
           contain: <code>{x.pattern}</code>
-          <OptionalSpan visible={x.count !== undefined && x.count != -1}>
+          <OptionalSpan visible={x.count !== undefined && x.count !== -1}>
             {" "}
-            {x.count} time{x.count != undefined && x.count > 1 ? "s" : ""}
+            {x.count} time{x.count !== undefined && x.count > 1 ? "s" : ""}
           </OptionalSpan>
           <OptionalSpan visible={!!x.ignore}> ({x.ignore})</OptionalSpan>
           <br />
