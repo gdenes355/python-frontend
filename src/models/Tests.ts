@@ -1,5 +1,5 @@
 type TestCase = {
-  in: string;
+  in: string | Array<string | number>;
   out: string;
 };
 

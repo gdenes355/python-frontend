@@ -53,7 +53,7 @@
         },
         "files": {
           "$ref": "#/$defs/files"
-        },        
+        },
         "comment": {
           "$ref": "#/$defs/comment"
         },
@@ -101,8 +101,19 @@
         "type": "object",
         "properties": {
           "in": {
-            "description": "stdin. Use \n for line breaks",
-            "type": "string"
+            "oneOf": [
+              {
+                "description": "stdin. Use \n for line breaks",
+                "type": "string"
+              },
+              {
+                "description": "stdin. List items will be entered as separate lines",
+                "type": "array",
+                "items": {
+                  "type": ["string", "number"]
+                }
+              }
+            ]
           },
           "out": {
             "description": "stdout to compare to. Use .* to match a line (but not the new line). Use \n for line breaks.",

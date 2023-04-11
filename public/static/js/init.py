@@ -443,7 +443,13 @@ def pyexec(code, expected_input, expected_output):
     os.system = test_shell
     input = test_input
 
-    test_inputs = expected_input.split("\n") if expected_input else []
+    if not expected_input:
+        test_inputs = []  # no input for this test case
+    elif isinstance(expected_input, str):
+        test_inputs = expected_input.split("\n")  # string input; split it on new lines
+    else:
+        test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
+    
     test_outputs = expected_output
 
     test_output.clear()

@@ -156,7 +156,7 @@ Ideal for keeping track of progress, when you give a chance for your students to
 `tests` is a list of test cases.
 
 ## Test cases
-Each test case has an `input` and `output` field. The input field specifies how the tester will respond to `input()` command, while the `output` is checked against all printed output (ignoring leading/trailing spaces and new lines). Lines are split on `\n` characters. `output` handles within-line `.*` wildcards,
+Each test case has an `input` and `output` field. The input field specifies how the tester will respond to `input()` command, while the `output` is checked against all printed output (ignoring leading/trailing spaces and new lines). In the simplest setup, lines are split on `\n` characters. `output` handles within-line `.*` wildcards.
 
 ### example
 For a short case study, let's imagine the student has to write a program which inputs two numbers, then outputs the larger one.
@@ -185,6 +185,10 @@ An updated test case might look like this:
   "out": ".*\n.*\n6"
 }
 ```
+
+## More formally (advanced testing options)
+The `"in"` property can be a string, such as `"in": "Alice"`. If you pick this option, then you can use the `\n` character to enter multiple lines of text.
+However, `"in"` can be also provided as a list of string/numerical values, such as `"in": ["Joe", 5, 2, "yes"]`.
 
 # Contributing to the project
 We welcome code additions to this github repo via PRs as long as they are in-line with the original design intentions of the project:
