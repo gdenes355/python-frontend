@@ -1,5 +1,3 @@
-import RealTurtle from "real-turtle";
-
 const TURTLE_CIRCLE_CCW_DEFAULT = true;
 const TURTLE_SIZE_DEFAULT = 15;
 const TURTLE_WIDTH_DEFAULT = 1;
@@ -7,7 +5,107 @@ const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_STANDARD_MODE_BEARING = 90;
 
-var turtles = new Map<number, RealTurtle>();
+class SimpleTurtle {
+  canvas: HTMLCanvasElement;
+  options: TurtleOptions;
+  ctx: CanvasRenderingContext2D | null;
+
+  constructor(canvas: HTMLCanvasElement, options: TurtleOptions) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext("2d");
+    this.options = options;
+    this.options.state.x = this.canvas.width / 2;
+    this.options.state.y = this.canvas.height / 2;
+    if (this.ctx !== null) {
+      this.ctx.moveTo(this.options.state.x, this.options.state.y);
+    }
+  }
+  async setPosition(x: number, y: number) {}
+
+  forward(distance: number) {
+    if (!this.ctx) return;
+
+    const new_x =
+      this.options.state.x +
+      distance * Math.cos((this.options.state.heading / 180) * Math.PI);
+    const new_y =
+      this.options.state.y -
+      distance * Math.sin((this.options.state.heading / 180) * Math.PI);
+
+    window.requestAnimationFrame(() => this.driveTo(new_x, new_y));
+  }
+
+  driveTo(x: number, y: number) {
+    if (!this.ctx) return;
+
+    let ch_x = 0;
+    let ch_y = 0;
+
+    if (x === this.options.state.x) {
+      if (y === this.options.state.y) {
+        return;
+      }
+      ch_y = y > this.options.state.y ? 1 : -1;
+    } else {
+      ch_x = x > this.options.state.x ? 1 : -1;
+      ch_y = (y - this.options.state.y) / (x - this.options.state.x);
+    }
+
+    this.ctx.beginPath();
+    this.ctx.moveTo(this.options.state.x, this.options.state.y);
+    this.ctx.lineTo(this.options.state.x + ch_x, this.options.state.y + ch_y);
+    this.ctx.stroke();
+    this.options.state.x += ch_x;
+    this.options.state.y += ch_y;
+
+    window.requestAnimationFrame(() =>
+      setTimeout(() => this.driveTo(x, y), 30 * this.options.state.speed)
+    );
+  }
+
+  async back(distance: number) {}
+  async right(angle: number) {
+    this.options.state.heading = (this.options.state.heading + angle) % 360;
+  }
+  async left(angle: number) {
+    this.options.state.heading = (this.options.state.heading + angle) % 360;
+  }
+  async penUp() {}
+  async penDown() {}
+  async setLineWidth(width: number) {}
+  async setStrokeStyle(style: string) {}
+  async setSize(size: number) {}
+  async arc(radius: number, extent: number, counterclockwise: boolean) {}
+  async beginPath() {}
+  async closePath() {}
+  async fill() {}
+  async setFillStyle(style: string) {}
+  async setSpeed(speed: number) {}
+}
+
+type TurtleOptions = {
+  autoStart?: boolean;
+  image?: string;
+  state: TurtleOptionsState; // added for Python frontend
+  mode?: "standard" | "logo";
+};
+
+type TurtleOptionsState = {
+  strokeStyle?: string;
+  fillStyle?: string;
+  lineCap?: string;
+  lineJoin?: string;
+  font?: string;
+  lineWidth?: number;
+  size?: number;
+  speed: number;
+  heading: number; // added for Python frontend
+  hasMoved?: boolean; // added for Python frontend
+  x: number; // added for Python frontend
+  y: number; // added for Python frontend
+};
+
+var turtles = new Map<number, SimpleTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
 
 const processTurtleCommand = async (
@@ -15,7 +113,6 @@ const processTurtleCommand = async (
   cmd: any,
   canvas: HTMLCanvasElement
 ) => {
-  id = 0; // turns out that real-turtle doesn't like multiple turtles
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
@@ -39,7 +136,7 @@ const processTurtleCommand = async (
   try {
     switch (cmd.action) {
       case "forward":
-        await turtle.forward(cmd.value);
+        turtle.forward(cmd.value);
         break;
       case "backward":
         await turtle.back(cmd.value);
@@ -161,13 +258,11 @@ const processTurtleCommand = async (
 
 const initialiseTurtle: (
   canvas: HTMLCanvasElement
-) => Promise<RealTurtle> = async (canvas) => {
-  let turtle = new RealTurtle(canvas, {
-    state: { size: 0 },
-    async: true,
+) => Promise<SimpleTurtle> = async (canvas) => {
+  let turtle = new SimpleTurtle(canvas, {
+    state: { size: 0, x: 0, y: 0, heading: 0, speed: 0.5 },
     autoStart: false,
-  }) as RealTurtle;
-  await turtle.setPosition(canvas.width / 2, canvas.height / 2);
+  }) as SimpleTurtle;
   if (turtleMode === "standard") {
     await turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
   }
