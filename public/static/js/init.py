@@ -486,9 +486,11 @@ def pyexec(code, expected_input, expected_output):
         criteria_outcomes = []
         for requirement in expected_output:
             requirement = requirement.as_object_map()
-            actual_output = test_output.buffer
             pattern = requirement["pattern"]  # the pattern to match. Must be present
             typ = requirement.get("typ", "+")
+
+            test_string = test_output.buffer if typ[0] != "c" else code
+
             ignore = requirement.get("ignore", "")
             expected_count = int(requirement.get("count", -1))
 
@@ -498,28 +500,29 @@ def pyexec(code, expected_input, expected_output):
                 # no lib support for this, so we just strip whitespaces from both the actual and the expected
                 # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
                 # But then really they shouldn't write a regex that tests for whitespace and ask us to ignore white space
-                actual_output = re.sub(r"\s+", "", actual_output)
+                test_string = re.sub(r"\s+", "", test_string)
                 pattern = re.sub(r"\s+", "", pattern)
             
             if "p" in ignore:
                 # similar to whitespace, this is a bit of a hack
                 # remove all punctuations from the actual
-                actual_output = re.sub(r"[^\w*\s]", "", actual_output)
+                test_string = re.sub(r"[^\w*\s]", "", test_string)
                 # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
                 # This is not a perfect solution, but it's good enough for most cases
                 pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
-            actual_count = len(re.findall(pattern, actual_output, flags))
+
+            actual_count = len(re.findall(pattern, test_string, flags))
             outcome = True
-            if typ == "+":
+            if "+" in typ:
                 if actual_count == 0 or ((expected_count != -1) and (expected_count != actual_count)):
                     outcome = False
-            elif typ == "-":
+            elif "-" in typ:
                 if actual_count > 0 or (expected_count != -1 and expected_count == actual_count):
                     outcome = False
             criteria_outcomes.append(outcome)
         # Yay, We got this far without failing!
         if False in criteria_outcomes:
-            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": str(test_output.buffer), "ins": expected_input}))
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": test_output.buffer, "ins": expected_input}))
         else:
             return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
