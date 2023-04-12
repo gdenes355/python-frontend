@@ -31,6 +31,8 @@ onmessage = function (e) {
       if (err.message.includes('KeyboardInterrupt')) {
         reason = 'interrupt'
       } else {
+        err = err.toString()
+        err = err.replace(/"\<exec\>", line \d+.*(\n.*)*File "<unknown>"/, '<main.py>)')
         workerPrint(err)
         reason = 'error'
       }
@@ -57,6 +59,8 @@ onmessage = function (e) {
     } catch (err) {
       if (err.message.includes('KeyboardInterrupt')) {
         results = e.data.tests.map((t) => { return { outcome: false, err: 'Interrupted', code: e.data.code, bookNode:e.data.bookNode } })
+      } else {
+        console.log('Error while running tests', err);
       }
     }
     self.postMessage({ cmd: 'test-finished', results, code: e.data.code, bookNode:e.data.bookNode })
