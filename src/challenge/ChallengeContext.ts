@@ -189,6 +189,7 @@ class ChallengeContextClass {
         };
       });
       this.actions["print-console"]("\n" + msg + "\n");
+      this.challenge.canvasDisplayRef?.current?.runTurtleClearup();
     },
     kill: () =>
       this.actions["restart-worker"]({

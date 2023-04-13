@@ -4,11 +4,11 @@ import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
-import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
   turtleClear: () => void;
   runTurtleCommand: (id: number, msg: string) => void;
+  runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
@@ -16,28 +16,40 @@ type CanvasDisplayHandle = {
 type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
   onKeyUp?: React.KeyboardEventHandler;
+  onHide: () => void;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
+    let turtleUsed = false;
+    let turtleRetained = false;
 
-    const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
+    const runTurtleClearup = () => {
+      if (turtleUsed && !turtleRetained) {
+        props.onHide();
+      }
+      turtleUsed = false;
+      turtleRetained = false;
+    };
 
     const turtleClear = () => {
-      turtleInstructionQueue.current?.reset();
       clearTurtle(canvasEl.current as HTMLCanvasElement);
+      turtleUsed = false;
+      turtleRetained = false;
     };
 
     const runTurtleCommand = (id: number, msg: string) => {
+      turtleUsed = true;
       const turtleObj = JSON.parse(msg);
-      turtleInstructionQueue.current.addItem(() =>
-        processTurtleCommand(
-          id,
-          turtleObj,
-          canvasEl.current as HTMLCanvasElement
-        )
+      if (turtleObj.action === "done") {
+        turtleRetained = true;
+      }
+      processTurtleCommand(
+        id,
+        turtleObj,
+        canvasEl.current as HTMLCanvasElement
       );
     };
 
@@ -75,6 +87,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
+      runTurtleClearup,
       runAudioCommand,
       turtleClear,
     }));

@@ -382,7 +382,9 @@ def post_message(data):
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
-def done():pass # no need to do anything
+def done(): 
+    msg = {_A:"done"}
+    post_message({"cmd": "turtle", "msg": J.dumps(msg)})
 class Turtle:
     def synchronise(self, typ):
         x = js.XMLHttpRequest.new()
@@ -579,7 +581,7 @@ def pydebug(code, breakpoints):
             workqueue.extend([(node.body[i], node)
                              for i in range(len(node.body))])
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
-    
+
 
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}

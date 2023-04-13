@@ -85,6 +85,10 @@ class Challenge
     100
   );
 
+  canvasHideCallback = () => {
+    this.setState({ typ: ChallengeTypes.TYP_PY });
+  };
+
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
@@ -337,7 +341,10 @@ class Challenge
                         }
                         canvas={
                           this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                            <CanvasDisplay ref={this.canvasDisplayRef} />
+                            <CanvasDisplay
+                              ref={this.canvasDisplayRef}
+                              onHide={() => this.canvasHideCallback()}
+                            />
                           ) : undefined
                         }
                       />

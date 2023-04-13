@@ -28,7 +28,7 @@ class SimpleTurtle {
     }
   }
 
-  async setPosition(x: number, y: number) {}
+  setPosition(x: number, y: number) {}
 
   stopTurtle() {
     this.alive = false;
@@ -86,7 +86,7 @@ class SimpleTurtle {
     });
   }
 
-  async back(distance: number) {}
+  back(distance: number) {}
 
   right(angle: number) {
     if (this.options.mode === "logo") {
@@ -104,17 +104,17 @@ class SimpleTurtle {
     this.completeCallback();
   }
 
-  async penUp() {}
-  async penDown() {}
-  async setLineWidth(width: number) {}
-  async setStrokeStyle(style: string) {}
-  async setSize(size: number) {}
-  async arc(radius: number, extent: number, counterclockwise: boolean) {}
-  async beginPath() {}
-  async closePath() {}
-  async fill() {}
-  async setFillStyle(style: string) {}
-  async setSpeed(speed: number) {}
+  penUp() {}
+  penDown() {}
+  setLineWidth(width: number) {}
+  setStrokeStyle(style: string) {}
+  setSize(size: number) {}
+  arc(radius: number, extent: number, counterclockwise: boolean) {}
+  beginPath() {}
+  closePath() {}
+  fill() {}
+  setFillStyle(style: string) {}
+  setSpeed(speed: number) {}
 }
 
 type TurtleOptions = {
@@ -158,7 +158,7 @@ const commandCompleted = () => {
   }
 };
 
-const processTurtleCommand = async (
+const processTurtleCommand = (
   id: number,
   cmd: any,
   canvas: HTMLCanvasElement
@@ -183,13 +183,13 @@ const processTurtleCommand = async (
     return undefined;
   }
   if (!turtle) {
-    turtle = await initialiseTurtle(canvas);
+    turtle = initialiseTurtle(canvas);
     turtles.set(id, turtle);
   }
 
   if (!turtle.options.state.hasMoved) {
     turtle.options.state.hasMoved = true;
-    await turtle.setSize(turtleMode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
+    turtle.setSize(turtleMode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
   }
   try {
     switch (cmd.action) {
@@ -197,7 +197,7 @@ const processTurtleCommand = async (
         turtle.forward(cmd.value);
         break;
       case "backward":
-        await turtle.back(cmd.value);
+        turtle.back(cmd.value);
         break;
       case "right":
         turtle.right(cmd.value);
@@ -206,49 +206,49 @@ const processTurtleCommand = async (
         turtle.left(cmd.value);
         break;
       case "setposition":
-        await turtle.setPosition(
+        turtle.setPosition(
           turtle.canvas.width / 2 + cmd.x,
           turtle.canvas.height / 2 - cmd.y
         );
         break;
       case "penup":
-        await turtle.penUp();
+        turtle.penUp();
         break;
       case "pendown":
-        await turtle.penDown();
+        turtle.penDown();
         break;
       case "pensize":
-        await turtle.setLineWidth(cmd.value);
+        turtle.setLineWidth(cmd.value);
         break;
       case "setheading":
         const turn = cmd.value - (turtle.options.state.heading || 0);
         if (turn !== 0) {
           if (turtleMode === "logo") {
-            await turtle.right(turn);
+            turtle.right(turn);
           } else {
             // standard
-            await turtle.left(turn);
+            turtle.left(turn);
           }
           turtle.options.state.heading = cmd.value;
         }
         break;
       case "hideturtle":
-        await turtle.setSize(0);
+        turtle.setSize(0);
         break;
       case "showturtle":
-        await turtle.setSize(TURTLE_SIZE_DEFAULT); // default
+        turtle.setSize(TURTLE_SIZE_DEFAULT); // default
         break;
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          await turtle.setStrokeStyle(cmd.value); // a named color as string or html code
+          turtle.setStrokeStyle(cmd.value); // a named color as string or html code
         } else {
-          await turtle.setStrokeStyle(
+          turtle.setStrokeStyle(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
         break;
       case "circle":
-        await turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
+        turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
         turtleMode === "logo"
           ? (turtle.options.state.heading =
               (turtle.options.state.heading || 0) - cmd.extent)
@@ -256,17 +256,17 @@ const processTurtleCommand = async (
               (turtle.options.state.heading || 0) + cmd.extent);
         break;
       case "begin_fill":
-        await turtle.beginPath();
+        turtle.beginPath();
         break;
       case "end_fill":
-        await turtle.closePath();
-        await turtle.fill();
+        turtle.closePath();
+        turtle.fill();
         break;
       case "fillcolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          await turtle.setFillStyle(cmd.value); // a named color as string or html code
+          turtle.setFillStyle(cmd.value); // a named color as string or html code
         } else {
-          await turtle.setFillStyle(
+          turtle.setFillStyle(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
@@ -293,10 +293,10 @@ const processTurtleCommand = async (
             speed_val = cmd.value === 0 ? 1 : cmd.value / 10;
         }
 
-        await turtle.setSpeed(speed_val);
+        turtle.setSpeed(speed_val);
         break;
       case "reset":
-        await turtle.setSize(0);
+        turtle.setSize(0);
         turtles.delete(id);
         commandCompleted();
     }
@@ -309,9 +309,9 @@ const processTurtleCommand = async (
   return undefined;
 };
 
-const initialiseTurtle: (
-  canvas: HTMLCanvasElement
-) => Promise<SimpleTurtle> = async (canvas) => {
+const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
+  canvas
+) => {
   let turtle = new SimpleTurtle(
     canvas,
     {
@@ -324,10 +324,10 @@ const initialiseTurtle: (
   turtle.options.state.heading =
     turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0;
   turtle.options.state.hasMoved = false;
-  await turtle.setSize(0);
-  await turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
-  await turtle.setSpeed(TURTLE_SPEED_DEFAULT);
-  await turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
+  turtle.setSize(0);
+  turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
+  turtle.setSpeed(TURTLE_SPEED_DEFAULT);
+  turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
   return turtle;
 };
 
