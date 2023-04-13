@@ -3,15 +3,22 @@ const TURTLE_SIZE_DEFAULT = 15;
 const TURTLE_WIDTH_DEFAULT = 1;
 const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
-const TURTLE_STANDARD_MODE_BEARING = 90;
+const TURTLE_LOGO_START_HEADING = 90;
 
 class SimpleTurtle {
   canvas: HTMLCanvasElement;
   options: TurtleOptions;
   ctx: CanvasRenderingContext2D | null;
+  completeCallback: () => void;
+  alive: boolean = true;
 
-  constructor(canvas: HTMLCanvasElement, options: TurtleOptions) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    options: TurtleOptions,
+    onComplete: () => void
+  ) {
     this.canvas = canvas;
+    this.completeCallback = onComplete;
     this.ctx = canvas.getContext("2d");
     this.options = options;
     this.options.state.x = this.canvas.width / 2;
@@ -20,10 +27,18 @@ class SimpleTurtle {
       this.ctx.moveTo(this.options.state.x, this.options.state.y);
     }
   }
+
   async setPosition(x: number, y: number) {}
 
+  stopTurtle() {
+    this.alive = false;
+  }
+
   forward(distance: number) {
-    if (!this.ctx) return;
+    if (!this.ctx) {
+      this.completeCallback();
+      return;
+    }
 
     const new_x =
       this.options.state.x +
@@ -36,13 +51,19 @@ class SimpleTurtle {
   }
 
   driveTo(x: number, y: number) {
-    if (!this.ctx) return;
+    if (!this.ctx) {
+      this.completeCallback();
+      return;
+    }
 
     let ch_x = 0;
     let ch_y = 0;
 
-    if (x === this.options.state.x) {
-      if (y === this.options.state.y) {
+    if (Math.abs(x - this.options.state.x) < 1) {
+      if (Math.abs(y - this.options.state.y) < 1) {
+        this.options.state.x = x;
+        this.options.state.y = y;
+        this.completeCallback();
         return;
       }
       ch_y = y > this.options.state.y ? 1 : -1;
@@ -58,18 +79,31 @@ class SimpleTurtle {
     this.options.state.x += ch_x;
     this.options.state.y += ch_y;
 
-    window.requestAnimationFrame(() =>
-      setTimeout(() => this.driveTo(x, y), 30 * this.options.state.speed)
-    );
+    window.requestAnimationFrame(() => {
+      if (this.alive) {
+        setTimeout(() => this.driveTo(x, y), 30 * this.options.state.speed);
+      }
+    });
   }
 
   async back(distance: number) {}
-  async right(angle: number) {
-    this.options.state.heading = (this.options.state.heading + angle) % 360;
+
+  right(angle: number) {
+    if (this.options.mode === "logo") {
+      angle = -1 * angle;
+    }
+    this.options.state.heading = (this.options.state.heading - angle) % 360;
+    this.completeCallback();
   }
-  async left(angle: number) {
+
+  left(angle: number) {
+    if (this.options.mode === "logo") {
+      angle = -1 * angle;
+    }
     this.options.state.heading = (this.options.state.heading + angle) % 360;
+    this.completeCallback();
   }
+
   async penUp() {}
   async penDown() {}
   async setLineWidth(width: number) {}
@@ -108,19 +142,43 @@ type TurtleOptionsState = {
 var turtles = new Map<number, SimpleTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
 
+const commandCompleted = () => {
+  let x = new XMLHttpRequest();
+  x.open("post", "/@turtle@/resp.js");
+  x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+  x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
+  try {
+    x.send(
+      JSON.stringify({
+        completed: true,
+      })
+    );
+  } catch (e) {
+    console.log(e);
+  }
+};
+
 const processTurtleCommand = async (
   id: number,
   cmd: any,
   canvas: HTMLCanvasElement
 ) => {
+  if (cmd.action === "stop") {
+    turtles.forEach((t) => t.stopTurtle());
+    commandCompleted();
+    return undefined;
+  }
+
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
     turtles.clear();
+    commandCompleted();
     return undefined;
   }
   let turtle = turtles.get(id);
   if (!turtle && cmd.action === "reset") {
+    commandCompleted();
     // ignore turtle reset if turtle doesn't exist
     return undefined;
   }
@@ -142,20 +200,10 @@ const processTurtleCommand = async (
         await turtle.back(cmd.value);
         break;
       case "right":
-        await turtle.right(cmd.value);
-        turtleMode === "logo"
-          ? (turtle.options.state.heading =
-              turtle.options.state.heading + cmd.value)
-          : (turtle.options.state.heading =
-              (turtle.options.state.heading || 0) - cmd.value);
+        turtle.right(cmd.value);
         break;
       case "left":
-        await turtle.left(cmd.value);
-        turtleMode === "logo"
-          ? (turtle.options.state.heading =
-              (turtle.options.state.heading || 0) - cmd.value)
-          : (turtle.options.state.heading =
-              turtle.options.state.heading + cmd.value);
+        turtle.left(cmd.value);
         break;
       case "setposition":
         await turtle.setPosition(
@@ -247,26 +295,34 @@ const processTurtleCommand = async (
 
         await turtle.setSpeed(speed_val);
         break;
+      case "reset":
+        await turtle.setSize(0);
+        turtles.delete(id);
+        commandCompleted();
     }
   } catch (err) {
     console.log("error processing canvas turtle action:");
     console.log(cmd);
     console.log(err);
   }
+
   return undefined;
 };
 
 const initialiseTurtle: (
   canvas: HTMLCanvasElement
 ) => Promise<SimpleTurtle> = async (canvas) => {
-  let turtle = new SimpleTurtle(canvas, {
-    state: { size: 0, x: 0, y: 0, heading: 0, speed: 0.5 },
-    autoStart: false,
-  }) as SimpleTurtle;
-  if (turtleMode === "standard") {
-    await turtle.right(TURTLE_STANDARD_MODE_BEARING); // for standard mode
-  }
-  turtle.options.state.heading = 0;
+  let turtle = new SimpleTurtle(
+    canvas,
+    {
+      state: { size: 0, x: 0, y: 0, heading: 0, speed: 0.5 },
+      autoStart: false,
+    },
+    commandCompleted
+  ) as SimpleTurtle;
+  turtle.options.mode = turtleMode;
+  turtle.options.state.heading =
+    turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0;
   turtle.options.state.hasMoved = false;
   await turtle.setSize(0);
   await turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);

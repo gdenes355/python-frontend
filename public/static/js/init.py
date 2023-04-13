@@ -384,14 +384,22 @@ def mode(mode_type):
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
 def done():pass # no need to do anything
 class Turtle:
+    def synchronise(self, typ):
+        x = js.XMLHttpRequest.new()
+        x.open('get', typ, False)
+        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
+        x.send()
+        return x.response
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
-      post_message(arg)  
+      post_message(arg)
+      resp = J.loads(self.synchronise('/@turtle@/req.js'))
+      return resp.get("completed")
     def __init__(self):
       global _idc
       self.__id=_idc;_idc+=1;
-      self.send({_A:"reset"})
+      # self.send({_A:"reset"})
     def forward(self, dist):self.send({_A:"forward", _V:dist})
     def fd(self, dist):self.forward(dist)
     def setposition(self, x, y):self.send({_A:"setposition", "x":x, "y":y})
@@ -543,7 +551,9 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
+    # ensures that canvas is always refreshed not just the mode
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -569,6 +579,7 @@ def pydebug(code, breakpoints):
             workqueue.extend([(node.body[i], node)
                              for i in range(len(node.body))])
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
+    
 
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
@@ -581,8 +592,11 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
+
+    # ensures that canvas is always refreshed not just the mode
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
-    exec(code, global_vars)    
+
+    exec(code, global_vars)
 
 
 def update_breakpoints(breakpoints):

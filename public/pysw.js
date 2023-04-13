@@ -6,6 +6,7 @@ addEventListener('activate', () => {
 })
 
 let inputPromiseResolve = null
+let turtlePromiseResolve = null
 let debugPromiseResolve = null
 let sleepPromiseResolve = null
 let sleepTimeout = null
@@ -24,6 +25,24 @@ addEventListener('fetch', e => {
       e.request.clone().json().then(data => {
         const local = inputPromiseResolve
         inputPromiseResolve = null
+        if (local) {
+          local(new Response(JSON.stringify(data), { status: 200 }))
+        }
+        r(new Response(null, { status: 200 }))
+      })
+    ))
+  } else if (u.pathname === '/@turtle@/req.js') {
+    e.respondWith(new Promise(function (resolve) {
+      if (turtlePromiseResolve != null) {
+        turtlePromiseResolve()
+      }
+      turtlePromiseResolve = resolve
+    }))
+  } else if (u.pathname === '/@turtle@/resp.js') {
+    e.respondWith(new Promise(r =>
+      e.request.clone().json().then(data => {
+        const local = turtlePromiseResolve
+        turtlePromiseResolve = null
         if (local) {
           local(new Response(JSON.stringify(data), { status: 200 }))
         }
@@ -77,7 +96,10 @@ addEventListener('fetch', e => {
         sleepPromiseResolve(new Response(null, { status: 304 }))
         sleepPromiseResolve = null
       }
-
+      if (turtlePromiseResolve !== null) {
+        turtlePromiseResolve(new Response(null, { status: 304 }))
+        turtlePromiseResolve = null
+      }            
       return new Response(null, { status: 200 })
     }))
   } else if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') {

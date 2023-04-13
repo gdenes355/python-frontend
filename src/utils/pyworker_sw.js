@@ -50,7 +50,7 @@ onmessage = function (e) {
         reason = 'error'
       }
     }
-    self.postMessage({ cmd: 'debug-finished', reason })      
+    self.postMessage({ cmd: 'debug-finished', reason })   
   } else if (e.data.cmd === 'test') {
     let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile', code: e.data.code, bookNode:e.data.bookNode } })
     try {

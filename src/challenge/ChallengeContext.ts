@@ -203,6 +203,10 @@ class ChallengeContextClass {
       });
     },
     "restart-worker": (data: RestartWorkerData) => {
+      this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
+        -1,
+        '{"action": "stop"}'
+      );
       if (
         this.challenge.state.editorState === ChallengeStatus.RESTARTING_WORKER
       ) {
