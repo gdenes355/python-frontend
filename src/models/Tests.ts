@@ -1,6 +1,6 @@
 type AdvancedOutRequirement = {
   pattern: string;
-  typ?: "+" | "-";
+  typ?: "+" | "-" | "c+" | "c-";
   ignore?: "" | "w" | "c" | "p" | "wc" | "wp" | "cp" | "wcp";
   count?: number;
 };
