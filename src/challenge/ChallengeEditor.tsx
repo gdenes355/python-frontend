@@ -492,7 +492,14 @@ class ChallengeEditor
                       file={
                         <FileEditor
                           ref={this.fileEditorRef}
-                          starterCode={""}
+                          files={
+                            this.props.bookNode.additionalFiles
+                              ? this.props.bookNode.additionalFiles.map(
+                                  (file) => file.filename
+                                )
+                              : []
+                          }
+                          starterContent={""}
                           onToggleFullScreen={() => {
                             this.setState((state) => {
                               return {

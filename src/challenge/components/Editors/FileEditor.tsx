@@ -13,8 +13,9 @@ import { Stack } from "@mui/material";
 import DropDownList from "../DropDownList";
 
 type FileEditorProps = {
-  starterCode: string;
+  starterContent: string;
   onToggleFullScreen: () => void;
+  files: string[];
 };
 
 type FileEditorHandle = {
@@ -71,21 +72,21 @@ const FileEditor = React.forwardRef<FileEditorHandle, FileEditorProps>(
         direction="column"
         style={{
           display: "flex",
-          justifyContent: "left",
-          alignItems: "left",
+          justifyContent: "center",
+          alignItems: "center",
         }}
       >
         <DropDownList
           disabled={false}
           onClick={() => {}}
-          options={["f1", "f2", "f3"]}
+          options={props.files}
         />
         <Editor
           className={"theme-" + themeContext.theme}
           width="100%"
           height="100%"
           defaultLanguage="txt"
-          value={props.starterCode}
+          value={props.starterContent}
           onMount={handleEditorDidMount}
           theme={themeContext.theme}
           options={{
