@@ -5,6 +5,7 @@ import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
 import JsonEditor, { JsonEditorHandle } from "./components/Editors/JsonEditor";
+import FileEditor, { FileEditorHandle } from "./components/Editors/FileEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import ChallengeConsole from "./components/ChallengeConsole";
 import CanvasDisplay, {
@@ -79,6 +80,7 @@ class ChallengeEditor
 {
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
+  fileEditorRef = React.createRef<FileEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
@@ -478,6 +480,19 @@ class ChallengeEditor
                         <JsonEditor
                           ref={this.jsonEditorRef}
                           starterCode={this.nodeToJson(this.props.bookNode)}
+                          onToggleFullScreen={() => {
+                            this.setState((state) => {
+                              return {
+                                editorFullScreen: !state.editorFullScreen,
+                              };
+                            });
+                          }}
+                        />
+                      }
+                      file={
+                        <FileEditor
+                          ref={this.fileEditorRef}
+                          starterCode={""}
                           onToggleFullScreen={() => {
                             this.setState((state) => {
                               return {

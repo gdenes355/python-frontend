@@ -14,6 +14,7 @@ type OutputsProps = {
   canvas: React.ReactNode;
   fixedInput: React.ReactNode;
   json?: React.ReactNode;
+  file?: React.ReactNode;
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
@@ -52,6 +53,15 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
       content: props.json,
       show: true,
       typ: PaneType.JSON_EDITOR,
+    });
+  }
+
+  if (props.file) {
+    panes.push({
+      label: "Files",
+      content: props.file,
+      show: true,
+      typ: PaneType.FILE_EDITOR,
     });
   }
 
