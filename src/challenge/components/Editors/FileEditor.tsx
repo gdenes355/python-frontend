@@ -13,11 +13,13 @@ import { Button, Grid } from "@mui/material";
 import DropDownList, { DropDownListHandle } from "../DropDownList";
 
 import ChallengeContext from "../../ChallengeContext";
+import { AdditionalFile } from "../../../models/AdditionalFiles";
 
 type FileEditorProps = {
   starterContent: string;
   onToggleFullScreen: () => void;
-  files: string[];
+  files: Array<AdditionalFile>;
+  enforceVisibility: boolean;
 };
 
 type FileEditorHandle = {
@@ -52,16 +54,32 @@ const FileEditor = React.forwardRef<FileEditorHandle, FileEditorProps>(
       editorRef.current?.revealLine(lineNo);
     };
 
-    const handleFileLoad = () => {
+    const loadFile = () => {
       if (dropdownRef?.current?.getValue() != null) {
-        try {
+        const isVis = props.files[dropdownRef.current.getIndex()].visible;
+        if (!isVis) {
+          setValue(
+            "FILE HIDDEN - YOU CAN STILL ACTIVATE IT & READ IT VIA PYTHON."
+          );
+        } else {
           challengeContext?.actions["fetch-file"](
             dropdownRef.current.getValue()
           );
-        } catch (err: any) {
-          setValue(err.message);
         }
       }
+    };
+
+    const activateFile = (activate: boolean = true) => {
+      if (dropdownRef?.current?.getValue() != null) {
+        challengeContext?.actions["activate-file"](
+          dropdownRef.current.getValue(),
+          activate
+        );
+      }
+      const msg = activate
+        ? "ACTIVATED & NOW AVAILABLE IN PYTHON"
+        : "DEACTIVATED FROM PYTHON";
+      setValue(msg);
     };
 
     useImperativeHandle(ref, () => ({
@@ -112,15 +130,33 @@ const FileEditor = React.forwardRef<FileEditorHandle, FileEditorProps>(
             variant="contained"
             onClick={(
               event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null
-            ) => handleFileLoad()}
+            ) => loadFile()}
             fullWidth={true}
           >
             VIEW FILE
           </Button>
+          <Button
+            variant="contained"
+            onClick={(
+              event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null
+            ) => activateFile()}
+            fullWidth={true}
+          >
+            ACTIVATE
+          </Button>
+          <Button
+            variant="contained"
+            onClick={(
+              event: React.MouseEvent<HTMLButtonElement, MouseEvent> | null
+            ) => activateFile(false)}
+            fullWidth={true}
+          >
+            DEACTIVATE
+          </Button>
           <DropDownList
             ref={dropdownRef}
             disabled={false}
-            options={props.files}
+            options={props.files.map((file: AdditionalFile) => file.filename)}
           />
         </Grid>
       </Grid>

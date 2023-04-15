@@ -476,6 +476,42 @@ class ChallengeContextClass {
           this.challenge.fileEditorRef.current?.setValue("ERROR LOADING FILE");
         });
     },
+    "activate-file": (filename: string, activate: boolean = true) => {
+      this.challenge.props.fetcher
+        .fetch(filename, this.challenge.props.authContext)
+        .then((response) => {
+          if (!response.ok) {
+            return "ERROR LOADING FILE";
+          }
+          return response.text();
+        })
+        .then((text) => {
+          let code = "";
+          if (activate) {
+            // load file to python
+            code = `with open("${filename}", "w") as f:\n    f.write("""${text}""")`;
+          } else {
+            // delete file from python
+            code = `import os\nos.remove("${filename}")`;
+          }
+          if (this.challenge.state.editorState === ChallengeStatus.READY) {
+            if (this.challenge.interruptBuffer) {
+              this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+            }
+            this.challenge.worker?.postMessage({
+              cmd: "run",
+              code: code,
+              breakpoints: [],
+            });
+            this.challenge.setState({
+              editorState: ChallengeStatus.RUNNING,
+            });
+          }
+        })
+        .catch((e) => {
+          this.challenge.fileEditorRef.current?.setValue("ERROR LOADING FILE");
+        });
+    },
     "load-saved-code": () => {
       let savedCode = localStorage.getItem(
         "code-" + encodeURIComponent(this.challenge.props.uid)

@@ -37,7 +37,7 @@ import HeaderButtons from "./components/HeaderButtons";
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
-import { FileEditorHandle } from "./components/Editors/FileEditor";
+import FileEditor, { FileEditorHandle } from "./components/Editors/FileEditor";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -342,6 +342,24 @@ class Challenge
                         canvas={
                           this.state.typ === ChallengeTypes.TYP_CANVAS ? (
                             <CanvasDisplay ref={this.canvasDisplayRef} />
+                          ) : undefined
+                        }
+                        file={
+                          this.props.bookNode?.additionalFiles &&
+                          this.props.bookNode.additionalFiles.length > 0 ? (
+                            <FileEditor
+                              ref={this.fileEditorRef}
+                              enforceVisibility={true}
+                              files={this.props.bookNode.additionalFiles || []}
+                              starterContent={""}
+                              onToggleFullScreen={() => {
+                                this.setState((state) => {
+                                  return {
+                                    editorFullScreen: !state.editorFullScreen,
+                                  };
+                                });
+                              }}
+                            />
                           ) : undefined
                         }
                       />

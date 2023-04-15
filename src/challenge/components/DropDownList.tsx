@@ -11,6 +11,7 @@ import MenuList from "@mui/material/MenuList";
 
 type DropDownListHandle = {
   getValue: () => string;
+  getIndex: () => number;
 };
 
 type DropDownListProps = {
@@ -28,8 +29,13 @@ const DropDownList = React.forwardRef<DropDownListHandle, DropDownListProps>(
       return props.options[selectedIndex];
     };
 
+    const getIndex = () => {
+      return selectedIndex;
+    };
+
     useImperativeHandle(ref, () => ({
       getValue,
+      getIndex,
     }));
 
     const handleMenuItemChoice = (
@@ -58,7 +64,12 @@ const DropDownList = React.forwardRef<DropDownListHandle, DropDownListProps>(
           aria-label="split button"
           fullWidth={true}
         >
-          <Button variant="contained" color="primary" disabled={props.disabled}>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={props.disabled}
+            style={{ textTransform: "none" }}
+          >
             {props.options[selectedIndex]}
           </Button>
           <Button

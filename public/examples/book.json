@@ -15,10 +15,12 @@
             ],
             "additionalFiles": [
               {
-                "filename": "test1.txt"
+                "filename": "test1.txt",
+                "visible": true
               },
               {
-                "filename": "test4.txt"
+                "filename": "test4.txt",
+                "visible": false
               }
             ]
         },
