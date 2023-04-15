@@ -6,6 +6,7 @@ import { TestCases, TestResults } from "../models/Tests";
 import { AdditionalFiles } from "../models/AdditionalFiles";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
+import { FileEditorHandle } from "./components/Editors/FileEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
@@ -42,6 +43,7 @@ type IChallengeState = {
 
 interface IChallenge {
   editorRef: React.RefObject<PyEditorHandle>;
+  fileEditorRef: React.RefObject<FileEditorHandle>;
   parsonsEditorRef: React.RefObject<ParsonsEditorHandle>;
   canvasDisplayRef: React.RefObject<CanvasDisplayHandle>;
   fixedInputFieldRef: React.RefObject<FixedInputFieldHandle>;

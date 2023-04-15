@@ -460,6 +460,22 @@ class ChallengeContextClass {
           }
         });
     },
+    "fetch-file": (filename: string) => {
+      this.challenge.props.fetcher
+        .fetch(filename, this.challenge.props.authContext)
+        .then((response) => {
+          if (!response.ok) {
+            return "ERROR LOADING FILE";
+          }
+          return response.text();
+        })
+        .then((text) => {
+          this.challenge.fileEditorRef.current?.setValue(text);
+        })
+        .catch((e) => {
+          this.challenge.fileEditorRef.current?.setValue("ERROR LOADING FILE");
+        });
+    },
     "load-saved-code": () => {
       let savedCode = localStorage.getItem(
         "code-" + encodeURIComponent(this.challenge.props.uid)

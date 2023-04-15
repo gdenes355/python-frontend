@@ -32,6 +32,19 @@ async function addNode(
       localStorage.setItem("edit://edit/" + node.py, await resp.text());
     }
   }
+  if (node.additionalFiles) {
+    for (let file of node.additionalFiles) {
+      let absPath = absolutisePath(
+        file.filename,
+        node.bookMainUrl || fetcher.getBookPathAbsolute()
+      );
+      let resp = await fetcher.fetch(absPath, authContext);
+      if (resp.ok) {
+        localStorage.setItem("edit://edit/" + file.filename, await resp.text());
+      }
+    }
+  }
+
   if (node.children) {
     for (let child of node.children) {
       await addNode(child, fetcher, authContext);

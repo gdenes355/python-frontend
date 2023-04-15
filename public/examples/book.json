@@ -12,6 +12,14 @@
                     "in": "",
                     "out": "hello world"
                 }
+            ],
+            "additionalFiles": [
+              {
+                "filename": "test1.txt"
+              },
+              {
+                "filename": "test4.txt"
+              }
             ]
         },
         {

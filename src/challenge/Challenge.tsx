@@ -37,6 +37,7 @@ import HeaderButtons from "./components/HeaderButtons";
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
+import { FileEditorHandle } from "./components/Editors/FileEditor";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -68,6 +69,7 @@ class Challenge
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  fileEditorRef = React.createRef<FileEditorHandle>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
