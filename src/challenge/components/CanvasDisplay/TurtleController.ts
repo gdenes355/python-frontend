@@ -1,8 +1,4 @@
-const TURTLE_CIRCLE_CCW_DEFAULT = true;
-const TURTLE_SIZE_DEFAULT = 15;
-const TURTLE_WIDTH_DEFAULT = 1;
 const TURTLE_SPEED_DEFAULT = 0.5;
-const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_LOGO_START_HEADING = 90;
 const TURTLE_IMG_PATH = "/static/img/turtle.png";
 const TURTLE_IMG_WIDTH = 30;
@@ -11,7 +7,7 @@ const TURTLE_IMG_HEIGHT = 30;
 class SimpleTurtle {
   imgTurtle: HTMLImageElement;
   canvas: HTMLCanvasElement;
-  options: TurtleOptions;
+  state: TurtleState;
   ctx: CanvasRenderingContext2D | null;
   canvasBackground: HTMLCanvasElement;
   ctxBackground: CanvasRenderingContext2D | null;
@@ -20,7 +16,7 @@ class SimpleTurtle {
 
   constructor(
     canvas: HTMLCanvasElement,
-    options: TurtleOptions,
+    state: TurtleState,
     onComplete: () => void
   ) {
     this.imgTurtle = new Image();
@@ -32,82 +28,92 @@ class SimpleTurtle {
     this.canvasBackground.width = canvas.width;
     this.canvasBackground.height = canvas.height;
     this.ctxBackground = this.canvasBackground.getContext("2d");
-    this.options = options;
-    this.options.state.x = this.canvas.width / 2;
-    this.options.state.y = this.canvas.height / 2;
+    this.state = state;
+    this.state.x = this.canvas.width / 2;
+    this.state.y = this.canvas.height / 2;
     if (this.ctxBackground !== null) {
-      this.ctxBackground.moveTo(this.options.state.x, this.options.state.y);
+      this.ctxBackground.moveTo(this.state.x, this.state.y);
     }
   }
 
-  setPosition(x: number, y: number) {}
+  setposition(x: number, y: number) {
+    // drives to required location but doesn't change the current heading (python compliant)
+    window.requestAnimationFrame(() => this.driveto(x, y, this.state.heading));
+  }
 
-  stopTurtle() {
+  stop() {
     this.alive = false;
   }
 
   forward(distance: number) {
-    if (!this.ctx || !this.ctxBackground) {
-      this.completeCallback();
-      return;
-    }
-
     const new_x =
-      this.options.state.x +
-      distance * Math.cos((this.options.state.heading / 180) * Math.PI);
+      this.state.x + distance * Math.cos((this.state.heading / 180) * Math.PI);
     const new_y =
-      this.options.state.y -
-      distance * Math.sin((this.options.state.heading / 180) * Math.PI);
+      this.state.y - distance * Math.sin((this.state.heading / 180) * Math.PI);
 
     window.requestAnimationFrame(() =>
-      this.driveTo(new_x, new_y, this.options.state.heading)
+      this.driveto(new_x, new_y, this.state.heading)
     );
   }
 
-  driveTo(x: number, y: number, heading: number) {
+  driveto(
+    x: number,
+    y: number,
+    heading: number,
+    completeOnEnd: boolean = true
+  ) {
     if (!this.ctx || !this.ctxBackground) {
       this.completeCallback();
       return;
     }
 
-    if (Math.abs(heading - this.options.state.heading) > 180) {
-      if (heading > this.options.state.heading) {
+    // hmmm should perhaps pay attention to left/right rather than most efficient turn??
+    if (Math.abs(heading - this.state.heading) > 180) {
+      if (heading > this.state.heading) {
         heading -= 360;
       } else {
         heading += 360;
       }
     }
 
-    let repeat = true;
+    let repeatAngle = true;
+    let repeatLoc = true;
+
     let ch_x = 0;
     let ch_y = 0;
     let ch_h = 0;
 
-    if (Math.abs(x - this.options.state.x) < 1) {
-      if (Math.abs(y - this.options.state.y) < 1) {
-        this.options.state.x = x;
-        this.options.state.y = y;
-        if (Math.abs(this.options.state.heading - heading) < 3) {
-          this.options.state.heading = heading;
-          repeat = false;
-        } else {
-          ch_h = heading > this.options.state.heading ? 3 : -3;
-        }
-      } else {
-        ch_y = y > this.options.state.y ? 1 : -1;
-      }
+    // set heading first if needed
+    if (Math.abs(this.state.heading - heading) < 3) {
+      this.state.heading = heading;
+      repeatAngle = false;
     } else {
-      ch_x = x > this.options.state.x ? 1 : -1;
-      ch_y = (y - this.options.state.y) / (x - this.options.state.x);
+      ch_h = heading > this.state.heading ? 3 : -3;
+    }
+
+    // find vector between start/end
+    const ch_x_reqd = x - this.state.x;
+    const ch_y_reqd = y - this.state.y;
+
+    const tot_dist = Math.sqrt(ch_x_reqd * ch_x_reqd + ch_y_reqd * ch_y_reqd);
+    const unit_dist = 6 * this.state.speed;
+
+    if (tot_dist < unit_dist) {
+      // if we're close enough, just go there
+      ch_x = ch_x_reqd;
+      ch_y = ch_y_reqd;
+      repeatLoc = false;
+    } else {
+      ch_x = (ch_x_reqd / tot_dist) * unit_dist;
+      ch_y = (ch_y_reqd / tot_dist) * unit_dist;
     }
 
     this.ctxBackground.beginPath();
-    this.ctxBackground.moveTo(this.options.state.x, this.options.state.y);
-    this.ctxBackground.lineTo(
-      this.options.state.x + ch_x,
-      this.options.state.y + ch_y
-    );
-    this.ctxBackground.stroke();
+    this.ctxBackground.moveTo(this.state.x, this.state.y);
+    if (this.state.penDown) {
+      this.ctxBackground.lineTo(this.state.x + ch_x, this.state.y + ch_y);
+      this.ctxBackground.stroke();
+    }
 
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     this.ctx.drawImage(
@@ -118,50 +124,51 @@ class SimpleTurtle {
       this.canvas.height
     );
 
-    // Set the origin to the current location, rotate the context, move the origin back
-    this.ctx.translate(this.options.state.x, this.options.state.y);
-    this.ctx.rotate(-1 * (Math.PI / 180) * this.options.state.heading);
-    this.ctx.translate(-this.options.state.x, -this.options.state.y);
+    if (this.state.showTurtle) {
+      // Set the origin to the current location, rotate the context, move the origin back
+      this.ctx.translate(this.state.x, this.state.y);
+      this.ctx.rotate(-1 * (Math.PI / 180) * this.state.heading);
+      this.ctx.translate(-this.state.x, -this.state.y);
 
-    // draw turtle rotated
-    this.ctx.drawImage(
-      this.imgTurtle,
-      this.options.state.x - TURTLE_IMG_WIDTH / 5,
-      this.options.state.y - TURTLE_IMG_HEIGHT / 2,
-      30,
-      30
-    );
+      // draw turtle rotated
+      this.ctx.drawImage(
+        this.imgTurtle,
+        this.state.x - TURTLE_IMG_WIDTH / 5,
+        this.state.y - TURTLE_IMG_HEIGHT / 2,
+        30,
+        30
+      );
 
-    // reset the rotation
-    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      // reset the rotation
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-    this.options.state.x += ch_x;
-    this.options.state.y += ch_y;
-    this.options.state.heading += ch_h;
+      this.state.x += ch_x;
+      this.state.y += ch_y;
+      this.state.heading += ch_h;
+    }
 
-    if (repeat) {
+    if (repeatAngle || repeatLoc) {
       window.requestAnimationFrame(() => {
         if (this.alive) {
-          setTimeout(
-            () => this.driveTo(x, y, heading),
-            10 * this.options.state.speed
-          );
+          setTimeout(() => this.driveto(x, y, heading), 10 * this.state.speed);
         }
       });
-    } else {
+    } else if (completeOnEnd) {
       this.completeCallback();
     }
   }
 
-  back(distance: number) {}
+  back(distance: number) {
+    this.forward(-1 * distance);
+  }
 
   left(angle: number) {
-    if (this.options.mode === "logo") {
+    if (this.state.mode === "logo") {
       angle = -1 * angle;
     }
-    const new_heading = (this.options.state.heading + angle) % 360;
+    const new_heading = (this.state.heading + angle) % 360;
     window.requestAnimationFrame(() =>
-      this.driveTo(this.options.state.x, this.options.state.y, new_heading)
+      this.driveto(this.state.x, this.state.y, new_heading)
     );
   }
 
@@ -169,39 +176,98 @@ class SimpleTurtle {
     this.left(-1 * angle);
   }
 
-  penUp() {}
-  penDown() {}
-  setLineWidth(width: number) {}
-  setStrokeStyle(style: string) {}
-  setSize(size: number) {}
-  arc(radius: number, extent: number, counterclockwise: boolean) {}
-  beginPath() {}
-  closePath() {}
-  fill() {}
-  setFillStyle(style: string) {}
-  setSpeed(speed: number) {}
+  setheading(angle: number) {
+    window.requestAnimationFrame(() =>
+      this.driveto(this.state.x, this.state.y, angle)
+    );
+  }
+
+  penup() {
+    this.state.penDown = false;
+    this.completeCallback();
+  }
+
+  pendown() {
+    this.state.penDown = true;
+    this.completeCallback();
+  }
+
+  pensize(width: number) {
+    if (this.ctxBackground) {
+      this.ctxBackground.lineWidth = width;
+    }
+    this.completeCallback();
+  }
+
+  showTurtle() {
+    this.state.showTurtle = true;
+    this.driveto(this.state.x, this.state.y, this.state.heading);
+  }
+
+  hideTurtle() {
+    this.state.showTurtle = false;
+    this.driveto(this.state.x, this.state.y, this.state.heading);
+  }
+
+  speed(speed: number) {
+    this.state.speed = speed;
+    this.completeCallback();
+  }
+
+  pencolor(color: string) {
+    if (this.ctxBackground) {
+      this.ctxBackground.strokeStyle = color;
+    }
+    this.completeCallback();
+  }
+
+  fillcolor(color: string) {
+    if (this.ctxBackground) {
+      this.ctxBackground.fillStyle = color;
+    }
+    this.completeCallback();
+  }
+
+  begin_fill() {
+    this.completeCallback();
+  }
+
+  end_fill() {
+    if (this.ctxBackground) {
+      this.ctxBackground.fill();
+    }
+    this.completeCallback();
+  }
+
+  circle(radius: number, extent: number) {
+    // counter clockwise in both modes (python compliant)
+    // draw circle with given radius given centre extent to left of current pos
+
+    this.completeCallback();
+
+    /* ISSUE: this is not working, need to fix - need to prevent next driveto until prev driveto is complete - use a promise?
+    const centreX = this.state.x - radius;
+    const centreY = this.state.y;
+    const startAngle = (this.state.heading + 90) * (Math.PI / 180);
+    const endAngle = (this.state.heading + 90 + extent) * (Math.PI / 180);
+    for (let i = 0; i < 30; i++) {
+      const angle = startAngle + (endAngle - startAngle) * (i / 10);
+      const x = centreX + radius * Math.cos(angle);
+      const y = centreY + radius * Math.sin(angle);
+      this.driveto(x, y, this.state.heading);
+    }
+    */
+  }
 }
 
-type TurtleOptions = {
-  autoStart?: boolean;
-  image?: string;
-  state: TurtleOptionsState; // added for Python frontend
-  mode?: "standard" | "logo";
-};
-
-type TurtleOptionsState = {
-  strokeStyle?: string;
-  fillStyle?: string;
-  lineCap?: string;
-  lineJoin?: string;
-  font?: string;
-  lineWidth?: number;
-  size?: number;
+type TurtleState = {
+  showTurtle: any;
+  penDown: boolean;
   speed: number;
-  heading: number; // added for Python frontend
-  hasMoved?: boolean; // added for Python frontend
-  x: number; // added for Python frontend
-  y: number; // added for Python frontend
+  heading: number;
+  x: number;
+  y: number;
+  mode?: "standard" | "logo";
 };
 
 var turtles = new Map<number, SimpleTurtle>();
@@ -229,7 +295,7 @@ const processTurtleCommand = (
   canvas: HTMLCanvasElement
 ) => {
   if (cmd.action === "stop") {
-    turtles.forEach((t) => t.stopTurtle());
+    turtles.forEach((t) => t.stop());
     commandCompleted();
     return undefined;
   }
@@ -252,10 +318,6 @@ const processTurtleCommand = (
     turtles.set(id, turtle);
   }
 
-  if (!turtle.options.state.hasMoved) {
-    turtle.options.state.hasMoved = true;
-    turtle.setSize(turtleMode === "logo" ? 0 : TURTLE_SIZE_DEFAULT);
-  }
   try {
     switch (cmd.action) {
       case "forward":
@@ -271,22 +333,22 @@ const processTurtleCommand = (
         turtle.left(cmd.value);
         break;
       case "setposition":
-        turtle.setPosition(
+        turtle.setposition(
           turtle.canvas.width / 2 + cmd.x,
           turtle.canvas.height / 2 - cmd.y
         );
         break;
       case "penup":
-        turtle.penUp();
+        turtle.penup();
         break;
       case "pendown":
-        turtle.penDown();
+        turtle.pendown();
         break;
       case "pensize":
-        turtle.setLineWidth(cmd.value);
+        turtle.pensize(cmd.value);
         break;
       case "setheading":
-        const turn = cmd.value - (turtle.options.state.heading || 0);
+        const turn = cmd.value - (turtle.state.heading || 0);
         if (turn !== 0) {
           if (turtleMode === "logo") {
             turtle.right(turn);
@@ -294,44 +356,41 @@ const processTurtleCommand = (
             // standard
             turtle.left(turn);
           }
-          turtle.options.state.heading = cmd.value;
+          turtle.state.heading = cmd.value;
         }
         break;
       case "hideturtle":
-        turtle.setSize(0);
+        turtle.hideTurtle();
         break;
       case "showturtle":
-        turtle.setSize(TURTLE_SIZE_DEFAULT); // default
+        turtle.showTurtle();
         break;
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.setStrokeStyle(cmd.value); // a named color as string or html code
+          turtle.pencolor(cmd.value); // a named color as string or html code
         } else {
-          turtle.setStrokeStyle(
+          turtle.pencolor(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
         break;
       case "circle":
-        turtle.arc(cmd.radius, cmd.extent, TURTLE_CIRCLE_CCW_DEFAULT); // set counterclockwise to true for standard mode
+        turtle.circle(cmd.radius, cmd.extent);
         turtleMode === "logo"
-          ? (turtle.options.state.heading =
-              (turtle.options.state.heading || 0) - cmd.extent)
-          : (turtle.options.state.heading =
-              (turtle.options.state.heading || 0) + cmd.extent);
+          ? (turtle.state.heading = (turtle.state.heading || 0) - cmd.extent)
+          : (turtle.state.heading = (turtle.state.heading || 0) + cmd.extent);
         break;
       case "begin_fill":
-        turtle.beginPath();
+        turtle.begin_fill();
         break;
       case "end_fill":
-        turtle.closePath();
-        turtle.fill();
+        turtle.end_fill();
         break;
       case "fillcolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.setFillStyle(cmd.value); // a named color as string or html code
+          turtle.fillcolor(cmd.value); // a named color as string or html code
         } else {
-          turtle.setFillStyle(
+          turtle.fillcolor(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
@@ -358,14 +417,15 @@ const processTurtleCommand = (
             speed_val = cmd.value === 0 ? 1 : cmd.value / 10;
         }
 
-        turtle.setSpeed(speed_val);
+        turtle.speed(speed_val);
         break;
       case "reset":
-        turtle.setSize(0);
+        turtle.hideTurtle();
         turtles.delete(id);
         commandCompleted();
     }
   } catch (err) {
+    // SHOULD FIND A WAY TO PASS ERROR BACK TO PYTHON THEN RAISE PYTHON EXCEPTION
     console.log("error processing canvas turtle action:");
     console.log(cmd);
     console.log(err);
@@ -380,19 +440,16 @@ const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
   let turtle = new SimpleTurtle(
     canvas,
     {
-      state: { size: 0, x: 0, y: 0, heading: 0, speed: 0.5 },
-      autoStart: false,
+      x: 0,
+      y: 0,
+      heading: turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0,
+      speed: TURTLE_SPEED_DEFAULT,
+      showTurtle: true,
+      penDown: true,
+      mode: turtleMode,
     },
     commandCompleted
   ) as SimpleTurtle;
-  turtle.options.mode = turtleMode;
-  turtle.options.state.heading =
-    turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0;
-  turtle.options.state.hasMoved = false;
-  turtle.setSize(0);
-  turtle.setLineWidth(TURTLE_WIDTH_DEFAULT);
-  turtle.setSpeed(TURTLE_SPEED_DEFAULT);
-  turtle.setStrokeStyle(TURTLE_STROKE_DEFAULT);
   return turtle;
 };
 
