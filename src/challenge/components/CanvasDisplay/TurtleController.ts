@@ -4,11 +4,17 @@ const TURTLE_WIDTH_DEFAULT = 1;
 const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_STROKE_DEFAULT = "BLACK";
 const TURTLE_LOGO_START_HEADING = 90;
+const TURTLE_IMG_PATH = "/static/img/turtle.png";
+const TURTLE_IMG_WIDTH = 30;
+const TURTLE_IMG_HEIGHT = 30;
 
 class SimpleTurtle {
+  imgTurtle: HTMLImageElement;
   canvas: HTMLCanvasElement;
   options: TurtleOptions;
   ctx: CanvasRenderingContext2D | null;
+  canvasBackground: HTMLCanvasElement;
+  ctxBackground: CanvasRenderingContext2D | null;
   completeCallback: () => void;
   alive: boolean = true;
 
@@ -17,14 +23,20 @@ class SimpleTurtle {
     options: TurtleOptions,
     onComplete: () => void
   ) {
+    this.imgTurtle = new Image();
+    this.imgTurtle.src = TURTLE_IMG_PATH;
     this.canvas = canvas;
     this.completeCallback = onComplete;
     this.ctx = canvas.getContext("2d");
+    this.canvasBackground = document.createElement("canvas");
+    this.canvasBackground.width = canvas.width;
+    this.canvasBackground.height = canvas.height;
+    this.ctxBackground = this.canvasBackground.getContext("2d");
     this.options = options;
     this.options.state.x = this.canvas.width / 2;
     this.options.state.y = this.canvas.height / 2;
-    if (this.ctx !== null) {
-      this.ctx.moveTo(this.options.state.x, this.options.state.y);
+    if (this.ctxBackground !== null) {
+      this.ctxBackground.moveTo(this.options.state.x, this.options.state.y);
     }
   }
 
@@ -35,7 +47,7 @@ class SimpleTurtle {
   }
 
   forward(distance: number) {
-    if (!this.ctx) {
+    if (!this.ctx || !this.ctxBackground) {
       this.completeCallback();
       return;
     }
@@ -47,61 +59,114 @@ class SimpleTurtle {
       this.options.state.y -
       distance * Math.sin((this.options.state.heading / 180) * Math.PI);
 
-    window.requestAnimationFrame(() => this.driveTo(new_x, new_y));
+    window.requestAnimationFrame(() =>
+      this.driveTo(new_x, new_y, this.options.state.heading)
+    );
   }
 
-  driveTo(x: number, y: number) {
-    if (!this.ctx) {
+  driveTo(x: number, y: number, heading: number) {
+    if (!this.ctx || !this.ctxBackground) {
       this.completeCallback();
       return;
     }
 
+    if (Math.abs(heading - this.options.state.heading) > 180) {
+      if (heading > this.options.state.heading) {
+        heading -= 360;
+      } else {
+        heading += 360;
+      }
+    }
+
+    let repeat = true;
     let ch_x = 0;
     let ch_y = 0;
+    let ch_h = 0;
 
     if (Math.abs(x - this.options.state.x) < 1) {
       if (Math.abs(y - this.options.state.y) < 1) {
         this.options.state.x = x;
         this.options.state.y = y;
-        this.completeCallback();
-        return;
+        if (Math.abs(this.options.state.heading - heading) < 3) {
+          this.options.state.heading = heading;
+          repeat = false;
+        } else {
+          ch_h = heading > this.options.state.heading ? 3 : -3;
+        }
+      } else {
+        ch_y = y > this.options.state.y ? 1 : -1;
       }
-      ch_y = y > this.options.state.y ? 1 : -1;
     } else {
       ch_x = x > this.options.state.x ? 1 : -1;
       ch_y = (y - this.options.state.y) / (x - this.options.state.x);
     }
 
-    this.ctx.beginPath();
-    this.ctx.moveTo(this.options.state.x, this.options.state.y);
-    this.ctx.lineTo(this.options.state.x + ch_x, this.options.state.y + ch_y);
-    this.ctx.stroke();
+    this.ctxBackground.beginPath();
+    this.ctxBackground.moveTo(this.options.state.x, this.options.state.y);
+    this.ctxBackground.lineTo(
+      this.options.state.x + ch_x,
+      this.options.state.y + ch_y
+    );
+    this.ctxBackground.stroke();
+
+    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.drawImage(
+      this.canvasBackground,
+      0,
+      0,
+      this.canvas.width,
+      this.canvas.height
+    );
+
+    // Set the origin to the current location, rotate the context, move the origin back
+    this.ctx.translate(this.options.state.x, this.options.state.y);
+    this.ctx.rotate(-1 * (Math.PI / 180) * this.options.state.heading);
+    this.ctx.translate(-this.options.state.x, -this.options.state.y);
+
+    // draw turtle rotated
+    this.ctx.drawImage(
+      this.imgTurtle,
+      this.options.state.x - TURTLE_IMG_WIDTH / 5,
+      this.options.state.y - TURTLE_IMG_HEIGHT / 2,
+      30,
+      30
+    );
+
+    // reset the rotation
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+
     this.options.state.x += ch_x;
     this.options.state.y += ch_y;
+    this.options.state.heading += ch_h;
 
-    window.requestAnimationFrame(() => {
-      if (this.alive) {
-        setTimeout(() => this.driveTo(x, y), 30 * this.options.state.speed);
-      }
-    });
+    if (repeat) {
+      window.requestAnimationFrame(() => {
+        if (this.alive) {
+          setTimeout(
+            () => this.driveTo(x, y, heading),
+            10 * this.options.state.speed
+          );
+        }
+      });
+    } else {
+      this.completeCallback();
+    }
   }
 
   back(distance: number) {}
-
-  right(angle: number) {
-    if (this.options.mode === "logo") {
-      angle = -1 * angle;
-    }
-    this.options.state.heading = (this.options.state.heading - angle) % 360;
-    this.completeCallback();
-  }
 
   left(angle: number) {
     if (this.options.mode === "logo") {
       angle = -1 * angle;
     }
-    this.options.state.heading = (this.options.state.heading + angle) % 360;
-    this.completeCallback();
+    const new_heading = (this.options.state.heading + angle) % 360;
+    window.requestAnimationFrame(() =>
+      this.driveTo(this.options.state.x, this.options.state.y, new_heading)
+    );
+  }
+
+  right(angle: number) {
+    this.left(-1 * angle);
   }
 
   penUp() {}
