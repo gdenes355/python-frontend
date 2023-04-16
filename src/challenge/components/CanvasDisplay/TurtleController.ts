@@ -3,6 +3,7 @@ const TURTLE_LOGO_START_HEADING = 90;
 const TURTLE_IMG_PATH = "/static/img/turtle.png";
 const TURTLE_IMG_WIDTH = 30;
 const TURTLE_IMG_HEIGHT = 30;
+const TURTLE_UNIT_MOVE_STEP = 6;
 
 class SimpleTurtle {
   imgTurtle: HTMLImageElement;
@@ -56,62 +57,17 @@ class SimpleTurtle {
     );
   }
 
-  driveto(
-    x: number,
-    y: number,
-    heading: number,
-    completeOnEnd: boolean = true
-  ) {
+  // private method
+  #drawLineTo(x: number, y: number) {
     if (!this.ctx || !this.ctxBackground) {
       this.completeCallback();
       return;
     }
 
-    // hmmm should perhaps pay attention to left/right rather than most efficient turn??
-    if (Math.abs(heading - this.state.heading) > 180) {
-      if (heading > this.state.heading) {
-        heading -= 360;
-      } else {
-        heading += 360;
-      }
-    }
-
-    let repeatAngle = true;
-    let repeatLoc = true;
-
-    let ch_x = 0;
-    let ch_y = 0;
-    let ch_h = 0;
-
-    // set heading first if needed
-    if (Math.abs(this.state.heading - heading) < 3) {
-      this.state.heading = heading;
-      repeatAngle = false;
-    } else {
-      ch_h = heading > this.state.heading ? 3 : -3;
-    }
-
-    // find vector between start/end
-    const ch_x_reqd = x - this.state.x;
-    const ch_y_reqd = y - this.state.y;
-
-    const tot_dist = Math.sqrt(ch_x_reqd * ch_x_reqd + ch_y_reqd * ch_y_reqd);
-    const unit_dist = 6 * this.state.speed;
-
-    if (tot_dist < unit_dist) {
-      // if we're close enough, just go there
-      ch_x = ch_x_reqd;
-      ch_y = ch_y_reqd;
-      repeatLoc = false;
-    } else {
-      ch_x = (ch_x_reqd / tot_dist) * unit_dist;
-      ch_y = (ch_y_reqd / tot_dist) * unit_dist;
-    }
-
     this.ctxBackground.beginPath();
     this.ctxBackground.moveTo(this.state.x, this.state.y);
     if (this.state.penDown) {
-      this.ctxBackground.lineTo(this.state.x + ch_x, this.state.y + ch_y);
+      this.ctxBackground.lineTo(x, y);
       this.ctxBackground.stroke();
     }
 
@@ -141,11 +97,83 @@ class SimpleTurtle {
 
       // reset the rotation
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-
-      this.state.x += ch_x;
-      this.state.y += ch_y;
-      this.state.heading += ch_h;
     }
+  }
+
+  driveAlong(arrLocs: Array<[number, number, number]>, completeOnEnd = true) {
+    if (arrLocs.length === 0) {
+      this.completeCallback();
+      return;
+    }
+
+    const [x, y, h] = arrLocs.shift()!;
+    this.state.heading = h;
+    this.#drawLineTo(x, y);
+    this.state.x = x;
+    this.state.y = y;
+
+    window.requestAnimationFrame(() => {
+      if (this.alive) {
+        setTimeout(() => this.driveAlong(arrLocs), 10 * this.state.speed);
+      } else if (completeOnEnd) {
+        this.completeCallback();
+      }
+    });
+  }
+
+  driveto(
+    x: number,
+    y: number,
+    heading: number,
+    completeOnEnd: boolean = true
+  ) {
+    // hmmm should perhaps pay attention to left/right rather than most efficient turn??
+    if (Math.abs(heading - this.state.heading) > 180) {
+      if (heading > this.state.heading) {
+        heading -= 360;
+      } else {
+        heading += 360;
+      }
+    }
+
+    let repeatAngle = true;
+    let repeatLoc = true;
+
+    let ch_x = 0;
+    let ch_y = 0;
+    let ch_h = 0;
+
+    // set heading first if needed
+    if (Math.abs(this.state.heading - heading) < 3) {
+      this.state.heading = heading;
+      repeatAngle = false;
+    } else {
+      ch_h = heading > this.state.heading ? 3 : -3;
+    }
+
+    // find vector between start/end
+    const ch_x_reqd = x - this.state.x;
+    const ch_y_reqd = y - this.state.y;
+
+    const tot_dist = Math.sqrt(ch_x_reqd * ch_x_reqd + ch_y_reqd * ch_y_reqd);
+    const unit_dist = TURTLE_UNIT_MOVE_STEP * this.state.speed;
+
+    if (tot_dist < unit_dist) {
+      // if we're close enough, just go there
+      ch_x = ch_x_reqd;
+      ch_y = ch_y_reqd;
+      repeatLoc = false;
+    } else {
+      ch_x = (ch_x_reqd / tot_dist) * unit_dist;
+      ch_y = (ch_y_reqd / tot_dist) * unit_dist;
+    }
+
+    // draw line
+    this.#drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
+
+    this.state.x += ch_x;
+    this.state.y += ch_y;
+    this.state.heading += ch_h;
 
     if (repeatAngle || repeatLoc) {
       window.requestAnimationFrame(() => {
@@ -163,9 +191,6 @@ class SimpleTurtle {
   }
 
   left(angle: number) {
-    if (this.state.mode === "logo") {
-      angle = -1 * angle;
-    }
     const new_heading = (this.state.heading + angle) % 360;
     window.requestAnimationFrame(() =>
       this.driveto(this.state.x, this.state.y, new_heading)
@@ -177,6 +202,9 @@ class SimpleTurtle {
   }
 
   setheading(angle: number) {
+    if (this.state.mode === "logo") {
+      angle = 90 - angle;
+    }
     window.requestAnimationFrame(() =>
       this.driveto(this.state.x, this.state.y, angle)
     );
@@ -239,24 +267,32 @@ class SimpleTurtle {
     this.completeCallback();
   }
 
-  circle(radius: number, extent: number) {
+  circle(radius: number, extent: number = 360) {
     // counter clockwise in both modes (python compliant)
-    // draw circle with given radius given centre extent to left of current pos
+    // draw circle with given radius
+    // the centre is radius in a dist perpendicular left to the current heading
+    const radHeading = this.state.heading + 90;
+    const centreX =
+      this.state.x + radius * Math.cos((radHeading * Math.PI) / 180);
+    const centreY =
+      this.state.y - radius * Math.sin((radHeading * Math.PI) / 180);
 
-    this.completeCallback();
+    const circDist = 2 * Math.PI * radius;
+    const steps = Math.floor(circDist / TURTLE_UNIT_MOVE_STEP);
+    const arrLocs = new Array(steps);
 
-    /* ISSUE: this is not working, need to fix - need to prevent next driveto until prev driveto is complete - use a promise?
-    const centreX = this.state.x - radius;
-    const centreY = this.state.y;
-    const startAngle = (this.state.heading + 90) * (Math.PI / 180);
-    const endAngle = (this.state.heading + 90 + extent) * (Math.PI / 180);
-    for (let i = 0; i < 30; i++) {
-      const angle = startAngle + (endAngle - startAngle) * (i / 10);
-      const x = centreX + radius * Math.cos(angle);
-      const y = centreY + radius * Math.sin(angle);
-      this.driveto(x, y, this.state.heading);
+    for (let i = 0; i < steps; i++) {
+      const angle = extent * ((i + 1) / steps);
+      const x =
+        centreX +
+        radius * Math.cos(((180 - angle - radHeading) * Math.PI) / 180);
+      const y =
+        centreY +
+        radius * Math.sin(((180 - angle - radHeading) * Math.PI) / 180);
+      arrLocs[i] = [x, y, this.state.heading + angle];
     }
-    */
+
+    this.driveAlong(arrLocs);
   }
 }
 
