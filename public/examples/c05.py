@@ -1,12 +1,14 @@
 import turtle
 t = turtle.Turtle()
 
-t.pencolor((174,68,23)) # use rgb tuple or named colour
 t.pensize(3)
 
-colors = ["gold", "purple", "green"]
+# use named colour or colour codes as strings e.g. "#ff0000" or colour tuple e.g. (255, 0, 0)
+colors = ["gold", "purple", "00ff00"]
 
+t.penup()
 t.setposition(-200, 0)
+t.pendown()
 
 for idx, color in enumerate(colors):
 

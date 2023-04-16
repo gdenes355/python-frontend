@@ -1,9 +1,10 @@
 const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_LOGO_START_HEADING = 90;
 const TURTLE_IMG_PATH = "/static/img/turtle.png";
-const TURTLE_IMG_WIDTH = 30;
-const TURTLE_IMG_HEIGHT = 30;
+const TURTLE_IMG_WIDTH = 16;
+const TURTLE_IMG_HEIGHT = 16;
 const TURTLE_UNIT_MOVE_STEP = 6;
+const TURTLE_TIME_PAUSE = 40;
 
 class SimpleTurtle {
   imgTurtle: HTMLImageElement;
@@ -14,6 +15,7 @@ class SimpleTurtle {
   ctxBackground: CanvasRenderingContext2D | null;
   completeCallback: () => void;
   alive: boolean = true;
+  fillPath: Path2D | null;
 
   constructor(
     canvas: HTMLCanvasElement,
@@ -29,6 +31,7 @@ class SimpleTurtle {
     this.canvasBackground.width = canvas.width;
     this.canvasBackground.height = canvas.height;
     this.ctxBackground = this.canvasBackground.getContext("2d");
+    this.fillPath = null;
     this.state = state;
     this.state.x = this.canvas.width / 2;
     this.state.y = this.canvas.height / 2;
@@ -39,7 +42,7 @@ class SimpleTurtle {
 
   setposition(x: number, y: number) {
     // drives to required location but doesn't change the current heading (python compliant)
-    window.requestAnimationFrame(() => this.driveto(x, y, this.state.heading));
+    window.requestAnimationFrame(() => this.#driveto(x, y, this.state.heading));
   }
 
   stop() {
@@ -53,7 +56,7 @@ class SimpleTurtle {
       this.state.y - distance * Math.sin((this.state.heading / 180) * Math.PI);
 
     window.requestAnimationFrame(() =>
-      this.driveto(new_x, new_y, this.state.heading)
+      this.#driveto(new_x, new_y, this.state.heading)
     );
   }
 
@@ -80,6 +83,10 @@ class SimpleTurtle {
       this.canvas.height
     );
 
+    // update state before drawing turtle
+    this.state.x = x;
+    this.state.y = y;
+
     if (this.state.showTurtle) {
       // Set the origin to the current location, rotate the context, move the origin back
       this.ctx.translate(this.state.x, this.state.y);
@@ -89,39 +96,52 @@ class SimpleTurtle {
       // draw turtle rotated
       this.ctx.drawImage(
         this.imgTurtle,
-        this.state.x - TURTLE_IMG_WIDTH / 5,
+        this.state.x - TURTLE_IMG_WIDTH,
         this.state.y - TURTLE_IMG_HEIGHT / 2,
-        30,
-        30
+        TURTLE_IMG_WIDTH,
+        TURTLE_IMG_HEIGHT
       );
 
       // reset the rotation
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
+
+    if (this.fillPath !== null) {
+      this.fillPath.lineTo(x, y);
+    }
   }
 
-  driveAlong(arrLocs: Array<[number, number, number]>, completeOnEnd = true) {
+  #driveAlong(arrLocs: Array<[number, number, number]>, completeOnEnd = true) {
     if (arrLocs.length === 0) {
-      this.completeCallback();
+      if (completeOnEnd) {
+        this.completeCallback();
+      }
       return;
     }
 
     const [x, y, h] = arrLocs.shift()!;
     this.state.heading = h;
     this.#drawLineTo(x, y);
-    this.state.x = x;
-    this.state.y = y;
 
-    window.requestAnimationFrame(() => {
-      if (this.alive) {
-        setTimeout(() => this.driveAlong(arrLocs), 10 * this.state.speed);
-      } else if (completeOnEnd) {
+    if (this.alive) {
+      if (this.state.speed === -1) {
+        this.#driveAlong(arrLocs, completeOnEnd);
+      } else {
+        window.requestAnimationFrame(() => {
+          setTimeout(
+            () => this.#driveAlong(arrLocs, completeOnEnd),
+            TURTLE_TIME_PAUSE * this.state.speed
+          );
+        });
+      }
+    } else {
+      if (completeOnEnd) {
         this.completeCallback();
       }
-    });
+    }
   }
 
-  driveto(
+  #driveto(
     x: number,
     y: number,
     heading: number,
@@ -156,31 +176,32 @@ class SimpleTurtle {
     const ch_y_reqd = y - this.state.y;
 
     const tot_dist = Math.sqrt(ch_x_reqd * ch_x_reqd + ch_y_reqd * ch_y_reqd);
-    const unit_dist = TURTLE_UNIT_MOVE_STEP * this.state.speed;
 
-    if (tot_dist < unit_dist) {
+    if (tot_dist < TURTLE_UNIT_MOVE_STEP) {
       // if we're close enough, just go there
       ch_x = ch_x_reqd;
       ch_y = ch_y_reqd;
       repeatLoc = false;
     } else {
-      ch_x = (ch_x_reqd / tot_dist) * unit_dist;
-      ch_y = (ch_y_reqd / tot_dist) * unit_dist;
+      ch_x = (ch_x_reqd / tot_dist) * TURTLE_UNIT_MOVE_STEP;
+      ch_y = (ch_y_reqd / tot_dist) * TURTLE_UNIT_MOVE_STEP;
     }
 
     // draw line
+    this.state.heading += ch_h;
     this.#drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
 
-    this.state.x += ch_x;
-    this.state.y += ch_y;
-    this.state.heading += ch_h;
-
-    if (repeatAngle || repeatLoc) {
-      window.requestAnimationFrame(() => {
-        if (this.alive) {
-          setTimeout(() => this.driveto(x, y, heading), 10 * this.state.speed);
-        }
-      });
+    if (this.alive && (repeatAngle || repeatLoc)) {
+      if (this.state.speed === -1) {
+        this.#driveto(x, y, heading, completeOnEnd);
+      } else {
+        window.requestAnimationFrame(() => {
+          setTimeout(
+            () => this.#driveto(x, y, heading, completeOnEnd),
+            TURTLE_TIME_PAUSE * this.state.speed
+          );
+        });
+      }
     } else if (completeOnEnd) {
       this.completeCallback();
     }
@@ -193,7 +214,7 @@ class SimpleTurtle {
   left(angle: number) {
     const new_heading = (this.state.heading + angle) % 360;
     window.requestAnimationFrame(() =>
-      this.driveto(this.state.x, this.state.y, new_heading)
+      this.#driveto(this.state.x, this.state.y, new_heading)
     );
   }
 
@@ -206,7 +227,7 @@ class SimpleTurtle {
       angle = 90 - angle;
     }
     window.requestAnimationFrame(() =>
-      this.driveto(this.state.x, this.state.y, angle)
+      this.#driveto(this.state.x, this.state.y, angle)
     );
   }
 
@@ -229,12 +250,12 @@ class SimpleTurtle {
 
   showTurtle() {
     this.state.showTurtle = true;
-    this.driveto(this.state.x, this.state.y, this.state.heading);
+    this.#driveto(this.state.x, this.state.y, this.state.heading);
   }
 
   hideTurtle() {
     this.state.showTurtle = false;
-    this.driveto(this.state.x, this.state.y, this.state.heading);
+    this.#driveto(this.state.x, this.state.y, this.state.heading);
   }
 
   speed(speed: number) {
@@ -257,12 +278,16 @@ class SimpleTurtle {
   }
 
   begin_fill() {
+    this.fillPath = new Path2D();
+    this.fillPath.moveTo(this.state.x, this.state.y);
     this.completeCallback();
   }
 
   end_fill() {
-    if (this.ctxBackground) {
-      this.ctxBackground.fill();
+    if (this.ctxBackground && this.fillPath !== null) {
+      this.ctxBackground.fill(this.fillPath);
+      this.fillPath = null;
+      this.#driveto(this.state.x, this.state.y, this.state.heading);
     }
     this.completeCallback();
   }
@@ -292,7 +317,7 @@ class SimpleTurtle {
       arrLocs[i] = [x, y, this.state.heading + angle];
     }
 
-    this.driveAlong(arrLocs);
+    this.#driveAlong(arrLocs);
   }
 }
 
@@ -435,22 +460,22 @@ const processTurtleCommand = (
         let speed_val = 0.5;
         switch (cmd.value) {
           case "fastest":
-            speed_val = 0.9;
+            speed_val = -1;
             break;
           case "fast":
-            speed_val = 0.75;
+            speed_val = 0.25;
             break;
           case "normal":
             speed_val = 0.5;
             break;
           case "slow":
-            speed_val = 0.25;
+            speed_val = 0.75;
             break;
           case "slowest":
-            speed_val = 0;
+            speed_val = 1;
             break;
           default:
-            speed_val = cmd.value === 0 ? 1 : cmd.value / 10;
+            speed_val = cmd.value === 0 ? -1 : 1 - cmd.value / 10;
         }
 
         turtle.speed(speed_val);

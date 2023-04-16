@@ -102,11 +102,31 @@ class ChallengeContextClass {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
-        this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
-        this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
-          data.id,
-          data.msg
-        );
+
+        new Promise((resolve) => {
+          let tryCount = 0;
+          const delayCheck = () => {
+            if (
+              this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS) &&
+              this.challenge.canvasDisplayRef?.current
+            ) {
+              resolve(true);
+            } else {
+              tryCount++;
+              if (tryCount > 10) {
+                resolve(false);
+              } else {
+                setTimeout(delayCheck, 100);
+              }
+            }
+          };
+          delayCheck();
+        }).then((result) => {
+          this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
+            data.id,
+            data.msg
+          );
+        });
       }
     },
     cls: () => {

@@ -371,6 +371,7 @@ step_into = False
 with open("turtle.py", "w") as file:
     file.write('''
 import js
+import struct
 from pyodide.ffi import to_js
 import json as J
 import inspect
@@ -425,15 +426,26 @@ class Turtle:
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, color):self.send({_A:"pencolor", _V:color})
+    def pencolor(self, color, color2=-1, color3=-1):
+        if color2 == -1 and color3 == -1:
+            self.send({_A:"pencolor", _V:color})
+        else:
+            rgb = (color,color2,color3)
+            self.send({_A:"pencolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
-    def color(self, color):self.pencolor(color)
+    def color(self, color, color2=-1, color3=-1):
+        self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
     def width(self, size):self.pensize(size)
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, color):self.send({_A:"fillcolor", _V:color})
+    def fillcolor(self, color, color2=-1, color3=-1):
+        if color2 == -1 and color3 == -1:
+            self.send({_A:"fillcolor", _V:color})
+        else:
+            rgb = (color,color2,color3)
+            self.send({_A:"fillcolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
