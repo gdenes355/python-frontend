@@ -24,11 +24,15 @@ const FolderPicker = (props: FolderPickerProps) => {
     <Card sx={{ maxWidth: 345, m: 5 }}>
       <Box>
         <CardContent>
-          Pick a folder on your computer with a book.json file in it
+          {folder
+            ? folder.name
+            : "Pick a folder on your computer with a book.json file in it"}
         </CardContent>
       </Box>
       <CardActions>
-        <Button onClick={() => selectClicked()}>Select</Button>
+        <Button onClick={() => selectClicked()}>
+          {folder ? "Change" : "Select"}
+        </Button>
         <Button onClick={() => openClicked()} disabled={!folder}>
           Open
         </Button>

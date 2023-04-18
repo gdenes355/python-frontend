@@ -1,6 +1,8 @@
 import React from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent, Grid, Paper } from "@mui/material";
+import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
+import CachedIcon from "@mui/icons-material/Cached";
+
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
@@ -51,6 +53,8 @@ type ChallengeProps = IChallengeProps & {
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
   onBookUploaded: (file: File, edit: boolean) => void;
+  canReloadBook?: boolean;
+  onBookReloadRequested: () => void;
 };
 
 class Challenge
@@ -278,6 +282,19 @@ class Challenge
                   />
                 }
               >
+                {this.props.canReloadBook ? (
+                  <Grid item>
+                    <IconButton
+                      onClick={() => {
+                        this.chContext.actions["fetch-code"](true);
+                        this.chContext.actions["fetch-guide"]();
+                        this.props.onBookReloadRequested();
+                      }}
+                    >
+                      <CachedIcon />
+                    </IconButton>
+                  </Grid>
+                ) : undefined}
                 {this.props.authContext.token ? (
                   <Grid item>
                     <SessionWsStateIndicator />

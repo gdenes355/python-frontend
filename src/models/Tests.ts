@@ -1,6 +1,13 @@
+type AdvancedOutRequirement = {
+  pattern: string;
+  typ?: "+" | "-" | "c+" | "c-";
+  ignore?: "" | "w" | "c" | "p" | "wc" | "wp" | "cp" | "wcp";
+  count?: number;
+};
+
 type TestCase = {
-  in: string;
-  out: string;
+  in: string | Array<string | number>;
+  out: string | Array<AdvancedOutRequirement>;
 };
 
 type TestCases = Array<TestCase>;
@@ -8,9 +15,10 @@ type TestCases = Array<TestCase>;
 type TestResult = {
   outcome: boolean;
   err?: string;
-  expected?: string;
+  expected?: string | Array<AdvancedOutRequirement>;
+  criteriaOutcomes?: Array<boolean>;
   actual?: string;
-  ins?: string;
+  ins?: string | Array<string | number>;
 };
 
 type TestResults = Array<TestResult>;

@@ -8,9 +8,12 @@ import os
 import json
 import re
 from collections import deque
-from pyodide import to_js
+from pyodide.ffi import to_js
 
 print(sys.version)
+
+class NotEnoughInputsError(Exception):
+    pass
 
 class DebugAudio:
     def load(self, source):
@@ -361,7 +364,6 @@ test_output = TestOutput()
 
 active_breakpoints = set()
 test_inputs = []
-test_outputs = []
 step_into = False
 
 # setup turtle library
@@ -369,7 +371,7 @@ step_into = False
 with open("turtle.py", "w") as file:
     file.write('''
 import js
-from pyodide import to_js
+from pyodide.ffi import to_js
 import json as J
 import inspect
 _A = "action"
@@ -455,7 +457,6 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
 
 def pyexec(code, expected_input, expected_output):
     global test_inputs
-    global test_outputs
     sys.stdout = test_output
     sys.stderr = test_output
     sys.stdctx = debug_context
@@ -465,10 +466,16 @@ def pyexec(code, expected_input, expected_output):
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
-
-    test_inputs = expected_input.split("\n") if expected_input else []
-    test_outputs = expected_output
-
+    
+    # prepare inputs
+    if not expected_input:
+        test_inputs = []  # no input for this test case
+    elif isinstance(expected_input, str):
+        test_inputs = expected_input.split("\n")  # string input; split it on new lines
+    else:
+        test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
+    
+    # run test
     test_output.clear()
     parsed_stmts = ast.parse(code)
     try:
@@ -476,27 +483,74 @@ def pyexec(code, expected_input, expected_output):
                        'traceback': traceback, 'input': test_input}
         exec(compile(parsed_stmts, filename="YourPythonCode.py",
              mode="exec"), global_vars)
+    except NotEnoughInputsError:
+        return js.Object.fromEntries(to_js({"err": "You've requested too many inputs", "ins": expected_input}))
     except Exception as e:
         return js.Object.fromEntries(to_js({"err": "Runtime error", "ins": expected_input}))
 
     if len(test_inputs) == 1 and test_inputs[0] == '':
         test_inputs = []  # if we have one last blank input stuck in the queue, just ignore it
 
-    # construct matching regex
-    expected_output = re.escape(test_outputs)  # initially escape everything
-    expected_output = expected_output.replace(
-        "\\\n", r"\n").replace("\.\*", ".*")  # restore \n and .*
-    expected_output += r"\n*$"  # allow any blank new lines before the end
-    js.console.log(str(expected_output))
-    js.console.log(str(test_output.buffer))
-    if not re.match(expected_output, test_output.buffer):
-        js.console.log(str(test_outputs), "!=", str(test_output.buffer))
-        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(test_outputs), "actual": str(test_output.buffer), "ins": expected_input}))
-    elif len(test_inputs) > 0:
-        js.console.log("inputs unconsumed: " + str(test_inputs))
+    # start output validation
+    if len(test_inputs) > 0:
         return js.Object.fromEntries(to_js({"outcome": False, "err": "Unconsumed input", "ins": expected_input}))
+
+    original_expected_output = expected_output
+
+    if isinstance(expected_output, str):
+        # Simple case: just a string. We respect \n and .* as special characters and ignore \n* at the end
+        expected_output = re.escape(expected_output).replace("\\\n", r"\n").replace("\.\*", ".*") + r"\n*$"        
+        if not re.match(expected_output, test_output.buffer):
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": str(original_expected_output), "actual": str(test_output.buffer), "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
     else:
-        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+        # Must be a list of requirements
+        criteria_outcomes = []
+        for requirement in expected_output:
+            requirement = requirement.as_object_map()
+            pattern = requirement["pattern"]  # the pattern to match. Must be present
+            typ = requirement.get("typ", "+")
+
+            test_string = test_output.buffer if typ[0] != "c" else code
+
+            ignore = requirement.get("ignore", "")
+            expected_count = int(requirement.get("count", -1))
+
+            # first, deal with the tricky ignore cases  w: whitespace, c: case, p: punctuation
+            flags = re.IGNORECASE if "c" in ignore else 0
+            if "w" in ignore:  
+                # no lib support for this, so we just strip whitespaces from both the actual and the expected
+                # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
+                # But then really they shouldn't write a regex that tests for whitespace and ask us to ignore white space
+                test_string = re.sub(r"\s+", "", test_string)
+                pattern = re.sub(r"\s+", "", pattern)
+            
+            if "p" in ignore:
+                # similar to whitespace, this is a bit of a hack
+                # remove all punctuations from the actual
+                test_string = re.sub(r"[^\w*\s]", "", test_string)
+                # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
+                # This is not a perfect solution, but it's good enough for most cases
+                pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
+
+            actual_count = len(re.findall(pattern, test_string, flags))
+            outcome = True
+            if "+" in typ:
+                if actual_count == 0 or ((expected_count != -1) and (expected_count != actual_count)):
+                    outcome = False
+            elif "-" in typ:
+                if actual_count > 0 or (expected_count != -1 and expected_count == actual_count):
+                    outcome = False
+            criteria_outcomes.append(outcome)
+        # Yay, We got this far without failing!
+        if False in criteria_outcomes:
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": test_output.buffer, "ins": expected_input}))
+        else:
+            return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+
+                    
+
 
 
 def pydebug(code, breakpoints):
@@ -590,6 +644,8 @@ def debug_input(prompt=""):
 def test_input(prompt=""):
     if prompt:
         print(prompt, end="")
+    if len(test_inputs) == 0:
+        raise NotEnoughInputsError()
     return test_inputs.pop(0)
 
 # cls

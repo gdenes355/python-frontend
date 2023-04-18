@@ -39,7 +39,7 @@ type PathsState = {
   pyPath: string | null;
 };
 
-type EditState = "cloning" | "editing" | "preview" | undefined;
+type EditState = "cloning" | "editing" | "preview" | "localpreview" | undefined;
 
 const Book = (props: BookProps) => {
   const authContext = useContext(SessionContext);
@@ -173,7 +173,11 @@ const Book = (props: BookProps) => {
       return;
     }
 
-    if (editParam === "editing" || editParam === "preview") {
+    if (
+      editParam === "editing" ||
+      editParam === "preview" ||
+      editParam === "localpreview"
+    ) {
       setEditState(editParam);
     }
   }, [
@@ -312,7 +316,11 @@ const Book = (props: BookProps) => {
         </Box>
       );
     } else if (activeNode && paths.guidePath && paths.pyPath) {
-      if (!editState || editState === "preview") {
+      if (
+        !editState ||
+        editState === "preview" ||
+        editState === "localpreview"
+      ) {
         return (
           <React.Fragment>
             <ErrorBounday>
@@ -332,6 +340,8 @@ const Book = (props: BookProps) => {
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
                 authContext={authContext}
+                canReloadBook={editState === "localpreview"}
+                onBookReloadRequested={() => requestBookReload()}
               />
               <BookDrawer
                 bookRoot={rootNode}

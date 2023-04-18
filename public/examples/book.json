@@ -34,6 +34,25 @@
             ]
         },
         {
+            "id": "d6824412-d643-4f1f-8aa5-e257e5a4fa80",
+            "name": "Advanced testing",
+            "guide": "advanced_tests.md",
+            "py": "advanced_tests.py",
+            "tests": [
+                {
+                    "in": [4, 5],
+                    "out": [
+                        {"pattern":"Enter    a;", "ignore":"wcp"},
+                        {"pattern":"Enter b:"},
+                        {"typ":"-", "pattern":"Hello 3"},
+                        {"typ":"+", "pattern":"Hello \\d", "count":"2", "ignore":"w"},
+                        {"pattern": "sum.*9", "ignore": "wc"},
+                        {"typ": "c+", "pattern": "int\\(input\\(", "count": "2", "ignore": "w"}
+                    ]
+                }
+            ]
+        },
+        {
             "id": "a071846a-8f41-4047-aef1-f7370affeffb",
             "name": "Test with wildcard",
             "guide": "wildcard.md",

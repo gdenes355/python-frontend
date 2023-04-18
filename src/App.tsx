@@ -20,6 +20,7 @@ import AuthCallbackPage from "./auth/AuthCallbackPage";
 import FolderPicker from "./components/FolderPicker";
 import AdminWrapper from "./auth/AdminWrapper";
 import TeacherAdmin from "./teacher/TeacherAdmin";
+import BookEditorFrame from "./vscode-frame/BookEditorFrame";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -38,7 +39,7 @@ const AppContainer = () => {
 
   const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
     setLocalFolder(folder);
-    navigate({ search: "?bk=book.json" });
+    navigate({ search: "?bk=book.json&edit=localpreview" });
   };
 
   useEffect(() => {
@@ -109,6 +110,7 @@ export default function App() {
                     </AdminWrapper>
                   }
                 />
+                <Route path="book-editor-frame" element={<BookEditorFrame />} />
                 <Route path="*" element={<AppContainer />} />
               </Routes>
             </BrowserRouter>
