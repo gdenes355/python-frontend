@@ -103,6 +103,10 @@ class ChallengeEditor
     100
   );
 
+  canvasHideCallback = () => {
+    this.setState({ typ: ChallengeTypes.TYP_PY });
+  };
+
   state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,
@@ -466,7 +470,12 @@ class ChallengeEditor
                       }
                       canvas={
                         this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                          <CanvasDisplay ref={this.canvasDisplayRef} initialWidth={500} initialHeight={400} />
+                          <CanvasDisplay
+                            ref={this.canvasDisplayRef}
+                            initialWidth={500}
+                            initialHeight={400}
+                            onHide={() => this.canvasHideCallback()}
+                          />
                         ) : undefined
                       }
                       json={

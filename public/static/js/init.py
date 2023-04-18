@@ -371,39 +371,55 @@ step_into = False
 with open("turtle.py", "w") as file:
     file.write('''
 import js
+import struct
 from pyodide.ffi import to_js
 import json as J
 import inspect
 _A = "action"
 _V = "value"
 _idc = 0
+colorModeMultiplier = 1
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "id":-1, "msg": J.dumps(msg)})
-def done():pass # no need to do anything
+def done(): 
+    msg = {_A:"done"}
+    post_message({"cmd": "turtle", "msg": J.dumps(msg)})
 def Screen():return ScreenStub()
-
+def updateColorMode(mode):
+    global colorModeMultiplier
+    if mode == 1.0:
+        colorModeMultiplier = 255
+    elif mode == 255:
+        colorModeMultiplier = 1
+    else:
+        raise ValueError("Invalid color mode should be 1.0 or 255")
 class ScreenStub:
     def setup(self, width, height):
         arg = {"cmd": "turtle"}
         arg["msg"] = J.dumps({_A:"setup", "width":width, "height":height})
         post_message(arg)
     def colormode(self, mode):
-        arg = {"cmd": "turtle"}
-        arg["msg"] = J.dumps({_A:"colormode", _V:mode})
-        post_message(arg)    
-    
+        updateColorMode(mode)
+
 class Turtle:
+    def synchronise(self, typ):
+        x = js.XMLHttpRequest.new()
+        x.open('get', typ, False)
+        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
+        x.send()
+        return x.response
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
-      post_message(arg)  
+      post_message(arg)
+      resp = J.loads(self.synchronise('/@turtle@/req.js'))
+      return resp.get("completed")
     def __init__(self):
       global _idc
       self.__id=_idc;_idc+=1;
-      self.send({_A:"reset"})
     def forward(self, dist):self.send({_A:"forward", _V:dist})
     def fd(self, dist):self.forward(dist)
     def setposition(self, x, y):self.send({_A:"setposition", "x":x, "y":y})
@@ -423,30 +439,33 @@ class Turtle:
     def pd(self):self.pendown()
     def down(self):self.pendown()
     def speed(self, speed_value):self.send({_A:"speed", _V:speed_value})
-    def reset(self):self.send({_A:"reset"})
+    def reset(self):self.send({_A:"reset", _V:"sync"})
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, *args):
-        if len(args) == 3: 
-            col = (args[0], args[1], args[2])
+    def colormode(self, mode):updateColorMode(mode)
+    def __sendColor(self, color, color2=-1, color3=-1, prefix="pen"):
+        if color2 == color3 == -1 and isinstance(color, str):
+            self.send({_A:prefix+"color", _V:color})
         else:
-            col = args[0]
-        self.send({_A:"pencolor", _V:col})
+            if isinstance(color, tuple) or isinstance(color, list):
+                color2 = color[1]
+                color3 = color[2]
+                color = color[0]
+            rgb = (color*colorModeMultiplier, color2*colorModeMultiplier, color3*colorModeMultiplier)
+            self.send({_A:prefix+"color", _V:"#" + struct.pack('BBB',*rgb).hex()})
+    def pencolor(self, color, color2=-1, color3=-1):
+        self.__sendColor(color, color2, color3, "pen")
+    def fillcolor(self, color, color2=-1, color3=-1):
+        self.__sendColor(color, color2, color3, "fill")
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
-    def color(self, *args):self.pencolor(*args)
-    def colormode(self, mode):self.send({_A:"colormode", _V:mode})
+    def color(self, color, color2=-1, color3=-1):
+        self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
     def width(self, size):self.pensize(size)
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, *args):
-        if len(args) == 3: 
-            col = (args[0], args[1], args[2])
-        else:
-            col = args[0]
-        self.send({_A:"fillcolor", _V:col})
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
@@ -569,7 +588,9 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
+    # ensures that canvas is always refreshed not just the mode
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -596,6 +617,7 @@ def pydebug(code, breakpoints):
                              for i in range(len(node.body))])
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
+
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
     sys.stdout = debug_output
@@ -607,8 +629,11 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
+
+    # ensures that canvas is always refreshed not just the mode
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
-    exec(code, global_vars)    
+
+    exec(code, global_vars)
 
 
 def update_breakpoints(breakpoints):

@@ -59,9 +59,10 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     for (let i = 0; i < panes.length; i++) {
       if (panes[i].typ === pane) {
         tabbedViewRef.current?.requestPane(i);
-        return;
+        return true;
       }
     }
+    return false;
   };
 
   useImperativeHandle(ref, () => ({ focusPane }));

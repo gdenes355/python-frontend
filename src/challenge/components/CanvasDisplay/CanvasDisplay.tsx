@@ -1,14 +1,19 @@
-import React, { useContext, useRef, useImperativeHandle, useState} from "react";
+import React, {
+  useContext,
+  useRef,
+  useImperativeHandle,
+  useState,
+} from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
-import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
   turtleClear: () => void;
   runTurtleCommand: (id: number, msg: string) => void;
+  runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
@@ -18,33 +23,55 @@ type CanvasDisplayProps = {
   onKeyUp?: React.KeyboardEventHandler;
   initialWidth: number;
   initialHeight: number;
+  onHide: () => void;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
+    let turtleUsed = false;
+    let turtleRetained = false;
 
-    const [dimensions, setDimensions] = useState({ canvasWidth: props.initialWidth, canvasHeight: props.initialHeight });
+    const [dimensions, setDimensions] = useState({
+      canvasWidth: props.initialWidth,
+      canvasHeight: props.initialHeight,
+    });
 
-    const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
+    const runTurtleClearup = () => {
+      if (turtleUsed && !turtleRetained) {
+        props.onHide();
+      }
+      turtleUsed = false;
+      turtleRetained = false;
+    };
 
     const turtleClear = () => {
-      turtleInstructionQueue.current?.reset();
       clearTurtle(canvasEl.current as HTMLCanvasElement);
+      turtleUsed = false;
+      turtleRetained = false;
     };
 
     const runTurtleCommand = (id: number, msg: string) => {
+      turtleUsed = true;
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "setup") {
-        setDimensions({canvasWidth: turtleObj.width, canvasHeight: turtleObj.height});
+        setDimensions({
+          canvasWidth: turtleObj.width,
+          canvasHeight: turtleObj.height,
+        });
+        processTurtleCommand(
+          id,
+          { action: "reset", value: "nosync" },
+          canvasEl.current as HTMLCanvasElement
+        );
+      } else if (turtleObj.action === "done") {
+        turtleRetained = true;
       } else {
-        turtleInstructionQueue.current.addItem(() =>
-          processTurtleCommand(
-            id,
-            turtleObj,
-            canvasEl.current as HTMLCanvasElement
-          )
+        processTurtleCommand(
+          id,
+          turtleObj,
+          canvasEl.current as HTMLCanvasElement
         );
       }
     };
@@ -83,6 +110,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
+      runTurtleClearup,
       runAudioCommand,
       turtleClear,
     }));

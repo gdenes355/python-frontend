@@ -5,23 +5,15 @@ sc = turtle.Screen()
 sc.colormode(255.0)
 sc.setup(600,450)
 
-
 t = turtle.Turtle()
 t.pensize(3)
 
-# use named colour or rgb via tuple, 3 params or colour code
-# t.pencolor("red")
-# t.pencolor("#ff0000")
-# if colormode is set to 255
-# t.pencolor((174,68,23)) 
-# t.pencolor(174,68,23)
-# if colormode is set to 1.0 (default)
-# t.pencolor((0.68,0.27,0.09))
-# t.pencolor(0.68,0.27,0.09)
+# use named colour or colour codes as strings e.g. "#ff0000" or colour tuple e.g. (255, 0, 0)
+colors = ["gold", "purple", "#00ff00"]
 
-colors = ["gold", "purple", "green"]
-
+t.penup()
 t.setposition(-200, 0)
+t.pendown()
 
 for idx, color in enumerate(colors):
 
