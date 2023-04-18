@@ -5,7 +5,7 @@ import AddIcon from "@mui/icons-material/Add";
 import BookEditorContents from "./BookEditorContents";
 
 import BookNodeModel from "../../models/BookNodeModel";
-import EditableBookStore from "../utils/EditableBookStore";
+import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
 import { findParent } from "../../models/BookNodeModel";
@@ -14,7 +14,7 @@ type BookEditorDrawerProps = {
   open: boolean;
   bookRoot: BookNodeModel;
   bookNode: BookNodeModel;
-  store: EditableBookStore;
+  store: IEditableBookStore;
   activePageId?: string;
   onRequestOpen: (open: boolean) => void;
   onNodeSelected: (node: BookNodeModel) => void;
