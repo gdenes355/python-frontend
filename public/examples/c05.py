@@ -4,7 +4,7 @@ t = turtle.Turtle()
 t.pensize(3)
 
 # use named colour or colour codes as strings e.g. "#ff0000" or colour tuple e.g. (255, 0, 0)
-colors = ["gold", "purple", "00ff00"]
+colors = ["gold", "purple", "#00ff00"]
 
 t.penup()
 t.setposition(-200, 0)
