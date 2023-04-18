@@ -108,7 +108,13 @@ const ExpectedDisplay = (props: TestResult) => {
               <CancelIcon color="error" sx={{ fontSize: "0.8em" }} />
             )}
           </span>{" "}
-          must <OptionalSpan visible={x.typ === "-"}>not </OptionalSpan>
+          <OptionalSpan visible={x.typ?.includes("c") === true}>
+            code{" "}
+          </OptionalSpan>
+          must{" "}
+          <OptionalSpan visible={x.typ?.includes("-") === true}>
+            not{" "}
+          </OptionalSpan>
           contain: <code>{x.pattern}</code>
           <OptionalSpan visible={x.count !== undefined && x.count !== -1}>
             {" "}
