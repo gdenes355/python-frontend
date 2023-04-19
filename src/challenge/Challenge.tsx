@@ -67,6 +67,7 @@ class Challenge
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
+  canvasPromiseResolve?: (value: any) => void;
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
@@ -87,6 +88,16 @@ class Challenge
 
   canvasHideCallback = () => {
     this.setState({ typ: ChallengeTypes.TYP_PY });
+  };
+
+  canvasMountedCallback = () => {
+    if (this.canvasPromiseResolve) {
+      const local = this.canvasPromiseResolve;
+      this.canvasPromiseResolve = undefined;
+      if (local) {
+        local(true);
+      }
+    }
   };
 
   state: ChallengeState = {
@@ -344,6 +355,7 @@ class Challenge
                             <CanvasDisplay
                               ref={this.canvasDisplayRef}
                               onHide={() => this.canvasHideCallback()}
+                              onMounted={() => this.canvasMountedCallback()}
                             />
                           ) : undefined
                         }

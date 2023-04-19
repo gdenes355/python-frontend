@@ -1,4 +1,9 @@
-import React, { useContext, useRef, useImperativeHandle } from "react";
+import React, {
+  useContext,
+  useRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
@@ -17,10 +22,15 @@ type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
   onKeyUp?: React.KeyboardEventHandler;
   onHide: () => void;
+  onMounted: () => void;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
+    useEffect(() => {
+      props.onMounted();
+    });
+
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
     let turtleUsed = false;
