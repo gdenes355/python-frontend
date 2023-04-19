@@ -62,7 +62,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
         });
         processTurtleCommand(
           id,
-          { action: "reset", value: "nosync" },
+          { action: "reset", value: "sync" },
           canvasEl.current as HTMLCanvasElement
         );
       } else if (turtleObj.action === "done") {

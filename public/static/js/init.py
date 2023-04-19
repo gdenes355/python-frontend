@@ -381,6 +381,12 @@ _idc = 0
 colorModeMultiplier = 1
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
+def synchronise(typ):
+    x = js.XMLHttpRequest.new()
+    x.open('get', typ, False)
+    x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
+    x.send()
+    return x.response
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "id":-1, "msg": J.dumps(msg)})
@@ -396,26 +402,23 @@ def updateColorMode(mode):
         colorModeMultiplier = 1
     else:
         raise ValueError("Invalid color mode should be 1.0 or 255")
+
 class ScreenStub:
     def setup(self, width, height):
         arg = {"cmd": "turtle"}
         arg["msg"] = J.dumps({_A:"setup", "width":width, "height":height})
         post_message(arg)
+        resp = J.loads(synchronise('/@turtle@/req.js'))
+        return resp.get("completed")
     def colormode(self, mode):
         updateColorMode(mode)
 
 class Turtle:
-    def synchronise(self, typ):
-        x = js.XMLHttpRequest.new()
-        x.open('get', typ, False)
-        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
-        x.send()
-        return x.response
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
       post_message(arg)
-      resp = J.loads(self.synchronise('/@turtle@/req.js'))
+      resp = J.loads(synchronise('/@turtle@/req.js'))
       return resp.get("completed")
     def __init__(self):
       global _idc
