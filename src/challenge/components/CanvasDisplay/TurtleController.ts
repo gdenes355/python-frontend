@@ -5,6 +5,7 @@ const TURTLE_IMG_WIDTH = 16;
 const TURTLE_IMG_HEIGHT = 16;
 const TURTLE_UNIT_MOVE_STEP = 6;
 const TURTLE_TIME_PAUSE = 40;
+const TURTLE_ANGLE_ADJUSTMENT = 6;
 
 class SimpleTurtle {
   imgTurtle: HTMLImageElement;
@@ -168,7 +169,10 @@ class SimpleTurtle {
       this.state.heading = heading;
       repeatAngle = false;
     } else {
-      ch_h = heading > this.state.heading ? 3 : -3;
+      ch_h =
+        heading > this.state.heading
+          ? TURTLE_ANGLE_ADJUSTMENT
+          : -TURTLE_ANGLE_ADJUSTMENT;
     }
 
     // find vector between start/end

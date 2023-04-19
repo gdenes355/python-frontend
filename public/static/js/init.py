@@ -474,6 +474,9 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
   args = str(inspect.signature(eval(f"Turtle.{m}")))
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
+
+# ensure always cleared
+mode("standard")
 ''')
 
 
@@ -591,9 +594,6 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
-    # ensures that canvas is always refreshed not just the mode
-    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
-
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -632,9 +632,6 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
-
-    # ensures that canvas is always refreshed not just the mode
-    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
 
     exec(code, global_vars)
 

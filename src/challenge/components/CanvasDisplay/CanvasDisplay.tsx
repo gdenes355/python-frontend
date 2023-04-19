@@ -3,6 +3,7 @@ import React, {
   useRef,
   useImperativeHandle,
   useState,
+  useEffect,
 } from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
@@ -24,10 +25,15 @@ type CanvasDisplayProps = {
   initialWidth: number;
   initialHeight: number;
   onHide: () => void;
+  onMounted: () => void;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
+    useEffect(() => {
+      props.onMounted();
+    });
+
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
     let turtleUsed = false;

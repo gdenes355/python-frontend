@@ -38,3 +38,6 @@ t.fillcolor("orange")
 t.begin_fill()
 t.circle(30, 360)
 t.end_fill()
+
+# call to keep turtle window open/visible on completion
+turtle.done()

@@ -107,6 +107,18 @@ class ChallengeEditor
     this.setState({ typ: ChallengeTypes.TYP_PY });
   };
 
+  canvasMountedCallback = () => {
+    if (this.canvasPromiseResolve) {
+      const local = this.canvasPromiseResolve;
+      this.canvasPromiseResolve = undefined;
+      if (local) {
+        local(true);
+      }
+    }
+  };
+
+  canvasPromiseResolve?: (value: any) => void;
+
   state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,
@@ -475,6 +487,7 @@ class ChallengeEditor
                             initialWidth={500}
                             initialHeight={400}
                             onHide={() => this.canvasHideCallback()}
+                            onMounted={() => this.canvasMountedCallback()}
                           />
                         ) : undefined
                       }

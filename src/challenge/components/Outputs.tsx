@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle } from "react";
+import React, { useRef, useImperativeHandle, useEffect } from "react";
 import { Box } from "@mui/material";
 
 import TabbedView from "../../components/TabbedView";
@@ -7,6 +7,7 @@ import PaneType from "../../models/PaneType";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;
+  currentPane: PaneType | null;
 };
 
 type OutputsProps = {
@@ -17,7 +18,13 @@ type OutputsProps = {
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
+  useEffect(() => {
+    setCurrentPane(null);
+  }, [props.console, props.canvas, props.fixedInput, props.json]);
+
   const tabbedViewRef = useRef<TabbedView>(null);
+
+  const [currentPane, setCurrentPane] = React.useState<PaneType | null>(null);
 
   let panes = [
     {
@@ -56,16 +63,20 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
   }
 
   const focusPane = (pane: PaneType) => {
+    if (currentPane === pane) {
+      return true;
+    }
     for (let i = 0; i < panes.length; i++) {
       if (panes[i].typ === pane) {
         tabbedViewRef.current?.requestPane(i);
+        setCurrentPane(pane);
         return true;
       }
     }
     return false;
   };
 
-  useImperativeHandle(ref, () => ({ focusPane }));
+  useImperativeHandle(ref, () => ({ focusPane, currentPane }));
 
   return (
     <Box
