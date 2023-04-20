@@ -57,7 +57,7 @@ const FileEditor = React.forwardRef<FileEditorHandle, FileEditorProps>(
     const loadFile = () => {
       if (dropdownRef?.current?.getValue() != null) {
         const isVis = props.files[dropdownRef.current.getIndex()].visible;
-        if (!isVis) {
+        if (!isVis && props.enforceVisibility) {
           setValue(
             "FILE HIDDEN - YOU CAN STILL ACTIVATE IT & READ IT VIA PYTHON."
           );
