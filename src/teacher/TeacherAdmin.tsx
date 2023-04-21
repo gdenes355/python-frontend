@@ -351,6 +351,15 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             ) : (
               <React.Fragment>
                 <h2>{book?.name}&nbsp;</h2>
+                {activeBookTitle ? (
+                  <a
+                    href={`${window.location.origin}?bk=${activeBookTitle}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {window.location.origin}?bk={activeBookTitle}
+                  </a>
+                ) : undefined}
                 <ResultsTable
                   book={book}
                   bookTitle={activeBookTitle}
