@@ -21,6 +21,7 @@ import FolderPicker from "./components/FolderPicker";
 import AdminWrapper from "./auth/AdminWrapper";
 import TeacherAdmin from "./teacher/TeacherAdmin";
 import BookEditorFrame from "./vscode-frame/BookEditorFrame";
+import StudentDashboard from "./studentDashboard/StudentDashboard";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -87,9 +88,7 @@ export default function App() {
     Cookies.set("theme", theme);
   };
 
-  const adminUrlBase =
-    new URLSearchParams(window.location.search).get("adminUrl") || "";
-  if (adminUrlBase) console.log(adminUrlBase);
+  const serverUrl = window.location.origin;
 
   return (
     <VsThemeContext.Provider
@@ -103,10 +102,14 @@ export default function App() {
                 <Route path="start" element={<Start />} />
                 <Route path="auth-callback" element={<AuthCallbackPage />} />
                 <Route
+                  path="student/books"
+                  element={<StudentDashboard baseUrl={serverUrl} />}
+                />
+                <Route
                   path="teacher"
                   element={
-                    <AdminWrapper urlBase={adminUrlBase}>
-                      <TeacherAdmin baseUrl={adminUrlBase} />
+                    <AdminWrapper urlBase={serverUrl}>
+                      <TeacherAdmin baseUrl={serverUrl} />
                     </AdminWrapper>
                   }
                 />

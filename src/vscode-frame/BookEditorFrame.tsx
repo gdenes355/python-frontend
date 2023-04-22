@@ -57,14 +57,15 @@ const BookEditorFrame = () => {
     <BookEditorDrawer
       open={true}
       bookRoot={bookRoot}
-      bookNode={bookRoot}
+      bookNode={bookNode || bookRoot}
       store={bookStore}
       onBookModified={() => {
-        window.parent.postMessage({ type: "modified", data: bookNode }, "*");
+        window.parent.postMessage({ type: "modified", data: bookRoot }, "*");
       }}
       onRequestOpen={() => {}}
       onNodeSelected={(node) => {
         window.parent.postMessage({ type: "open", node: node }, "*");
+        setBookNode(node);
       }}
     />
   );
