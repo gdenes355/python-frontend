@@ -7,6 +7,7 @@ import { keyToVMCode } from "../utils/keyTools";
 import PaneType from "../models/PaneType";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
 
 type WorkerResponse = {
   cmd: string;
@@ -285,6 +286,14 @@ class ChallengeContextClass {
       breakpoints: number[],
       mode: "debug" | "run" = "debug"
     ) => {
+      const addFiles: AdditionalFilesContents =
+        this.challenge.getAdditionalFiles();
+
+      let additionalCode = "";
+      Object.keys(addFiles).forEach((filename) => {
+        additionalCode += `with open("${filename}", "w") as f:f.write("""${addFiles[filename]}""")\n`;
+      });
+
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
           "",
@@ -297,7 +306,7 @@ class ChallengeContextClass {
         }
         this.challenge.worker?.postMessage({
           cmd: mode,
-          code: code,
+          code: additionalCode + code,
           breakpoints: breakpoints,
         });
         this.challenge.setState({
@@ -470,47 +479,22 @@ class ChallengeContextClass {
           return response.text();
         })
         .then((text) => {
-          this.challenge.fileEditorRef.current?.setValue(text);
+          this.challenge.additionalFilesLoadCallback(filename, text);
         })
         .catch((e) => {
-          this.challenge.fileEditorRef.current?.setValue("ERROR LOADING FILE");
+          this.challenge.additionalFilesLoadCallback(
+            filename,
+            "ERROR LOADING FILE"
+          );
         });
     },
-    "activate-file": (filename: string, activate: boolean = true) => {
-      this.challenge.props.fetcher
-        .fetch(filename, this.challenge.props.authContext)
-        .then((response) => {
-          if (!response.ok) {
-            return "ERROR LOADING FILE";
-          }
-          return response.text();
-        })
-        .then((text) => {
-          let code = "";
-          if (activate) {
-            // load file to python
-            code = `with open("${filename}", "w") as f:\n    f.write("""${text}""")`;
-          } else {
-            // delete file from python
-            code = `import os\nos.remove("${filename}")`;
-          }
-          if (this.challenge.state.editorState === ChallengeStatus.READY) {
-            if (this.challenge.interruptBuffer) {
-              this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
-            }
-            this.challenge.worker?.postMessage({
-              cmd: "run",
-              code: code,
-              breakpoints: [],
-            });
-            this.challenge.setState({
-              editorState: ChallengeStatus.RUNNING,
-            });
-          }
-        })
-        .catch((e) => {
-          this.challenge.fileEditorRef.current?.setValue("ERROR LOADING FILE");
-        });
+    "activate-file": (filename: string, contents: string) => {
+      let code = `with open("${filename}", "w") as f:\n    f.write("""${contents}""")`;
+      this.challenge.worker?.postMessage({
+        cmd: "run",
+        code: code,
+        breakpoints: [],
+      });
     },
     "load-saved-code": () => {
       let savedCode = localStorage.getItem(

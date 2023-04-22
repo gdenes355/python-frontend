@@ -3,10 +3,12 @@ import { DebouncedFunc } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { TestCases, TestResults } from "../models/Tests";
-import { AdditionalFiles } from "../models/AdditionalFiles";
+import {
+  AdditionalFiles,
+  AdditionalFilesContents,
+} from "../models/AdditionalFiles";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
-import { FileEditorHandle } from "./components/Editors/FileEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
@@ -19,7 +21,6 @@ import BookNodeModel from "../models/BookNodeModel";
 type IChallengeProps = {
   uid: string;
   tests?: TestCases | null;
-  additionalFiles?: AdditionalFiles | null;
   isExample?: boolean;
   guidePath: string;
   codePath: string;
@@ -39,11 +40,11 @@ type IChallengeState = {
   debugContext: DebugContext;
   consoleText: string;
   testResults: TestResults;
+  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 interface IChallenge {
   editorRef: React.RefObject<PyEditorHandle>;
-  fileEditorRef: React.RefObject<FileEditorHandle>;
   parsonsEditorRef: React.RefObject<ParsonsEditorHandle>;
   canvasDisplayRef: React.RefObject<CanvasDisplayHandle>;
   fixedInputFieldRef: React.RefObject<FixedInputFieldHandle>;
@@ -55,6 +56,8 @@ interface IChallenge {
   keyDownBuffer: Uint8Array | null;
 
   printCallback: DebouncedFunc<() => void>;
+  additionalFilesLoadCallback: (filename: string, contents: string) => void;
+  getAdditionalFiles: () => AdditionalFilesContents;
 
   currentConsoleText: string;
   currentFixedUserInput: string[];

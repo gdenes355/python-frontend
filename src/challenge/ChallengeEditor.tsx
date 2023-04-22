@@ -5,7 +5,6 @@ import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 import DebugPane from "../components/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
 import JsonEditor, { JsonEditorHandle } from "./components/Editors/JsonEditor";
-import FileEditor, { FileEditorHandle } from "./components/Editors/FileEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import ChallengeConsole from "./components/ChallengeConsole";
 import CanvasDisplay, {
@@ -61,6 +60,7 @@ type ChallengeEditorState = {
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
+  additionalFilesLoaded: {};
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -80,7 +80,6 @@ class ChallengeEditor
 {
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
-  fileEditorRef = React.createRef<FileEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
@@ -105,6 +104,19 @@ class ChallengeEditor
     100
   );
 
+  additionalFilesLoadCallback(filename: string, contents: string) {
+    this.setState({
+      additionalFilesLoaded: {
+        ...this.state.additionalFilesLoaded,
+        [filename]: contents,
+      },
+    });
+  }
+
+  getAdditionalFiles() {
+    return this.state.additionalFilesLoaded;
+  }
+
   state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,
@@ -123,6 +135,7 @@ class ChallengeEditor
     dialogInfoText: undefined,
     hasEdited: false,
     saveDialogProps: undefined,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -170,6 +183,13 @@ class ChallengeEditor
       this.setState({ testResults: [], testsPassing: undefined });
       this.setState({ hasEdited: false });
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file.filename);
+      }
+    });
+
     if (
       this.editorRef.current &&
       this.state.editorState !== prevState.editorState &&
@@ -285,7 +305,7 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
     }
-    if (editedNode.additionalFiles !== this.props.additionalFiles) {
+    if (editedNode.additionalFiles !== this.props.bookNode.additionalFiles) {
       changed = true;
       this.props.bookNode.additionalFiles = editedNode.additionalFiles;
     }
@@ -489,21 +509,9 @@ class ChallengeEditor
                           }}
                         />
                       }
-                      file={
-                        <FileEditor
-                          ref={this.fileEditorRef}
-                          enforceVisibility={false}
-                          files={this.props.bookNode.additionalFiles || []}
-                          starterContent={""}
-                          onToggleFullScreen={() => {
-                            this.setState((state) => {
-                              return {
-                                editorFullScreen: !state.editorFullScreen,
-                              };
-                            });
-                          }}
-                        />
-                      }
+                      fileProperties={this.props.bookNode.additionalFiles || []}
+                      fileContents={this.state.additionalFilesLoaded}
+                      fileShowAll={true}
                     />
                   </Allotment.Pane>
                 </Allotment>

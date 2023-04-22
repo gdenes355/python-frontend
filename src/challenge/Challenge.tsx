@@ -28,7 +28,6 @@ import BookControlFabs from "../book/components/BookControlFabs";
 import HeaderBar from "../components/HeaderBar";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases } from "../models/Tests";
-import { AdditionalFiles } from "../models/AdditionalFiles";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
 import BookUploadModal from "../book/components/BookUploadModal";
@@ -37,7 +36,6 @@ import HeaderButtons from "./components/HeaderButtons";
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
-import FileEditor, { FileEditorHandle } from "./components/Editors/FileEditor";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -51,7 +49,6 @@ type ChallengeState = IChallengeState & {
 type ChallengeProps = IChallengeProps & {
   title?: string;
   tests?: TestCases | null;
-  additionalFiles?: AdditionalFiles | null;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
@@ -69,7 +66,6 @@ class Challenge
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
-  fileEditorRef = React.createRef<FileEditorHandle>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -89,6 +85,19 @@ class Challenge
     100
   );
 
+  additionalFilesLoadCallback(filename: string, contents: string) {
+    this.setState({
+      additionalFilesLoaded: {
+        ...this.state.additionalFilesLoaded,
+        [filename]: contents,
+      },
+    });
+  }
+
+  getAdditionalFiles() {
+    return this.state.additionalFilesLoaded;
+  }
+
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
@@ -104,6 +113,7 @@ class Challenge
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     showBookUpload: false,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeProps) {
@@ -116,6 +126,7 @@ class Challenge
     this.chContext.actions["load-saved-code"]();
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
+
     this.chContext.actions["restart-worker"]({ force: true });
     this.setState({
       typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
@@ -126,6 +137,12 @@ class Challenge
     if (prevProps.guidePath !== this.props.guidePath) {
       this.chContext.actions["fetch-guide"]();
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file.filename);
+      }
+    });
 
     if (prevProps.codePath !== this.props.codePath) {
       this.chContext.actions["fetch-code"]();
@@ -344,24 +361,11 @@ class Challenge
                             <CanvasDisplay ref={this.canvasDisplayRef} />
                           ) : undefined
                         }
-                        file={
-                          this.props.bookNode?.additionalFiles &&
-                          this.props.bookNode.additionalFiles.length > 0 ? (
-                            <FileEditor
-                              ref={this.fileEditorRef}
-                              enforceVisibility={true}
-                              files={this.props.bookNode.additionalFiles || []}
-                              starterContent={""}
-                              onToggleFullScreen={() => {
-                                this.setState((state) => {
-                                  return {
-                                    editorFullScreen: !state.editorFullScreen,
-                                  };
-                                });
-                              }}
-                            />
-                          ) : undefined
+                        fileProperties={
+                          this.props.bookNode.additionalFiles || []
                         }
+                        fileContents={this.state.additionalFilesLoaded}
+                        fileShowAll={false}
                       />
                     </Allotment.Pane>
                   </Allotment>
