@@ -26,6 +26,9 @@ onmessage = function (e) {
   } else if (e.data.cmd === 'debug') {
     let reason = 'ok'
     try {
+      if(e.data.initCode) {
+        self.pyodide.globals.get('pyexec')(e.data.initCode, [], []);
+      }
       self.pyodide.globals.get('pydebug')(e.data.code, e.data.breakpoints)
     } catch (err) {
       if (err.message.includes('KeyboardInterrupt')) {
@@ -41,6 +44,9 @@ onmessage = function (e) {
   } else if (e.data.cmd === 'run') {
     let reason = 'ok'
     try {
+      if(e.data.initCode) {
+        self.pyodide.globals.get('pyexec')(e.data.initCode, [], []);
+      }      
       self.pyodide.globals.get('pyrun')(e.data.code)
     } catch (err) {
       if (err.message.includes('KeyboardInterrupt')) {
@@ -54,6 +60,9 @@ onmessage = function (e) {
   } else if (e.data.cmd === 'test') {
     let results = e.data.tests.map((t) => { return { outcome: false, err: 'Failed to compile', code: e.data.code, bookNode:e.data.bookNode } })
     try {
+      if(e.data.initCode) {
+        self.pyodide.globals.get('pyexec')(e.data.initCode, [], []);
+      }      
       const tests = e.data.tests
       results = tests.map((test) => self.pyodide.globals.get('pyexec')(e.data.code, test.in, test.out))
     } catch (err) {

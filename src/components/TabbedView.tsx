@@ -1,11 +1,13 @@
 import React from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 import "./TabbedView.css";
+import PaneType from "../models/PaneType";
 
 type TabbedPane = {
   label: string;
   content: React.ReactNode;
   show: boolean;
+  typ: PaneType;
 };
 
 type TabbedViewProps = {
@@ -76,7 +78,10 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
             {this.props.panes.map((pane, i) => (
               <Tab
                 label={pane.label}
-                className={pane.show ? "tab-show" : "tab-hide"}
+                className={
+                  (pane.show ? "tab-show" : "tab-hide") +
+                  (pane.typ === PaneType.FILE_EDITOR ? " lower" : "")
+                }
                 key={i}
               />
             ))}

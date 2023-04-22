@@ -33,14 +33,14 @@ async function addNode(
     }
   }
   if (node.additionalFiles) {
-    Object.keys(node.additionalFiles).forEach(async (filename) => {
+    node.additionalFiles.forEach(async (file) => {
       let absPath = absolutisePath(
-        filename,
+        file.filename,
         node.bookMainUrl || fetcher.getBookPathAbsolute()
       );
       let resp = await fetcher.fetch(absPath, authContext);
       if (resp.ok) {
-        localStorage.setItem("edit://edit/" + filename, await resp.text());
+        localStorage.setItem("edit://edit/" + file.filename, await resp.text());
       }
     });
   }

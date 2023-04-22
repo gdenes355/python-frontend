@@ -1,3 +1,7 @@
 .tab-hide {
   display: none !important;
 }
+
+.lower {
+  text-transform: none !important;
+}
