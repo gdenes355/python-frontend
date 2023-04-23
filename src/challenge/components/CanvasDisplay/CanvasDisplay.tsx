@@ -12,7 +12,7 @@ import ChallengeContext from "../../ChallengeContext";
 
 type CanvasDisplayHandle = {
   turtleClear: () => void;
-  runTurtleCommand: (id: number, msg: string) => void;
+  runTurtleCommand: (id: number, msg: string) => Promise<void>;
   runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
@@ -55,8 +55,11 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "done") {
         turtleRetained = true;
+        return new Promise<void>((r, e) => {
+          r();
+        });
       }
-      processTurtleCommand(
+      return processTurtleCommand(
         id,
         turtleObj,
         canvasEl.current as HTMLCanvasElement

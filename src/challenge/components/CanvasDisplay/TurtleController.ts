@@ -8,25 +8,42 @@ const TURTLE_TIME_PAUSE = 40;
 const TURTLE_ANGLE_ADJUSTMENT = 6;
 
 class SimpleTurtle {
-  imgTurtle: HTMLImageElement;
+  originalTurleImageData = new Uint8ClampedArray([]);
+  originalTurleImageSize = [0, 0];
+
+  turtleImage: HTMLImageElement | undefined = undefined;
   canvas: HTMLCanvasElement;
   state: TurtleState;
   ctx: CanvasRenderingContext2D | null;
   canvasBackground: HTMLCanvasElement;
   ctxBackground: CanvasRenderingContext2D | null;
-  completeCallback: () => void;
   alive: boolean = true;
   fillPath: Path2D | null;
 
-  constructor(
-    canvas: HTMLCanvasElement,
-    state: TurtleState,
-    onComplete: () => void
-  ) {
-    this.imgTurtle = new Image();
-    this.imgTurtle.src = TURTLE_IMG_PATH;
+  constructor(canvas: HTMLCanvasElement, state: TurtleState) {
+    let baseImage = new Image();
+    baseImage.onload = () => {
+      let canvas = document.createElement("canvas");
+      let context = canvas.getContext("2d")!;
+      canvas.width = baseImage.width;
+      canvas.height = baseImage.height;
+      context.drawImage(baseImage, 0, 0);
+      const data = context.getImageData(
+        0,
+        0,
+        baseImage.width,
+        baseImage.height
+      ).data;
+      this.originalTurleImageData = new Uint8ClampedArray(data.length);
+      for (let i = 0; i < data.length; i += 1) {
+        this.originalTurleImageData[i] = data[i];
+      }
+      this.originalTurleImageSize = [baseImage.width, baseImage.height];
+
+      this.updateTurtleImage();
+    };
+    baseImage.src = TURTLE_IMG_PATH;
     this.canvas = canvas;
-    this.completeCallback = onComplete;
     this.ctx = canvas.getContext("2d");
     this.canvasBackground = document.createElement("canvas");
     this.canvasBackground.width = canvas.width;
@@ -36,18 +53,23 @@ class SimpleTurtle {
     this.state = state;
     this.state.x = this.canvas.width / 2;
     this.state.y = this.canvas.height / 2;
-    if (this.ctxBackground !== null) {
+    if (this.ctxBackground) {
       this.ctxBackground.moveTo(this.state.x, this.state.y);
     }
   }
 
   setposition(x: number, y: number) {
     // drives to required location but doesn't change the current heading (python compliant)
-    window.requestAnimationFrame(() => this.#driveto(x, y, this.state.heading));
+    return new Promise<void>((r, e) => {
+      window.requestAnimationFrame(() =>
+        this.driveto(x, y, this.state.heading).catch(e).then(r)
+      );
+    });
   }
 
   stop() {
     this.alive = false;
+    return newResolvedPromise();
   }
 
   forward(distance: number) {
@@ -56,16 +78,58 @@ class SimpleTurtle {
     const new_y =
       this.state.y - distance * Math.sin((this.state.heading / 180) * Math.PI);
 
-    window.requestAnimationFrame(() =>
-      this.#driveto(new_x, new_y, this.state.heading)
-    );
+    return new Promise<void>((r, e) => {
+      window.requestAnimationFrame(() =>
+        this.driveto(new_x, new_y, this.state.heading).catch(e).then(r)
+      );
+    });
   }
 
-  // private method
-  #drawLineTo(x: number, y: number) {
+  private updateTurtleImage() {
+    if (!this.originalTurleImageData.length) return;
+
+    if (!this.turtleImage) {
+      this.turtleImage = new Image();
+    }
+    let canvas = document.createElement("canvas");
+    let context = canvas.getContext("2d")!;
+    canvas.width = this.originalTurleImageSize[0];
+    canvas.height = this.originalTurleImageSize[1];
+    context.fillStyle = this.state.pencolor;
+    context.fillRect(0, 0, 1, 1);
+    context.fillStyle = this.state.fillcolor;
+    context.fillRect(1, 0, 1, 1);
+    const imgData = context.getImageData(
+      0,
+      0,
+      this.originalTurleImageSize[0],
+      this.originalTurleImageSize[1]
+    );
+    for (let i = 0; i < imgData.data.length; i += 4) {
+      if (this.originalTurleImageData[i + 3] === 0) {
+        // background, A=0
+        imgData.data[i + 3] = 0;
+      } else if (this.originalTurleImageData[i + 0] === 0) {
+        // border
+        imgData.data[i + 0] = imgData.data[0];
+        imgData.data[i + 1] = imgData.data[1];
+        imgData.data[i + 2] = imgData.data[2];
+        imgData.data[i + 3] = 255;
+      } else {
+        imgData.data[i + 0] = imgData.data[4];
+        imgData.data[i + 1] = imgData.data[5];
+        imgData.data[i + 2] = imgData.data[6];
+        imgData.data[i + 3] = 255;
+      }
+    }
+    context.putImageData(imgData, 0, 0);
+
+    this.turtleImage.src = canvas.toDataURL();
+  }
+
+  private drawLineTo(x: number, y: number) {
     if (!this.ctx || !this.ctxBackground) {
-      this.completeCallback();
-      return;
+      return newResolvedPromise();
     }
 
     this.ctxBackground.beginPath();
@@ -88,20 +152,22 @@ class SimpleTurtle {
     this.state.x = x;
     this.state.y = y;
 
-    if (this.state.showTurtle) {
+    if (this.state.showTurtle && this.turtleImage) {
       // Set the origin to the current location, rotate the context, move the origin back
       this.ctx.translate(this.state.x, this.state.y);
       this.ctx.rotate(-1 * (Math.PI / 180) * this.state.heading);
       this.ctx.translate(-this.state.x, -this.state.y);
 
+      //this.ctx.globalCompositeOperation = "destination-out";
       // draw turtle rotated
       this.ctx.drawImage(
-        this.imgTurtle,
+        this.turtleImage,
         this.state.x - TURTLE_IMG_WIDTH,
         this.state.y - TURTLE_IMG_HEIGHT / 2,
         TURTLE_IMG_WIDTH,
         TURTLE_IMG_HEIGHT
       );
+      //this.ctx.globalCompositeOperation = "source-over";
 
       // reset the rotation
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -110,44 +176,37 @@ class SimpleTurtle {
     if (this.fillPath !== null) {
       this.fillPath.lineTo(x, y);
     }
+    return newResolvedPromise();
   }
 
-  #driveAlong(arrLocs: Array<[number, number, number]>, completeOnEnd = true) {
+  private driveAlong(arrLocs: Array<[number, number, number]>): Promise<void> {
     if (arrLocs.length === 0) {
-      if (completeOnEnd) {
-        this.completeCallback();
-      }
-      return;
+      return newResolvedPromise();
     }
 
     const [x, y, h] = arrLocs.shift()!;
     this.state.heading = h;
-    this.#drawLineTo(x, y);
+    this.drawLineTo(x, y);
 
     if (this.alive) {
       if (this.state.speed === -1) {
-        this.#driveAlong(arrLocs, completeOnEnd);
+        return this.driveAlong(arrLocs);
       } else {
-        window.requestAnimationFrame(() => {
-          setTimeout(
-            () => this.#driveAlong(arrLocs, completeOnEnd),
-            TURTLE_TIME_PAUSE * this.state.speed
-          );
+        return new Promise<void>((r, e) => {
+          window.requestAnimationFrame(() => {
+            setTimeout(
+              () => this.driveAlong(arrLocs).catch(e).then(r),
+              TURTLE_TIME_PAUSE * this.state.speed
+            );
+          });
         });
       }
     } else {
-      if (completeOnEnd) {
-        this.completeCallback();
-      }
+      return newResolvedPromiseError();
     }
   }
 
-  #driveto(
-    x: number,
-    y: number,
-    heading: number,
-    completeOnEnd: boolean = true
-  ) {
+  private driveto(x: number, y: number, heading: number): Promise<void> {
     // hmmm should perhaps pay attention to left/right rather than most efficient turn??
     if (Math.abs(heading - this.state.heading) > 180) {
       if (heading > this.state.heading) {
@@ -193,107 +252,130 @@ class SimpleTurtle {
 
     // draw line
     this.state.heading += ch_h;
-    this.#drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
+    this.drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
 
-    if (this.alive && (repeatAngle || repeatLoc)) {
+    if (!this.alive) {
+      return newResolvedPromiseError();
+    }
+
+    if (repeatAngle || repeatLoc) {
       if (this.state.speed === -1) {
-        this.#driveto(x, y, heading, completeOnEnd);
+        return this.driveto(x, y, heading);
       } else {
-        window.requestAnimationFrame(() => {
-          setTimeout(
-            () => this.#driveto(x, y, heading, completeOnEnd),
-            TURTLE_TIME_PAUSE * this.state.speed
-          );
+        return new Promise<void>((r, e) => {
+          window.requestAnimationFrame(() => {
+            setTimeout(
+              () => this.driveto(x, y, heading).catch(e).then(r),
+              TURTLE_TIME_PAUSE * this.state.speed
+            );
+          });
         });
       }
-    } else if (completeOnEnd) {
-      this.completeCallback();
     }
+    return newResolvedPromise();
   }
 
   back(distance: number) {
-    this.forward(-1 * distance);
+    return this.forward(-1 * distance);
   }
 
   left(angle: number) {
     const new_heading = (this.state.heading + angle) % 360;
-    window.requestAnimationFrame(() =>
-      this.#driveto(this.state.x, this.state.y, new_heading)
-    );
+
+    return new Promise<void>((r, e) => {
+      window.requestAnimationFrame(() =>
+        this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r)
+      );
+    });
   }
 
   right(angle: number) {
-    this.left(-1 * angle);
+    return this.left(-1 * angle);
   }
 
   setheading(angle: number) {
     if (this.state.mode === "logo") {
       angle = 90 - angle;
     }
-    window.requestAnimationFrame(() =>
-      this.#driveto(this.state.x, this.state.y, angle)
-    );
+    return new Promise<void>((r, e) => {
+      window.requestAnimationFrame(() =>
+        this.driveto(this.state.x, this.state.y, angle).catch(e).then(r)
+      );
+    });
   }
 
   penup() {
     this.state.penDown = false;
-    this.completeCallback();
+    return newResolvedPromise();
   }
 
   pendown() {
     this.state.penDown = true;
-    this.completeCallback();
+    return newResolvedPromise();
   }
 
   pensize(width: number) {
     if (this.ctxBackground) {
       this.ctxBackground.lineWidth = width;
     }
-    this.completeCallback();
+    return newResolvedPromise();
   }
 
   showTurtle() {
     this.state.showTurtle = true;
-    this.#driveto(this.state.x, this.state.y, this.state.heading);
+    return this.driveto(this.state.x, this.state.y, this.state.heading);
   }
 
   hideTurtle() {
     this.state.showTurtle = false;
-    this.#driveto(this.state.x, this.state.y, this.state.heading);
+    return this.driveto(this.state.x, this.state.y, this.state.heading);
   }
 
   speed(speed: number) {
     this.state.speed = speed;
-    this.completeCallback();
+    return newResolvedPromise();
   }
 
   pencolor(color: string) {
+    this.state.pencolor = color;
     if (this.ctxBackground) {
       this.ctxBackground.strokeStyle = color;
     }
-    this.completeCallback();
+    this.updateTurtleImage();
+    return newResolvedPromise();
+  }
+
+  pencolor3(r: number, g: number, b: number) {
+    return this.pencolor(`rgb(${r},${g},${b})`);
   }
 
   fillcolor(color: string) {
+    this.state.fillcolor = color;
     if (this.ctxBackground) {
       this.ctxBackground.fillStyle = color;
     }
-    this.completeCallback();
+    this.updateTurtleImage();
+    return newResolvedPromise();
   }
 
   begin_fill() {
     this.fillPath = new Path2D();
     this.fillPath.moveTo(this.state.x, this.state.y);
-    this.completeCallback();
+    return newResolvedPromise();
   }
 
   end_fill() {
-    if (this.ctxBackground && this.fillPath !== null) {
-      this.ctxBackground.fill(this.fillPath);
-      this.fillPath = null;
-      this.#driveto(this.state.x, this.state.y, this.state.heading);
-    }
-    this.completeCallback();
+    return new Promise<void>((r, e) => {
+      if (this.ctxBackground && this.fillPath !== null) {
+        this.ctxBackground.fill(this.fillPath);
+        this.fillPath = null;
+        this.driveto(this.state.x, this.state.y, this.state.heading)
+          .catch(e)
+          .then(r);
+      } else {
+        r();
+      }
+    });
   }
 
   circle(radius: number, extent: number = 360) {
@@ -321,7 +403,7 @@ class SimpleTurtle {
       arrLocs[i] = [x, y, this.state.heading + angle];
     }
 
-    this.#driveAlong(arrLocs);
+    return this.driveAlong(arrLocs);
   }
 }
 
@@ -333,26 +415,22 @@ type TurtleState = {
   x: number;
   y: number;
   mode?: "standard" | "logo";
+  pencolor: string;
+  fillcolor: string;
 };
 
 var turtles = new Map<number, SimpleTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
 
-const commandCompleted = () => {
-  let x = new XMLHttpRequest();
-  x.open("post", "/@turtle@/resp.js");
-  x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
-  try {
-    x.send(
-      JSON.stringify({
-        completed: true,
-      })
-    );
-  } catch (e) {
-    console.log(e);
-  }
-};
+const newResolvedPromise = () =>
+  new Promise<void>((r, e) => {
+    r();
+  });
+
+const newResolvedPromiseError = () =>
+  new Promise<void>((r, e) => {
+    e();
+  });
 
 const processTurtleCommand = (
   id: number,
@@ -361,22 +439,19 @@ const processTurtleCommand = (
 ) => {
   if (cmd.action === "stop") {
     turtles.forEach((t) => t.stop());
-    commandCompleted();
-    return undefined;
+    return newResolvedPromise();
   }
 
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
     turtles.clear();
-    commandCompleted();
-    return undefined;
+    return newResolvedPromise();
   }
   let turtle = turtles.get(id);
   if (!turtle && cmd.action === "reset") {
-    commandCompleted();
     // ignore turtle reset if turtle doesn't exist
-    return undefined;
+    return newResolvedPromise();
   }
   if (!turtle) {
     turtle = initialiseTurtle(canvas);
@@ -386,80 +461,53 @@ const processTurtleCommand = (
   try {
     switch (cmd.action) {
       case "forward":
-        turtle.forward(cmd.value);
-        break;
+        return turtle.forward(cmd.value);
       case "backward":
-        turtle.back(cmd.value);
-        break;
+        return turtle.back(cmd.value);
       case "right":
-        turtle.right(cmd.value);
-        break;
+        return turtle.right(cmd.value);
       case "left":
-        turtle.left(cmd.value);
-        break;
+        return turtle.left(cmd.value);
       case "setposition":
-        turtle.setposition(
+        return turtle.setposition(
           turtle.canvas.width / 2 + cmd.x,
           turtle.canvas.height / 2 - cmd.y
         );
-        break;
       case "penup":
-        turtle.penup();
-        break;
+        return turtle.penup();
       case "pendown":
-        turtle.pendown();
-        break;
+        return turtle.pendown();
       case "pensize":
-        turtle.pensize(cmd.value);
-        break;
+        return turtle.pensize(cmd.value);
       case "setheading":
-        const turn = cmd.value - (turtle.state.heading || 0);
-        if (turn !== 0) {
-          if (turtleMode === "logo") {
-            turtle.right(turn);
-          } else {
-            // standard
-            turtle.left(turn);
-          }
-          turtle.state.heading = cmd.value;
-        }
-        break;
+        return turtle.setheading(cmd.value);
       case "hideturtle":
-        turtle.hideTurtle();
-        break;
+        return turtle.hideTurtle();
       case "showturtle":
-        turtle.showTurtle();
-        break;
+        return turtle.showTurtle();
       case "pencolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.pencolor(cmd.value); // a named color as string or html code
+          return turtle.pencolor(cmd.value); // a named color as string or html code
         } else {
-          turtle.pencolor(
-            `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
-          ); // color tuple
+          return turtle.pencolor3(cmd.value[0], cmd.value[1], cmd.value[2]); // color tuple
         }
-        break;
       case "circle":
-        turtle.circle(cmd.radius, cmd.extent);
-        turtleMode === "logo"
+        return turtle.circle(cmd.radius, cmd.extent);
+      /*turtleMode === "logo"
           ? (turtle.state.heading = (turtle.state.heading || 0) - cmd.extent)
-          : (turtle.state.heading = (turtle.state.heading || 0) + cmd.extent);
-        break;
+          : (turtle.state.heading = (turtle.state.heading || 0) + cmd.extent);*/
       case "begin_fill":
-        turtle.begin_fill();
-        break;
+        return turtle.begin_fill();
       case "end_fill":
-        turtle.end_fill();
-        break;
+        return turtle.end_fill();
       case "fillcolor":
         if (typeof cmd.value === "string" || cmd.value instanceof String) {
-          turtle.fillcolor(cmd.value); // a named color as string or html code
+          return turtle.fillcolor(cmd.value); // a named color as string or html code
         } else {
-          turtle.fillcolor(
+          return turtle.fillcolor(
             `rgb(${cmd.value[0]},${cmd.value[1]},${cmd.value[2]})`
           ); // color tuple
         }
-        break;
       case "speed":
         let speed_val = 0.5;
         switch (cmd.value) {
@@ -482,39 +530,43 @@ const processTurtleCommand = (
             speed_val = cmd.value === 0 ? -1 : 1 - cmd.value / 10;
         }
 
-        turtle.speed(speed_val);
-        break;
+        return turtle.speed(speed_val);
       case "reset":
-        turtle.hideTurtle();
-        turtles.delete(id);
-        commandCompleted();
+        return new Promise<void>((r, e) => {
+          turtle
+            ?.hideTurtle()
+            .catch(e)
+            .then(() => {
+              turtles.delete(id);
+              r();
+            });
+        });
+      default:
+        return new Promise<void>((r, e) => {
+          e(new Error(`unknown turtle action ${cmd.action}`));
+        });
     }
   } catch (err) {
-    // SHOULD FIND A WAY TO PASS ERROR BACK TO PYTHON THEN RAISE PYTHON EXCEPTION
-    console.log("error processing canvas turtle action:");
-    console.log(cmd);
-    console.log(err);
+    return new Promise<void>((r, e) => {
+      e(err);
+    });
   }
-
-  return undefined;
 };
 
 const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
   canvas
 ) => {
-  let turtle = new SimpleTurtle(
-    canvas,
-    {
-      x: 0,
-      y: 0,
-      heading: turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0,
-      speed: TURTLE_SPEED_DEFAULT,
-      showTurtle: true,
-      penDown: true,
-      mode: turtleMode,
-    },
-    commandCompleted
-  ) as SimpleTurtle;
+  let turtle = new SimpleTurtle(canvas, {
+    x: 0,
+    y: 0,
+    heading: turtleMode === "logo" ? TURTLE_LOGO_START_HEADING : 0,
+    speed: TURTLE_SPEED_DEFAULT,
+    showTurtle: true,
+    penDown: true,
+    mode: turtleMode,
+    pencolor: "black",
+    fillcolor: "white",
+  }) as SimpleTurtle;
   return turtle;
 };
 

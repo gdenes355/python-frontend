@@ -6,10 +6,11 @@ addEventListener('activate', () => {
 })
 
 let inputPromiseResolve = null
-let turtlePromiseResolve = null
 let debugPromiseResolve = null
 let sleepPromiseResolve = null
 let sleepTimeout = null
+let turtlePromiseResolve = null
+let turtleResolveAheadCount = 0  // how many promises have been resolved that we haven't even seen
 
 addEventListener('fetch', e => {
   const u = new URL(e.request.url)
@@ -33,22 +34,31 @@ addEventListener('fetch', e => {
     ))
   } else if (u.pathname === '/@turtle@/req.js') {
     e.respondWith(new Promise(function (resolve) {
+      if (turtleResolveAheadCount > 0) {
+        turtleResolveAheadCount--;
+        resolve(new Response(null, { status: 200 }))
+        return
+      }
       if (turtlePromiseResolve != null) {
         turtlePromiseResolve()
       }
       turtlePromiseResolve = resolve
     }))
   } else if (u.pathname === '/@turtle@/resp.js') {
-    e.respondWith(new Promise(r =>
-      e.request.clone().json().then(data => {
-        const local = turtlePromiseResolve
-        turtlePromiseResolve = null
-        if (local) {
-          local(new Response(JSON.stringify(data), { status: 200 }))
-        }
-        r(new Response(null, { status: 200 }))
-      })
-    ))
+    e.respondWith(new Promise(r => {
+      const local = turtlePromiseResolve
+      turtlePromiseResolve = null
+      if (local) {
+        local(new Response(null, { status: 200 }))
+      } else {
+        //this seems very unlikely, but if the turtle command
+        // was so easy to complete (e.g. state update), TS might have
+        // issued a response before a request was received
+        // if this happened, then 
+        turtleResolveAheadCount += 1
+      }
+      r(new Response(null, { status: 200 }))
+    }))
   } else if (u.pathname === '/@debug@/break.js') {
     e.respondWith(new Promise(function (resolve) {
       if (debugPromiseResolve != null) {
@@ -100,6 +110,7 @@ addEventListener('fetch', e => {
         turtlePromiseResolve(new Response(null, { status: 304 }))
         turtlePromiseResolve = null
       }            
+      turtleResolveAheadCount = 0
       return new Response(null, { status: 200 })
     }))
   } else if (e.request.cache === 'only-if-cached' && e.request.mode !== 'same-origin') {

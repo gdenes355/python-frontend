@@ -108,19 +108,32 @@ class ChallengeContextClass {
           this.challenge.canvasDisplayRef &&
           this.challenge.canvasDisplayRef.current
         ) {
-          this.challenge.canvasDisplayRef.current.runTurtleCommand(
-            data.id,
-            data.msg
-          );
+          this.challenge.canvasDisplayRef.current
+            .runTurtleCommand(data.id, data.msg)
+            .catch((e) => console.log("turtle stopped with", e))
+            .then(() => this.actions.turtleCmdComplete());
         } else {
           new Promise((resolve) => {
             this.challenge.canvasPromiseResolve = resolve;
           }).then((result) => {
-            this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
-              data.id,
-              data.msg
-            );
+            this.challenge.canvasDisplayRef?.current
+              ?.runTurtleCommand(data.id, data.msg)
+              .catch((e) => console.log("turtle stopped with", e))
+              .then(() => this.actions.turtleCmdComplete());
           });
+        }
+      }
+    },
+    turtleCmdComplete: () => {
+      if (this.challenge.state.editorState !== ChallengeStatus.READY) {
+        let x = new XMLHttpRequest();
+        x.open("post", "/@turtle@/resp.js");
+        x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+        x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
+        try {
+          x.send();
+        } catch (e) {
+          console.log(e);
         }
       }
     },
@@ -247,7 +260,7 @@ class ChallengeContextClass {
         try {
           x.send("");
         } catch (e) {
-          console.log(e);
+          // console.log(e);
         }
         return; // we can just issue an interrupt, no need to kill worker
       }
@@ -276,6 +289,15 @@ class ChallengeContextClass {
       this.challenge.setState({
         editorState: ChallengeStatus.RESTARTING_WORKER,
       });
+      let x = new XMLHttpRequest();
+      x.open("post", "/@reset@/reset.js");
+      x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
+      try {
+        x.send("");
+      } catch (e) {
+        // console.log(e);
+      }
       this.actions["print-console"](msg);
     },
     "get-code": () => {

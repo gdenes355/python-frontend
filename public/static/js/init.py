@@ -378,27 +378,31 @@ import inspect
 _A = "action"
 _V = "value"
 _idc = 0
+def synchronise():
+    x = js.XMLHttpRequest.new()
+    x.open('get', '/@turtle@/req.js', False)
+    x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
+    x.send()
+    if x.status != 200:
+        raise Exception("Turtle command failed")
+    return x.response
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+    synchronise()
 def done(): 
     msg = {_A:"done"}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+    synchronise()
 class Turtle:
-    def synchronise(self, typ):
-        x = js.XMLHttpRequest.new()
-        x.open('get', typ, False)
-        x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
-        x.send()
-        return x.response
+    
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
       post_message(arg)
-      resp = J.loads(self.synchronise('/@turtle@/req.js'))
-      return resp.get("completed")
+      synchronise()
     def __init__(self):
       global _idc
       self.__id=_idc;_idc+=1;
@@ -433,8 +437,7 @@ class Turtle:
             rgb = (color,color2,color3)
             self.send({_A:"pencolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
-    def color(self, color, color2=-1, color3=-1):
-        self.pencolor(color, color2, color3)
+    def color(self, color, color2=-1, color3=-1): self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
     def width(self, size):self.pensize(size)
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
