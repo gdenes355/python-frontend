@@ -352,7 +352,8 @@ class Challenge
                             <CanvasDisplay
                               ref={(c) => {
                                 this.canvasDisplayRef.current = c;
-                                this.canvasMountedCallback();
+                                if (this.canvasDisplayRef.current)
+                                  this.canvasMountedCallback();
                               }}
                               onHide={() =>
                                 this.setState({ typ: ChallengeTypes.TYP_PY })
