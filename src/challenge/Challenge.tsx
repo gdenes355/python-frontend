@@ -1,6 +1,14 @@
 import React from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Paper,
+  TextField,
+} from "@mui/material";
 import CachedIcon from "@mui/icons-material/Cached";
 
 import { Allotment } from "allotment";
@@ -66,6 +74,7 @@ class Challenge
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -361,12 +370,42 @@ class Challenge
                             <CanvasDisplay ref={this.canvasDisplayRef} />
                           ) : undefined
                         }
+                        files={
+                          this.props.bookNode.additionalFiles?.map(
+                            (file, index) => (
+                              <TextField
+                                multiline={true}
+                                key={index}
+                                inputRef={(ref) => {
+                                  if (this.fileEditorRefs.current) {
+                                    this.fileEditorRefs.current[index] = ref;
+                                  }
+                                }}
+                                defaultValue={
+                                  this.state.additionalFilesLoaded[
+                                    file.filename
+                                  ]
+                                }
+                                InputProps={{
+                                  readOnly: true,
+                                  disableUnderline: true,
+                                }}
+                                margin="dense"
+                                onChange={(e) => {}}
+                                variant="standard"
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  overflowY: "auto",
+                                }}
+                              />
+                            )
+                          ) || []
+                        }
                         fileProperties={
                           this.props.bookNode.additionalFiles || []
                         }
-                        fileContents={this.state.additionalFilesLoaded}
                         fileShowAll={false}
-                        fileReadOnly={true}
                       />
                     </Allotment.Pane>
                   </Allotment>

@@ -41,6 +41,7 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -60,7 +61,7 @@ type ChallengeEditorState = {
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
-  additionalFilesLoaded: {};
+  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -84,6 +85,7 @@ class ChallengeEditor
   canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -286,6 +288,14 @@ class ChallengeEditor
 
     // saving the guide is easy
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
+
+    // saving the files
+    this.props.bookNode.additionalFiles?.forEach((file, index) => {
+      this.props.bookStore.store.save(
+        this.state.additionalFilesLoaded[file.filename],
+        file.filename
+      );
+    });
 
     // update the book from json
     let changed = false;
@@ -512,10 +522,40 @@ class ChallengeEditor
                           }}
                         />
                       }
+                      files={
+                        this.props.bookNode.additionalFiles?.map(
+                          (file, index) => (
+                            <TextField
+                              multiline={true}
+                              key={index}
+                              inputRef={(ref) => {
+                                if (this.fileEditorRefs.current) {
+                                  this.fileEditorRefs.current[index] = ref;
+                                }
+                              }}
+                              defaultValue={
+                                this.state.additionalFilesLoaded[file.filename]
+                              }
+                              margin="dense"
+                              onChange={(e) => {
+                                this.additionalFilesLoadCallback(
+                                  file.filename,
+                                  e.target.value
+                                );
+                              }}
+                              variant="standard"
+                              InputProps={{ disableUnderline: true }}
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                overflowY: "auto",
+                              }}
+                            />
+                          )
+                        ) || []
+                      }
                       fileProperties={this.props.bookNode.additionalFiles || []}
-                      fileContents={this.state.additionalFilesLoaded}
                       fileShowAll={true}
-                      fileReadOnly={false}
                     />
                   </Allotment.Pane>
                 </Allotment>

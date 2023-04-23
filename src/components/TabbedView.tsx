@@ -80,10 +80,7 @@ class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
                 label={pane.label}
                 className={
                   (pane.show ? "tab-show" : "tab-hide") +
-                  (pane.typ === PaneType.FILE_EDITOR ||
-                    pane.typ === PaneType.FILE_VIEWER)
-                    ? " lower"
-                    : ""
+                  (pane.typ === PaneType.FILE_EDITOR ? " lower" : "")
                 }
                 key={i}
               />
