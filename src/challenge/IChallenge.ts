@@ -51,7 +51,6 @@ interface IChallenge {
   keyDownBuffer: Uint8Array | null;
 
   printCallback: DebouncedFunc<() => void>;
-  canvasHideCallback: () => void;
   canvasMountedCallback: () => void;
   canvasPromiseResolve?: (value: any) => void;
 

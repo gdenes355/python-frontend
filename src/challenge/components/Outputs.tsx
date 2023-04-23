@@ -1,7 +1,7 @@
 import React, { useRef, useImperativeHandle, useEffect } from "react";
 import { Box } from "@mui/material";
 
-import TabbedView from "../../components/TabbedView";
+import TabbedView, { TabbedViewHandle } from "../../components/TabbedView";
 
 import PaneType from "../../models/PaneType";
 
@@ -22,7 +22,7 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     setCurrentPane(null);
   }, [props.console, props.canvas, props.fixedInput, props.json]);
 
-  const tabbedViewRef = useRef<TabbedView>(null);
+  const tabbedViewRef = useRef<TabbedViewHandle>(null);
 
   const [currentPane, setCurrentPane] = React.useState<PaneType | null>(null);
 

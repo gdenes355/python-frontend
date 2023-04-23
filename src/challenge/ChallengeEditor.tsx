@@ -104,10 +104,6 @@ class ChallengeEditor
     100
   );
 
-  canvasHideCallback = () => {
-    this.setState({ typ: ChallengeTypes.TYP_PY });
-  };
-
   canvasMountedCallback = () => {
     if (this.canvasPromiseResolve) {
       const local = this.canvasPromiseResolve;
@@ -485,12 +481,12 @@ class ChallengeEditor
                         this.state.typ === ChallengeTypes.TYP_CANVAS ? (
                           <CanvasDisplay
                             ref={(c) => {
-                              if (c) {
-                                this.canvasDisplayRef.current = c;
-                              }
+                              this.canvasDisplayRef.current = c;
                               this.canvasMountedCallback();
                             }}
-                            onHide={() => this.canvasHideCallback()}
+                            onHide={() =>
+                              this.setState({ typ: ChallengeTypes.TYP_PY })
+                            }
                           />
                         ) : undefined
                       }
