@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { throttle } from "lodash";
 import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
 import CachedIcon from "@mui/icons-material/Cached";
@@ -63,7 +63,8 @@ class Challenge
 {
   editorRef = React.createRef<PyEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
+    React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
@@ -353,9 +354,13 @@ class Challenge
                         canvas={
                           this.state.typ === ChallengeTypes.TYP_CANVAS ? (
                             <CanvasDisplay
-                              ref={this.canvasDisplayRef}
+                              ref={(c) => {
+                                if (c) {
+                                  this.canvasDisplayRef.current = c;
+                                }
+                                this.canvasMountedCallback();
+                              }}
                               onHide={() => this.canvasHideCallback()}
-                              onMounted={() => this.canvasMountedCallback()}
                             />
                           ) : undefined
                         }

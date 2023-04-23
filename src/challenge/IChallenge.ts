@@ -41,7 +41,7 @@ type IChallengeState = {
 interface IChallenge {
   editorRef: React.RefObject<PyEditorHandle>;
   parsonsEditorRef: React.RefObject<ParsonsEditorHandle>;
-  canvasDisplayRef: React.RefObject<CanvasDisplayHandle>;
+  canvasDisplayRef: React.MutableRefObject<CanvasDisplayHandle | null>;
   fixedInputFieldRef: React.RefObject<FixedInputFieldHandle>;
   outputsRef: React.RefObject<OutputsHandle>;
 

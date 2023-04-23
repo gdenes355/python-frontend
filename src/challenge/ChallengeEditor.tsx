@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { saveAs } from "file-saver";
 import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 
@@ -80,7 +80,8 @@ class ChallengeEditor
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
+    React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
@@ -483,9 +484,13 @@ class ChallengeEditor
                       canvas={
                         this.state.typ === ChallengeTypes.TYP_CANVAS ? (
                           <CanvasDisplay
-                            ref={this.canvasDisplayRef}
+                            ref={(c) => {
+                              if (c) {
+                                this.canvasDisplayRef.current = c;
+                              }
+                              this.canvasMountedCallback();
+                            }}
                             onHide={() => this.canvasHideCallback()}
-                            onMounted={() => this.canvasMountedCallback()}
                           />
                         ) : undefined
                       }
