@@ -8,6 +8,7 @@ import PaneType from "../models/PaneType";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
+import EditableBookStore from "../book/utils/EditableBookStore";
 
 type WorkerResponse = {
   cmd: string;
@@ -478,12 +479,22 @@ class ChallengeContextClass {
           }
         });
     },
-    "fetch-file": (filename: string) => {
+    "fetch-file": (
+      filename: string,
+      store: EditableBookStore | null = null
+    ) => {
       this.challenge.props.fetcher
         .fetch(filename, this.challenge.props.authContext)
         .then((response) => {
           if (!response.ok) {
-            return "ERROR LOADING FILE";
+            // try to make the file
+            let newContents = "add new file contents here\n";
+            if (store) {
+              store.store.save(newContents, `edit://edit/${filename}`);
+            } else {
+              throw Error("file not available");
+            }
+            return newContents;
           }
           return response.text();
         })

@@ -186,7 +186,10 @@ class ChallengeEditor
 
     this.props.bookNode.additionalFiles?.forEach((file) => {
       if (!(file.filename in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](file.filename);
+        this.chContext.actions["fetch-file"](
+          file.filename,
+          this.props.bookStore
+        );
       }
     });
 
@@ -512,6 +515,7 @@ class ChallengeEditor
                       fileProperties={this.props.bookNode.additionalFiles || []}
                       fileContents={this.state.additionalFilesLoaded}
                       fileShowAll={true}
+                      fileReadOnly={false}
                     />
                   </Allotment.Pane>
                 </Allotment>

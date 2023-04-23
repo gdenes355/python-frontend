@@ -366,6 +366,7 @@ class Challenge
                         }
                         fileContents={this.state.additionalFilesLoaded}
                         fileShowAll={false}
+                        fileReadOnly={true}
                       />
                     </Allotment.Pane>
                   </Allotment>

@@ -21,6 +21,7 @@ type OutputsProps = {
   fileContents: AdditionalFilesContents;
   fileProperties: AdditionalFiles;
   fileShowAll: boolean;
+  fileReadOnly: boolean;
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
@@ -68,7 +69,7 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
         label: file.filename,
         content: props.fileContents[file.filename],
         show: file.visible || props.fileShowAll,
-        typ: PaneType.FILE_EDITOR,
+        typ: props.fileReadOnly ? PaneType.FILE_VIEWER : PaneType.FILE_EDITOR,
       });
     });
   }

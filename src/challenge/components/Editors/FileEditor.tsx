@@ -13,6 +13,7 @@ type FileEditorProps = {
   starterContent: string;
   onToggleFullScreen: () => void;
   enforceVisibility: boolean;
+  readOnly: boolean;
 };
 
 type FileEditorHandle = {
@@ -80,7 +81,7 @@ const FileEditor = React.forwardRef<FileEditorHandle, FileEditorProps>(
           wordWrap: "on",
           lineNumbersMinChars: 4,
           padding: { top: 10 },
-          readOnly: true,
+          readOnly: props.readOnly,
         }}
       />
     );
