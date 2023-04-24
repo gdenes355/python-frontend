@@ -115,10 +115,6 @@ class ChallengeEditor
     });
   }
 
-  getAdditionalFiles() {
-    return this.state.additionalFilesLoaded;
-  }
-
   state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,

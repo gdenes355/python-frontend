@@ -57,7 +57,6 @@ interface IChallenge {
 
   printCallback: DebouncedFunc<() => void>;
   additionalFilesLoadCallback: (filename: string, contents: string) => void;
-  getAdditionalFiles: () => AdditionalFilesContents;
 
   currentConsoleText: string;
   currentFixedUserInput: string[];

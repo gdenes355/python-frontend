@@ -288,7 +288,7 @@ class ChallengeContextClass {
       mode: "debug" | "run" = "debug"
     ) => {
       const addFiles: AdditionalFilesContents =
-        this.challenge.getAdditionalFiles();
+        this.challenge.state.additionalFilesLoaded;
 
       let additionalCode = "";
       Object.keys(addFiles).forEach((filename) => {
@@ -363,7 +363,7 @@ class ChallengeContextClass {
           this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
         const addFiles: AdditionalFilesContents =
-          this.challenge.getAdditionalFiles();
+          this.challenge.state.additionalFilesLoaded;
 
         let additionalCode = "";
         Object.keys(addFiles).forEach((filename) => {

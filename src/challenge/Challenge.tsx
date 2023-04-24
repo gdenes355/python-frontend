@@ -103,10 +103,6 @@ class Challenge
     });
   }
 
-  getAdditionalFiles() {
-    return this.state.additionalFilesLoaded;
-  }
-
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
