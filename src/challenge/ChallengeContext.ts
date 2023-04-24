@@ -126,15 +126,9 @@ class ChallengeContextClass {
     },
     turtleCmdComplete: () => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        let x = new XMLHttpRequest();
-        x.open("post", "/@turtle@/resp.js");
-        x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
-        try {
-          x.send();
-        } catch (e) {
-          console.log(e);
-        }
+        navigator.serviceWorker.controller?.postMessage({
+          cmd: "ps-turtle-resp",
+        });
       }
     },
     cls: () => {
@@ -154,50 +148,29 @@ class ChallengeContextClass {
       }
     },
     "input-entered": (data: InputData) => {
-      let x = new XMLHttpRequest();
-      x.open("post", "/@input@/resp.js");
-      x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
       let input = data?.input == null ? "" : data.input;
-      try {
-        x.send(
-          JSON.stringify({
-            data: input,
-            breakpoints:
-              this.challenge.breakpointsChanged &&
-              this.challenge.editorRef.current
-                ? this.challenge.editorRef.current.getBreakpoints()
-                : null,
-          })
-        );
-      } catch (e) {
-        console.log(e);
-      }
+      navigator.serviceWorker.controller?.postMessage({
+        cmd: "ps-input-resp",
+        data: input,
+        breakpoints:
+          this.challenge.breakpointsChanged && this.challenge.editorRef.current
+            ? this.challenge.editorRef.current.getBreakpoints()
+            : null,
+      });
       this.actions["print-console"](data.input + "\n");
-
       this.challenge.setState({
         editorState: ChallengeStatus.RUNNING,
       });
     },
     continue: (step: boolean = false) => {
-      let x = new XMLHttpRequest();
-      x.open("post", "/@debug@/continue.js");
-      x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
-      try {
-        x.send(
-          JSON.stringify({
-            breakpoints:
-              this.challenge.breakpointsChanged &&
-              this.challenge.editorRef.current
-                ? this.challenge.editorRef.current.getBreakpoints()
-                : null,
-            step: step,
-          })
-        );
-      } catch (e) {
-        console.log(e);
-      }
+      navigator.serviceWorker.controller?.postMessage({
+        cmd: "ps-debug-continue",
+        breakpoints:
+          this.challenge.breakpointsChanged && this.challenge.editorRef.current
+            ? this.challenge.editorRef.current.getBreakpoints()
+            : null,
+        step: step,
+      });
       this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
     },
     step: () => this.actions["continue"](true),
@@ -253,15 +226,7 @@ class ChallengeContextClass {
         this.challenge.workerFullyInitialised
       ) {
         this.challenge.interruptBuffer[0] = 2;
-        let x = new XMLHttpRequest();
-        x.open("post", "/@reset@/reset.js");
-        x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-        x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
-        try {
-          x.send("");
-        } catch (e) {
-          // console.log(e);
-        }
+        navigator.serviceWorker.controller?.postMessage({ cmd: "ps-reset" });
         return; // we can just issue an interrupt, no need to kill worker
       }
       this.challenge.worker?.terminate();
@@ -289,15 +254,7 @@ class ChallengeContextClass {
       this.challenge.setState({
         editorState: ChallengeStatus.RESTARTING_WORKER,
       });
-      let x = new XMLHttpRequest();
-      x.open("post", "/@reset@/reset.js");
-      x.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-      x.setRequestHeader("cache-control", "no-cache, no-store, max-age=0");
-      try {
-        x.send("");
-      } catch (e) {
-        // console.log(e);
-      }
+      navigator.serviceWorker.controller?.postMessage({ cmd: "ps-reset" });
       this.actions["print-console"](msg);
     },
     "get-code": () => {
@@ -327,6 +284,7 @@ class ChallengeContextClass {
       breakpoints: number[],
       mode: "debug" | "run" = "debug"
     ) => {
+      navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
           "",

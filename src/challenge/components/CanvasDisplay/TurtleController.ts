@@ -202,7 +202,7 @@ class SimpleTurtle {
         });
       }
     } else {
-      return newResolvedPromiseError();
+      return newResolvedPromiseError("!alive during driveAlong");
     }
   }
 
@@ -255,7 +255,7 @@ class SimpleTurtle {
     this.drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
 
     if (!this.alive) {
-      return newResolvedPromiseError();
+      return newResolvedPromiseError("!alive during driveto");
     }
 
     if (repeatAngle || repeatLoc) {
@@ -427,9 +427,9 @@ const newResolvedPromise = () =>
     r();
   });
 
-const newResolvedPromiseError = () =>
+const newResolvedPromiseError = (msg: string) =>
   new Promise<void>((r, e) => {
-    e();
+    e(new Error(msg));
   });
 
 const processTurtleCommand = (
