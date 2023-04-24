@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { saveAs } from "file-saver";
 import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 
@@ -80,7 +80,8 @@ class ChallengeEditor
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
+    React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
@@ -102,6 +103,18 @@ class ChallengeEditor
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
+
+  canvasMountedCallback = () => {
+    if (this.canvasPromiseResolve) {
+      const local = this.canvasPromiseResolve;
+      this.canvasPromiseResolve = undefined;
+      if (local) {
+        local(true);
+      }
+    }
+  };
+
+  canvasPromiseResolve?: (value: any) => void;
 
   state: ChallengeEditorState = {
     starterCode: null,
@@ -466,7 +479,16 @@ class ChallengeEditor
                       }
                       canvas={
                         this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                          <CanvasDisplay ref={this.canvasDisplayRef} />
+                          <CanvasDisplay
+                            ref={(c) => {
+                              this.canvasDisplayRef.current = c;
+                              if (this.canvasDisplayRef.current)
+                                this.canvasMountedCallback();
+                            }}
+                            onHide={() =>
+                              this.setState({ typ: ChallengeTypes.TYP_PY })
+                            }
+                          />
                         ) : undefined
                       }
                       json={

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { throttle } from "lodash";
 import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
 import CachedIcon from "@mui/icons-material/Cached";
@@ -63,10 +63,12 @@ class Challenge
 {
   editorRef = React.createRef<PyEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
+    React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileReader = new FileReader();
+  canvasPromiseResolve?: (value: any) => void;
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
@@ -84,6 +86,16 @@ class Challenge
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
+
+  canvasMountedCallback = () => {
+    if (this.canvasPromiseResolve) {
+      const local = this.canvasPromiseResolve;
+      this.canvasPromiseResolve = undefined;
+      if (local) {
+        local(true);
+      }
+    }
+  };
 
   state: ChallengeState = {
     starterCode: null,
@@ -337,7 +349,16 @@ class Challenge
                         }
                         canvas={
                           this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                            <CanvasDisplay ref={this.canvasDisplayRef} />
+                            <CanvasDisplay
+                              ref={(c) => {
+                                this.canvasDisplayRef.current = c;
+                                if (this.canvasDisplayRef.current)
+                                  this.canvasMountedCallback();
+                              }}
+                              onHide={() =>
+                                this.setState({ typ: ChallengeTypes.TYP_PY })
+                              }
+                            />
                           ) : undefined
                         }
                       />
