@@ -106,15 +106,6 @@ class ChallengeEditor
     100
   );
 
-  additionalFilesLoadCallback(filename: string, contents: string) {
-    this.setState({
-      additionalFilesLoaded: {
-        ...this.state.additionalFilesLoaded,
-        [filename]: contents,
-      },
-    });
-  }
-
   state: ChallengeEditorState = {
     starterCode: null,
     savedCode: null,
@@ -187,6 +178,13 @@ class ChallengeEditor
         this.chContext.actions["fetch-file"](
           file.filename,
           this.props.bookStore
+        ).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
         );
       }
     });
@@ -534,10 +532,12 @@ class ChallengeEditor
                               }
                               margin="dense"
                               onChange={(e) => {
-                                this.additionalFilesLoadCallback(
-                                  file.filename,
-                                  e.target.value
-                                );
+                                this.setState({
+                                  additionalFilesLoaded: {
+                                    ...this.state.additionalFilesLoaded,
+                                    [file.filename]: e.target.value,
+                                  },
+                                });
                               }}
                               variant="standard"
                               InputProps={{ disableUnderline: true }}

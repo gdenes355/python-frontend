@@ -483,30 +483,29 @@ class ChallengeContextClass {
       filename: string,
       store: EditableBookStore | null = null
     ) => {
-      this.challenge.props.fetcher
-        .fetch(filename, this.challenge.props.authContext)
-        .then((response) => {
-          if (!response.ok) {
-            // try to make the file
-            let newContents = "add new file contents here\n";
-            if (store) {
-              store.store.save(newContents, `edit://edit/${filename}`);
-            } else {
-              throw Error("file not available");
+      return new Promise<string>((resolve, reject) => {
+        this.challenge.props.fetcher
+          .fetch(filename, this.challenge.props.authContext)
+          .then((response) => {
+            if (!response.ok) {
+              // try to make the file
+              let newContents = "add new file contents here\n";
+              if (store) {
+                store.store.save(newContents, `edit://edit/${filename}`);
+              } else {
+                throw Error("file not available");
+              }
+              return newContents;
             }
-            return newContents;
-          }
-          return response.text();
-        })
-        .then((text) => {
-          this.challenge.additionalFilesLoadCallback(filename, text);
-        })
-        .catch((e) => {
-          this.challenge.additionalFilesLoadCallback(
-            filename,
-            "ERROR LOADING FILE"
-          );
-        });
+            return response.text();
+          })
+          .then((text) => {
+            resolve(text);
+          })
+          .catch((e) => {
+            resolve("ERROR LOADING FILE");
+          });
+      });
     },
     "activate-file": (filename: string, contents: string) => {
       let code = `with open("${filename}", "w") as f:\n    f.write("""${contents}""")`;

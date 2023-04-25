@@ -94,15 +94,6 @@ class Challenge
     100
   );
 
-  additionalFilesLoadCallback(filename: string, contents: string) {
-    this.setState({
-      additionalFilesLoaded: {
-        ...this.state.additionalFilesLoaded,
-        [filename]: contents,
-      },
-    });
-  }
-
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
@@ -145,7 +136,14 @@ class Challenge
 
     this.props.bookNode.additionalFiles?.forEach((file) => {
       if (!(file.filename in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](file.filename);
+        this.chContext.actions["fetch-file"](file.filename).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
+        );
       }
     });
 

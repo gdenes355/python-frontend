@@ -56,7 +56,6 @@ interface IChallenge {
   keyDownBuffer: Uint8Array | null;
 
   printCallback: DebouncedFunc<() => void>;
-  additionalFilesLoadCallback: (filename: string, contents: string) => void;
 
   currentConsoleText: string;
   currentFixedUserInput: string[];
