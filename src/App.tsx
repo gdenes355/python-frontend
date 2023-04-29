@@ -96,28 +96,33 @@ export default function App() {
     >
       <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
         <CssBaseline>
-          <SessionWrapper>
+          <>
             <BrowserRouter>
               <Routes>
-                <Route path="start" element={<Start />} />
-                <Route path="auth-callback" element={<AuthCallbackPage />} />
-                <Route
-                  path="student/books"
-                  element={<StudentDashboard baseUrl={serverUrl} />}
-                />
-                <Route
-                  path="teacher"
-                  element={
-                    <AdminWrapper urlBase={serverUrl}>
-                      <TeacherAdmin baseUrl={serverUrl} />
-                    </AdminWrapper>
-                  }
-                />
-                <Route path="book-editor-frame" element={<BookEditorFrame />} />
-                <Route path="*" element={<AppContainer />} />
+                <Route element={<SessionWrapper />}>
+                  <Route path="start" element={<Start />} />
+                  <Route path="auth-callback" element={<AuthCallbackPage />} />
+                  <Route
+                    path="student/books"
+                    element={<StudentDashboard baseUrl={serverUrl} />}
+                  />
+                  <Route
+                    path="teacher"
+                    element={
+                      <AdminWrapper urlBase={serverUrl}>
+                        <TeacherAdmin baseUrl={serverUrl} />
+                      </AdminWrapper>
+                    }
+                  />
+                  <Route
+                    path="book-editor-frame"
+                    element={<BookEditorFrame />}
+                  />
+                  <Route index path="*" element={<AppContainer />} />
+                </Route>
               </Routes>
             </BrowserRouter>
-          </SessionWrapper>
+          </>
         </CssBaseline>
       </ThemeProvider>
     </VsThemeContext.Provider>

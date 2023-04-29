@@ -3,17 +3,15 @@ import SessionContext, { WsResponse } from "./SessionContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
 import { absolutisePath } from "../utils/pathTools";
+import { useLocation, Outlet } from "react-router-dom";
 
-type SessionWrapperProps = {
-  children?: React.ReactNode;
-};
+type SessionWrapperProps = {};
 
 var wsCounter = 0;
 var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 
 const SessionWrapper = (props: SessionWrapperProps) => {
-  const { children } = props;
-  const searchParams = new URLSearchParams(document.location.search);
+  const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
 
   const [token, setToken] = useState<string>(
@@ -170,7 +168,6 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     ws.current?.send(JSON.stringify(msg));
     return res;
   };
-
   return (
     <SessionContext.Provider
       value={{
@@ -186,7 +183,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         wsSend,
       }}
     >
-      {requiresAuth && token === "" ? <Login info={loginInfo} /> : children}
+      {requiresAuth && token === "" ? <Login info={loginInfo} /> : <Outlet />}
     </SessionContext.Provider>
   );
 };

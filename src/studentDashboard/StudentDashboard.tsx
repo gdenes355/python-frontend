@@ -27,11 +27,10 @@ const StudentDashboard = (props: StudentDashboardProps) => {
 
   useEffect(() => {
     if (books) return;
-    if (sessionContext.token !== token) {
+    if (!sessionContext.token || sessionContext.token !== token) {
       setToken(sessionContext.token);
       let headers = new Headers();
       headers.append("Authorization", `Bearer ${sessionContext.token}`);
-      console.log("fetching", baseUrl, sessionContext);
       fetch(`${baseUrl}/api/student-dashboard`, { headers })
         .then((response) => {
           if (response.status === 200) {
