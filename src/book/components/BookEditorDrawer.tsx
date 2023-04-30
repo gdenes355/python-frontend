@@ -4,7 +4,7 @@ import AddIcon from "@mui/icons-material/Add";
 
 import BookEditorContents from "./BookEditorContents";
 
-import BookNodeModel from "../../models/BookNodeModel";
+import BookNodeModel, { extractFileNames } from "../../models/BookNodeModel";
 import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
@@ -24,12 +24,25 @@ type BookEditorDrawerProps = {
 const BookEditorDrawer = (props: BookEditorDrawerProps) => {
   const addNode = () => {
     let id = uuidv4();
+    let existingFileNames = extractFileNames(props.bookRoot);
+    console.log(existingFileNames);
+    let maxNum = Math.max(
+      ...[
+        0,
+        ...existingFileNames
+          .map((f) => f.match(/^(?:\.\/)*c(\d+)\..*/))
+          .filter((n) => !!n)
+          .map((n) => parseInt(n![1])),
+      ]
+    );
+    console.log(maxNum);
+    let newNum = maxNum + 1;
     let newNode: BookNodeModel = {
       id,
       name: "New page",
       tests: [],
-      py: `${id}.py`,
-      guide: `${id}.md`,
+      py: `c${newNum.toString().padStart(2, "0")}.py`,
+      guide: `c${newNum.toString().padStart(2, "0")}.md`,
     };
 
     if (newNode.py) {

@@ -253,6 +253,22 @@ const extractIdsWithTestsInOrder = (node: BookNodeModel) => {
   return arr;
 };
 
+const _extractFileNames = (node: BookNodeModel, arr: Array<string>) => {
+  if (node.py) arr.push(node.py);
+  if (node.guide) arr.push(node.guide);
+  if (node.children) {
+    for (let child of node.children) {
+      _extractFileNames(child, arr);
+    }
+  }
+};
+
+const extractFileNames = (node: BookNodeModel) => {
+  let arr: Array<string> = [];
+  _extractFileNames(node, arr);
+  return arr;
+};
+
 export default BookNodeModel;
 export {
   findBookNode,
@@ -266,4 +282,5 @@ export {
   findParent,
   moveBookNodeAfter,
   getSinglePage,
+  extractFileNames,
 };
