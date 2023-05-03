@@ -1,8 +1,3 @@
-enum PaneType {
-  CONSOLE = "console",
-  CANVAS = "canvas",
-  FIXED_INPUT = "fixed-input",
-  JSON_EDITOR = "json",
-}
+type PaneType = "console" | "canvas" | "fixed-input" | "json";
 
 export default PaneType;

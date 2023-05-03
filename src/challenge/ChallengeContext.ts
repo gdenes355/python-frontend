@@ -4,7 +4,6 @@ import { TestCases, TestResults } from "../models/Tests";
 import DebugContext from "../models/DebugContext";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
-import PaneType from "../models/PaneType";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
 
@@ -85,7 +84,7 @@ class ChallengeContextClass {
           }
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
-        this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
+        this.challenge.outputsRef?.current?.focusPane("canvas");
         this.challenge.canvasDisplayRef?.current?.runCommand(commands);
       }
     },
@@ -98,16 +97,13 @@ class ChallengeContextClass {
       }
     },
     turtle: (data: TurtleData) => {
-      this.challenge.outputsRef?.current?.focusPane(PaneType.CANVAS);
+      this.challenge.outputsRef?.current?.focusPane("canvas");
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
 
-        if (
-          this.challenge.canvasDisplayRef &&
-          this.challenge.canvasDisplayRef.current
-        ) {
+        if (this.challenge.canvasDisplayRef.current) {
           this.challenge.canvasDisplayRef.current
             .runTurtleCommand(data.id, data.msg)
             .catch((e) => console.log("turtle stopped with", e))
@@ -131,6 +127,9 @@ class ChallengeContextClass {
         });
       }
     },
+    "hide-turtle": () => {
+      this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
+    },
     cls: () => {
       this.challenge.currentConsoleText = "";
       this.challenge.printCallback();
@@ -144,7 +143,7 @@ class ChallengeContextClass {
         this.challenge.setState({
           editorState: ChallengeStatus.AWAITING_INPUT,
         });
-        this.challenge.outputsRef?.current?.focusPane(PaneType.CONSOLE);
+        this.challenge.outputsRef?.current?.focusPane("console");
       }
     },
     "input-entered": (data: InputData) => {

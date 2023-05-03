@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle, useEffect } from "react";
+import React, { useRef, useImperativeHandle } from "react";
 import { Box } from "@mui/material";
 
 import TabbedView, { TabbedViewHandle } from "../../components/TabbedView";
@@ -7,7 +7,6 @@ import PaneType from "../../models/PaneType";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;
-  currentPane: PaneType | null;
 };
 
 type OutputsProps = {
@@ -15,23 +14,18 @@ type OutputsProps = {
   canvas: React.ReactNode;
   fixedInput: React.ReactNode;
   json?: React.ReactNode;
+  visiblePanes: PaneType[];
 };
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
-  useEffect(() => {
-    setCurrentPane(null);
-  }, [props.console, props.canvas, props.fixedInput, props.json]);
-
   const tabbedViewRef = useRef<TabbedViewHandle>(null);
-
-  const [currentPane, setCurrentPane] = React.useState<PaneType | null>(null);
 
   let panes = [
     {
       label: "Console",
       content: props.console,
-      show: true,
-      typ: PaneType.CONSOLE,
+      show: props.visiblePanes.includes("console"),
+      name: "console",
     },
   ];
 
@@ -39,8 +33,8 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     panes.push({
       label: "Fixed input",
       content: props.fixedInput,
-      show: true,
-      typ: PaneType.FIXED_INPUT,
+      show: props.visiblePanes.includes("fixed-input"),
+      name: "fixed-input",
     });
   }
 
@@ -48,8 +42,8 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     panes.push({
       label: "Canvas",
       content: props.canvas,
-      show: true,
-      typ: PaneType.CANVAS,
+      show: props.visiblePanes.includes("canvas"),
+      name: "canvas",
     });
   }
 
@@ -57,26 +51,16 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     panes.push({
       label: "Edit challenge",
       content: props.json,
-      show: true,
-      typ: PaneType.JSON_EDITOR,
+      show: props.visiblePanes.includes("json"),
+      name: "json",
     });
   }
 
   const focusPane = (pane: PaneType) => {
-    if (currentPane === pane) {
-      return true;
-    }
-    for (let i = 0; i < panes.length; i++) {
-      if (panes[i].typ === pane) {
-        tabbedViewRef.current?.requestPane(i);
-        setCurrentPane(pane);
-        return true;
-      }
-    }
-    return false;
+    tabbedViewRef.current?.requestPane(pane);
   };
 
-  useImperativeHandle(ref, () => ({ focusPane, currentPane }));
+  useImperativeHandle(ref, () => ({ focusPane }));
 
   return (
     <Box
@@ -87,11 +71,7 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
         overflow: "hidden",
       }}
     >
-      {panes.length > 1 ? (
-        <TabbedView ref={tabbedViewRef} panes={panes} />
-      ) : (
-        props.console
-      )}
+      <TabbedView ref={tabbedViewRef} panes={panes} />
     </Box>
   );
 });

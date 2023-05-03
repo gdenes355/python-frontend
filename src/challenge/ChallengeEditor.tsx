@@ -41,6 +41,7 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
+import PaneType from "../models/PaneType";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -463,6 +464,16 @@ class ChallengeEditor
                   >
                     <Outputs
                       ref={this.outputsRef}
+                      visiblePanes={[
+                        "console",
+                        "json",
+                        ...(this.state.typ === ChallengeTypes.TYP_CANVAS
+                          ? ["canvas" as PaneType]
+                          : []),
+                        ...(this.state.usesFixedInput
+                          ? ["fixed-input" as PaneType]
+                          : []),
+                      ]}
                       console={
                         <ChallengeConsole
                           content={this.state.consoleText}
@@ -473,23 +484,16 @@ class ChallengeEditor
                         />
                       }
                       fixedInput={
-                        this.state.usesFixedInput ? (
-                          <FixedInputField ref={this.fixedInputFieldRef} />
-                        ) : undefined
+                        <FixedInputField ref={this.fixedInputFieldRef} />
                       }
                       canvas={
-                        this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                          <CanvasDisplay
-                            ref={(c) => {
-                              this.canvasDisplayRef.current = c;
-                              if (this.canvasDisplayRef.current)
-                                this.canvasMountedCallback();
-                            }}
-                            onHide={() =>
-                              this.setState({ typ: ChallengeTypes.TYP_PY })
-                            }
-                          />
-                        ) : undefined
+                        <CanvasDisplay
+                          ref={(c) => {
+                            this.canvasDisplayRef.current = c;
+                            if (this.canvasDisplayRef.current)
+                              this.canvasMountedCallback();
+                          }}
+                        />
                       }
                       json={
                         <JsonEditor
