@@ -16,35 +16,36 @@ type CanvasDisplayHandle = {
 type CanvasDisplayProps = {
   onKeyDown?: React.KeyboardEventHandler;
   onKeyUp?: React.KeyboardEventHandler;
-  onHide: () => void;
 };
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
-    let turtleUsed = false;
-    let turtleRetained = false;
+    const turtleUsed = useRef<boolean>(false);
+    const turtleRetained = useRef<boolean>(false);
+
+    const challenge = useContext(ChallengeContext);
 
     const runTurtleClearup = () => {
-      if (turtleUsed && !turtleRetained) {
-        props.onHide();
+      if (turtleUsed.current && !turtleRetained.current) {
+        challenge?.actions["hide-turtle"]();
       }
-      turtleUsed = false;
-      turtleRetained = false;
+      turtleUsed.current = false;
+      turtleRetained.current = false;
     };
 
     const turtleClear = () => {
       clearTurtle(canvasEl.current as HTMLCanvasElement);
-      turtleUsed = false;
-      turtleRetained = false;
+      turtleUsed.current = false;
+      turtleRetained.current = false;
     };
 
     const runTurtleCommand = (id: number, msg: string) => {
-      turtleUsed = true;
+      turtleUsed.current = true;
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "done") {
-        turtleRetained = true;
+        turtleRetained.current = true;
         return new Promise<void>((r, e) => {
           r();
         });

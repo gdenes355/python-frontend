@@ -36,6 +36,7 @@ import HeaderButtons from "./components/HeaderButtons";
 import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
+import PaneType from "../models/PaneType";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -333,6 +334,15 @@ class Challenge
                     >
                       <Outputs
                         ref={this.outputsRef}
+                        visiblePanes={[
+                          "console",
+                          ...(this.state.typ === ChallengeTypes.TYP_CANVAS
+                            ? ["canvas" as PaneType]
+                            : []),
+                          ...(this.state.usesFixedInput
+                            ? ["fixed-input" as PaneType]
+                            : []),
+                        ]}
                         console={
                           <ChallengeConsole
                             content={this.state.consoleText}
@@ -343,23 +353,16 @@ class Challenge
                           />
                         }
                         fixedInput={
-                          this.state.usesFixedInput ? (
-                            <FixedInputField ref={this.fixedInputFieldRef} />
-                          ) : undefined
+                          <FixedInputField ref={this.fixedInputFieldRef} />
                         }
                         canvas={
-                          this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                            <CanvasDisplay
-                              ref={(c) => {
-                                this.canvasDisplayRef.current = c;
-                                if (this.canvasDisplayRef.current)
-                                  this.canvasMountedCallback();
-                              }}
-                              onHide={() =>
-                                this.setState({ typ: ChallengeTypes.TYP_PY })
-                              }
-                            />
-                          ) : undefined
+                          <CanvasDisplay
+                            ref={(c) => {
+                              this.canvasDisplayRef.current = c;
+                              if (this.canvasDisplayRef.current)
+                                this.canvasMountedCallback();
+                            }}
+                          />
                         }
                       />
                     </Allotment.Pane>
