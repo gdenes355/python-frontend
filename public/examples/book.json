@@ -77,6 +77,37 @@
             ]
         },
         {
+            "id": "8146dc43-a983-464b-a226-f2ce30b23599",
+            "name": "Test filename contents",
+            "guide": "filecontents.md",
+            "py": "filecontents.py",
+            "tests": [
+                {
+                    "in": ["5"],
+                    "out": [
+                        {"typ": "f+", "pattern": "1\\n3\\n5\\n7\\n9", "filename":"numbers.txt"},
+                        {"typ": "f-", "pattern": "1\\n3\\n5\\n7\\n9\\n11", "filename":"numbers.txt"}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ce4e8567-4958-43fb-8536-658d13cd7b8f",
+            "name": "Statement tests",
+            "guide": "statementtest.md",
+            "py": "statementtest.py",
+            "tests": [
+                {
+                    "in": [],
+                    "out": [
+                        {"typ": "s+", "pattern": "21", "statement":"getNextMultipleOfSeven(15)"},
+                        {"typ": "s-", "pattern": "14", "statement":"getNextMultipleOfSeven(14)"},                        
+                        {"typ": "s+", "pattern": "42", "statement":"getNextMultipleOfSeven(41)"}
+                    ]
+                }
+            ]
+        },    
+        {
             "id": "f79a3f47-0e12-4a8c-9913-2d325b1dd245",
             "name": "Empty py",
             "guide": "c03.md",

@@ -517,7 +517,37 @@ def pyexec(code, expected_input, expected_output):
             pattern = requirement["pattern"]  # the pattern to match. Must be present
             typ = requirement.get("typ", "+")
 
-            test_string = test_output.buffer if typ[0] != "c" else code
+            if typ[0] == "c":
+                test_string = code
+            elif typ[0] == "f":
+                # get file contents from filename
+                filename = requirement.get("filename", "")
+                if filename == "":
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing filename in test case", "ins": expected_input}))
+                try:
+                    with open(filename, "r") as f:
+                        test_string = f.read()
+                except FileNotFoundError:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "File not found", "ins": expected_input}))
+                except Exception as e:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Unknown error reading file", "ins": expected_input}))
+            elif typ[0] == "s":
+                # get string from evaluating a code statement
+                if "statement" not in requirement:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing statement in test case", "ins": expected_input}))
+                try:
+                    test_output.clear()
+                    parsed_stmts = ast.parse(code + "\nwith open('STATEMENT_RESULT.txt', 'w') as f:\n    f.write(str(" + requirement.get("statement") + "))")
+                    global_vars = {'hit_breakpoint': hit_breakpoint,
+                                'traceback': traceback, 'input': test_input}
+                    exec(compile(parsed_stmts, filename="YourPythonCode.py",
+                        mode="exec"), global_vars)
+                    with open("STATEMENT_RESULT.txt", "r") as f:
+                        test_string = f.read()   
+                except Exception as e:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating test-case statement", "ins": expected_input}))
+            else:
+                test_string = test_output.buffer
 
             ignore = requirement.get("ignore", "")
             expected_count = int(requirement.get("count", -1))
