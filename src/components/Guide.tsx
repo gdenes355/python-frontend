@@ -26,7 +26,7 @@ const StyledGuide = styled("div")(
     padding-bottom: 50px;
     & :not(pre div) > code { background-color: ${theme.palette.secondary.light};  border-radius: 5px; padding: 4px; color: black; };
     & pre { background-color: ${theme.palette.secondary.light}; color: black;}
-
+    & img { border: 1px solid ${theme.palette.secondary.light}; }
 `
 );
 

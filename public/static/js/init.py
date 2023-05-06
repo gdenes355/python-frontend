@@ -514,8 +514,8 @@ def pyexec(code, expected_input, expected_output):
         criteria_outcomes = []
         for requirement in expected_output:
             requirement = requirement.as_object_map()
-            pattern = requirement["pattern"]  # the pattern to match. Must be present
             typ = requirement.get("typ", "+")
+            pattern = requirement.get("pattern","")  # the pattern to match. Must be present unless turtle
 
             if typ[0] == "c":
                 test_string = code
@@ -532,7 +532,7 @@ def pyexec(code, expected_input, expected_output):
                 except Exception as e:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Unknown error reading file", "ins": expected_input}))
             elif typ[0] == "s":
-                # get string from evaluating a code statement
+                # get string from evaluating a code statement - find a neater/more efficient way to do this?
                 if "statement" not in requirement:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing statement in test case", "ins": expected_input}))
                 try:
@@ -546,6 +546,37 @@ def pyexec(code, expected_input, expected_output):
                         test_string = f.read()   
                 except Exception as e:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating test-case statement", "ins": expected_input}))
+            elif typ[0] == "t":
+                # evaluate turtle canvas result comparison with code from filename
+                if "filename" not in requirement:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing turtle solution filename in test case", "ins": expected_input}))
+                try:
+                    # temporary hack to get turtle canvas to demo
+                    turtle_code = "import turtle\nturtle.done()\nturtle.pencolor('red')\nfor _ in range(4):\n  turtle.forward(100)\n  turtle.right(90)"
+                    msg = {"action":"dump", "value":""}
+                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+                    screen_dump_user = synchronise('/@turtle@/req.js')                    
+                    msg = {"action":"virtual", "value":True}
+                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+                    synchronise('/@turtle@/req.js')
+                    parsed_stmts = ast.parse(turtle_code)
+                    global_vars = {'hit_breakpoint': hit_breakpoint,
+                                'traceback': traceback, 'input': test_input}
+                    exec(compile(parsed_stmts, filename="YourPythonCode.py",
+                        mode="exec"), global_vars)
+                    msg = {"action":"dump", "value":""}
+                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+                    screen_dump_soln = synchronise('/@turtle@/req.js')                                 
+                    msg = {"action":"virtual", "value":False}
+                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+                    synchronise('/@turtle@/req.js')
+                    if screen_dump_user != screen_dump_soln:
+                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
+                    else:
+                        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+                except Exception as e:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
+
             else:
                 test_string = test_output.buffer
 

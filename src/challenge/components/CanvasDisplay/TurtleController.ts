@@ -61,15 +61,19 @@ class SimpleTurtle {
   setposition(x: number, y: number) {
     // drives to required location but doesn't change the current heading (python compliant)
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(x, y, this.state.heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.driveto(x, y, this.state.heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(x, y, this.state.heading).catch(e).then(r)
+        );
+      }
     });
   }
 
   stop() {
     this.alive = false;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   forward(distance: number) {
@@ -79,9 +83,13 @@ class SimpleTurtle {
       this.state.y - distance * Math.sin((this.state.heading / 180) * Math.PI);
 
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(new_x, new_y, this.state.heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.driveto(new_x, new_y, this.state.heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(new_x, new_y, this.state.heading).catch(e).then(r)
+        );
+      }
     });
   }
 
@@ -129,7 +137,7 @@ class SimpleTurtle {
 
   private drawLineTo(x: number, y: number) {
     if (!this.ctx || !this.ctxBackground) {
-      return newResolvedPromise();
+      return Promise.resolve();
     }
 
     this.ctxBackground.beginPath();
@@ -176,12 +184,12 @@ class SimpleTurtle {
     if (this.fillPath !== null) {
       this.fillPath.lineTo(x, y);
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   private driveAlong(arrLocs: Array<[number, number, number]>): Promise<void> {
     if (arrLocs.length === 0) {
-      return newResolvedPromise();
+      return Promise.resolve();
     }
 
     const [x, y, h] = arrLocs.shift()!;
@@ -189,7 +197,7 @@ class SimpleTurtle {
     this.drawLineTo(x, y);
 
     if (this.alive) {
-      if (this.state.speed === -1) {
+      if (this.state.speed === -1 || this.state.virtual) {
         return this.driveAlong(arrLocs);
       } else {
         return new Promise<void>((r, e) => {
@@ -202,7 +210,7 @@ class SimpleTurtle {
         });
       }
     } else {
-      return newResolvedPromiseError("!alive during driveAlong");
+      return Promise.reject(new Error("!alive during driveAlong"));
     }
   }
 
@@ -255,11 +263,11 @@ class SimpleTurtle {
     this.drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
 
     if (!this.alive) {
-      return newResolvedPromiseError("!alive during driveto");
+      return Promise.reject(new Error("!alive during driveto"));
     }
 
     if (repeatAngle || repeatLoc) {
-      if (this.state.speed === -1) {
+      if (this.state.speed === -1 || this.state.virtual) {
         return this.driveto(x, y, heading);
       } else {
         return new Promise<void>((r, e) => {
@@ -272,7 +280,7 @@ class SimpleTurtle {
         });
       }
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   back(distance: number) {
@@ -283,9 +291,14 @@ class SimpleTurtle {
     const new_heading = (this.state.heading + angle) % 360;
 
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.state.heading = new_heading;
+        this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r)
+        );
+      }
     });
   }
 
@@ -298,27 +311,32 @@ class SimpleTurtle {
       angle = 90 - angle;
     }
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(this.state.x, this.state.y, angle).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.state.heading = angle;
+        this.driveto(this.state.x, this.state.y, angle).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(this.state.x, this.state.y, angle).catch(e).then(r)
+        );
+      }
     });
   }
 
   penup() {
     this.state.penDown = false;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pendown() {
     this.state.penDown = true;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pensize(width: number) {
     if (this.ctxBackground) {
       this.ctxBackground.lineWidth = width;
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   showTurtle() {
@@ -333,7 +351,7 @@ class SimpleTurtle {
 
   speed(speed: number) {
     this.state.speed = speed;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pencolor(color: string) {
@@ -342,7 +360,7 @@ class SimpleTurtle {
       this.ctxBackground.strokeStyle = color;
     }
     this.updateTurtleImage();
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pencolor3(r: number, g: number, b: number) {
@@ -355,13 +373,13 @@ class SimpleTurtle {
       this.ctxBackground.fillStyle = color;
     }
     this.updateTurtleImage();
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   begin_fill() {
     this.fillPath = new Path2D();
     this.fillPath.moveTo(this.state.x, this.state.y);
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   end_fill() {
@@ -417,20 +435,13 @@ type TurtleState = {
   mode?: "standard" | "logo";
   pencolor: string;
   fillcolor: string;
+  virtual: boolean;
 };
 
 var turtles = new Map<number, SimpleTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
-
-const newResolvedPromise = () =>
-  new Promise<void>((r, e) => {
-    r();
-  });
-
-const newResolvedPromiseError = (msg: string) =>
-  new Promise<void>((r, e) => {
-    e(new Error(msg));
-  });
+var virtualMode: boolean = false;
+var virtualCanvas: HTMLCanvasElement = document.createElement("canvas");
 
 const processTurtleCommand = (
   id: number,
@@ -439,22 +450,39 @@ const processTurtleCommand = (
 ) => {
   if (cmd.action === "stop") {
     turtles.forEach((t) => t.stop());
-    return newResolvedPromise();
+    return Promise.resolve();
+  }
+
+  if (cmd.action === "virtual") {
+    virtualMode = cmd.value;
+    turtles.clear();
+    if (virtualMode) {
+      virtualCanvas = document.createElement("canvas");
+      virtualCanvas.width = canvas.width;
+      virtualCanvas.height = canvas.height;
+    }
+    return Promise.resolve();
+  }
+
+  if (cmd.action === "dump") {
+    return virtualMode
+      ? Promise.resolve(virtualCanvas?.toDataURL())
+      : Promise.resolve(canvas.toDataURL());
   }
 
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
     turtles.clear();
-    return newResolvedPromise();
+    return Promise.resolve();
   }
   let turtle = turtles.get(id);
   if (!turtle && cmd.action === "reset") {
     // ignore turtle reset if turtle doesn't exist
-    return newResolvedPromise();
+    return Promise.resolve();
   }
   if (!turtle) {
-    turtle = initialiseTurtle(canvas);
+    turtle = initialiseTurtle(virtualMode ? virtualCanvas : canvas);
     turtles.set(id, turtle);
   }
 
@@ -542,14 +570,10 @@ const processTurtleCommand = (
             });
         });
       default:
-        return new Promise<void>((r, e) => {
-          e(new Error(`unknown turtle action ${cmd.action}`));
-        });
+        return Promise.reject(new Error(`unknown turtle action ${cmd.action}`));
     }
   } catch (err) {
-    return new Promise<void>((r, e) => {
-      e(err);
-    });
+    return Promise.reject(err);
   }
 };
 
@@ -566,6 +590,7 @@ const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
     mode: turtleMode,
     pencolor: "black",
     fillcolor: "white",
+    virtual: virtualMode,
   }) as SimpleTurtle;
   return turtle;
 };

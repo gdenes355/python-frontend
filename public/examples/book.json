@@ -106,7 +106,21 @@
                     ]
                 }
             ]
-        },    
+        }, 
+        {
+            "id": "c91966b1-b090-4595-8cc0-abb441532902",
+            "name": "Turtle tests",
+            "guide": "turtletest.md",
+            "py": "turtletest.py",
+            "tests": [
+                {
+                    "in": [],
+                    "out": [
+                        {"typ": "t", "filename":"turtletest_sol.py"}
+                    ]
+                }
+            ]
+        },            
         {
             "id": "f79a3f47-0e12-4a8c-9913-2d325b1dd245",
             "name": "Empty py",

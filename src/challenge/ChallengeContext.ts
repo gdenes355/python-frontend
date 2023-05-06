@@ -107,7 +107,9 @@ class ChallengeContextClass {
           this.challenge.canvasDisplayRef.current
             .runTurtleCommand(data.id, data.msg)
             .catch((e) => console.log("turtle stopped with", e))
-            .then(() => this.actions.turtleCmdComplete());
+            .then((turtleResult) =>
+              this.actions.turtleCmdComplete(turtleResult)
+            );
         } else {
           new Promise((resolve) => {
             this.challenge.canvasPromiseResolve = resolve;
@@ -115,15 +117,18 @@ class ChallengeContextClass {
             this.challenge.canvasDisplayRef?.current
               ?.runTurtleCommand(data.id, data.msg)
               .catch((e) => console.log("turtle stopped with", e))
-              .then(() => this.actions.turtleCmdComplete());
+              .then((turtleResult) =>
+                this.actions.turtleCmdComplete(turtleResult)
+              );
           });
         }
       }
     },
-    turtleCmdComplete: () => {
+    turtleCmdComplete: (turtleResult: string | void) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         navigator.serviceWorker.controller?.postMessage({
           cmd: "ps-turtle-resp",
+          data: turtleResult,
         });
       }
     },

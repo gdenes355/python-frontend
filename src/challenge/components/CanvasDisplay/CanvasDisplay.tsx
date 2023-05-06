@@ -7,7 +7,7 @@ import ChallengeContext from "../../ChallengeContext";
 
 type CanvasDisplayHandle = {
   turtleClear: () => void;
-  runTurtleCommand: (id: number, msg: string) => Promise<void>;
+  runTurtleCommand: (id: number, msg: string) => Promise<string | void>;
   runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
