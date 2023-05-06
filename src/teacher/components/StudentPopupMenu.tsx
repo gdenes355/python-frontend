@@ -1,5 +1,4 @@
 import React, { useImperativeHandle, useState } from "react";
-import { ClassModel } from "../Models";
 import { Menu, MenuItem, MenuList } from "@mui/material";
 import DeleteDialog from "../../components/dialogs/DeleteDialog";
 
