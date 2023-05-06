@@ -4,8 +4,8 @@ import AddIcon from "@mui/icons-material/Add";
 
 import BookEditorContents from "./BookEditorContents";
 
-import BookNodeModel from "../../models/BookNodeModel";
-import EditableBookStore from "../utils/EditableBookStore";
+import BookNodeModel, { extractFileNames } from "../../models/BookNodeModel";
+import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
 import { findParent } from "../../models/BookNodeModel";
@@ -14,7 +14,7 @@ type BookEditorDrawerProps = {
   open: boolean;
   bookRoot: BookNodeModel;
   bookNode: BookNodeModel;
-  store: EditableBookStore;
+  store: IEditableBookStore;
   activePageId?: string;
   onRequestOpen: (open: boolean) => void;
   onNodeSelected: (node: BookNodeModel) => void;
@@ -24,13 +24,25 @@ type BookEditorDrawerProps = {
 const BookEditorDrawer = (props: BookEditorDrawerProps) => {
   const addNode = () => {
     let id = uuidv4();
+    let existingFileNames = extractFileNames(props.bookRoot);
+    console.log(existingFileNames);
+    let maxNum = Math.max(
+      ...[
+        0,
+        ...existingFileNames
+          .map((f) => f.match(/^(?:\.\/)*c(\d+)\..*/))
+          .filter((n) => !!n)
+          .map((n) => parseInt(n![1])),
+      ]
+    );
+    let newNum = maxNum + 1;
     let newNode: BookNodeModel = {
       id,
       name: "New page",
       tests: [],
       additionalFiles: [],
-      py: `${id}.py`,
-      guide: `${id}.md`,
+      py: `c${newNum.toString().padStart(2, "0")}.py`,
+      guide: `c${newNum.toString().padStart(2, "0")}.md`,
     };
 
     if (newNode.py) {

@@ -4,11 +4,11 @@ import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, clearTurtle } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
-import AsyncQueue from "../../../utils/AsyncQueue";
 
 type CanvasDisplayHandle = {
   turtleClear: () => void;
-  runTurtleCommand: (id: number, msg: string) => void;
+  runTurtleCommand: (id: number, msg: string) => Promise<void>;
+  runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
@@ -22,22 +22,38 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
+    const turtleUsed = useRef<boolean>(false);
+    const turtleRetained = useRef<boolean>(false);
 
-    const turtleInstructionQueue = useRef<AsyncQueue>(new AsyncQueue());
+    const challenge = useContext(ChallengeContext);
+
+    const runTurtleClearup = () => {
+      if (turtleUsed.current && !turtleRetained.current) {
+        challenge?.actions["hide-turtle"]();
+      }
+      turtleUsed.current = false;
+      turtleRetained.current = false;
+    };
 
     const turtleClear = () => {
-      turtleInstructionQueue.current?.reset();
       clearTurtle(canvasEl.current as HTMLCanvasElement);
+      turtleUsed.current = false;
+      turtleRetained.current = false;
     };
 
     const runTurtleCommand = (id: number, msg: string) => {
+      turtleUsed.current = true;
       const turtleObj = JSON.parse(msg);
-      turtleInstructionQueue.current.addItem(() =>
-        processTurtleCommand(
-          id,
-          turtleObj,
-          canvasEl.current as HTMLCanvasElement
-        )
+      if (turtleObj.action === "done") {
+        turtleRetained.current = true;
+        return new Promise<void>((r, e) => {
+          r();
+        });
+      }
+      return processTurtleCommand(
+        id,
+        turtleObj,
+        canvasEl.current as HTMLCanvasElement
       );
     };
 
@@ -75,6 +91,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
+      runTurtleClearup,
       runAudioCommand,
       turtleClear,
     }));

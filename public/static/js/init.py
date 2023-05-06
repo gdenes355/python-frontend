@@ -371,27 +371,42 @@ step_into = False
 with open("turtle.py", "w") as file:
     file.write('''
 import js
+import struct
 from pyodide.ffi import to_js
 import json as J
 import inspect
 _A = "action"
 _V = "value"
 _idc = 0
+def synchronise():
+    x = js.XMLHttpRequest.new()
+    x.open('get', '/@turtle@/req.js', False)
+    x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
+    x.send()
+    if x.status != 200:
+        raise Exception("Turtle command failed")
+    return x.response
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
-def done():pass # no need to do anything
+    synchronise()
+def done(): 
+    msg = {_A:"done"}
+    post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+    synchronise()
 class Turtle:
+    
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
-      post_message(arg)  
+      post_message(arg)
+      synchronise()
     def __init__(self):
       global _idc
       self.__id=_idc;_idc+=1;
-      self.send({_A:"reset"})
+      # self.send({_A:"reset"})
     def forward(self, dist):self.send({_A:"forward", _V:dist})
     def fd(self, dist):self.forward(dist)
     def setposition(self, x, y):self.send({_A:"setposition", "x":x, "y":y})
@@ -415,20 +430,33 @@ class Turtle:
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, color):self.send({_A:"pencolor", _V:color})
+    def pencolor(self, color, color2=-1, color3=-1):
+        if color2 == -1 and color3 == -1:
+            self.send({_A:"pencolor", _V:color})
+        else:
+            rgb = (color,color2,color3)
+            self.send({_A:"pencolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
-    def color(self, color):self.pencolor(color)
+    def color(self, color, color2=-1, color3=-1): self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
     def width(self, size):self.pensize(size)
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, color):self.send({_A:"fillcolor", _V:color})
+    def fillcolor(self, color, color2=-1, color3=-1):
+        if color2 == -1 and color3 == -1:
+            self.send({_A:"fillcolor", _V:color})
+        else:
+            rgb = (color,color2,color3)
+            self.send({_A:"fillcolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
+
+# ensure always cleared
+mode("standard")
 ''')
 
 
@@ -486,9 +514,11 @@ def pyexec(code, expected_input, expected_output):
         criteria_outcomes = []
         for requirement in expected_output:
             requirement = requirement.as_object_map()
-            actual_output = test_output.buffer
             pattern = requirement["pattern"]  # the pattern to match. Must be present
             typ = requirement.get("typ", "+")
+
+            test_string = test_output.buffer if typ[0] != "c" else code
+
             ignore = requirement.get("ignore", "")
             expected_count = int(requirement.get("count", -1))
 
@@ -498,28 +528,29 @@ def pyexec(code, expected_input, expected_output):
                 # no lib support for this, so we just strip whitespaces from both the actual and the expected
                 # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
                 # But then really they shouldn't write a regex that tests for whitespace and ask us to ignore white space
-                actual_output = re.sub(r"\s+", "", actual_output)
+                test_string = re.sub(r"\s+", "", test_string)
                 pattern = re.sub(r"\s+", "", pattern)
             
             if "p" in ignore:
                 # similar to whitespace, this is a bit of a hack
                 # remove all punctuations from the actual
-                actual_output = re.sub(r"[^\w*\s]", "", actual_output)
+                test_string = re.sub(r"[^\w*\s]", "", test_string)
                 # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
                 # This is not a perfect solution, but it's good enough for most cases
                 pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
-            actual_count = len(re.findall(pattern, actual_output, flags))
+
+            actual_count = len(re.findall(pattern, test_string, flags))
             outcome = True
-            if typ == "+":
+            if "+" in typ:
                 if actual_count == 0 or ((expected_count != -1) and (expected_count != actual_count)):
                     outcome = False
-            elif typ == "-":
+            elif "-" in typ:
                 if actual_count > 0 or (expected_count != -1 and expected_count == actual_count):
                     outcome = False
             criteria_outcomes.append(outcome)
         # Yay, We got this far without failing!
         if False in criteria_outcomes:
-            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": str(test_output.buffer), "ins": expected_input}))
+            return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect output", "expected": original_expected_output, "criteriaOutcomes": criteria_outcomes, "actual": test_output.buffer, "ins": expected_input}))
         else:
             return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
@@ -543,7 +574,6 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
-    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -570,6 +600,7 @@ def pydebug(code, breakpoints):
                              for i in range(len(node.body))])
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
+
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
     sys.stdout = debug_output
@@ -581,8 +612,8 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
-    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
-    exec(code, global_vars)    
+
+    exec(code, global_vars)
 
 
 def update_breakpoints(breakpoints):

@@ -21,6 +21,7 @@ type InputDialogProps = {
   disabledOptions?: string[];
   onInputEntered: (data: string) => void;
   onClose: () => void;
+  renderOption?: (option: string) => string;
 };
 
 const InputDialog = (props: InputDialogProps) => {
@@ -47,6 +48,11 @@ const InputDialog = (props: InputDialogProps) => {
             )}
             onChange={(e, n) => setValue(n || "")}
             value={value || null}
+            renderOption={(lprops, option) => (
+              <li {...lprops}>
+                {props.renderOption ? props.renderOption(option) : option}
+              </li>
+            )}
           />
         ) : (
           <TextField

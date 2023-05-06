@@ -64,7 +64,14 @@ async function createEditableBookStore(
   return new EditableBookStore(book);
 }
 
-class EditableBookStore {
+interface IEditableBookStore {
+  store: {
+    save: (text: string, url: string) => void;
+    saveBook: () => void;
+  };
+}
+
+class EditableBookStore implements IEditableBookStore {
   constructor(book?: BookNodeModel) {
     if (!book) {
       let stored = localStorage.getItem("edit://edit/book.json");
@@ -120,4 +127,4 @@ class EditableBookStore {
 }
 
 export default EditableBookStore;
-export { createEditableBookStore };
+export { createEditableBookStore, IEditableBookStore };

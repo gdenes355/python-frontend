@@ -1,4 +1,4 @@
-import React from "react";
+import React, { MutableRefObject } from "react";
 import { saveAs } from "file-saver";
 import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 
@@ -42,6 +42,7 @@ import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
+import PaneType from "../models/PaneType";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -82,7 +83,8 @@ class ChallengeEditor
   editorRef = React.createRef<PyEditorHandle>();
   jsonEditorRef = React.createRef<JsonEditorHandle>();
   parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef = React.createRef<CanvasDisplayHandle>();
+  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
+    React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
   fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
@@ -105,6 +107,18 @@ class ChallengeEditor
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
+
+  canvasMountedCallback = () => {
+    if (this.canvasPromiseResolve) {
+      const local = this.canvasPromiseResolve;
+      this.canvasPromiseResolve = undefined;
+      if (local) {
+        local(true);
+      }
+    }
+  };
+
+  canvasPromiseResolve?: (value: any) => void;
 
   state: ChallengeEditorState = {
     starterCode: null,
@@ -484,6 +498,16 @@ class ChallengeEditor
                   >
                     <Outputs
                       ref={this.outputsRef}
+                      visiblePanes={[
+                        "console",
+                        "json",
+                        ...(this.state.typ === ChallengeTypes.TYP_CANVAS
+                          ? ["canvas" as PaneType]
+                          : []),
+                        ...(this.state.usesFixedInput
+                          ? ["fixed-input" as PaneType]
+                          : []),
+                      ]}
                       console={
                         <ChallengeConsole
                           content={this.state.consoleText}
@@ -494,14 +518,16 @@ class ChallengeEditor
                         />
                       }
                       fixedInput={
-                        this.state.usesFixedInput ? (
-                          <FixedInputField ref={this.fixedInputFieldRef} />
-                        ) : undefined
+                        <FixedInputField ref={this.fixedInputFieldRef} />
                       }
                       canvas={
-                        this.state.typ === ChallengeTypes.TYP_CANVAS ? (
-                          <CanvasDisplay ref={this.canvasDisplayRef} />
-                        ) : undefined
+                        <CanvasDisplay
+                          ref={(c) => {
+                            this.canvasDisplayRef.current = c;
+                            if (this.canvasDisplayRef.current)
+                              this.canvasMountedCallback();
+                          }}
+                        />
                       }
                       json={
                         <JsonEditor

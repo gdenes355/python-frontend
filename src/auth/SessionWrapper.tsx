@@ -2,17 +2,16 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import SessionContext, { WsResponse } from "./SessionContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
+import { absolutisePath } from "../utils/pathTools";
+import { useLocation, Outlet } from "react-router-dom";
 
-type SessionWrapperProps = {
-  children?: React.ReactNode;
-};
+type SessionWrapperProps = {};
 
 var wsCounter = 0;
 var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 
 const SessionWrapper = (props: SessionWrapperProps) => {
-  const { children } = props;
-  const searchParams = new URLSearchParams(document.location.search);
+  const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
 
   const [token, setToken] = useState<string>(
@@ -37,9 +36,26 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const [wsConnectionUrl, setWsConnectionUrl] = useState<string>("");
 
   useEffect(() => {
-    if (queryBookPath && queryBookPath !== bookPath && token !== "") {
-      // so this session now needs to end...
-      logout();
+    if (token !== "" && queryBookPath) {
+      // we have a token already and we need to open a book (from query)
+      if (queryBookPath === bookPath) {
+        // all good, the query matches the current book
+        return;
+      }
+
+      // otherwise to avoid leaking the token, check that the queryBookPath is from the same origin as the bookPath
+      let queryBookPathAbs = absolutisePath(
+        queryBookPath,
+        window.location.origin
+      );
+      let bookPathAbs = absolutisePath(bookPath, window.location.origin);
+      if (new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin) {
+        console.log("force logout...", queryBookPathAbs, bookPathAbs);
+        logout();
+      } else {
+        setBookPath(queryBookPath);
+        localStorage.setItem("session-book", queryBookPath);
+      }
     }
   }, [queryBookPath, bookPath, token]);
 
@@ -152,7 +168,6 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     ws.current?.send(JSON.stringify(msg));
     return res;
   };
-
   return (
     <SessionContext.Provider
       value={{
@@ -168,7 +183,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         wsSend,
       }}
     >
-      {requiresAuth && token === "" ? <Login info={loginInfo} /> : children}
+      {requiresAuth && token === "" ? <Login info={loginInfo} /> : <Outlet />}
     </SessionContext.Provider>
   );
 };

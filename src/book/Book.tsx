@@ -129,17 +129,6 @@ const Book = (props: BookProps) => {
   ]);
 
   /**
-   * if book path doesn't match auth, then force logout
-   */
-  useEffect(() => {
-    if (bookPath !== authContext.bookPath) {
-      if (authContext.isLoggedIn()) {
-        authContext.logout();
-      }
-    }
-  }, [bookPath, authContext]);
-
-  /**
    * Managing edit state
    */
   const bookClonedForEditing = useMemo(

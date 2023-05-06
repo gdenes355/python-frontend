@@ -3,6 +3,7 @@ import {
   Autocomplete,
   Box,
   Button,
+  Checkbox,
   CircularProgress,
   Grid,
   IconButton,
@@ -28,14 +29,24 @@ import {
   ResultsModel,
   ChallengeResultComplexModel,
 } from "./Models";
-import ResultCodePane from "./ResultCodePane";
-import ResultsTable from "./ResultsTable";
+import ResultCodePane from "./components/ResultCodePane";
+import ResultsTable from "./components/ResultsTable";
 import AddIcon from "@mui/icons-material/Add";
-import AddGroupDialog from "./AddGroupDialog";
+import AddGroupDialog from "./components/AddGroupDialog";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
 type TeacherAdminProps = {
   baseUrl: string;
 };
+
+type GroupBook = {
+  bookTitle: string;
+  enabled: boolean;
+};
+
+const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
+const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
   const sessionContext = useContext(SessionContext);
@@ -46,13 +57,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     undefined
   );
   const [updateCtr, setUpdateCtr] = useState<number>(0);
-  const forceUpdate = () => setUpdateCtr((c) => c + 1);
+  const forceUpdate = useCallback(() => setUpdateCtr((c) => c + 1), []);
 
   const [bookTitles, setBookTitles] = useState<Array<string>>([]);
-  const [bookTitlesInGroup, setBookTitlesInGroup] = useState<Array<string>>([]);
-  const [activeBookTitle, setActiveBookTitle] = useState<string | undefined>(
+  const [booksInGroup, setBooksInGroup] = useState<Array<GroupBook>>([]);
+  const [activeBook, setActiveBook] = useState<GroupBook | undefined>(
     undefined
   );
+  const activeBookTitle = useRef<string | undefined>(undefined); // not for rendering, just for persistence across group changes
 
   const [book, setBook] = useState<BookNodeModel | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -97,15 +109,33 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   }, [request]);
 
   useEffect(() => {
+    activeBookTitle.current = activeBook?.bookTitle;
+  }, [activeBook]);
+
+  useEffect(() => {
     if (!activeGroup) return;
-    setBookTitlesInGroup(activeGroup?.books || []);
-    setActiveBookTitle(undefined);
-  }, [activeGroup]);
+    let displayBooks: Array<GroupBook> = [
+      ...(activeGroup.books?.map((b) => ({ bookTitle: b, enabled: true })) ||
+        []),
+      ...(activeGroup.disabled_books?.map((b) => ({
+        bookTitle: b,
+        enabled: false,
+      })) || []),
+    ];
+    setBooksInGroup(displayBooks);
+    let newActiveBook: GroupBook | undefined = undefined;
+    if (activeBookTitle.current) {
+      newActiveBook = displayBooks.find(
+        (b) => b.bookTitle === activeBookTitle.current
+      );
+    }
+    setActiveBook(newActiveBook);
+  }, [activeGroup, updateCtr]);
 
   useEffect(() => {
     setError(undefined);
 
-    if (!activeBookTitle || !activeGroup) {
+    if (!activeBook || !activeGroup) {
       setBookFetcher(undefined);
       setResults([]);
       return;
@@ -113,15 +143,15 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
     setBook(undefined);
 
-    setBookFetcher(new BookFetcher(activeBookTitle));
+    setBookFetcher(new BookFetcher(activeBook.bookTitle));
     request(
       `api/admin/classes/${activeGroup.name}/books/${encodeURIComponent(
-        activeBookTitle
+        activeBook.bookTitle
       )}/results`
     )
       .then(setResults)
       .catch((e) => setError(e.reason));
-  }, [activeBookTitle, request, activeGroup]);
+  }, [activeBook, request, activeGroup, updateCtr]);
 
   useEffect(() => {
     if (!bookFetcher) {
@@ -174,7 +204,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     }).then((resp) => {
       if (resp.status === 200) {
         activeGroup.books?.push(bookTitle);
-        setActiveBookTitle(bookTitle);
+        setActiveBook({ bookTitle, enabled: true });
         forceUpdate();
       }
     });
@@ -227,6 +257,66 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     });
   };
 
+  const onDeleteStudent = (student: string) => {
+    if (!activeGroup || !student) return;
+    fetch(
+      `${props.baseUrl}/api/admin/classes/${activeGroup.name}/students/${student}`,
+      {
+        method: "delete",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionContext.token}`,
+        },
+      }
+    ).then((resp) => {
+      if (resp.status === 200) {
+        activeGroup.students = activeGroup.students.filter(
+          (s) => s !== student
+        );
+        forceUpdate();
+      }
+    });
+  };
+
+  const onUpdateBookEnabled = (book: GroupBook, enabled: boolean) => {
+    if (!activeGroup) return;
+    const group = activeGroup;
+    fetch(`${props.baseUrl}/api/admin/classes/${group.name}/books`, {
+      method: "post",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionContext.token}`,
+      },
+      body: JSON.stringify({ book: book.bookTitle, enabled }),
+    }).then((resp) => {
+      if (resp.status === 200) {
+        book.enabled = enabled;
+        if (enabled) {
+          group.books = [
+            ...(group.books?.filter((b) => b !== book.bookTitle) || []),
+            book.bookTitle,
+          ];
+          group.disabled_books = [
+            ...(group.disabled_books?.filter((b) => b !== book.bookTitle) ||
+              []),
+          ];
+        } else {
+          group.books = [
+            ...(group.books?.filter((b) => b !== book.bookTitle) || []),
+          ];
+          group.disabled_books = [
+            ...(group.disabled_books?.filter((b) => b !== book.bookTitle) ||
+              []),
+            book.bookTitle,
+          ];
+        }
+        forceUpdate();
+      }
+    });
+  };
+
   return (
     <div className="h-100">
       <Box
@@ -265,13 +355,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
         <InputDialog
           type="combo"
           options={bookTitles}
-          disabledOptions={bookTitlesInGroup}
+          disabledOptions={booksInGroup.map((b) => b.bookTitle)}
           title="Add book"
           inputLabel="Book"
           onInputEntered={onAddBook}
           okButtonLabel="Add"
           open={dialogState === "addBook"}
           onClose={() => setDialogState("")}
+          renderOption={(option) => option.replace(/^books\//, "")}
           fullWidth
         />
         <AddGroupDialog
@@ -322,12 +413,48 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   >
                     <Autocomplete
                       size="small"
-                      value={activeBookTitle || null}
-                      onChange={(e, n) => setActiveBookTitle(n || undefined)}
-                      options={bookTitlesInGroup}
-                      getOptionLabel={(option) => (option ? option : "")}
+                      value={activeBook || null}
+                      onChange={(e, n) => setActiveBook(n || undefined)}
+                      options={booksInGroup.sort((a, b) =>
+                        a.enabled !== b.enabled
+                          ? a.enabled
+                            ? -1
+                            : 1
+                          : a.bookTitle.localeCompare(b.bookTitle)
+                      )}
+                      groupBy={(option) =>
+                        option.enabled ? "Enabled" : "Disabled"
+                      }
+                      getOptionLabel={(option) =>
+                        option
+                          ? option.bookTitle
+                              .replace(/^books\//, "")
+                              .replace(/\//g, "  /  ")
+                          : ""
+                      }
                       renderInput={(params) => (
-                        <TextField {...params} label="Book" />
+                        <>
+                          <TextField {...params} label="Book" />
+                        </>
+                      )}
+                      renderOption={(props, option) => (
+                        <li {...props}>
+                          <Box sx={{ flex: 1 }}>
+                            {option.bookTitle
+                              .replace(/^books\//, "")
+                              .replace(/\//g, " / ")}
+                          </Box>
+                          <Checkbox
+                            icon={icon}
+                            checkedIcon={checkedIcon}
+                            style={{ marginRight: 8 }}
+                            checked={option.enabled}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => {
+                              onUpdateBookEnabled(option, e.target.checked);
+                            }}
+                          />
+                        </li>
                       )}
                       disabled={!activeGroup}
                     />
@@ -351,15 +478,25 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             ) : (
               <React.Fragment>
                 <h2>{book?.name}&nbsp;</h2>
+                {activeBook ? (
+                  <a
+                    href={`${window.location.origin}?bk=${activeBook.bookTitle}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {window.location.origin}?bk={activeBook.bookTitle}
+                  </a>
+                ) : undefined}
                 <ResultsTable
                   book={book}
-                  bookTitle={activeBookTitle}
+                  bookTitle={activeBook?.bookTitle}
                   group={activeGroup}
                   updateCtr={updateCtr}
                   results={results}
                   onResultSelected={onResultSet}
                   onResultAdd={onResultAdd}
                   onResultsSelected={onResultsSet}
+                  onDeleteStudent={onDeleteStudent}
                 />
                 {activeGroup && book ? (
                   <IconButton

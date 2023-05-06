@@ -182,7 +182,7 @@
           "typ": {
             "type": "string",
             "description": "should the output match this requirement or not",
-            "enum": ["+", "-"],
+            "enum": ["+", "-", "c+", "c-"],
             "default": "+"
           },
           "ignore": {

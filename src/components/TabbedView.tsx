@@ -1,38 +1,33 @@
-import React from "react";
+import React, { useEffect, useImperativeHandle, useState } from "react";
 import { Box, Tabs, Tab } from "@mui/material";
 import "./TabbedView.css";
-import PaneType from "../models/PaneType";
 
 type TabbedPane = {
   label: string;
   content: React.ReactNode;
   show: boolean;
-  typ: PaneType;
+  name: string;
 };
 
 type TabbedViewProps = {
   panes: TabbedPane[];
 };
 
-type TabbedViewState = {
-  currentTab: number | false;
-};
-
 type TabPanelProps = {
   children?: React.ReactNode;
-  index: number;
-  value: number | false;
+  name: string;
+  activeName: string | null;
 };
 
 function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
+  const { children, name, activeName, ...other } = props;
 
   return (
     <Box
       role="tabpanel"
-      hidden={value !== index}
-      id={`tabpanel-${index}`}
-      aria-labelledby={`output-tab-${index}`}
+      hidden={name !== activeName}
+      id={`tabpanel-${name}`}
+      aria-labelledby={`output-tab-${name}`}
       {...other}
       sx={{
         p: 3,
@@ -48,54 +43,79 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
-class TabbedView extends React.Component<TabbedViewProps, TabbedViewState> {
-  constructor(props: TabbedViewProps) {
-    super(props);
-    this.requestPane.bind(this);
-  }
+type TabbedViewHandle = {
+  requestPane: (name: string) => void;
+};
 
-  state: TabbedViewState = {
-    currentTab: false,
-  };
+const TabbedView = React.forwardRef<TabbedViewHandle, TabbedViewProps>(
+  (props, ref) => {
+    const [currentTab, setCurrentTab] = useState<string | null>(null);
+    const [showTabBar, setShowTabBar] = useState<boolean>(true);
 
-  requestPane(index: number) {
-    this.setState({ currentTab: index });
-  }
+    const pendingRequestedTab = React.useRef<string | null>(null);
 
-  componentDidMount() {
-    this.setState({ currentTab: 0 });
-  }
+    useImperativeHandle(ref, () => ({ requestPane }));
 
-  render() {
+    useEffect(() => {
+      if (pendingRequestedTab.current) {
+        if (
+          props.panes.find(
+            (p) => p.name === pendingRequestedTab.current && p.show
+          )
+        ) {
+          pendingRequestedTab.current = null;
+          setCurrentTab(pendingRequestedTab.current);
+        }
+      }
+      setShowTabBar(props.panes.filter((p) => p.show).length > 1);
+    }, [props.panes]);
+
+    const requestPane = (name: string | null) => {
+      if (!!name || props.panes.find((p) => p.name === name)) {
+        // we can make this change immediately
+        pendingRequestedTab.current = null;
+        setCurrentTab(name);
+      } else {
+        pendingRequestedTab.current = name;
+        setCurrentTab(null);
+      }
+    };
+
+    // if the current tab is not visible, switch to the first tab (assumed to be visible)
+    const actualCurrent =
+      currentTab && props.panes.find((p) => p.name === currentTab && p.show)
+        ? currentTab
+        : props.panes[0].name;
+
     return (
       <Box sx={{ flexDirection: "column", display: "flex", height: "100%" }}>
-        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Tabs
-            value={this.state.currentTab}
-            onChange={(evt, newVal) => this.setState({ currentTab: newVal })}
-            aria-label="Output tabs"
-          >
-            {this.props.panes.map((pane, i) => (
-              <Tab
-                label={pane.label}
-                className={
-                  (pane.show ? "tab-show" : "tab-hide") +
-                  (pane.typ === PaneType.FILE_EDITOR ? " lower" : "")
-                }
-                key={i}
-              />
-            ))}
-          </Tabs>
-        </Box>
-        {this.props.panes.map((pane, i) => (
-          <TabPanel value={this.state.currentTab} index={i} key={i}>
+        {showTabBar ? (
+          <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+            <Tabs
+              value={actualCurrent}
+              onChange={(evt, newVal) => setCurrentTab(newVal)}
+              aria-label="Output tabs"
+            >
+              {props.panes.map((pane) => (
+                <Tab
+                  value={pane.name}
+                  label={pane.label}
+                  className={pane.show ? "tab-show lower" : "tab-hide lower"}
+                  key={pane.name}
+                />
+              ))}
+            </Tabs>
+          </Box>
+        ) : null}
+        {props.panes.map((pane) => (
+          <TabPanel activeName={actualCurrent} name={pane.name} key={pane.name}>
             {pane.content}
           </TabPanel>
         ))}
       </Box>
     );
   }
-}
+);
 
 export default TabbedView;
-export { TabbedPane };
+export { TabbedPane, TabbedViewHandle };
