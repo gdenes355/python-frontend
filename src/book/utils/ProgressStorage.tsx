@@ -2,6 +2,7 @@ import { useContext, useEffect, useState } from "react";
 import SessionContext from "../../auth/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
+import { throttle } from "lodash";
 
 const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
@@ -91,6 +92,61 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     setAllTestResults(allTestResults); // trigger update
   };
 
+  const persistInServer = throttle(
+    (challenge: BookNodeModel, outcome?: boolean, code?: string) => {
+      if (!sessionContext.isLoggedIn()) return;
+
+      // if code is too long, trim it to 4000 characters
+      if (code && code.length > 4000) {
+        code = code.substring(0, 4000);
+      }
+
+      // check for ws
+      if (sessionContext.wsOpen && sessionContext.wsSend) {
+        sessionContext.wsSend({
+          cmd: "set-result",
+          id: challenge.id,
+          outcome,
+          code,
+        });
+        return;
+      }
+
+      // fall back to REST if available
+      if (sessionContext.resultsEndpoint) {
+        fetch(sessionContext.resultsEndpoint, {
+          method: "POST",
+          cache: "no-cache",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${sessionContext.token}`,
+          },
+          body: JSON.stringify({
+            book: bookPath,
+            id: challenge.id,
+            outcome,
+            code,
+          }),
+        }).then((response) => {
+          if (response.status === 401) {
+            response.json().then((data) => {
+              sessionContext.login({
+                clientId: data.clientId,
+                tenantId: data.tenantId || "common",
+                jwtEndpoint: data.jwtEndpoint,
+                startUrl: window.location.href,
+                resultsEndpoint: data.resultsEndpoint,
+                wsEndPoint: data.wsEndPoint,
+                bookPath: bookPath,
+              });
+            });
+          }
+        });
+      }
+    },
+    3000
+  );
+
   useEffect(() => {
     setAllTestResults({ passed: new Set(), failed: new Set() });
   }, [bookPath]);
@@ -106,42 +162,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
     persistInMemory(challenge, outcome);
     saveTestStateLocal(challenge, outcome); // persist in local storage
-
-    if (!sessionContext.isLoggedIn()) return;
-
-    // if code is too long, trim it to 4000 characters
-    if (code && code.length > 4000) {
-      code = code.substring(0, 4000);
-    }
-
-    // check for ws
-    if (sessionContext.wsOpen && sessionContext.wsSend) {
-      sessionContext.wsSend({
-        cmd: "set-result",
-        id: challenge.id,
-        outcome,
-        code,
-      });
-      return;
-    }
-
-    // fall back to REST if available
-    if (sessionContext.resultsEndpoint) {
-      fetch(sessionContext.resultsEndpoint, {
-        method: "POST",
-        cache: "no-cache",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionContext.token}`,
-        },
-        body: JSON.stringify({
-          book: bookPath,
-          id: challenge.id,
-          outcome,
-          code,
-        }),
-      });
-    }
+    persistInServer(challenge, outcome, code); // push to server
   };
 
   const getResult = (challenge: BookNodeModel) => {
