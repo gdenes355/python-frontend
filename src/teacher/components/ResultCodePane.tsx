@@ -1,12 +1,12 @@
 import { Box, Grid, IconButton, Stack } from "@mui/material";
 import React, { useContext, useMemo, useState } from "react";
-import { ChallengeResultComplexModel } from "./Models";
+import { ChallengeResultComplexModel } from "../Models";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   vs,
   vscDarkPlus,
 } from "react-syntax-highlighter/dist/esm/styles/prism";
-import VsThemeContext from "../themes/VsThemeContext";
+import VsThemeContext from "../../themes/VsThemeContext";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 

@@ -5,7 +5,7 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { ClassModel } from "./Models";
+import { ClassModel } from "../Models";
 import { Box, Chip } from "@mui/material";
 
 type AddGroupDialogProps = {
