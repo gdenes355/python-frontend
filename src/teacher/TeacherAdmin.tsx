@@ -29,10 +29,10 @@ import {
   ResultsModel,
   ChallengeResultComplexModel,
 } from "./Models";
-import ResultCodePane from "./ResultCodePane";
-import ResultsTable from "./ResultsTable";
+import ResultCodePane from "./components/ResultCodePane";
+import ResultsTable from "./components/ResultsTable";
 import AddIcon from "@mui/icons-material/Add";
-import AddGroupDialog from "./AddGroupDialog";
+import AddGroupDialog from "./components/AddGroupDialog";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 
@@ -257,6 +257,28 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     });
   };
 
+  const onDeleteStudent = (student: string) => {
+    if (!activeGroup || !student) return;
+    fetch(
+      `${props.baseUrl}/api/admin/classes/${activeGroup.name}/students/${student}`,
+      {
+        method: "delete",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionContext.token}`,
+        },
+      }
+    ).then((resp) => {
+      if (resp.status === 200) {
+        activeGroup.students = activeGroup.students.filter(
+          (s) => s !== student
+        );
+        forceUpdate();
+      }
+    });
+  };
+
   const onUpdateBookEnabled = (book: GroupBook, enabled: boolean) => {
     if (!activeGroup) return;
     const group = activeGroup;
@@ -474,6 +496,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   onResultSelected={onResultSet}
                   onResultAdd={onResultAdd}
                   onResultsSelected={onResultsSet}
+                  onDeleteStudent={onDeleteStudent}
                 />
                 {activeGroup && book ? (
                   <IconButton
