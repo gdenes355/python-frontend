@@ -5,14 +5,17 @@ import {
   Switch,
   FormControlLabel,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import FileUploadControl from "../../components/FileUploadControl";
 import { FileDownload } from "@mui/icons-material";
 import ChallengeContext from "../ChallengeContext";
+import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 
 type HeaderButtonsEditorProps = {
   editingGuide?: boolean;
+  hasUnsavedChanges?: boolean;
   onEditingGuideChange?: (editingGuide: boolean) => void;
 };
 
@@ -47,6 +50,13 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
         <a href={previewUrl} target="_blank" rel="noreferrer noopener">
           <Button>Preview</Button>
         </a>
+      </Grid>
+      <Grid item key="unsaved-changes">
+        {props.hasUnsavedChanges ? (
+          <Tooltip title="You have unsaved changes">
+            <FiberManualRecordIcon sx={{ color: "red", margin: "5px" }} />
+          </Tooltip>
+        ) : undefined}
       </Grid>
       <Grid item key="edit-toggle">
         <FormControlLabel

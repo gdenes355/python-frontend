@@ -43,6 +43,9 @@ import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
+import AdditionalFileView, {
+  AdditionalFileViewRef,
+} from "./components/Editors/AdditionalFileView";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -87,12 +90,12 @@ class ChallengeEditor
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
-  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
   bookExports: string[][] = [];
+  fileEditorRefs: Map<string, AdditionalFileViewRef> = new Map();
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
@@ -310,25 +313,20 @@ class ChallengeEditor
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
     // saving the additional files or solution files
-    const files = (this.props.bookNode.additionalFiles || []).map(
-      (file) => file.filename
+    let updatedFiles = new Map(
+      this.getDisplayFiles().map((file, index) => {
+        return [
+          file,
+          this.fileEditorRefs.get(file)?.getValue() ||
+            this.state.additionalFilesLoaded[file],
+        ];
+      })
     );
-
-    this.props.bookNode.tests?.forEach((test) => {
-      if (test.out instanceof Array) {
-        test.out.forEach((out) => {
-          if (out.filename) {
-            files.push(out.filename);
-          }
-        });
+    this.setState({ additionalFilesLoaded: Object.fromEntries(updatedFiles) });
+    updatedFiles.forEach((text, file) => {
+      if (text) {
+        this.props.bookStore.store.save(text, file);
       }
-    });
-
-    files.forEach((file) => {
-      this.props.bookStore.store.save(
-        this.state.additionalFilesLoaded[file],
-        file
-      );
     });
 
     // update the book from json
@@ -408,35 +406,7 @@ class ChallengeEditor
         });
       }
     });
-
-    return files.map((filename, index) => (
-      <TextField
-        multiline={true}
-        key={index}
-        inputRef={(ref) => {
-          if (this.fileEditorRefs.current) {
-            this.fileEditorRefs.current[index] = ref;
-          }
-        }}
-        defaultValue={this.state.additionalFilesLoaded[filename]}
-        margin="dense"
-        onChange={(e) => {
-          this.setState({
-            additionalFilesLoaded: {
-              ...this.state.additionalFilesLoaded,
-              [filename]: e.target.value,
-            },
-          });
-        }}
-        variant="standard"
-        InputProps={{ disableUnderline: true }}
-        sx={{
-          width: "100%",
-          height: "100%",
-          overflowY: "auto",
-        }}
-      />
-    ));
+    return files;
   };
 
   getDisplayFilesProperties = () => {
@@ -549,6 +519,7 @@ class ChallengeEditor
                     hasEdited: this.state.hasEdited || editing,
                   })
                 }
+                hasUnsavedChanges={this.state.hasEdited}
               />
             </HeaderBar>
 
@@ -630,9 +601,40 @@ class ChallengeEditor
                               };
                             });
                           }}
+                          onChange={() =>
+                            this.state.hasEdited
+                              ? undefined
+                              : this.setState({
+                                  hasEdited: this.state.hasEdited || true,
+                                })
+                          }
                         />
                       }
-                      files={this.getDisplayFiles()}
+                      files={
+                        this.getDisplayFiles().map((file, index) => (
+                          <AdditionalFileView
+                            key={index}
+                            defaultValue={
+                              this.state.additionalFilesLoaded[file]
+                            }
+                            readonly={false}
+                            ref={(r) => {
+                              if (r) {
+                                this.fileEditorRefs.set(file, r);
+                              } else {
+                                this.fileEditorRefs.delete(file);
+                              }
+                            }}
+                            onChange={() =>
+                              this.state.hasEdited
+                                ? undefined
+                                : this.setState({
+                                    hasEdited: this.state.hasEdited || true,
+                                  })
+                            }
+                          />
+                        )) || []
+                      }
                       fileProperties={this.getDisplayFilesProperties()}
                       fileShowAll={true}
                     />

@@ -35,6 +35,10 @@ const SessionWrapper = (props: SessionWrapperProps) => {
 
   const [wsConnectionUrl, setWsConnectionUrl] = useState<string>("");
 
+  const additionalWsListener = useRef<((msg: any) => void) | undefined>(
+    undefined
+  );
+
   useEffect(() => {
     if (token !== "" && queryBookPath) {
       // we have a token already and we need to open a book (from query)
@@ -92,11 +96,14 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const onWsMessage = useMemo(
     () => (event: WebSocketEventMap["message"]) => {
       let msg = JSON.parse(event.data);
-
       if (msg.i !== undefined && wsMap.has(msg.i)) {
         let future = wsMap.get(msg.i);
         if (future) {
           future(msg);
+        }
+      } else {
+        if (additionalWsListener.current) {
+          additionalWsListener.current(msg);
         }
       }
     },
@@ -133,6 +140,14 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   );
   const ws = useRef<WebSocket | undefined>(undefined);
   const [wsOpen, setWsOpen] = useState<boolean>(false);
+
+  const registerAdditionalWsHandler = (handler: (msg: any) => void) => {
+    additionalWsListener.current = handler;
+  };
+
+  const unregisterAdditionalWsHandler = () => {
+    additionalWsListener.current = undefined;
+  };
 
   useEffect(() => {
     if (!wsEndPoint || !token) {
@@ -181,6 +196,8 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         resultsEndpoint,
         wsOpen,
         wsSend,
+        registerAdditionalWsHandler,
+        unregisterAdditionalWsHandler,
       }}
     >
       {requiresAuth && token === "" ? <Login info={loginInfo} /> : <Outlet />}

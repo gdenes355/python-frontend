@@ -9,6 +9,8 @@ import BookNodeModel from "../models/BookNodeModel";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
+import { absolutisePath } from "../utils/pathTools";
+
 type WorkerResponse = {
   cmd: string;
 };
@@ -370,7 +372,7 @@ class ChallengeContextClass {
         this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
           additionalCode += `with open("${
             file.filename
-          }", "w") as f:f.write("""${
+          }", "w") as f:f.write(r"""${
             this.challenge.state.additionalFilesLoaded[file.filename]
           }""")\n`;
         });
@@ -502,6 +504,10 @@ class ChallengeContextClass {
       filename: string,
       store: EditableBookStore | null = null
     ) => {
+      filename = absolutisePath(
+        filename,
+        this.challenge.props.fetcher.getBookPathAbsolute()
+      );
       return new Promise<string>((resolve, reject) => {
         this.challenge.props.fetcher
           .fetch(filename, this.challenge.props.authContext)
@@ -527,7 +533,7 @@ class ChallengeContextClass {
       });
     },
     "activate-file": (filename: string, contents: string) => {
-      let code = `with open("${filename}", "w") as f:\n    f.write("""${contents}""")`;
+      let code = `with open("${filename}", "w") as f:\n    f.write(r"""${contents}""")`;
       this.challenge.worker?.postMessage({
         cmd: "run",
         code: code,

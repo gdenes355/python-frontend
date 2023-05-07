@@ -96,6 +96,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     (challenge: BookNodeModel, outcome?: boolean, code?: string) => {
       if (!sessionContext.isLoggedIn()) return;
 
+      code = code?.trimEnd();
       // if code is too long, trim it to 4000 characters
       if (code && code.length > 4000) {
         code = code.substring(0, 4000);
