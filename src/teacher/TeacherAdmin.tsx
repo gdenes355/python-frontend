@@ -30,11 +30,12 @@ import {
   ChallengeResultComplexModel,
 } from "./Models";
 import ResultCodePane from "./components/ResultCodePane";
-import ResultsTable from "./components/ResultsTable";
+import ResultsTable, { ResultsTableRef } from "./components/ResultsTable";
 import AddIcon from "@mui/icons-material/Add";
 import AddGroupDialog from "./components/AddGroupDialog";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 
 type TeacherAdminProps = {
   baseUrl: string;
@@ -82,6 +83,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   const allotmentRef = useRef<AllotmentHandle>(null);
 
+  const resultsTableRef = useRef<ResultsTableRef>(null);
+
   const requestRef = useRef<Map<string, any>>(new Map());
   const request = useCallback(
     (req: string) =>
@@ -103,8 +106,50 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     [sessionContext.token, props.baseUrl]
   );
 
+  const onWsMessage = useCallback(
+    (msg: any) => {
+      if (msg.cmd === "teacher-update") {
+        for (let res of results) {
+          if (res.user === msg.student) {
+            if (msg["ch-id"]) {
+              let id = msg["ch-id"];
+              let ares = (res as any)[id] as ChallengeResultComplexModel;
+              if (!ares) {
+                ares = { correct: msg.outcome, id };
+                (res as any)[id] = ares;
+              }
+              ares.correct = msg.outcome;
+              if (msg.outcome) {
+                ares["correct-code"] = msg.code;
+                ares["correct-date"] = new Date().toISOString();
+              } else {
+                ares["wrong-code"] = msg.code;
+                ares["wrong-date"] = new Date().toISOString();
+              }
+              resultsTableRef.current?.updateCell(msg.student, id);
+            }
+          }
+        }
+      }
+    },
+    [results]
+  );
+
   useEffect(() => {
-    request("api/admin/classes").then((data) => setGroups(data));
+    sessionContext.registerAdditionalWsHandler?.(onWsMessage);
+    return () => {
+      sessionContext.unregisterAdditionalWsHandler?.();
+    };
+  }, [sessionContext, onWsMessage]);
+
+  useEffect(() => {
+    request("api/admin/classes").then((data) => {
+      setGroups(data);
+      const prevActGroup = localStorage.getItem("teacher-activeGroup");
+      if (prevActGroup) {
+        setActiveGroup(data.find((g: ClassModel) => g.name === prevActGroup));
+      }
+    });
     request("api/admin/books").then((data) => setBookTitles(data));
   }, [request]);
 
@@ -114,6 +159,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   useEffect(() => {
     if (!activeGroup) return;
+    localStorage.setItem("teacher-activeGroup", activeGroup.name);
     let displayBooks: Array<GroupBook> = [
       ...(activeGroup.books?.map((b) => ({ bookTitle: b, enabled: true })) ||
         []),
@@ -130,7 +176,13 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       );
     }
     setActiveBook(newActiveBook);
-  }, [activeGroup, updateCtr]);
+    if (sessionContext.wsSend) {
+      sessionContext.wsSend({
+        cmd: "reg-teacher-group",
+        students: activeGroup.students,
+      });
+    }
+  }, [activeGroup, updateCtr, sessionContext]);
 
   useEffect(() => {
     setError(undefined);
@@ -331,6 +383,9 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       >
         <HeaderBar title="Teacher view">
           <React.Fragment>
+            <Grid item key="ws-indicator">
+              <SessionWsStateIndicator />
+            </Grid>
             <Grid item key="reset-view">
               <Button
                 onClick={() => {
@@ -488,6 +543,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   </a>
                 ) : undefined}
                 <ResultsTable
+                  ref={resultsTableRef}
                   book={book}
                   bookTitle={activeBook?.bookTitle}
                   group={activeGroup}
