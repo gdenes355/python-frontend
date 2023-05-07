@@ -35,12 +35,12 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
           .map((n) => parseInt(n![1])),
       ]
     );
-    console.log(maxNum);
     let newNum = maxNum + 1;
     let newNode: BookNodeModel = {
       id,
       name: "New page",
       tests: [],
+      additionalFiles: [],
       py: `c${newNum.toString().padStart(2, "0")}.py`,
       guide: `c${newNum.toString().padStart(2, "0")}.md`,
     };

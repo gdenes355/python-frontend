@@ -41,6 +41,7 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
 
 type ChallengeEditorState = {
@@ -61,6 +62,7 @@ type ChallengeEditorState = {
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
+  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -85,6 +87,7 @@ class ChallengeEditor
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -135,6 +138,7 @@ class ChallengeEditor
     dialogInfoText: undefined,
     hasEdited: false,
     saveDialogProps: undefined,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -151,6 +155,7 @@ class ChallengeEditor
       isExample: node.isExample,
       typ: node.typ,
       tests: node.tests,
+      additionalFiles: node.additionalFiles,
     };
     return JSON.stringify(proxy, null, 2);
   }
@@ -181,6 +186,23 @@ class ChallengeEditor
       this.setState({ testResults: [], testsPassing: undefined });
       this.setState({ hasEdited: false });
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](
+          file.filename,
+          this.props.bookStore
+        ).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
+        );
+      }
+    });
+
     if (
       this.editorRef.current &&
       this.state.editorState !== prevState.editorState &&
@@ -275,6 +297,14 @@ class ChallengeEditor
     // saving the guide is easy
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
+    // saving the files
+    this.props.bookNode.additionalFiles?.forEach((file, index) => {
+      this.props.bookStore.store.save(
+        this.state.additionalFilesLoaded[file.filename],
+        file.filename
+      );
+    });
+
     // update the book from json
     let changed = false;
     let editedNode = JSON.parse(
@@ -295,6 +325,10 @@ class ChallengeEditor
     if (editedNode.tests !== this.props.tests) {
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
+    }
+    if (editedNode.additionalFiles !== this.props.bookNode.additionalFiles) {
+      changed = true;
+      this.props.bookNode.additionalFiles = editedNode.additionalFiles;
     }
     if (changed) {
       this.props.bookStore.store.saveBook();
@@ -508,6 +542,42 @@ class ChallengeEditor
                           }}
                         />
                       }
+                      files={
+                        this.props.bookNode.additionalFiles?.map(
+                          (file, index) => (
+                            <TextField
+                              multiline={true}
+                              key={index}
+                              inputRef={(ref) => {
+                                if (this.fileEditorRefs.current) {
+                                  this.fileEditorRefs.current[index] = ref;
+                                }
+                              }}
+                              defaultValue={
+                                this.state.additionalFilesLoaded[file.filename]
+                              }
+                              margin="dense"
+                              onChange={(e) => {
+                                this.setState({
+                                  additionalFilesLoaded: {
+                                    ...this.state.additionalFilesLoaded,
+                                    [file.filename]: e.target.value,
+                                  },
+                                });
+                              }}
+                              variant="standard"
+                              InputProps={{ disableUnderline: true }}
+                              sx={{
+                                width: "100%",
+                                height: "100%",
+                                overflowY: "auto",
+                              }}
+                            />
+                          )
+                        ) || []
+                      }
+                      fileProperties={this.props.bookNode.additionalFiles || []}
+                      fileShowAll={true}
                     />
                   </Allotment.Pane>
                 </Allotment>

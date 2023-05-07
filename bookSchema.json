@@ -51,9 +51,9 @@
         "tests": {
           "$ref": "#/$defs/tests"
         },
-        "files": {
-          "$ref": "#/$defs/files"
-        },
+        "additionalFiles": {
+          "$ref": "#/$defs/additionalFiles"
+        },        
         "comment": {
           "$ref": "#/$defs/comment"
         },
@@ -131,7 +131,7 @@
         "additionalProperties": false
       }
     },
-    "files": {
+    "additionalFiles": {
       "description": "optional list of files",
       "type": "array",
       "items": {

@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext } from "react";
 import SessionContext from "../SessionContext";
 import PowerIcon from "@mui/icons-material/Power";
 import { Tooltip } from "@mui/material";
@@ -6,21 +6,23 @@ import { Tooltip } from "@mui/material";
 const SessionWsStateIndicator = () => {
   const sessionContext = useContext(SessionContext);
 
-  const [connected, setConnected] = useState<boolean>(false);
-
-  useEffect(() => {
-    setConnected(sessionContext.wsOpen);
-  }, [sessionContext.wsOpen]);
+  const ws = sessionContext.wsOpen && sessionContext.wsSend;
+  const http = !!sessionContext.resultsEndpoint;
 
   return (
     <Tooltip
       title={
-        connected
+        ws
           ? "WebSocket connection with server is active"
-          : "Websocket closed. Your progress is saved through HTTP requests"
+          : http
+          ? "Websocket closed. Your progress is saved through HTTP requests"
+          : "No connection with server. Your progress is not saved"
       }
     >
-      <PowerIcon sx={{ margin: 1 }} color={connected ? "success" : "warning"} />
+      <PowerIcon
+        sx={{ margin: 1 }}
+        color={ws ? "success" : http ? "warning" : "error"}
+      />
     </Tooltip>
   );
 };

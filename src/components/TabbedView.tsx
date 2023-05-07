@@ -100,7 +100,7 @@ const TabbedView = React.forwardRef<TabbedViewHandle, TabbedViewProps>(
                 <Tab
                   value={pane.name}
                   label={pane.label}
-                  className={pane.show ? "tab-show" : "tab-hide"}
+                  className={pane.show ? "tab-show lower" : "tab-hide lower"}
                   key={pane.name}
                 />
               ))}

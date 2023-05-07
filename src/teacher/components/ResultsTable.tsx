@@ -11,20 +11,21 @@ import {
   Tooltip,
 } from "@mui/material";
 import { Box } from "@mui/system";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import BookNodeModel, {
   extractIdsWithTestsInOrder,
   extractIds,
-} from "../models/BookNodeModel";
+} from "../../models/BookNodeModel";
 import {
   ClassModel,
   ResultsModel,
   ChallengeResultModel,
   ChallengeResultComplexModel,
-} from "./Models";
+} from "../Models";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 
 import "./ResultsTable.css";
+import StudentPopupMenu, { StudentPopupMenuHandle } from "./StudentPopupMenu";
 
 type ResultsTableProps = {
   group?: ClassModel;
@@ -35,6 +36,7 @@ type ResultsTableProps = {
   onResultsSelected: (res: ChallengeResultComplexModel[]) => void;
   onResultSelected: (res: ChallengeResultComplexModel) => void;
   onResultAdd: (res: ChallengeResultComplexModel) => void;
+  onDeleteStudent: (student: string) => void;
 };
 
 type ChallengeInfo = {
@@ -46,6 +48,7 @@ type ResultsTableRowProps = {
   student: string;
   results?: Array<ResultsModel>;
   challengeInfo?: ChallengeInfo;
+  menu: React.RefObject<StudentPopupMenuHandle>;
   onResultSelected: (
     res: ChallengeResultComplexModel,
     withShift: boolean,
@@ -179,7 +182,13 @@ const ResultsTableRow = (props: ResultsTableRowProps) => {
 
   return (
     <TableRow>
-      <TableCell>{props.student}</TableCell>
+      <TableCell
+        onContextMenu={(e) =>
+          props.menu.current?.handleContextMenu(e, props.student)
+        }
+      >
+        {props.student}
+      </TableCell>
       <TableCell>
         {correctCount || "?"}/{props.challengeInfo?.ids?.length}
       </TableCell>
@@ -239,6 +248,8 @@ const ResultsTable = (props: ResultsTableProps) => {
     setChallengeInfo({ ids, map });
   }, [props.book]);
 
+  const popupMenuRef = useRef<StudentPopupMenuHandle>(null);
+
   if (!props.group) {
     return <p>Please pick a group to display results.</p>;
   }
@@ -294,6 +305,7 @@ const ResultsTable = (props: ResultsTableProps) => {
                 <ResultsTableRow
                   key={student}
                   student={student}
+                  menu={popupMenuRef}
                   challengeInfo={challengeInfo}
                   results={props.results}
                   onResultSelected={onResultSelected}
@@ -304,6 +316,10 @@ const ResultsTable = (props: ResultsTableProps) => {
           </TableBody>
         </Table>
       </TableContainer>
+      <StudentPopupMenu
+        ref={popupMenuRef}
+        onDeleteStudent={props.onDeleteStudent}
+      />
     </Box>
   );
 };

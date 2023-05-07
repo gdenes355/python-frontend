@@ -3,6 +3,10 @@ import { DebouncedFunc } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { TestCases, TestResults } from "../models/Tests";
+import {
+  AdditionalFiles,
+  AdditionalFilesContents,
+} from "../models/AdditionalFiles";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
@@ -36,6 +40,7 @@ type IChallengeState = {
   debugContext: DebugContext;
   consoleText: string;
   testResults: TestResults;
+  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 interface IChallenge {

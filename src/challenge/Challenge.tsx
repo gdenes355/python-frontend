@@ -1,6 +1,14 @@
 import React, { MutableRefObject } from "react";
 import { throttle } from "lodash";
-import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
+import {
+  Box,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Paper,
+  TextField,
+} from "@mui/material";
 import CachedIcon from "@mui/icons-material/Cached";
 
 import { Allotment } from "allotment";
@@ -68,6 +76,7 @@ class Challenge
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
   canvasPromiseResolve?: (value: any) => void;
 
@@ -113,6 +122,7 @@ class Challenge
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     showBookUpload: false,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeProps) {
@@ -125,6 +135,7 @@ class Challenge
     this.chContext.actions["load-saved-code"]();
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
+
     this.chContext.actions["restart-worker"]({ force: true });
     this.setState({
       typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
@@ -135,6 +146,19 @@ class Challenge
     if (prevProps.guidePath !== this.props.guidePath) {
       this.chContext.actions["fetch-guide"]();
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file.filename).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
+        );
+      }
+    });
 
     if (prevProps.codePath !== this.props.codePath) {
       this.chContext.actions["fetch-code"]();
@@ -364,6 +388,42 @@ class Challenge
                             }}
                           />
                         }
+                        files={
+                          this.props.bookNode.additionalFiles?.map(
+                            (file, index) => (
+                              <TextField
+                                multiline={true}
+                                key={index}
+                                inputRef={(ref) => {
+                                  if (this.fileEditorRefs.current) {
+                                    this.fileEditorRefs.current[index] = ref;
+                                  }
+                                }}
+                                defaultValue={
+                                  this.state.additionalFilesLoaded[
+                                    file.filename
+                                  ]
+                                }
+                                InputProps={{
+                                  readOnly: true,
+                                  disableUnderline: true,
+                                }}
+                                margin="dense"
+                                onChange={(e) => {}}
+                                variant="standard"
+                                sx={{
+                                  width: "100%",
+                                  height: "100%",
+                                  overflowY: "auto",
+                                }}
+                              />
+                            )
+                          ) || []
+                        }
+                        fileProperties={
+                          this.props.bookNode.additionalFiles || []
+                        }
+                        fileShowAll={false}
                       />
                     </Allotment.Pane>
                   </Allotment>

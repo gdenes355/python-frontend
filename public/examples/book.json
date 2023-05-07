@@ -12,6 +12,16 @@
                     "in": "",
                     "out": "hello world"
                 }
+            ],
+            "additionalFiles": [
+              {
+                "filename": "test1.txt",
+                "visible": true
+              },
+              {
+                "filename": "test4.txt",
+                "visible": false
+              }
             ]
         },
         {
