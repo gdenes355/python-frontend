@@ -366,7 +366,7 @@ class ChallengeContextClass {
 
         let additionalCode = "";
         Object.keys(addFiles).forEach((filename) => {
-          additionalCode += `with open("${filename}", "w") as f:f.write("""${addFiles[filename]}""")\n`;
+          additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
         });
         this.challenge.worker.postMessage({
           cmd: "test",
