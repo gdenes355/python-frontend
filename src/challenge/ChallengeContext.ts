@@ -511,7 +511,7 @@ class ChallengeContextClass {
       });
     },
     "activate-file": (filename: string, contents: string) => {
-      let code = `with open("${filename}", "w") as f:\n    f.write("""${contents}""")`;
+      let code = `with open("${filename}", "w") as f:\n    f.write(r"""${contents}""")`;
       this.challenge.worker?.postMessage({
         cmd: "run",
         code: code,
