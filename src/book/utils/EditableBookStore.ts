@@ -45,6 +45,28 @@ async function addNode(
     });
   }
 
+  if (node.tests) {
+    node.tests.forEach(async (test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach(async (out) => {
+          if (out.filename) {
+            let absPath = absolutisePath(
+              out.filename,
+              node.bookMainUrl || fetcher.getBookPathAbsolute()
+            );
+            let resp = await fetcher.fetch(absPath, authContext);
+            if (resp.ok) {
+              localStorage.setItem(
+                "edit://edit/" + out.filename,
+                await resp.text()
+              );
+            }
+          }
+        });
+      }
+    });
+  }
+
   if (node.children) {
     for (let child of node.children) {
       await addNode(child, fetcher, authContext);

@@ -389,6 +389,7 @@ def synchronise():
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
+    print("HERE MODE CHANGE")
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
     synchronise()
@@ -455,8 +456,6 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
 
-# ensure always cleared
-mode("standard")
 ''')
 
 
@@ -472,6 +471,9 @@ def pyexec(code, expected_input, expected_output):
     os.system = test_shell
     input = test_input
     
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     # prepare inputs
     if not expected_input:
         test_inputs = []  # no input for this test case
@@ -551,8 +553,8 @@ def pyexec(code, expected_input, expected_output):
                 if "filename" not in requirement:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing turtle solution filename in test case", "ins": expected_input}))
                 try:
-                    # temporary hack to get turtle canvas to demo
-                    turtle_code = "import turtle\nturtle.done()\nturtle.pencolor('red')\nfor _ in range(4):\n  turtle.forward(100)\n  turtle.right(90)"
+                    # the filename has been replaced with the soln code
+                    turtle_code = requirement.get("filename")
                     msg = {"action":"dump", "value":""}
                     post_message({"cmd": "turtle", "msg": json.dumps(msg)})
                     screen_dump_user = synchronise('/@turtle@/req.js')                    
@@ -575,8 +577,10 @@ def pyexec(code, expected_input, expected_output):
                     else:
                         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
                 except Exception as e:
+                    msg = {"action":"virtual", "value":False}
+                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+                    synchronise('/@turtle@/req.js')                    
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
-
             else:
                 test_string = test_output.buffer
 
@@ -635,6 +639,9 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -664,6 +671,10 @@ def pydebug(code, breakpoints):
 
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
+
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context

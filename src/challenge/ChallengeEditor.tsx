@@ -187,18 +187,30 @@ class ChallengeEditor
       this.setState({ hasEdited: false });
     }
 
-    this.props.bookNode.additionalFiles?.forEach((file) => {
-      if (!(file.filename in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](
-          file.filename,
-          this.props.bookStore
-        ).then((text) =>
-          this.setState({
-            additionalFilesLoaded: {
-              ...this.state.additionalFilesLoaded,
-              [file.filename]: text,
-            },
-          })
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    files.forEach((file) => {
+      if (!(file in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file, this.props.bookStore).then(
+          (text) =>
+            this.setState({
+              additionalFilesLoaded: {
+                ...this.state.additionalFilesLoaded,
+                [file]: text,
+              },
+            })
         );
       }
     });
@@ -297,11 +309,25 @@ class ChallengeEditor
     // saving the guide is easy
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
-    // saving the files
-    this.props.bookNode.additionalFiles?.forEach((file, index) => {
+    // saving the additional files or solution files
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    files.forEach((file) => {
       this.props.bookStore.store.save(
-        this.state.additionalFilesLoaded[file.filename],
-        file.filename
+        this.state.additionalFilesLoaded[file],
+        file
       );
     });
 
@@ -366,6 +392,70 @@ class ChallengeEditor
     return this.state.editorState === ChallengeStatus.LOADING
       ? undefined
       : visible;
+  };
+
+  getDisplayFiles = () => {
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    return files.map((filename, index) => (
+      <TextField
+        multiline={true}
+        key={index}
+        inputRef={(ref) => {
+          if (this.fileEditorRefs.current) {
+            this.fileEditorRefs.current[index] = ref;
+          }
+        }}
+        defaultValue={this.state.additionalFilesLoaded[filename]}
+        margin="dense"
+        onChange={(e) => {
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [filename]: e.target.value,
+            },
+          });
+        }}
+        variant="standard"
+        InputProps={{ disableUnderline: true }}
+        sx={{
+          width: "100%",
+          height: "100%",
+          overflowY: "auto",
+        }}
+      />
+    ));
+  };
+
+  getDisplayFilesProperties = () => {
+    const files = this.props.bookNode.additionalFiles || [];
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename) {
+            files.push({
+              filename: out.filename,
+              visible: false,
+            });
+          }
+        });
+      }
+    });
+
+    return files;
   };
 
   renderMainControls = () => {
@@ -542,41 +632,8 @@ class ChallengeEditor
                           }}
                         />
                       }
-                      files={
-                        this.props.bookNode.additionalFiles?.map(
-                          (file, index) => (
-                            <TextField
-                              multiline={true}
-                              key={index}
-                              inputRef={(ref) => {
-                                if (this.fileEditorRefs.current) {
-                                  this.fileEditorRefs.current[index] = ref;
-                                }
-                              }}
-                              defaultValue={
-                                this.state.additionalFilesLoaded[file.filename]
-                              }
-                              margin="dense"
-                              onChange={(e) => {
-                                this.setState({
-                                  additionalFilesLoaded: {
-                                    ...this.state.additionalFilesLoaded,
-                                    [file.filename]: e.target.value,
-                                  },
-                                });
-                              }}
-                              variant="standard"
-                              InputProps={{ disableUnderline: true }}
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                overflowY: "auto",
-                              }}
-                            />
-                          )
-                        ) || []
-                      }
-                      fileProperties={this.props.bookNode.additionalFiles || []}
+                      files={this.getDisplayFiles()}
+                      fileProperties={this.getDisplayFilesProperties()}
                       fileShowAll={true}
                     />
                   </Allotment.Pane>

@@ -364,18 +364,35 @@ class ChallengeContextClass {
         if (this.challenge.interruptBuffer) {
           this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
-        const addFiles: AdditionalFilesContents =
-          this.challenge.state.additionalFilesLoaded;
 
         let additionalCode = "";
-        Object.keys(addFiles).forEach((filename) => {
-          additionalCode += `with open("${filename}", "w") as f:f.write("""${addFiles[filename]}""")\n`;
+
+        this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
+          additionalCode += `with open("${
+            file.filename
+          }", "w") as f:f.write("""${
+            this.challenge.state.additionalFilesLoaded[file.filename]
+          }""")\n`;
         });
+
+        const testsClone = structuredClone(this.challenge.props.bookNode.tests);
+
+        (testsClone || []).forEach((test) => {
+          if (test.out instanceof Array) {
+            test.out.forEach((out) => {
+              if (out.filename) {
+                out.filename =
+                  this.challenge.state.additionalFilesLoaded[out.filename];
+              }
+            });
+          }
+        });
+
         this.challenge.worker.postMessage({
           cmd: "test",
           code: code,
           initCode: additionalCode,
-          tests: tests,
+          tests: testsClone,
           bookNode: this.challenge.props.bookNode,
         });
         this.challenge.setState({ editorState: ChallengeStatus.RUNNING });

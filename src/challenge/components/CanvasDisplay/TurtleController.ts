@@ -473,7 +473,7 @@ const processTurtleCommand = (
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
-    turtles.clear();
+    clearTurtlesAndCanvas(canvas);
     return Promise.resolve();
   }
   let turtle = turtles.get(id);
@@ -595,9 +595,9 @@ const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
   return turtle;
 };
 
-const clearTurtle = (canvas: HTMLCanvasElement) => {
+const clearTurtlesAndCanvas = (canvas: HTMLCanvasElement) => {
   turtles.clear();
   canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
 };
 
-export { processTurtleCommand, clearTurtle };
+export { processTurtleCommand, clearTurtlesAndCanvas as clearTurtle };

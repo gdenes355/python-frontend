@@ -147,13 +147,27 @@ class Challenge
       this.chContext.actions["fetch-guide"]();
     }
 
-    this.props.bookNode.additionalFiles?.forEach((file) => {
-      if (!(file.filename in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](file.filename).then((text) =>
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    files.forEach((file) => {
+      if (!(file in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file).then((text) =>
           this.setState({
             additionalFilesLoaded: {
               ...this.state.additionalFilesLoaded,
-              [file.filename]: text,
+              [file]: text,
             },
           })
         );
