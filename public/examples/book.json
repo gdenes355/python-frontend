@@ -1,4 +1,5 @@
 {
+    "$schema": "https://raw.githubusercontent.com/gdenes355/python-frontend/main/bookSchema.json",
     "name": "Example challenges",
     "id": "a8ab8afe-9470-4fbc-980c-6b8017e3aa0b",
     "children": [
@@ -12,16 +13,6 @@
                     "in": "",
                     "out": "hello world"
                 }
-            ],
-            "additionalFiles": [
-              {
-                "filename": "test1.txt",
-                "visible": true
-              },
-              {
-                "filename": "test4.txt",
-                "visible": false
-              }
             ]
         },
         {
@@ -92,6 +83,22 @@
             "guide": "c03.md",
             "py": "c03.py",
             "isExample": true
+        },
+        {
+            "id": "8b3d3a10-9c7c-4815-b7bf-5c6ed0b65daa",
+            "name": "Additional files",
+            "guide": "additional_files.md",
+            "py": "additional_files.py",
+            "additionalFiles": [
+                {
+                    "filename": "test1.txt",
+                    "visible": true
+                },
+                {
+                    "filename": "test2.txt",
+                    "visible": false
+                }
+            ]
         },
         {
             "id": "361421e2-d9cc-4c80-ad79-f1dc8b36ca48",

@@ -1,38 +1,68 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef } from "react";
 
 type AdditionalFileViewProps = {
   defaultValue: string;
   readonly: boolean;
+  onChange?: () => void;
 };
 
 type AdditionalFileViewRef = {
   getValue: () => string;
-  setValue: (value: string) => void;
 };
 
 const AdditionalFileView = React.forwardRef<
   AdditionalFileViewRef,
   AdditionalFileViewProps
 >((props, ref) => {
-  useEffect(() => {
-    setValue(props.defaultValue);
-  }, [props.defaultValue]);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
-  const [currentValue, setCurrentValue] = useState(props.defaultValue);
+  const getValue = () => {
+    if (textAreaRef.current) {
+      return textAreaRef.current.value;
+    }
 
-  const getValue = () => currentValue;
-  const setValue = (value: string) => setCurrentValue(value);
+    return props.defaultValue;
+  };
+  React.useImperativeHandle(ref, () => ({ getValue }));
 
-  React.useImperativeHandle(ref, () => ({ getValue, setValue }));
-
+  // view in challenge
   if (props.readonly)
     return (
-      <div style={{ width: "100%", height: "100%", overflow: "auto" }}>
-        <pre>{currentValue}</pre>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          overflow: "auto",
+          paddingLeft: "5px",
+          paddingRight: "5px",
+          paddingTop: "0px",
+        }}
+      >
+        <pre>{props.defaultValue}</pre>
       </div>
     );
 
-  return <div></div>;
+  // or edit
+  return (
+    <textarea
+      ref={textAreaRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        overflow: "auto",
+        resize: "none",
+        padding: "5px",
+        borderWidth: "0px",
+        outline: "none",
+      }}
+      onChange={(e) => {
+        if (e.target.value !== props.defaultValue) {
+          props.onChange?.();
+        }
+      }}
+      defaultValue={props.defaultValue}
+    />
+  );
 });
 
 export default AdditionalFileView;

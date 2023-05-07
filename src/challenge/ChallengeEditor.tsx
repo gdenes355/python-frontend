@@ -43,6 +43,9 @@ import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
+import AdditionalFileView, {
+  AdditionalFileViewRef,
+} from "./components/Editors/AdditionalFileView";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -87,12 +90,12 @@ class ChallengeEditor
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
-  fileEditorRefs = React.createRef<(HTMLDivElement | null)[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
   bookExports: string[][] = [];
+  fileEditorRefs: Map<string, AdditionalFileViewRef> = new Map();
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
@@ -298,11 +301,20 @@ class ChallengeEditor
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
     // saving the files
-    this.props.bookNode.additionalFiles?.forEach((file, index) => {
-      this.props.bookStore.store.save(
-        this.state.additionalFilesLoaded[file.filename],
-        file.filename
-      );
+    let updatedFiles = new Map(
+      this.props.bookNode.additionalFiles?.map((file, index) => {
+        return [
+          file.filename,
+          this.fileEditorRefs.get(file.filename)?.getValue() ||
+            this.state.additionalFilesLoaded[file.filename],
+        ];
+      })
+    );
+    this.setState({ additionalFilesLoaded: Object.fromEntries(updatedFiles) });
+    updatedFiles.forEach((text, file) => {
+      if (text) {
+        this.props.bookStore.store.save(text, file);
+      }
     });
 
     // update the book from json
@@ -459,6 +471,7 @@ class ChallengeEditor
                     hasEdited: this.state.hasEdited || editing,
                   })
                 }
+                hasUnsavedChanges={this.state.hasEdited}
               />
             </HeaderBar>
 
@@ -540,38 +553,38 @@ class ChallengeEditor
                               };
                             });
                           }}
+                          onChange={() =>
+                            this.state.hasEdited
+                              ? undefined
+                              : this.setState({
+                                  hasEdited: this.state.hasEdited || true,
+                                })
+                          }
                         />
                       }
                       files={
                         this.props.bookNode.additionalFiles?.map(
                           (file, index) => (
-                            <TextField
-                              multiline={true}
+                            <AdditionalFileView
                               key={index}
-                              inputRef={(ref) => {
-                                if (this.fileEditorRefs.current) {
-                                  this.fileEditorRefs.current[index] = ref;
-                                }
-                              }}
                               defaultValue={
                                 this.state.additionalFilesLoaded[file.filename]
                               }
-                              margin="dense"
-                              onChange={(e) => {
-                                this.setState({
-                                  additionalFilesLoaded: {
-                                    ...this.state.additionalFilesLoaded,
-                                    [file.filename]: e.target.value,
-                                  },
-                                });
+                              readonly={false}
+                              ref={(r) => {
+                                if (r) {
+                                  this.fileEditorRefs.set(file.filename, r);
+                                } else {
+                                  this.fileEditorRefs.delete(file.filename);
+                                }
                               }}
-                              variant="standard"
-                              InputProps={{ disableUnderline: true }}
-                              sx={{
-                                width: "100%",
-                                height: "100%",
-                                overflowY: "auto",
-                              }}
+                              onChange={() =>
+                                this.state.hasEdited
+                                  ? undefined
+                                  : this.setState({
+                                      hasEdited: this.state.hasEdited || true,
+                                    })
+                              }
                             />
                           )
                         ) || []

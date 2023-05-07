@@ -9,6 +9,8 @@ import BookNodeModel from "../models/BookNodeModel";
 import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
+import { absolutisePath } from "../utils/pathTools";
+
 type WorkerResponse = {
   cmd: string;
 };
@@ -480,6 +482,10 @@ class ChallengeContextClass {
       filename: string,
       store: EditableBookStore | null = null
     ) => {
+      filename = absolutisePath(
+        filename,
+        this.challenge.props.fetcher.getBookPathAbsolute()
+      );
       return new Promise<string>((resolve, reject) => {
         this.challenge.props.fetcher
           .fetch(filename, this.challenge.props.authContext)

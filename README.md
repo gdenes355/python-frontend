@@ -136,6 +136,21 @@ Sometimes you just want your students to go wild, and giving them a green tick d
 }
 ```
 
+## Additional files
+You can provide additional input files using the `additionalFiles` fiels. E.g. the following will expose the contents of `test1.txt` and `test2.txt` to Python. Any `visible` file will also appear to the student next to the console tab.
+```
+"additionalFiles": [
+    {
+        "filename": "test1.txt",
+        "visible": true
+    },
+    {
+        "filename": "test2.txt",
+        "visible": false
+    }
+]
+```
+
 ## A task with test cases
 Ideal for keeping track of progress, when you give a chance for your students to practice their Python skills.
 ```json
