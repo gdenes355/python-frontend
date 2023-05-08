@@ -548,7 +548,7 @@ def pyexec(code, expected_input, expected_output):
                     # the filename has been replaced with the soln code
                     screen_dump_user = run_turtle_cmd({"action":"dump", "value":""})
                     run_turtle_cmd({"action":"virtual", "value":True})
-                    exec(requirement.get("filename"))
+                    exec(requirement.get("filename"), global_vars)
                     screen_dump_soln = run_turtle_cmd({"action":"dump", "value":""})  
                     run_turtle_cmd({"action":"virtual", "value":False})
                     if screen_dump_user != screen_dump_soln:
