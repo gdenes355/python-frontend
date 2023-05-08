@@ -30,11 +30,4 @@ type AllTestResults = {
   failed: Set<string>;
 };
 
-export {
-  TestCase,
-  TestCases,
-  TestResult,
-  TestResults,
-  AllTestResults,
-  AdvancedOutRequirement,
-};
+export { TestCase, TestCases, TestResult, TestResults, AllTestResults };
