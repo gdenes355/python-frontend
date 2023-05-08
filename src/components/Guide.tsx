@@ -12,9 +12,25 @@ import VsThemeContext from "../themes/VsThemeContext";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import IChallenge from "../challenge/IChallenge";
+
+type TurtleResultProps = {
+  challenge: IChallenge;
+  file: string;
+};
+
+const TurtleResult = (props: TurtleResultProps) => {
+  const canvMain = props.challenge.canvasDisplayRef.current?.getCanvas();
+  if (canvMain) {
+    return <img src={canvMain.toDataURL()} alt={props.file} />;
+  } else {
+    return <img src={props.file} alt={props.file}></img>;
+  }
+};
 
 type GuideProps = {
   md: string;
+  challenge: IChallenge;
 };
 
 const StyledGuide = styled("div")(
@@ -30,20 +46,20 @@ const StyledGuide = styled("div")(
 `
 );
 
-const Guide = ({ md }: GuideProps) => {
+const Guide = (guideProps: GuideProps) => {
   const [localMd, setLocalMd] = useState("");
   const themeContext = useContext(VsThemeContext);
   useEffect(() => {
     // For best visuals, the md cannot have ``` tags without a language definition
     // the code below will ensure that opening ``` tags have a plaintext annotation
-    let parts = md.split("```");
+    let parts = guideProps.md.split("```");
     for (let i = 1; i < parts.length; i += 2) {
       if (/^[\r\n].*/.test(parts[i])) {
         parts[i] = "plaintext" + parts[i];
       }
     }
     setLocalMd(parts.join("```"));
-  }, [md]);
+  }, [guideProps.md]);
 
   return (
     <StyledGuide>
@@ -66,6 +82,22 @@ const Guide = ({ md }: GuideProps) => {
                   {children}
                 </code>
               );
+            },
+            img({ node, className, alt, children, ...props }) {
+              if (alt?.endsWith(".py")) {
+                return (
+                  <TurtleResult
+                    file={alt}
+                    challenge={guideProps.challenge}
+                  ></TurtleResult>
+                );
+              } else {
+                return (
+                  <img className={className} alt={alt} {...props}>
+                    {children}
+                  </img>
+                );
+              }
             },
           }}
           remarkPlugins={[remarkMath]}

@@ -278,7 +278,7 @@ class Challenge
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
-    return <Guide md={this.state.guideMd} />;
+    return <Guide md={this.state.guideMd} challenge={this} />;
   };
 
   render() {

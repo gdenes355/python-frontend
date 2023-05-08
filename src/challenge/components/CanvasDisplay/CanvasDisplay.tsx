@@ -11,6 +11,7 @@ type CanvasDisplayHandle = {
   runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
+  getCanvas: () => HTMLCanvasElement | null;
 };
 
 type CanvasDisplayProps = {
@@ -90,12 +91,17 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       }
     };
 
+    const getCanvas = () => {
+      return canvasEl.current;
+    };
+
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
       runTurtleClearup: turtleClearup,
       runAudioCommand,
       turtleReset,
+      getCanvas,
     }));
 
     return (

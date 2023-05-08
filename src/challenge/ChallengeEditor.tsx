@@ -477,7 +477,7 @@ class ChallengeEditor
         />
       );
     }
-    return <Guide md={this.state.guideMd} />;
+    return <Guide md={this.state.guideMd} challenge={this} />;
   };
 
   render() {
