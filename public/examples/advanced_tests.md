@@ -16,7 +16,7 @@ can be a string, or a list of output requirements to be checked, where
     * `c+` means the code must match this requirement
     * `c-` means the code must not match this requirement
     * `f+` means that the contents of the file specified by filename after running must match this requirement
-    * `f-` means that the contents of the file specified by filename after running must not match this requirment
+    * `f-` means that the contents of the file specified by filename after running must not match this requirement
     * `s+` means that the value of the code specified by statement, when evaluated & cast to a string, must match this requirement
     * `s-` means that the value of the code specified by statement, when evaluated & cast to a string, must not match this requirement
   * `ignore`: each output requirement can include `ignore` flags so that tests can pass with slight differences to the expected output, as students can make small mistakes that are not relevant to the overall pass/fail result. 3 classes of errors that can be ignored are **w**hitespace, **p**unctuation and **c**apitalization of text. If the difference between the expected and actual output fall into an ignore class, then the test should pass. This is given as a string of flag initial letter.
