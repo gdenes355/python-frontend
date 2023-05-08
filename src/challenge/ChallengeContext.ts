@@ -6,7 +6,6 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
-import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import { absolutisePath } from "../utils/pathTools";
@@ -292,13 +291,17 @@ class ChallengeContextClass {
       breakpoints: number[],
       mode: "debug" | "run" = "debug"
     ) => {
-      const addFiles: AdditionalFilesContents =
-        this.challenge.state.additionalFilesLoaded;
-
       let additionalCode = "";
-      Object.keys(addFiles).forEach((filename) => {
-        additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
+
+      this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
+        const escContents = this.challenge.state.additionalFilesLoaded[
+          file.filename
+        ]
+          .replace(/\\/g, "\\\\")
+          .replace(/"/g, '\\"');
+        additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
       });
+
       navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
@@ -370,11 +373,12 @@ class ChallengeContextClass {
         let additionalCode = "";
 
         this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
-          additionalCode += `with open("${
+          const escContents = this.challenge.state.additionalFilesLoaded[
             file.filename
-          }", "w") as f:f.write(r"""${
-            this.challenge.state.additionalFilesLoaded[file.filename]
-          }""")\n`;
+          ]
+            .replace("\\", "\\\\")
+            .replace('"', '\\"');
+          additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
         });
 
         const testsClone = structuredClone(this.challenge.props.bookNode.tests);
