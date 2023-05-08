@@ -115,11 +115,17 @@
             "py": "turtletest.py",
             "tests": [
                 {
-                    "in": [],
+                    "in": [100],
                     "out": [
                         {"typ": "t", "filename":"turtletest_sol.py"}
                     ]
-                }
+                },
+                {
+                    "in": [50],
+                    "out": [
+                        {"typ": "t", "filename":"turtletest_sol.py"}
+                    ]
+                }                
             ]
         },            
         {
@@ -136,11 +142,11 @@
             "py": "additional_files.py",
             "additionalFiles": [
                 {
-                    "filename": "test1.txt",
+                    "filename": "additionalFile1.txt",
                     "visible": true
                 },
                 {
-                    "filename": "test2.txt",
+                    "filename": "additionalFile2.txt",
                     "visible": false
                 }
             ]

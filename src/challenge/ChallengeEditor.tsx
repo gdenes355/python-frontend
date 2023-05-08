@@ -197,7 +197,7 @@ class ChallengeEditor
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
-          if (out.filename) {
+          if (out.filename && !files.includes(out.filename)) {
             files.push(out.filename);
           }
         });
@@ -400,7 +400,7 @@ class ChallengeEditor
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
-          if (out.filename) {
+          if (out.filename && !files.includes(out.filename)) {
             files.push(out.filename);
           }
         });
@@ -410,22 +410,26 @@ class ChallengeEditor
   };
 
   getDisplayFilesProperties = () => {
-    const files = this.props.bookNode.additionalFiles || [];
+    const filesProperties = this.props.bookNode.additionalFiles || [];
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
 
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
-          if (out.filename) {
-            files.push({
+          if (out.filename && !files.includes(out.filename)) {
+            filesProperties.push({
               filename: out.filename,
               visible: false,
             });
+            files.push(out.filename);
           }
         });
       }
     });
 
-    return files;
+    return filesProperties;
   };
 
   renderMainControls = () => {
