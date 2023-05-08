@@ -37,6 +37,7 @@ import "./Challenge.css";
 import HeaderMenu from "./components/HeaderMenu";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 import PaneType from "../models/PaneType";
+import AdditionalFileView from "./components/Editors/AdditionalFileView";
 
 type ChallengeState = IChallengeState & {
   savedCode: string | null;
@@ -113,6 +114,7 @@ class Challenge
     typ: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     showBookUpload: false,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeProps) {
@@ -125,6 +127,7 @@ class Challenge
     this.chContext.actions["load-saved-code"]();
     this.chContext.actions["fetch-code"]();
     this.chContext.actions["fetch-guide"]();
+
     this.chContext.actions["restart-worker"]({ force: true });
     this.setState({
       typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
@@ -135,6 +138,19 @@ class Challenge
     if (prevProps.guidePath !== this.props.guidePath) {
       this.chContext.actions["fetch-guide"]();
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file.filename).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
+        );
+      }
+    });
 
     if (prevProps.codePath !== this.props.codePath) {
       this.chContext.actions["fetch-code"]();
@@ -364,6 +380,25 @@ class Challenge
                             }}
                           />
                         }
+                        files={
+                          this.props.bookNode.additionalFiles?.map(
+                            (file, index) => (
+                              <AdditionalFileView
+                                key={index}
+                                defaultValue={
+                                  this.state.additionalFilesLoaded[
+                                    file.filename
+                                  ]
+                                }
+                                readonly={true}
+                              />
+                            )
+                          ) || []
+                        }
+                        fileProperties={
+                          this.props.bookNode.additionalFiles || []
+                        }
+                        fileShowAll={false}
                       />
                     </Allotment.Pane>
                   </Allotment>
