@@ -41,7 +41,11 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
+import AdditionalFileView, {
+  AdditionalFileViewRef,
+} from "./components/Editors/AdditionalFileView";
 
 type ChallengeEditorState = {
   starterCode: string | null;
@@ -61,6 +65,7 @@ type ChallengeEditorState = {
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
+  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -90,6 +95,7 @@ class ChallengeEditor
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
   bookExports: string[][] = [];
+  fileEditorRefs: Map<string, AdditionalFileViewRef> = new Map();
 
   chContext: ChallengeContextClass = new ChallengeContextClass(this);
 
@@ -135,6 +141,7 @@ class ChallengeEditor
     dialogInfoText: undefined,
     hasEdited: false,
     saveDialogProps: undefined,
+    additionalFilesLoaded: {},
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -151,6 +158,7 @@ class ChallengeEditor
       isExample: node.isExample,
       typ: node.typ,
       tests: node.tests,
+      additionalFiles: node.additionalFiles,
     };
     return JSON.stringify(proxy, null, 2);
   }
@@ -181,6 +189,23 @@ class ChallengeEditor
       this.setState({ testResults: [], testsPassing: undefined });
       this.setState({ hasEdited: false });
     }
+
+    this.props.bookNode.additionalFiles?.forEach((file) => {
+      if (!(file.filename in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](
+          file.filename,
+          this.props.bookStore
+        ).then((text) =>
+          this.setState({
+            additionalFilesLoaded: {
+              ...this.state.additionalFilesLoaded,
+              [file.filename]: text,
+            },
+          })
+        );
+      }
+    });
+
     if (
       this.editorRef.current &&
       this.state.editorState !== prevState.editorState &&
@@ -275,6 +300,23 @@ class ChallengeEditor
     // saving the guide is easy
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
+    // saving the files
+    let updatedFiles = new Map(
+      this.props.bookNode.additionalFiles?.map((file, index) => {
+        return [
+          file.filename,
+          this.fileEditorRefs.get(file.filename)?.getValue() ||
+            this.state.additionalFilesLoaded[file.filename],
+        ];
+      })
+    );
+    this.setState({ additionalFilesLoaded: Object.fromEntries(updatedFiles) });
+    updatedFiles.forEach((text, file) => {
+      if (text) {
+        this.props.bookStore.store.save(text, file);
+      }
+    });
+
     // update the book from json
     let changed = false;
     let editedNode = JSON.parse(
@@ -295,6 +337,10 @@ class ChallengeEditor
     if (editedNode.tests !== this.props.tests) {
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
+    }
+    if (editedNode.additionalFiles !== this.props.bookNode.additionalFiles) {
+      changed = true;
+      this.props.bookNode.additionalFiles = editedNode.additionalFiles;
     }
     if (changed) {
       this.props.bookStore.store.saveBook();
@@ -425,6 +471,7 @@ class ChallengeEditor
                     hasEdited: this.state.hasEdited || editing,
                   })
                 }
+                hasUnsavedChanges={this.state.hasEdited}
               />
             </HeaderBar>
 
@@ -506,8 +553,44 @@ class ChallengeEditor
                               };
                             });
                           }}
+                          onChange={() =>
+                            this.state.hasEdited
+                              ? undefined
+                              : this.setState({
+                                  hasEdited: this.state.hasEdited || true,
+                                })
+                          }
                         />
                       }
+                      files={
+                        this.props.bookNode.additionalFiles?.map(
+                          (file, index) => (
+                            <AdditionalFileView
+                              key={index}
+                              defaultValue={
+                                this.state.additionalFilesLoaded[file.filename]
+                              }
+                              readonly={false}
+                              ref={(r) => {
+                                if (r) {
+                                  this.fileEditorRefs.set(file.filename, r);
+                                } else {
+                                  this.fileEditorRefs.delete(file.filename);
+                                }
+                              }}
+                              onChange={() =>
+                                this.state.hasEdited
+                                  ? undefined
+                                  : this.setState({
+                                      hasEdited: this.state.hasEdited || true,
+                                    })
+                              }
+                            />
+                          )
+                        ) || []
+                      }
+                      fileProperties={this.props.bookNode.additionalFiles || []}
+                      fileShowAll={true}
                     />
                   </Allotment.Pane>
                 </Allotment>

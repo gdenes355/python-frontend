@@ -6,6 +6,10 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
+import EditableBookStore from "../book/utils/EditableBookStore";
+
+import { absolutisePath } from "../utils/pathTools";
 
 type WorkerResponse = {
   cmd: string;
@@ -283,6 +287,13 @@ class ChallengeContextClass {
       breakpoints: number[],
       mode: "debug" | "run" = "debug"
     ) => {
+      const addFiles: AdditionalFilesContents =
+        this.challenge.state.additionalFilesLoaded;
+
+      let additionalCode = "";
+      Object.keys(addFiles).forEach((filename) => {
+        additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
+      });
       navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
@@ -296,6 +307,7 @@ class ChallengeContextClass {
         this.challenge.worker?.postMessage({
           cmd: mode,
           code: code,
+          initCode: additionalCode,
           breakpoints: breakpoints,
         });
         this.challenge.setState({
@@ -349,9 +361,17 @@ class ChallengeContextClass {
         if (this.challenge.interruptBuffer) {
           this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
+        const addFiles: AdditionalFilesContents =
+          this.challenge.state.additionalFilesLoaded;
+
+        let additionalCode = "";
+        Object.keys(addFiles).forEach((filename) => {
+          additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
+        });
         this.challenge.worker.postMessage({
           cmd: "test",
           code: code,
+          initCode: additionalCode,
           tests: tests,
           bookNode: this.challenge.props.bookNode,
         });
@@ -457,6 +477,46 @@ class ChallengeContextClass {
             this.actions["reset-code"]();
           }
         });
+    },
+    "fetch-file": (
+      filename: string,
+      store: EditableBookStore | null = null
+    ) => {
+      filename = absolutisePath(
+        filename,
+        this.challenge.props.fetcher.getBookPathAbsolute()
+      );
+      return new Promise<string>((resolve, reject) => {
+        this.challenge.props.fetcher
+          .fetch(filename, this.challenge.props.authContext)
+          .then((response) => {
+            if (!response.ok) {
+              // try to make the file
+              let newContents = "add new file contents here\n";
+              if (store) {
+                store.store.save(newContents, `edit://edit/${filename}`);
+              } else {
+                throw Error("file not available");
+              }
+              return newContents;
+            }
+            return response.text();
+          })
+          .then((text) => {
+            resolve(text);
+          })
+          .catch((e) => {
+            resolve("ERROR LOADING FILE");
+          });
+      });
+    },
+    "activate-file": (filename: string, contents: string) => {
+      let code = `with open("${filename}", "w") as f:\n    f.write(r"""${contents}""")`;
+      this.challenge.worker?.postMessage({
+        cmd: "run",
+        code: code,
+        breakpoints: [],
+      });
     },
     "load-saved-code": () => {
       let savedCode = localStorage.getItem(

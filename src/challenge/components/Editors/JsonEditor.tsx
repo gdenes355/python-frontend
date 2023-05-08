@@ -11,6 +11,7 @@ import VsThemeContext from "../../../themes/VsThemeContext";
 
 type JsonEditorProps = {
   starterCode: string;
+  onChange?: () => void;
   onToggleFullScreen: () => void;
 };
 
@@ -31,11 +32,14 @@ const JsonEditor = React.forwardRef<JsonEditorHandle, JsonEditorProps>(
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
 
+    const lastSetValue = useRef<string | null>(null);
+
     const getValue = () => {
       return editorRef?.current?.getValue() || "";
     };
 
     const setValue = (value: string) => {
+      lastSetValue.current = value;
       editorRef.current?.setValue(value);
     };
 
@@ -72,6 +76,11 @@ const JsonEditor = React.forwardRef<JsonEditorHandle, JsonEditorProps>(
         value={props.starterCode}
         onMount={handleEditorDidMount}
         theme={themeContext.theme}
+        onChange={(e) => {
+          if (lastSetValue.current !== e && props.starterCode !== e) {
+            props.onChange?.();
+          }
+        }}
         options={{
           scrollBeyondLastLine: false,
           tabSize: 2,

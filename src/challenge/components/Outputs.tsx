@@ -4,6 +4,7 @@ import { Box } from "@mui/material";
 import TabbedView, { TabbedViewHandle } from "../../components/TabbedView";
 
 import PaneType from "../../models/PaneType";
+import { AdditionalFiles } from "../../models/AdditionalFiles";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;
@@ -14,6 +15,9 @@ type OutputsProps = {
   canvas: React.ReactNode;
   fixedInput: React.ReactNode;
   json?: React.ReactNode;
+  files: Array<React.ReactNode>;
+  fileProperties: AdditionalFiles;
+  fileShowAll: boolean;
   visiblePanes: PaneType[];
 };
 
@@ -53,6 +57,17 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
       content: props.json,
       show: props.visiblePanes.includes("json"),
       name: "json",
+    });
+  }
+
+  if (props.fileProperties) {
+    props.fileProperties.forEach((file, index) => {
+      panes.push({
+        label: file.filename,
+        content: props.files[index],
+        show: file.visible || props.fileShowAll,
+        name: file.filename,
+      });
     });
   }
 
