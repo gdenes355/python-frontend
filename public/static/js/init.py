@@ -547,18 +547,15 @@ def pyexec(code, expected_input, expected_output):
                 try:
                     # the filename has been replaced with the soln code
                     screen_dump_user = run_turtle_cmd({"action":"dump", "value":""})
-                    run_turtle_cmd({"action":"virtual", "value":True})
+                    # now using virtual for both user & soln, must ensure reset between runs
+                    run_turtle_cmd({"action":"mode", "value":"standard"})                    
                     exec(requirement.get("filename"), global_vars)
                     screen_dump_soln = run_turtle_cmd({"action":"dump", "value":""})  
-                    run_turtle_cmd({"action":"virtual", "value":False})
                     if screen_dump_user != screen_dump_soln:
                         return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
                     else:
                         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
-                except Exception as e:
-                    msg = {"action":"virtual", "value":False}
-                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
-                    synchronise('/@turtle@/req.js')                    
+                except Exception as e:                   
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
             else:
                 test_string = test_output.buffer

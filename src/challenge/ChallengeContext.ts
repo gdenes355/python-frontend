@@ -280,7 +280,7 @@ class ChallengeContextClass {
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let bkpts = this.challenge.editorRef.current?.getBreakpoints() || [];
-        this.challenge.canvasDisplayRef?.current?.turtleClear();
+        this.challenge.canvasDisplayRef?.current?.turtleReset();
         if (code || code === "") {
           this.actions["debugpy"](code, bkpts, mode);
         }
@@ -382,6 +382,7 @@ class ChallengeContextClass {
         });
 
         const testsClone = structuredClone(this.challenge.props.bookNode.tests);
+        let hasTurtleTest = false;
 
         (testsClone || []).forEach((test) => {
           if (test.out instanceof Array) {
@@ -390,9 +391,28 @@ class ChallengeContextClass {
                 out.filename =
                   this.challenge.state.additionalFilesLoaded[out.filename];
               }
+              if (out.typ && out.typ[0] === "t") {
+                hasTurtleTest = true;
+              }
             });
           }
         });
+
+        if (hasTurtleTest) {
+          // switch to virtual mode
+          if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+            this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+          }
+          if (this.challenge.canvasDisplayRef.current) {
+            this.challenge.canvasDisplayRef.current.turtleReset(true);
+          } else {
+            new Promise((resolve) => {
+              this.challenge.canvasPromiseResolve = resolve;
+            }).then((result) => {
+              this.challenge.canvasDisplayRef.current?.turtleReset(true);
+            });
+          }
+        }
 
         this.challenge.worker.postMessage({
           cmd: "test",

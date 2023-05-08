@@ -453,17 +453,6 @@ const processTurtleCommand = (
     return Promise.resolve();
   }
 
-  if (cmd.action === "virtual") {
-    virtualMode = cmd.value;
-    turtles.clear();
-    if (virtualMode) {
-      virtualCanvas = document.createElement("canvas");
-      virtualCanvas.width = canvas.width;
-      virtualCanvas.height = canvas.height;
-    }
-    return Promise.resolve();
-  }
-
   if (cmd.action === "dump") {
     return virtualMode
       ? Promise.resolve(virtualCanvas?.toDataURL())
@@ -600,4 +589,14 @@ const clearTurtlesAndCanvas = (canvas: HTMLCanvasElement) => {
   canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
 };
 
-export { processTurtleCommand, clearTurtlesAndCanvas as clearTurtle };
+const setVirtualMode = (canvas: HTMLCanvasElement, virtual: boolean) => {
+  clearTurtlesAndCanvas(canvas);
+  virtualMode = virtual;
+  if (virtualMode) {
+    virtualCanvas = document.createElement("canvas");
+    virtualCanvas.width = canvas.width;
+    virtualCanvas.height = canvas.height;
+  }
+};
+
+export { processTurtleCommand, clearTurtlesAndCanvas, setVirtualMode };
