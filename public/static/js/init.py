@@ -389,7 +389,6 @@ def synchronise():
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
 def mode(mode_type):
-    print("HERE MODE CHANGE")
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
     synchronise()
@@ -523,8 +522,8 @@ def pyexec(code, expected_input, expected_output):
                 test_string = code
             elif typ[0] == "f":
                 # get file contents from filename
-                filename = requirement.get("filename", "")
-                if filename == "":
+                filename = requirement.get("filename")
+                if not filename:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing filename in test case", "ins": expected_input}))
                 try:
                     with open(filename, "r") as f:
@@ -538,14 +537,7 @@ def pyexec(code, expected_input, expected_output):
                 if "statement" not in requirement:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing statement in test case", "ins": expected_input}))
                 try:
-                    test_output.clear()
-                    parsed_stmts = ast.parse(code + "\nwith open('STATEMENT_RESULT.txt', 'w') as f:\n    f.write(str(" + requirement.get("statement") + "))")
-                    global_vars = {'hit_breakpoint': hit_breakpoint,
-                                'traceback': traceback, 'input': test_input}
-                    exec(compile(parsed_stmts, filename="YourPythonCode.py",
-                        mode="exec"), global_vars)
-                    with open("STATEMENT_RESULT.txt", "r") as f:
-                        test_string = f.read()   
+                    test_string = str(eval(requirement.get("statement"), global_vars))
                 except Exception as e:
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating test-case statement", "ins": expected_input}))
             elif typ[0] == "t":
@@ -554,24 +546,11 @@ def pyexec(code, expected_input, expected_output):
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing turtle solution filename in test case", "ins": expected_input}))
                 try:
                     # the filename has been replaced with the soln code
-                    turtle_code = requirement.get("filename")
-                    msg = {"action":"dump", "value":""}
-                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
-                    screen_dump_user = synchronise('/@turtle@/req.js')                    
-                    msg = {"action":"virtual", "value":True}
-                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
-                    synchronise('/@turtle@/req.js')
-                    parsed_stmts = ast.parse(turtle_code)
-                    global_vars = {'hit_breakpoint': hit_breakpoint,
-                                'traceback': traceback, 'input': test_input}
-                    exec(compile(parsed_stmts, filename="YourPythonCode.py",
-                        mode="exec"), global_vars)
-                    msg = {"action":"dump", "value":""}
-                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
-                    screen_dump_soln = synchronise('/@turtle@/req.js')                                 
-                    msg = {"action":"virtual", "value":False}
-                    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
-                    synchronise('/@turtle@/req.js')
+                    screen_dump_user = run_turtle_cmd({"action":"dump", "value":""})
+                    run_turtle_cmd({"action":"virtual", "value":True})
+                    exec(requirement.get("filename"))
+                    screen_dump_soln = run_turtle_cmd({"action":"dump", "value":""})  
+                    run_turtle_cmd({"action":"virtual", "value":False})
                     if screen_dump_user != screen_dump_soln:
                         return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
                     else:
@@ -745,6 +724,11 @@ def debug_sleep(time_in_s):
 
 def test_sleep(time_in_s):
     pass
+
+# turtle
+def run_turtle_cmd(msg):
+    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+    return synchronise('/@turtle@/req.js')   
 
 
 def hit_breakpoint(lineno, alocals, aglobals):
