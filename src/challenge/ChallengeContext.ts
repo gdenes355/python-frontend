@@ -404,13 +404,30 @@ class ChallengeContextClass {
             this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
           }
           if (this.challenge.canvasDisplayRef.current) {
+            // continue synchronously
             this.challenge.canvasDisplayRef.current.turtleReset(true);
           } else {
+            // wait for canvas to be ready inc postMessage
             new Promise((resolve) => {
               this.challenge.canvasPromiseResolve = resolve;
-            }).then((result) => {
-              this.challenge.canvasDisplayRef.current?.turtleReset(true);
-            });
+            })
+              .then((result) => {
+                this.challenge.canvasDisplayRef.current?.turtleReset(true);
+              })
+              .then(() => {
+                this.challenge.worker?.postMessage({
+                  cmd: "test",
+                  code: code,
+                  initCode: additionalCode,
+                  tests: testsClone,
+                  bookNode: this.challenge.props.bookNode,
+                });
+                this.challenge.setState({
+                  editorState: ChallengeStatus.RUNNING,
+                });
+                this.actions["cls"]();
+              });
+            return;
           }
         }
 
