@@ -14,6 +14,7 @@ type SessionContextType = {
   isLoggedIn: () => boolean;
   wsOpen: boolean;
   wsSend?: (msg: any, then?: WsResponse) => void;
+  wsReconnect?: () => void;
   registerAdditionalWsHandler?: (handler: (msg: any) => void) => void;
   unregisterAdditionalWsHandler?: () => void;
 };

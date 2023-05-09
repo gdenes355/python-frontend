@@ -20,8 +20,11 @@ const SessionWsStateIndicator = () => {
       }
     >
       <PowerIcon
-        sx={{ margin: 1 }}
+        sx={{ margin: 1, cursor: ws ? "default" : "pointer" }}
         color={ws ? "success" : http ? "warning" : "error"}
+        onClick={() => {
+          sessionContext.wsReconnect?.();
+        }}
       />
     </Tooltip>
   );
