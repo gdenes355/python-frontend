@@ -134,7 +134,9 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const onWsClose = useMemo(
     () => (event: WebSocketEventMap["close"]) => {
       wsMap.forEach((then) => then({ res: "error" }));
-      setWsOpen(false);
+      if (ws.current === event.target) {
+        setWsOpen(false);
+      }
     },
     []
   );
@@ -159,6 +161,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   }, [wsConnectionUrl, wsEndPoint, token]);
 
   useEffect(() => {
+    console.log("wsConnectionUrl", wsConnectionUrl);
     if (!wsConnectionUrl) {
       ws.current = undefined;
       setWsOpen(false);
@@ -180,7 +183,11 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         wsMap.set(msg.i, resp);
       }).then(then);
     }
-    ws.current?.send(JSON.stringify(msg));
+    try {
+      ws.current?.send(JSON.stringify(msg));
+    } catch (e) {
+      console.log("failed to send websocket packet", e);
+    }
     return res;
   };
   return (
