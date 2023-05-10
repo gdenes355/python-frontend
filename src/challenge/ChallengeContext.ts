@@ -403,24 +403,33 @@ class ChallengeContextClass {
           if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
             this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
           }
-          if (this.challenge.canvasDisplayRef.current) {
-            this.challenge.canvasDisplayRef.current.turtleReset(true);
-          } else {
-            new Promise((resolve) => {
+          // wait for canvas to be ready inc postMessage
+          new Promise((resolve) => {
+            if (this.challenge.canvasDisplayRef.current) {
+              resolve(true);
+            } else {
               this.challenge.canvasPromiseResolve = resolve;
-            }).then((result) => {
-              this.challenge.canvasDisplayRef.current?.turtleReset(true);
+            }
+          }).then(() => {
+            this.challenge.canvasDisplayRef.current?.turtleReset(true);
+            this.challenge.worker?.postMessage({
+              cmd: "test",
+              code: code,
+              initCode: additionalCode,
+              tests: testsClone,
+              bookNode: this.challenge.props.bookNode,
             });
-          }
+          });
+        } else {
+          this.challenge.worker.postMessage({
+            cmd: "test",
+            code: code,
+            initCode: additionalCode,
+            tests: testsClone,
+            bookNode: this.challenge.props.bookNode,
+          });
         }
 
-        this.challenge.worker.postMessage({
-          cmd: "test",
-          code: code,
-          initCode: additionalCode,
-          tests: testsClone,
-          bookNode: this.challenge.props.bookNode,
-        });
         this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
         this.actions["cls"]();
       }

@@ -1,6 +1,7 @@
 const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_LOGO_START_HEADING = 90;
-const TURTLE_IMG_PATH = "/static/img/turtle.png";
+const TURTLE_IMG_SRC =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kTtIw0Acxr8+pCIVByuKOGSoThbEFx2likWwUNoKrTqYXPqCJg1Jiouj4Fpw8LFYdXBx1tXBVRAEHyCuLk6KLlLi/5JCixgPjvvx3X0fd98B3kaFKYZ/AlBUU0/FY0I2tyoEXuHHIAYwg6jIDC2RXszAdXzdw8PXuwjPcj/35+iV8wYDPALxHNN0k3iDeHbT1DjvE4dYSZSJz4nHdbog8SPXJYffOBdt9vLMkJ5JzROHiIViB0sdzEq6QjxNHJYVlfK9WYdlzluclUqNte7JXxjMqytprtMcQRxLSCAJARJqKKMCExFaVVIMpGg/5uIftv1JcknkKoORYwFVKBBtP/gf/O7WKExNOknBGND1Ylkfo0BgF2jWLev72LKaJ4DvGbhS2/5qA4h+kl5va+EjoG8buLhua9IecLkDDD1poi7ako+mt1AA3s/om3JA/y3Qs+b01trH6QOQoa6Wb4CDQ2CsSNnrLu/u7uzt3zOt/n4AGeVy6hhVemgAAAAGYktHRAAAAAAAAPlDu38AAAAJcEhZcwAAMsAAADLAAShkWtsAAAAHdElNRQfnBBcWNDh0WNzXAAAAxElEQVRIx8WXyQ6DMAxEM5H//5fdS1ELihfMOFjihJQ3XmKGMX6h32dL4A9qvWsDa1LcdnCLgHk9UNXUQZ2BuSSoRgJow3U68AoFQC9/CtwhAFYJnVJTBMDqnwdmCIA3OA/hrgB4U5sBVwXQwHcFILqnFXim/4iWRBUcCMAcL4W0rUS/10vw2DFcQvu+3rxO8rTM1QUi1TJXgSuwdmaYyniVLQuYHi420LS3R7ZdwIyvbnWaWXtL99ayGxiBW39f2sx6Jj7b5UlE5o7znAAAAABJRU5ErkJggg==";
 const TURTLE_IMG_WIDTH = 16;
 const TURTLE_IMG_HEIGHT = 16;
 const TURTLE_UNIT_MOVE_STEP = 6;
@@ -42,7 +43,7 @@ class SimpleTurtle {
 
       this.updateTurtleImage();
     };
-    baseImage.src = TURTLE_IMG_PATH;
+    baseImage.src = TURTLE_IMG_SRC;
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.canvasBackground = document.createElement("canvas");
