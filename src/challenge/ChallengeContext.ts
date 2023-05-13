@@ -102,29 +102,23 @@ class ChallengeContextClass {
     turtle: (data: TurtleData) => {
       this.challenge.outputsRef?.current?.focusPane("canvas");
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
-          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
-        }
-
-        if (this.challenge.canvasDisplayRef.current) {
-          this.challenge.canvasDisplayRef.current
-            .runTurtleCommand(data.id, data.msg)
+        new Promise((resolve) => {
+          if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+            this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+          }
+          if (this.challenge.canvasDisplayRef.current) {
+            resolve(true);
+          } else {
+            this.challenge.canvasPromiseResolve = resolve;
+          }
+        }).then((result) => {
+          this.challenge.canvasDisplayRef?.current
+            ?.runTurtleCommand(data.id, data.msg)
             .catch((e) => console.log("turtle stopped with", e))
             .then((turtleResult) =>
               this.actions.turtleCmdComplete(turtleResult)
             );
-        } else {
-          new Promise((resolve) => {
-            this.challenge.canvasPromiseResolve = resolve;
-          }).then((result) => {
-            this.challenge.canvasDisplayRef?.current
-              ?.runTurtleCommand(data.id, data.msg)
-              .catch((e) => console.log("turtle stopped with", e))
-              .then((turtleResult) =>
-                this.actions.turtleCmdComplete(turtleResult)
-              );
-          });
-        }
+        });
       }
     },
     turtleCmdComplete: (turtleResult: string | void) => {
@@ -381,7 +375,7 @@ class ChallengeContextClass {
           additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
         });
 
-        const testsClone = structuredClone(this.challenge.props.bookNode.tests);
+        const testsClone = structuredClone(tests);
         let hasTurtleTest = false;
 
         (testsClone || []).forEach((test) => {

@@ -49,7 +49,8 @@ async function addNode(
     node.tests.forEach(async (test) => {
       if (test.out instanceof Array) {
         test.out.forEach(async (out) => {
-          if (out.filename) {
+          // fetch files referenced in test cases but not if they are from file output tests
+          if (out.filename && out.typ && out.typ[0] !== "f") {
             let absPath = absolutisePath(
               out.filename,
               node.bookMainUrl || fetcher.getBookPathAbsolute()
