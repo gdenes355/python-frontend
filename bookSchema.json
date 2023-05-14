@@ -182,7 +182,7 @@
           "typ": {
             "type": "string",
             "description": "should the output match this requirement or not",
-            "enum": ["+", "-", "c+", "c-"],
+            "enum": ["+", "-", "c+", "c-", "f+", "f-", "s+", "s-", "t"],
             "default": "+"
           },
           "ignore": {
@@ -195,10 +195,20 @@
             "type": "number",
             "default": -1,
             "description": "The output must occur (-: not occur) exactly `count` number of times. -1, which is the default, means we don't care."
+          },
+          "filename" : {
+            "type": "string",
+            "description": "output file to check",
+            "default": ""
+          },
+          "statement": {
+            "type": "string",
+            "description": "Python statement to check the output of",
+            "default": ""
           }
         },
         "additionalProperties": false,
-        "required": ["pattern"]
+        "required": []
       }
     }
   }

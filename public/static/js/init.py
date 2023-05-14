@@ -480,6 +480,7 @@ def pyexec(code, expected_input, expected_output):
         test_inputs = expected_input.split("\n")  # string input; split it on new lines
     else:
         test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
+    test_input_copy = copy.deepcopy(test_inputs)
 
     # run test
     test_output.clear()
@@ -549,7 +550,7 @@ def pyexec(code, expected_input, expected_output):
                     screen_dump_user = run_turtle_cmd({"action":"dump", "value":""})
                     # now using virtual for both user & soln, must ensure reset between runs
                     run_turtle_cmd({"action":"mode", "value":"standard"})
-                    test_inputs = [str(inp) for inp in expected_input]
+                    test_inputs = copy.deepcopy(test_input_copy)
                     exec(requirement.get("filename"), global_vars)
                     screen_dump_soln = run_turtle_cmd({"action":"dump", "value":""})  
                     if screen_dump_user != screen_dump_soln:
