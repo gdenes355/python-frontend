@@ -99,29 +99,35 @@ class ChallengeContextClass {
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
     },
+    awaitCanvas: () => {
+      return new Promise((resolve) => {
+        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+        }
+        if (this.challenge.canvasDisplayRef.current) {
+          resolve(true);
+        } else {
+          if (this.challenge.canvasPromiseResolve !== undefined) {
+            console.log("awaitCanvas called twice");
+          }
+          this.challenge.canvasPromiseResolve = resolve;
+        }
+      });
+    },
     turtle: (data: TurtleData) => {
       this.challenge.outputsRef?.current?.focusPane("canvas");
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        new Promise((resolve) => {
-          if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
-            this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
-          }
-          if (this.challenge.canvasDisplayRef.current) {
-            resolve(true);
-          } else {
-            this.challenge.canvasPromiseResolve = resolve;
-          }
-        }).then((result) => {
+        this.actions.awaitCanvas().then((result) => {
           this.challenge.canvasDisplayRef?.current
             ?.runTurtleCommand(data.id, data.msg)
-            .catch((e) => console.log("turtle stopped with", e))
             .then((turtleResult) =>
-              this.actions.turtleCmdComplete(turtleResult)
-            );
+              this.actions.turtleCmdComplete(turtleResult || undefined)
+            )
+            .catch((e) => console.log("turtle stopped with", e));
         });
       }
     },
-    turtleCmdComplete: (turtleResult: string | void) => {
+    turtleCmdComplete: (turtleResult?: string) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         navigator.serviceWorker.controller?.postMessage({
           cmd: "ps-turtle-resp",
@@ -394,17 +400,7 @@ class ChallengeContextClass {
 
         if (hasTurtleTest) {
           // switch to virtual mode
-          if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
-            this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
-          }
-          // wait for canvas to be ready inc postMessage
-          new Promise((resolve) => {
-            if (this.challenge.canvasDisplayRef.current) {
-              resolve(true);
-            } else {
-              this.challenge.canvasPromiseResolve = resolve;
-            }
-          }).then(() => {
+          this.actions.awaitCanvas().then(() => {
             this.challenge.canvasDisplayRef.current?.turtleReset(true);
             this.challenge.worker?.postMessage({
               cmd: "test",
