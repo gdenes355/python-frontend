@@ -363,6 +363,7 @@ debug_audio = DebugAudio()
 test_output = TestOutput()
 
 active_breakpoints = set()
+breakpoint_map = {}
 test_inputs = []
 step_into = False
 
@@ -604,6 +605,7 @@ def pyexec(code, expected_input, expected_output):
 def pydebug(code, breakpoints):
     global active_breakpoints
     global step_into
+    global breakpoint_map
     global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback,
                    'input': debug_input, 'time.sleep': debug_sleep}
     step_into = False
@@ -622,7 +624,7 @@ def pydebug(code, breakpoints):
 
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
-    active_breakpoints = set(breakpoints)
+    breakpoint_map = {}
 
     injected_breakpoints = set()
 
@@ -630,6 +632,9 @@ def pydebug(code, breakpoints):
     workqueue = deque()  # stores (node, parent). The latter two are needed for instrumentation
     workqueue.extend([(parsed_stmts.body[i], parsed_stmts)
                      for i in range(len(parsed_stmts.body))])
+    last_line = 0
+
+    # walk the AST and inject breakpoint commands on each line
     while workqueue:
         node, parent = workqueue.popleft()
         if node.lineno not in injected_breakpoints:
@@ -641,9 +646,19 @@ def pydebug(code, breakpoints):
             idx = parent.body.index(node)
             parent.body.insert(idx, break_cmd)
             injected_breakpoints.add(node.lineno)
+            last_line = max(last_line, node.lineno)
         if hasattr(node, 'body'):
             workqueue.extend([(node.body[i], node)
                              for i in range(len(node.body))])
+            
+    # find lines with no breakpoints and map them to the next line with a breakpoint
+    nextbrk = last_line
+    for lineno in range(last_line, -1, -1):
+        if lineno in injected_breakpoints:
+            nextbrk = lineno
+        breakpoint_map[lineno] = nextbrk
+
+    update_breakpoints(breakpoints)
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
 
@@ -668,7 +683,7 @@ def pyrun(code):
 
 def update_breakpoints(breakpoints):
     global active_breakpoints
-    active_breakpoints = set(breakpoints)
+    active_breakpoints = set([breakpoint_map.get(b, b) for b in breakpoints])
 
 
 def post_message(data):
