@@ -657,6 +657,9 @@ def pydebug(code, breakpoints):
         if hasattr(node, 'orelse'):
             workqueue.extend([(node.orelse[i], node.orelse)
                             for i in range(len(node.orelse))])
+        if hasattr(node, 'test'):
+            # instrument test with break
+            node.test = ast.BoolOp(ast.And(), [break_cmd.value, node.test], lineno=node.lineno, col_offset=1)
             
     # find lines with no breakpoints and map them to the next line with a breakpoint
     nextbrk = last_line
@@ -664,7 +667,6 @@ def pydebug(code, breakpoints):
         if lineno in injected_breakpoints:
             nextbrk = lineno
         breakpoint_map[lineno] = nextbrk
-    js.console.log(to_js(list(injected_breakpoints)))
     update_breakpoints(breakpoints)
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
