@@ -362,10 +362,11 @@ debug_context = DebugContext()
 debug_audio = DebugAudio()
 test_output = TestOutput()
 
-active_breakpoints = set()
-breakpoint_map = {}
+active_breakpoints = set()  # set of line numbers that have active breakpoints
+breakpoint_map = {}  # map all lines (including empty) to a breakpointable line
+step_into = False  # step into the next instruction
+last_seen_lineno = -1  # keep track of the last seen line number, so we don't double break on a line
 test_inputs = []
-step_into = False
 
 # setup turtle library
 
@@ -606,9 +607,11 @@ def pydebug(code, breakpoints):
     global active_breakpoints
     global step_into
     global breakpoint_map
+    global last_seen_lineno
     global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback,
                    'input': debug_input, 'time.sleep': debug_sleep}
     step_into = False
+    last_seen_lineno = -1
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context
@@ -630,26 +633,30 @@ def pydebug(code, breakpoints):
 
     # walk the AST and inject breakpoint commands after each line
     workqueue = deque()  # stores (node, parent). The latter two are needed for instrumentation
-    workqueue.extend([(parsed_stmts.body[i], parsed_stmts)
+    workqueue.extend([(parsed_stmts.body[i], parsed_stmts.body)
                      for i in range(len(parsed_stmts.body))])
     last_line = 0
 
     # walk the AST and inject breakpoint commands on each line
     while workqueue:
-        node, parent = workqueue.popleft()
-        if node.lineno not in injected_breakpoints:
-            break_cmd = copy.deepcopy(parsed_break.body[0])
-            break_cmd.value.lineno = node.lineno
-            break_cmd.value.end_lineno = node.lineno
-            break_cmd.value.args[0] = ast.Constant(
-                node.lineno, lineno=0, col_offset=0)
-            idx = parent.body.index(node)
-            parent.body.insert(idx, break_cmd)
-            injected_breakpoints.add(node.lineno)
-            last_line = max(last_line, node.lineno)
+        node, parentl = workqueue.popleft()
+        if node.lineno in injected_breakpoints:
+            continue
+        break_cmd = copy.deepcopy(parsed_break.body[0])
+        break_cmd.value.lineno = node.lineno
+        break_cmd.value.end_lineno = node.lineno
+        break_cmd.value.args[0] = ast.Constant(
+            node.lineno, lineno=0, col_offset=0)
+        idx = parentl.index(node)
+        parentl.insert(idx, break_cmd)
+        injected_breakpoints.add(node.lineno)
+        last_line = max(last_line, node.lineno)
         if hasattr(node, 'body'):
-            workqueue.extend([(node.body[i], node)
-                             for i in range(len(node.body))])
+            workqueue.extend([(node.body[i], node.body)
+                            for i in range(len(node.body))])
+        if hasattr(node, 'orelse'):
+            workqueue.extend([(node.orelse[i], node.orelse)
+                            for i in range(len(node.orelse))])
             
     # find lines with no breakpoints and map them to the next line with a breakpoint
     nextbrk = last_line
@@ -657,7 +664,7 @@ def pydebug(code, breakpoints):
         if lineno in injected_breakpoints:
             nextbrk = lineno
         breakpoint_map[lineno] = nextbrk
-
+    js.console.log(to_js(list(injected_breakpoints)))
     update_breakpoints(breakpoints)
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
@@ -747,13 +754,17 @@ def run_turtle_cmd(msg):
 
 def hit_breakpoint(lineno, alocals, aglobals):
     global step_into
+    global last_seen_lineno
+    if last_seen_lineno == lineno:
+        return True
+    last_seen_lineno = lineno
     if step_into or lineno in active_breakpoints:
         step_into = False
         # remove wrapper and breakpt method
         stack = traceback.extract_stack()[1:-1]
         VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__",
                           "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
-                          "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time"]
+                          "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time", "last_seen_lineno"]
         vars = aglobals.copy()
         vars.update(alocals)
         env = {k: str(
@@ -765,3 +776,4 @@ def hit_breakpoint(lineno, alocals, aglobals):
             update_breakpoints(resp["breakpoints"])
         if (resp.get("step")):
             step_into = True
+    return True
