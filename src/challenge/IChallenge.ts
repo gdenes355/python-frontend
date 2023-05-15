@@ -41,6 +41,7 @@ type IChallengeState = {
   consoleText: string;
   testResults: TestResults;
   additionalFilesLoaded: AdditionalFilesContents;
+  turtleExampleRendered: string | undefined;
 };
 
 interface IChallenge {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import { Box } from "@mui/material";
 import { styled } from "@mui/material/styles";
@@ -12,9 +12,12 @@ import VsThemeContext from "../themes/VsThemeContext";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
+import TurtlePreview from "./TurtlePreview";
 
 type GuideProps = {
   md: string;
+  challengeId?: string;
+  turtleExampleImage?: string;
 };
 
 const StyledGuide = styled("div")(
@@ -30,7 +33,7 @@ const StyledGuide = styled("div")(
 `
 );
 
-const Guide = ({ md }: GuideProps) => {
+const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
   const [localMd, setLocalMd] = useState("");
   const themeContext = useContext(VsThemeContext);
   useEffect(() => {
@@ -45,37 +48,57 @@ const Guide = ({ md }: GuideProps) => {
     setLocalMd(parts.join("```"));
   }, [md]);
 
-  return (
-    <StyledGuide>
-      <Box>
-        <ReactMarkdown
-          components={{
-            code({ node, inline, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || "");
-              return !inline && match ? (
-                <SyntaxHighlighter
-                  children={String(children).replace(/\n$/, "")}
-                  customStyle={{ fontSize: "1.05em" }}
-                  language={match[1]}
-                  PreTag="div"
-                  {...props}
-                  style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
-                />
-              ) : (
-                <code className={className} {...props}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-          remarkPlugins={[remarkMath]}
-          rehypePlugins={[rehypeKatex]}
-        >
-          {localMd}
-        </ReactMarkdown>
-      </Box>
-    </StyledGuide>
-  );
+  const rendered = useMemo(() => {
+    return (
+      <StyledGuide>
+        <Box>
+          <ReactMarkdown
+            components={{
+              code({ node, inline, className, children, ...props }) {
+                const match = /language-(\w+)/.exec(className || "");
+                return !inline && match ? (
+                  <SyntaxHighlighter
+                    children={String(children).replace(/\n$/, "")}
+                    customStyle={{ fontSize: "1.05em" }}
+                    language={match[1]}
+                    PreTag="div"
+                    {...props}
+                    style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
+                  />
+                ) : (
+                  <code className={className} {...props}>
+                    {children}
+                  </code>
+                );
+              },
+              img({ node, className, src, alt, children, ...props }) {
+                if (src === "turtlepreview") {
+                  return (
+                    <TurtlePreview
+                      challengeId={challengeId}
+                      turtleExampleImage={turtleExampleImage}
+                    />
+                  );
+                } else {
+                  return (
+                    <img className={className} alt={alt} src={src} {...props}>
+                      {children}
+                    </img>
+                  );
+                }
+              },
+            }}
+            remarkPlugins={[remarkMath]}
+            rehypePlugins={[rehypeKatex]}
+          >
+            {localMd}
+          </ReactMarkdown>
+        </Box>
+      </StyledGuide>
+    );
+  }, [localMd, turtleExampleImage, challengeId, themeContext.theme]);
+
+  return rendered;
 };
 
 export default Guide;

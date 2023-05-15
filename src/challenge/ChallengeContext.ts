@@ -138,6 +138,57 @@ class ChallengeContextClass {
     "hide-turtle": () => {
       this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
     },
+    "draw-turtle-example": () => {
+      // draws the first turtle test case
+      if (!!this.challenge.state.turtleExampleRendered) {
+        return;
+      }
+      if (!this.challenge.worker) {
+        return;
+      }
+      if (this.challenge.state.editorState === ChallengeStatus.READY) {
+        if (this.challenge.interruptBuffer) {
+          this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+        }
+      } else {
+        return;
+      }
+
+      let code = "";
+      let inputs: string | (number | string)[] = "";
+
+      loop: for (let test of this.challenge.props.tests || []) {
+        if (!(test.out instanceof Array)) {
+          continue;
+        }
+        for (let out of test.out) {
+          if (out.typ === "t" && out.filename) {
+            code = this.challenge.state.additionalFilesLoaded[out.filename];
+            if (!code) return; // file not yet loaded!
+            inputs = test.in instanceof Array ? test.in : [test.in];
+            break loop;
+          }
+        }
+      }
+
+      if (!code) {
+        // no code to run. Don't try again
+        return;
+      }
+
+      this.actions.awaitCanvas().then(() => {
+        this.challenge.canvasDisplayRef.current?.turtleReset(true);
+        this.challenge.worker?.postMessage({
+          cmd: "draw-turtle-example",
+          code: code,
+          inputs: inputs,
+          bookNode: this.challenge.props.bookNode,
+        });
+        this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
+      });
+      return;
+    },
+
     cls: () => {
       this.challenge.currentConsoleText = "";
       this.challenge.printCallback();
@@ -210,6 +261,21 @@ class ChallengeContextClass {
         testResults: data.results,
         editorState: ChallengeStatus.READY,
       });
+    },
+    "draw-turtle-example-finished": (data: { bookNode: BookNodeModel }) => {
+      this.challenge.setState({
+        editorState: ChallengeStatus.READY,
+      });
+      this.challenge.outputsRef?.current?.focusPane("console");
+      if (this.challenge.props.bookNode.id !== data.bookNode.id) return; // ignore if we have moved on
+
+      this.challenge.canvasDisplayRef?.current
+        ?.runTurtleCommand(-1, '{"action": "dump"}')
+        .then((turtleResult) => {
+          this.challenge.setState({
+            turtleExampleRendered: turtleResult || undefined,
+          });
+        });
     },
     "restart-worker": (data: RestartWorkerData) => {
       this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
@@ -391,7 +457,7 @@ class ChallengeContextClass {
                 out.filename =
                   this.challenge.state.additionalFilesLoaded[out.filename];
               }
-              if (out.typ && out.typ[0] === "t") {
+              if (out.typ === "t") {
                 hasTurtleTest = true;
               }
             });
@@ -497,6 +563,7 @@ class ChallengeContextClass {
       }
     },
     "fetch-guide": () => {
+      this.challenge.setState({ turtleExampleRendered: undefined });
       this.challenge.props.fetcher
         .fetch(this.challenge.props.guidePath, this.challenge.props.authContext)
         .then((response) => {

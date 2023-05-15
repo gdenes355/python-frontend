@@ -115,6 +115,7 @@ class Challenge
     usesFixedInput: false,
     showBookUpload: false,
     additionalFilesLoaded: {},
+    turtleExampleRendered: undefined,
   };
 
   constructor(props: ChallengeProps) {
@@ -146,7 +147,7 @@ class Challenge
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
-          if (out.filename) {
+          if (out.filename && out.typ?.[0] !== "f") {
             files.push(out.filename);
           }
         });
@@ -278,7 +279,13 @@ class Challenge
     if (this.state.helpOpen) {
       return <Help onClose={() => this.setState({ helpOpen: false })} />;
     }
-    return <Guide md={this.state.guideMd} />;
+    return (
+      <Guide
+        challengeId={this.props.bookNode.id}
+        md={this.state.guideMd}
+        turtleExampleImage={this.state.turtleExampleRendered}
+      />
+    );
   };
 
   render() {

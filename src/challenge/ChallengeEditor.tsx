@@ -21,8 +21,6 @@ import HeaderBar from "../components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
-import { TestResults } from "../models/Tests";
-import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
@@ -32,7 +30,7 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
-import IChallenge, { IChallengeProps } from "./IChallenge";
+import IChallenge, { IChallengeProps, IChallengeState } from "./IChallenge";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import BookZipper from "../book/utils/BookZipper";
@@ -41,31 +39,21 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
-import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
 import AdditionalFileView, {
   AdditionalFileViewRef,
 } from "./components/Editors/AdditionalFileView";
 
-type ChallengeEditorState = {
-  starterCode: string | null;
+type ChallengeEditorState = IChallengeState & {
   savedCode: string | null;
-  guideMd: string;
-  debugContext: DebugContext;
   editorFullScreen: boolean;
-  consoleText: string;
-  editorState: ChallengeStatus;
-  testResults: TestResults;
   testsPassing: boolean | undefined;
   helpOpen: boolean;
   guideMinimised: boolean;
-  typ: ChallengeTypes; // use this in favour of the props.typ
-  usesFixedInput: boolean;
   isEditingGuide: boolean;
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
-  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -142,6 +130,7 @@ class ChallengeEditor
     hasEdited: false,
     saveDialogProps: undefined,
     additionalFilesLoaded: {},
+    turtleExampleRendered: undefined,
   };
 
   constructor(props: ChallengeEditorProps) {
