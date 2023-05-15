@@ -368,9 +368,7 @@ class Challenge
                         !this.state.editorFullScreen
                       )}
                       maxSize={550}
-                      minSize={
-                        this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
-                      }
+                      minSize={150}
                     >
                       <Outputs
                         ref={this.outputsRef}
