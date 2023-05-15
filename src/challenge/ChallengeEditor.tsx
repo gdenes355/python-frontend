@@ -93,6 +93,7 @@ class ChallengeEditor
   workerFullyInitialised: boolean = false;
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
+  forceStopping: boolean = false;
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),

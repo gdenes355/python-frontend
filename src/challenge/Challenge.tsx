@@ -84,6 +84,8 @@ class Challenge
   keyDownBuffer: Uint8Array | null = null;
   workerFullyInitialised: boolean = false;
 
+  forceStopping: boolean = false;
+
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
