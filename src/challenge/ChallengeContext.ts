@@ -157,6 +157,7 @@ class ChallengeContextClass {
       let code = "";
       let inputs: string | (number | string)[] = "";
 
+      // find first testcase
       loop: for (let test of this.challenge.props.tests || []) {
         if (!(test.out instanceof Array)) {
           continue;
@@ -170,23 +171,18 @@ class ChallengeContextClass {
           }
         }
       }
-
-      if (!code) {
-        // no code to run. Don't try again
-        return;
-      }
-
-      this.actions.awaitCanvas().then(() => {
-        this.challenge.canvasDisplayRef.current?.turtleReset(true);
-        this.challenge.worker?.postMessage({
-          cmd: "draw-turtle-example",
-          code: code,
-          inputs: inputs,
-          bookNode: this.challenge.props.bookNode,
+      if (code) {
+        this.actions.awaitCanvas().then(() => {
+          this.challenge.canvasDisplayRef.current?.turtleReset(true);
+          this.challenge.worker?.postMessage({
+            cmd: "draw-turtle-example",
+            code: code,
+            inputs: inputs,
+            bookNode: this.challenge.props.bookNode,
+          });
+          this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
         });
-        this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
-      });
-      return;
+      }
     },
 
     cls: () => {
