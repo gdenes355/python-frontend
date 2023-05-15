@@ -1,6 +1,7 @@
 const TURTLE_SPEED_DEFAULT = 0.5;
 const TURTLE_LOGO_START_HEADING = 90;
-const TURTLE_IMG_PATH = "/static/img/turtle.png";
+const TURTLE_IMG_SRC =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAABhWlDQ1BJQ0MgcHJvZmlsZQAAKJF9kTtIw0Acxr8+pCIVByuKOGSoThbEFx2likWwUNoKrTqYXPqCJg1Jiouj4Fpw8LFYdXBx1tXBVRAEHyCuLk6KLlLi/5JCixgPjvvx3X0fd98B3kaFKYZ/AlBUU0/FY0I2tyoEXuHHIAYwg6jIDC2RXszAdXzdw8PXuwjPcj/35+iV8wYDPALxHNN0k3iDeHbT1DjvE4dYSZSJz4nHdbog8SPXJYffOBdt9vLMkJ5JzROHiIViB0sdzEq6QjxNHJYVlfK9WYdlzluclUqNte7JXxjMqytprtMcQRxLSCAJARJqKKMCExFaVVIMpGg/5uIftv1JcknkKoORYwFVKBBtP/gf/O7WKExNOknBGND1Ylkfo0BgF2jWLev72LKaJ4DvGbhS2/5qA4h+kl5va+EjoG8buLhua9IecLkDDD1poi7ako+mt1AA3s/om3JA/y3Qs+b01trH6QOQoa6Wb4CDQ2CsSNnrLu/u7uzt3zOt/n4AGeVy6hhVemgAAAAGYktHRAAAAAAAAPlDu38AAAAJcEhZcwAAMsAAADLAAShkWtsAAAAHdElNRQfnBBcWNDh0WNzXAAAAxElEQVRIx8WXyQ6DMAxEM5H//5fdS1ELihfMOFjihJQ3XmKGMX6h32dL4A9qvWsDa1LcdnCLgHk9UNXUQZ2BuSSoRgJow3U68AoFQC9/CtwhAFYJnVJTBMDqnwdmCIA3OA/hrgB4U5sBVwXQwHcFILqnFXim/4iWRBUcCMAcL4W0rUS/10vw2DFcQvu+3rxO8rTM1QUi1TJXgSuwdmaYyniVLQuYHi420LS3R7ZdwIyvbnWaWXtL99ayGxiBW39f2sx6Jj7b5UlE5o7znAAAAABJRU5ErkJggg==";
 const TURTLE_IMG_WIDTH = 16;
 const TURTLE_IMG_HEIGHT = 16;
 const TURTLE_UNIT_MOVE_STEP = 6;
@@ -42,7 +43,7 @@ class SimpleTurtle {
 
       this.updateTurtleImage();
     };
-    baseImage.src = TURTLE_IMG_PATH;
+    baseImage.src = TURTLE_IMG_SRC;
     this.canvas = canvas;
     this.ctx = canvas.getContext("2d");
     this.canvasBackground = document.createElement("canvas");
@@ -61,15 +62,19 @@ class SimpleTurtle {
   setposition(x: number, y: number) {
     // drives to required location but doesn't change the current heading (python compliant)
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(x, y, this.state.heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.driveto(x, y, this.state.heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(x, y, this.state.heading).catch(e).then(r)
+        );
+      }
     });
   }
 
   stop() {
     this.alive = false;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   forward(distance: number) {
@@ -79,9 +84,13 @@ class SimpleTurtle {
       this.state.y - distance * Math.sin((this.state.heading / 180) * Math.PI);
 
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(new_x, new_y, this.state.heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.driveto(new_x, new_y, this.state.heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(new_x, new_y, this.state.heading).catch(e).then(r)
+        );
+      }
     });
   }
 
@@ -129,7 +138,7 @@ class SimpleTurtle {
 
   private drawLineTo(x: number, y: number) {
     if (!this.ctx || !this.ctxBackground) {
-      return newResolvedPromise();
+      return Promise.resolve();
     }
 
     this.ctxBackground.beginPath();
@@ -176,12 +185,12 @@ class SimpleTurtle {
     if (this.fillPath !== null) {
       this.fillPath.lineTo(x, y);
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   private driveAlong(arrLocs: Array<[number, number, number]>): Promise<void> {
     if (arrLocs.length === 0) {
-      return newResolvedPromise();
+      return Promise.resolve();
     }
 
     const [x, y, h] = arrLocs.shift()!;
@@ -189,7 +198,7 @@ class SimpleTurtle {
     this.drawLineTo(x, y);
 
     if (this.alive) {
-      if (this.state.speed === -1) {
+      if (this.state.speed === -1 || this.state.virtual) {
         return this.driveAlong(arrLocs);
       } else {
         return new Promise<void>((r, e) => {
@@ -202,7 +211,7 @@ class SimpleTurtle {
         });
       }
     } else {
-      return newResolvedPromiseError("!alive during driveAlong");
+      return Promise.reject(new Error("!alive during driveAlong"));
     }
   }
 
@@ -255,11 +264,11 @@ class SimpleTurtle {
     this.drawLineTo(this.state.x + ch_x, this.state.y + ch_y);
 
     if (!this.alive) {
-      return newResolvedPromiseError("!alive during driveto");
+      return Promise.reject(new Error("!alive during driveto"));
     }
 
     if (repeatAngle || repeatLoc) {
-      if (this.state.speed === -1) {
+      if (this.state.speed === -1 || this.state.virtual) {
         return this.driveto(x, y, heading);
       } else {
         return new Promise<void>((r, e) => {
@@ -272,7 +281,7 @@ class SimpleTurtle {
         });
       }
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   back(distance: number) {
@@ -283,9 +292,14 @@ class SimpleTurtle {
     const new_heading = (this.state.heading + angle) % 360;
 
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.state.heading = new_heading;
+        this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(this.state.x, this.state.y, new_heading).catch(e).then(r)
+        );
+      }
     });
   }
 
@@ -298,27 +312,32 @@ class SimpleTurtle {
       angle = 90 - angle;
     }
     return new Promise<void>((r, e) => {
-      window.requestAnimationFrame(() =>
-        this.driveto(this.state.x, this.state.y, angle).catch(e).then(r)
-      );
+      if (this.state.speed === -1 || this.state.virtual) {
+        this.state.heading = angle;
+        this.driveto(this.state.x, this.state.y, angle).catch(e).then(r);
+      } else {
+        window.requestAnimationFrame(() =>
+          this.driveto(this.state.x, this.state.y, angle).catch(e).then(r)
+        );
+      }
     });
   }
 
   penup() {
     this.state.penDown = false;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pendown() {
     this.state.penDown = true;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pensize(width: number) {
     if (this.ctxBackground) {
       this.ctxBackground.lineWidth = width;
     }
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   showTurtle() {
@@ -333,7 +352,7 @@ class SimpleTurtle {
 
   speed(speed: number) {
     this.state.speed = speed;
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pencolor(color: string) {
@@ -342,7 +361,7 @@ class SimpleTurtle {
       this.ctxBackground.strokeStyle = color;
     }
     this.updateTurtleImage();
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   pencolor3(r: number, g: number, b: number) {
@@ -355,13 +374,13 @@ class SimpleTurtle {
       this.ctxBackground.fillStyle = color;
     }
     this.updateTurtleImage();
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   begin_fill() {
     this.fillPath = new Path2D();
     this.fillPath.moveTo(this.state.x, this.state.y);
-    return newResolvedPromise();
+    return Promise.resolve();
   }
 
   end_fill() {
@@ -417,20 +436,13 @@ type TurtleState = {
   mode?: "standard" | "logo";
   pencolor: string;
   fillcolor: string;
+  virtual: boolean;
 };
 
 var turtles = new Map<number, SimpleTurtle>();
 var turtleMode: "standard" | "logo" = "standard";
-
-const newResolvedPromise = () =>
-  new Promise<void>((r, e) => {
-    r();
-  });
-
-const newResolvedPromiseError = (msg: string) =>
-  new Promise<void>((r, e) => {
-    e(new Error(msg));
-  });
+var virtualMode: boolean = false;
+var virtualCanvas: HTMLCanvasElement = document.createElement("canvas");
 
 const processTurtleCommand = (
   id: number,
@@ -439,22 +451,28 @@ const processTurtleCommand = (
 ) => {
   if (cmd.action === "stop") {
     turtles.forEach((t) => t.stop());
-    return newResolvedPromise();
+    return Promise.resolve();
+  }
+
+  if (cmd.action === "dump") {
+    return virtualMode
+      ? Promise.resolve(virtualCanvas?.toDataURL())
+      : Promise.resolve(canvas.toDataURL());
   }
 
   if (cmd.action === "mode") {
     // reset the canvas!
     turtleMode = cmd.value;
-    turtles.clear();
-    return newResolvedPromise();
+    clearTurtlesAndCanvas(canvas);
+    return Promise.resolve();
   }
   let turtle = turtles.get(id);
   if (!turtle && cmd.action === "reset") {
     // ignore turtle reset if turtle doesn't exist
-    return newResolvedPromise();
+    return Promise.resolve();
   }
   if (!turtle) {
-    turtle = initialiseTurtle(canvas);
+    turtle = initialiseTurtle(virtualMode ? virtualCanvas : canvas);
     turtles.set(id, turtle);
   }
 
@@ -542,14 +560,10 @@ const processTurtleCommand = (
             });
         });
       default:
-        return new Promise<void>((r, e) => {
-          e(new Error(`unknown turtle action ${cmd.action}`));
-        });
+        return Promise.reject(new Error(`unknown turtle action ${cmd.action}`));
     }
   } catch (err) {
-    return new Promise<void>((r, e) => {
-      e(err);
-    });
+    return Promise.reject(err);
   }
 };
 
@@ -566,13 +580,24 @@ const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
     mode: turtleMode,
     pencolor: "black",
     fillcolor: "white",
+    virtual: virtualMode,
   }) as SimpleTurtle;
   return turtle;
 };
 
-const clearTurtle = (canvas: HTMLCanvasElement) => {
+const clearTurtlesAndCanvas = (canvas: HTMLCanvasElement) => {
   turtles.clear();
   canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
 };
 
-export { processTurtleCommand, clearTurtle };
+const setVirtualMode = (canvas: HTMLCanvasElement, virtual: boolean) => {
+  clearTurtlesAndCanvas(canvas);
+  virtualMode = virtual;
+  if (virtualMode) {
+    virtualCanvas = document.createElement("canvas");
+    virtualCanvas.width = canvas.width;
+    virtualCanvas.height = canvas.height;
+  }
+};
+
+export { processTurtleCommand, clearTurtlesAndCanvas, setVirtualMode };

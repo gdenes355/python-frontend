@@ -1,8 +1,10 @@
 type AdvancedOutRequirement = {
   pattern: string;
-  typ?: "+" | "-" | "c+" | "c-";
+  typ?: "+" | "-" | "c+" | "c-" | "f+" | "f-" | "s+" | "s-" | "t";
   ignore?: "" | "w" | "c" | "p" | "wc" | "wp" | "cp" | "wcp";
   count?: number;
+  filename?: string;
+  statement?: string;
 };
 
 type TestCase = {

@@ -78,6 +78,57 @@
             ]
         },
         {
+            "id": "8146dc43-a983-464b-a226-f2ce30b23599",
+            "name": "Test filename contents",
+            "guide": "filecontents.md",
+            "py": "filecontents.py",
+            "tests": [
+                {
+                    "in": ["5"],
+                    "out": [
+                        {"typ": "f+", "pattern": "1\\n3\\n5\\n7\\n9", "filename":"numbers.txt"},
+                        {"typ": "f-", "pattern": "1\\n3\\n5\\n7\\n9\\n11", "filename":"numbers.txt"}
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ce4e8567-4958-43fb-8536-658d13cd7b8f",
+            "name": "Statement tests",
+            "guide": "statementtest.md",
+            "py": "statementtest.py",
+            "tests": [
+                {
+                    "in": [],
+                    "out": [
+                        {"typ": "s+", "pattern": "21", "statement":"getNextMultipleOfSeven(15)"},
+                        {"typ": "s-", "pattern": "14", "statement":"getNextMultipleOfSeven(14)"},                        
+                        {"typ": "s+", "pattern": "42", "statement":"getNextMultipleOfSeven(41)"}
+                    ]
+                }
+            ]
+        }, 
+        {
+            "id": "c91966b1-b090-4595-8cc0-abb441532902",
+            "name": "Turtle tests",
+            "guide": "turtletest.md",
+            "py": "turtletest.py",
+            "tests": [
+                {
+                    "in": [100],
+                    "out": [
+                        {"typ": "t", "filename":"turtletest_sol.py"}
+                    ]
+                },
+                {
+                    "in": [50],
+                    "out": [
+                        {"typ": "t", "filename":"turtletest_sol.py"}
+                    ]
+                }                
+            ]
+        },            
+        {
             "id": "f79a3f47-0e12-4a8c-9913-2d325b1dd245",
             "name": "Empty py",
             "guide": "c03.md",
@@ -91,11 +142,11 @@
             "py": "additional_files.py",
             "additionalFiles": [
                 {
-                    "filename": "test1.txt",
+                    "filename": "additionalFile1.txt",
                     "visible": true
                 },
                 {
-                    "filename": "test2.txt",
+                    "filename": "additionalFile2.txt",
                     "visible": false
                 }
             ]

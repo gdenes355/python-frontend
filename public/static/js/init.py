@@ -455,8 +455,6 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
 
-# ensure always cleared
-mode("standard")
 ''')
 
 
@@ -472,6 +470,9 @@ def pyexec(code, expected_input, expected_output):
     os.system = test_shell
     input = test_input
     
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     # prepare inputs
     if not expected_input:
         test_inputs = []  # no input for this test case
@@ -479,7 +480,8 @@ def pyexec(code, expected_input, expected_output):
         test_inputs = expected_input.split("\n")  # string input; split it on new lines
     else:
         test_inputs = [str(inp) for inp in expected_input]  # must be a list of inputs; cast each to be a string to be safe
-    
+    test_input_copy = copy.deepcopy(test_inputs)
+
     # run test
     test_output.clear()
     parsed_stmts = ast.parse(code)
@@ -514,10 +516,51 @@ def pyexec(code, expected_input, expected_output):
         criteria_outcomes = []
         for requirement in expected_output:
             requirement = requirement.as_object_map()
-            pattern = requirement["pattern"]  # the pattern to match. Must be present
             typ = requirement.get("typ", "+")
+            pattern = requirement.get("pattern","")  # the pattern to match. Must be present unless turtle
 
-            test_string = test_output.buffer if typ[0] != "c" else code
+            if typ[0] == "c":
+                test_string = code
+            elif typ[0] == "f":
+                # get file contents from filename
+                filename = requirement.get("filename")
+                if not filename:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing filename in test case", "ins": expected_input}))
+                try:
+                    with open(filename, "r") as f:
+                        test_string = f.read()
+                except FileNotFoundError:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "File not found", "ins": expected_input}))
+                except Exception as e:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Unknown error reading file", "ins": expected_input}))
+            elif typ[0] == "s":
+                # get string from evaluating a code statement - find a neater/more efficient way to do this?
+                if "statement" not in requirement:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing statement in test case", "ins": expected_input}))
+                try:
+                    test_string = str(eval(requirement.get("statement"), global_vars))
+                except Exception as e:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating test-case statement", "ins": expected_input}))
+            elif typ[0] == "t":
+                # evaluate turtle canvas result comparison with code from filename
+                if "filename" not in requirement:
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Missing turtle solution filename in test case", "ins": expected_input}))
+                try:
+                    # the filename has been replaced with the soln code
+                    screen_dump_user = run_turtle_cmd({"action":"dump", "value":""})
+                    # now using virtual for both user & soln, must ensure reset between runs
+                    run_turtle_cmd({"action":"mode", "value":"standard"})
+                    test_inputs = copy.deepcopy(test_input_copy)
+                    exec(requirement.get("filename"), global_vars)
+                    screen_dump_soln = run_turtle_cmd({"action":"dump", "value":""})  
+                    if screen_dump_user != screen_dump_soln:
+                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
+                    else:
+                        return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
+                except Exception as e:                   
+                    return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
+            else:
+                test_string = test_output.buffer
 
             ignore = requirement.get("ignore", "")
             expected_count = int(requirement.get("count", -1))
@@ -574,6 +617,9 @@ def pydebug(code, breakpoints):
     os.system = debug_shell
     input = debug_input
 
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     parsed_stmts = ast.parse(code)
     parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
     active_breakpoints = set(breakpoints)
@@ -603,6 +649,10 @@ def pydebug(code, breakpoints):
 
 def pyrun(code):
     global_vars = {'input': debug_input, 'time.sleep': debug_sleep}
+
+    # ensure turtle canvas cleared if used
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
+
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context
@@ -673,6 +723,11 @@ def debug_sleep(time_in_s):
 
 def test_sleep(time_in_s):
     pass
+
+# turtle
+def run_turtle_cmd(msg):
+    post_message({"cmd": "turtle", "msg": json.dumps(msg)})
+    return synchronise('/@turtle@/req.js')   
 
 
 def hit_breakpoint(lineno, alocals, aglobals):

@@ -21,8 +21,6 @@ import HeaderBar from "../components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
-import { TestResults } from "../models/Tests";
-import DebugContext from "../models/DebugContext";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
 import Outputs, { OutputsHandle } from "./components/Outputs";
@@ -32,7 +30,7 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
 
 import "./Challenge.css";
-import IChallenge, { IChallengeProps } from "./IChallenge";
+import IChallenge, { IChallengeProps, IChallengeState } from "./IChallenge";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import BookZipper from "../book/utils/BookZipper";
@@ -41,31 +39,21 @@ import HeaderMenuEditor from "./components/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
-import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import PaneType from "../models/PaneType";
 import AdditionalFileView, {
   AdditionalFileViewRef,
 } from "./components/Editors/AdditionalFileView";
 
-type ChallengeEditorState = {
-  starterCode: string | null;
+type ChallengeEditorState = IChallengeState & {
   savedCode: string | null;
-  guideMd: string;
-  debugContext: DebugContext;
   editorFullScreen: boolean;
-  consoleText: string;
-  editorState: ChallengeStatus;
-  testResults: TestResults;
   testsPassing: boolean | undefined;
   helpOpen: boolean;
   guideMinimised: boolean;
-  typ: ChallengeTypes; // use this in favour of the props.typ
-  usesFixedInput: boolean;
   isEditingGuide: boolean;
   hasEdited: boolean;
   dialogInfoText?: string;
   saveDialogProps?: SaveDialogProps;
-  additionalFilesLoaded: AdditionalFilesContents;
 };
 
 type ChallengeEditorProps = IChallengeProps & {
@@ -142,6 +130,7 @@ class ChallengeEditor
     hasEdited: false,
     saveDialogProps: undefined,
     additionalFilesLoaded: {},
+    turtleExampleRendered: undefined,
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -190,18 +179,30 @@ class ChallengeEditor
       this.setState({ hasEdited: false });
     }
 
-    this.props.bookNode.additionalFiles?.forEach((file) => {
-      if (!(file.filename in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](
-          file.filename,
-          this.props.bookStore
-        ).then((text) =>
-          this.setState({
-            additionalFilesLoaded: {
-              ...this.state.additionalFilesLoaded,
-              [file.filename]: text,
-            },
-          })
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename && !files.includes(out.filename)) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    files.forEach((file) => {
+      if (!(file in this.state.additionalFilesLoaded)) {
+        this.chContext.actions["fetch-file"](file, this.props.bookStore).then(
+          (text) =>
+            this.setState({
+              additionalFilesLoaded: {
+                ...this.state.additionalFilesLoaded,
+                [file]: text,
+              },
+            })
         );
       }
     });
@@ -300,13 +301,13 @@ class ChallengeEditor
     // saving the guide is easy
     this.props.bookStore.store.save(this.state.guideMd, this.props.guidePath);
 
-    // saving the files
+    // saving the additional files or solution files
     let updatedFiles = new Map(
-      this.props.bookNode.additionalFiles?.map((file, index) => {
+      this.getDisplayFiles().map((file, index) => {
         return [
-          file.filename,
-          this.fileEditorRefs.get(file.filename)?.getValue() ||
-            this.state.additionalFilesLoaded[file.filename],
+          file,
+          this.fileEditorRefs.get(file)?.getValue() ||
+            this.state.additionalFilesLoaded[file],
         ];
       })
     );
@@ -378,6 +379,46 @@ class ChallengeEditor
     return this.state.editorState === ChallengeStatus.LOADING
       ? undefined
       : visible;
+  };
+
+  getDisplayFiles = () => {
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename && !files.includes(out.filename)) {
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+    return files;
+  };
+
+  getDisplayFilesProperties = () => {
+    const filesProperties = this.props.bookNode.additionalFiles || [];
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    this.props.bookNode.tests?.forEach((test) => {
+      if (test.out instanceof Array) {
+        test.out.forEach((out) => {
+          if (out.filename && !files.includes(out.filename)) {
+            filesProperties.push({
+              filename: out.filename,
+              visible: false,
+            });
+            files.push(out.filename);
+          }
+        });
+      }
+    });
+
+    return filesProperties;
   };
 
   renderMainControls = () => {
@@ -563,33 +604,31 @@ class ChallengeEditor
                         />
                       }
                       files={
-                        this.props.bookNode.additionalFiles?.map(
-                          (file, index) => (
-                            <AdditionalFileView
-                              key={index}
-                              defaultValue={
-                                this.state.additionalFilesLoaded[file.filename]
+                        this.getDisplayFiles().map((file, index) => (
+                          <AdditionalFileView
+                            key={index}
+                            defaultValue={
+                              this.state.additionalFilesLoaded[file]
+                            }
+                            readonly={false}
+                            ref={(r) => {
+                              if (r) {
+                                this.fileEditorRefs.set(file, r);
+                              } else {
+                                this.fileEditorRefs.delete(file);
                               }
-                              readonly={false}
-                              ref={(r) => {
-                                if (r) {
-                                  this.fileEditorRefs.set(file.filename, r);
-                                } else {
-                                  this.fileEditorRefs.delete(file.filename);
-                                }
-                              }}
-                              onChange={() =>
-                                this.state.hasEdited
-                                  ? undefined
-                                  : this.setState({
-                                      hasEdited: this.state.hasEdited || true,
-                                    })
-                              }
-                            />
-                          )
-                        ) || []
+                            }}
+                            onChange={() =>
+                              this.state.hasEdited
+                                ? undefined
+                                : this.setState({
+                                    hasEdited: this.state.hasEdited || true,
+                                  })
+                            }
+                          />
+                        )) || []
                       }
-                      fileProperties={this.props.bookNode.additionalFiles || []}
+                      fileProperties={this.getDisplayFilesProperties()}
                       fileShowAll={true}
                     />
                   </Allotment.Pane>

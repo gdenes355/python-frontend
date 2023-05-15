@@ -6,7 +6,6 @@ import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import IChallenge, { IChallengeState } from "./IChallenge";
 import BookNodeModel from "../models/BookNodeModel";
-import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import { absolutisePath } from "../utils/pathTools";
@@ -100,40 +99,92 @@ class ChallengeContextClass {
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
     },
-    turtle: (data: TurtleData) => {
-      this.challenge.outputsRef?.current?.focusPane("canvas");
-      if (this.challenge.state.editorState !== ChallengeStatus.READY) {
+    awaitCanvas: () => {
+      return new Promise((resolve) => {
         if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
-
         if (this.challenge.canvasDisplayRef.current) {
-          this.challenge.canvasDisplayRef.current
-            .runTurtleCommand(data.id, data.msg)
-            .catch((e) => console.log("turtle stopped with", e))
-            .then(() => this.actions.turtleCmdComplete());
+          resolve(true);
         } else {
-          new Promise((resolve) => {
-            this.challenge.canvasPromiseResolve = resolve;
-          }).then((result) => {
-            this.challenge.canvasDisplayRef?.current
-              ?.runTurtleCommand(data.id, data.msg)
-              .catch((e) => console.log("turtle stopped with", e))
-              .then(() => this.actions.turtleCmdComplete());
-          });
+          if (this.challenge.canvasPromiseResolve !== undefined) {
+            console.log("awaitCanvas called twice");
+          }
+          this.challenge.canvasPromiseResolve = resolve;
         }
+      });
+    },
+    turtle: (data: TurtleData) => {
+      this.challenge.outputsRef?.current?.focusPane("canvas");
+      if (this.challenge.state.editorState !== ChallengeStatus.READY) {
+        this.actions.awaitCanvas().then((result) => {
+          this.challenge.canvasDisplayRef?.current
+            ?.runTurtleCommand(data.id, data.msg)
+            .then((turtleResult) =>
+              this.actions.turtleCmdComplete(turtleResult || undefined)
+            )
+            .catch((e) => console.log("turtle stopped with", e));
+        });
       }
     },
-    turtleCmdComplete: () => {
+    turtleCmdComplete: (turtleResult?: string) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
         navigator.serviceWorker.controller?.postMessage({
           cmd: "ps-turtle-resp",
+          data: turtleResult,
         });
       }
     },
     "hide-turtle": () => {
       this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
     },
+    "draw-turtle-example": () => {
+      // draws the first turtle test case
+      if (!!this.challenge.state.turtleExampleRendered) {
+        return;
+      }
+      if (!this.challenge.worker) {
+        return;
+      }
+      if (this.challenge.state.editorState === ChallengeStatus.READY) {
+        if (this.challenge.interruptBuffer) {
+          this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
+        }
+      } else {
+        return;
+      }
+
+      let code = "";
+      let inputs: string | (number | string)[] = "";
+
+      // find first testcase
+      loop: for (let test of this.challenge.props.tests || []) {
+        if (!(test.out instanceof Array)) {
+          continue;
+        }
+        for (let out of test.out) {
+          if (out.typ === "t" && out.filename) {
+            code = this.challenge.state.additionalFilesLoaded[out.filename];
+            if (!code) return; // file not yet loaded!
+            inputs = test.in instanceof Array ? test.in : [test.in];
+            break loop;
+          }
+        }
+      }
+      if (code) {
+        this.actions.awaitCanvas().then(() => {
+          this.challenge.canvasDisplayRef.current?.turtleReset(true);
+          this.challenge.worker?.postMessage({
+            cmd: "draw-turtle-example",
+            code: code,
+            inputs: inputs,
+            bookNode: this.challenge.props.bookNode,
+          });
+          this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
+        });
+      }
+    },
+
     cls: () => {
       this.challenge.currentConsoleText = "";
       this.challenge.printCallback();
@@ -207,6 +258,21 @@ class ChallengeContextClass {
         editorState: ChallengeStatus.READY,
       });
     },
+    "draw-turtle-example-finished": (data: { bookNode: BookNodeModel }) => {
+      this.challenge.setState({
+        editorState: ChallengeStatus.READY,
+      });
+      this.challenge.outputsRef?.current?.focusPane("console");
+      if (this.challenge.props.bookNode.id !== data.bookNode.id) return; // ignore if we have moved on
+
+      this.challenge.canvasDisplayRef?.current
+        ?.runTurtleCommand(-1, '{"action": "dump"}')
+        .then((turtleResult) => {
+          this.challenge.setState({
+            turtleExampleRendered: turtleResult || undefined,
+          });
+        });
+    },
     "restart-worker": (data: RestartWorkerData) => {
       this.challenge.canvasDisplayRef?.current?.runTurtleCommand(
         -1,
@@ -276,7 +342,7 @@ class ChallengeContextClass {
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let bkpts = this.challenge.editorRef.current?.getBreakpoints() || [];
-        this.challenge.canvasDisplayRef?.current?.turtleClear();
+        this.challenge.canvasDisplayRef?.current?.turtleReset();
         if (code || code === "") {
           this.actions["debugpy"](code, bkpts, mode);
         }
@@ -287,13 +353,17 @@ class ChallengeContextClass {
       breakpoints: number[],
       mode: "debug" | "run" = "debug"
     ) => {
-      const addFiles: AdditionalFilesContents =
-        this.challenge.state.additionalFilesLoaded;
-
       let additionalCode = "";
-      Object.keys(addFiles).forEach((filename) => {
-        additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
+
+      this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
+        const escContents = this.challenge.state.additionalFilesLoaded[
+          file.filename
+        ]
+          .replace(/\\/g, "\\\\")
+          .replace(/"/g, '\\"');
+        additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
       });
+
       navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
       this.challenge.currentFixedUserInput =
         this.challenge.fixedInputFieldRef.current?.getValue().split("\n") || [
@@ -361,20 +431,57 @@ class ChallengeContextClass {
         if (this.challenge.interruptBuffer) {
           this.challenge.interruptBuffer[0] = 0; // if interrupts are supported, just clear the flag for this execution
         }
-        const addFiles: AdditionalFilesContents =
-          this.challenge.state.additionalFilesLoaded;
 
         let additionalCode = "";
-        Object.keys(addFiles).forEach((filename) => {
-          additionalCode += `with open("${filename}", "w") as f:f.write(r"""${addFiles[filename]}""")\n`;
+
+        this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
+          const escContents = this.challenge.state.additionalFilesLoaded[
+            file.filename
+          ]
+            .replace("\\", "\\\\")
+            .replace('"', '\\"');
+          additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
         });
-        this.challenge.worker.postMessage({
-          cmd: "test",
-          code: code,
-          initCode: additionalCode,
-          tests: tests,
-          bookNode: this.challenge.props.bookNode,
+
+        const testsClone = structuredClone(tests);
+        let hasTurtleTest = false;
+
+        (testsClone || []).forEach((test) => {
+          if (test.out instanceof Array) {
+            test.out.forEach((out) => {
+              if (out.filename) {
+                out.filename =
+                  this.challenge.state.additionalFilesLoaded[out.filename];
+              }
+              if (out.typ === "t") {
+                hasTurtleTest = true;
+              }
+            });
+          }
         });
+
+        if (hasTurtleTest) {
+          // switch to virtual mode
+          this.actions.awaitCanvas().then(() => {
+            this.challenge.canvasDisplayRef.current?.turtleReset(true);
+            this.challenge.worker?.postMessage({
+              cmd: "test",
+              code: code,
+              initCode: additionalCode,
+              tests: testsClone,
+              bookNode: this.challenge.props.bookNode,
+            });
+          });
+        } else {
+          this.challenge.worker.postMessage({
+            cmd: "test",
+            code: code,
+            initCode: additionalCode,
+            tests: testsClone,
+            bookNode: this.challenge.props.bookNode,
+          });
+        }
+
         this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
         this.actions["cls"]();
       }
@@ -452,6 +559,7 @@ class ChallengeContextClass {
       }
     },
     "fetch-guide": () => {
+      this.challenge.setState({ turtleExampleRendered: undefined });
       this.challenge.props.fetcher
         .fetch(this.challenge.props.guidePath, this.challenge.props.authContext)
         .then((response) => {

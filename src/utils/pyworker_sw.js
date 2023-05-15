@@ -73,6 +73,13 @@ onmessage = function (e) {
       }
     }
     self.postMessage({ cmd: 'test-finished', results, code: e.data.code, bookNode:e.data.bookNode })
+  } else if (e.data.cmd === 'draw-turtle-example') {
+    try {
+      self.pyodide.globals.get('pyexec')(e.data.code, e.data.inputs, []);
+    } catch (err) {
+      console.log('Error while running turtle test draw', err);
+    }
+    self.postMessage({ cmd: 'draw-turtle-example-finished', bookNode:e.data.bookNode })
   }
 }
 

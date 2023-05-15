@@ -1,13 +1,13 @@
 import React, { useContext, useRef, useImperativeHandle } from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
-import { processTurtleCommand, clearTurtle } from "./TurtleController";
+import { processTurtleCommand, setVirtualMode } from "./TurtleController";
 
 import ChallengeContext from "../../ChallengeContext";
 
 type CanvasDisplayHandle = {
-  turtleClear: () => void;
-  runTurtleCommand: (id: number, msg: string) => Promise<void>;
+  turtleReset: (virtual?: boolean) => void;
+  runTurtleCommand: (id: number, msg: string) => Promise<string | void>;
   runTurtleClearup: () => void;
   runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
@@ -27,7 +27,8 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
 
     const challenge = useContext(ChallengeContext);
 
-    const runTurtleClearup = () => {
+    // used after run to hide turtle if it was not retained by turtle.done()
+    const turtleClearup = () => {
       if (turtleUsed.current && !turtleRetained.current) {
         challenge?.actions["hide-turtle"]();
       }
@@ -35,8 +36,9 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       turtleRetained.current = false;
     };
 
-    const turtleClear = () => {
-      clearTurtle(canvasEl.current as HTMLCanvasElement);
+    // used to reset turtle (also to specified virtual mode)
+    const turtleReset = (virtual = false) => {
+      setVirtualMode(canvasEl.current as HTMLCanvasElement, virtual);
       turtleUsed.current = false;
       turtleRetained.current = false;
     };
@@ -91,9 +93,9 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
-      runTurtleClearup,
+      runTurtleClearup: turtleClearup,
       runAudioCommand,
-      turtleClear,
+      turtleReset,
     }));
 
     return (
