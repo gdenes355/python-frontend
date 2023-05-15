@@ -22,6 +22,7 @@ onmessage = function (e) {
     } else {
       self.interruptBufferToSet = e.data.interruptBuffer
     }
+    self.interruptBuffer = e.data.interruptBuffer
     self.keyDownBuffer = e.data.keyDownBuffer
   } else if (e.data.cmd === 'debug') {
     let reason = 'ok'
@@ -103,3 +104,6 @@ loadPyodideAsync().then(() => self.postMessage({ cmd: 'init-done' }))
 function workerPostMessage (msg) { self.postMessage(msg) }
 function workerPrint (msg) { self.postMessage({ cmd: 'print', msg: msg }) }
 function workerCheckKeyDown(keyCode) { return self.keyDownBuffer[keyCode] > 0;}
+function workerInterrupted() { 
+  return self.interruptBuffer && self.interruptBuffer[0] > 2;
+}

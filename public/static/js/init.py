@@ -715,6 +715,8 @@ def debug_input(prompt=""):
 
     post_message({"cmd": "input"})
     resp = json.loads(synchronise('/@input@/req.js'))
+    if (js.workerInterrupted()):
+        raise KeyboardInterrupt()
     if (resp.get("breakpoints")):
         update_breakpoints(resp["breakpoints"])
     return resp.get("data")
