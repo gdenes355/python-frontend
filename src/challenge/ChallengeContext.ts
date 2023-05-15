@@ -358,10 +358,8 @@ class ChallengeContextClass {
       this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
         const escContents = this.challenge.state.additionalFilesLoaded[
           file.filename
-        ]
-          .replace(/\\/g, "\\\\")
-          .replace(/"/g, '\\"');
-        additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
+        ].replace(/"/g, '\\"');
+        additionalCode += `with open("${file.filename}", "w") as f:f.write("""${escContents}""")\n`;
       });
 
       navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
@@ -437,10 +435,8 @@ class ChallengeContextClass {
         this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
           const escContents = this.challenge.state.additionalFilesLoaded[
             file.filename
-          ]
-            .replace("\\", "\\\\")
-            .replace('"', '\\"');
-          additionalCode += `with open("${file.filename}", "w") as f:f.write("${escContents}")\n`;
+          ].replace(/"/g, '\\"');
+          additionalCode += `with open("${file.filename}", "w") as f:f.write("""${escContents}""")\n`;
         });
 
         const testsClone = structuredClone(tests);
@@ -473,11 +469,12 @@ class ChallengeContextClass {
             });
           });
         } else {
+          // use the original tests for non turtle tests to avoid changing filenames to contents
           this.challenge.worker.postMessage({
             cmd: "test",
             code: code,
             initCode: additionalCode,
-            tests: testsClone,
+            tests: tests,
             bookNode: this.challenge.props.bookNode,
           });
         }
@@ -619,7 +616,8 @@ class ChallengeContextClass {
       });
     },
     "activate-file": (filename: string, contents: string) => {
-      let code = `with open("${filename}", "w") as f:\n    f.write(r"""${contents}""")`;
+      const escContents = contents.replace(/"/g, '\\"');
+      let code = `with open("${filename}", "w") as f:f.write(r"""${escContents}""")`;
       this.challenge.worker?.postMessage({
         cmd: "run",
         code: code,
