@@ -266,6 +266,7 @@ class Challenge
               (this.props.tests !== null || this.props.typ === "parsons")
             }
             testResults={this.state.testResults}
+            canKill={this.state.editorState === ChallengeStatus.RUNNING}
           />
         </CardContent>
       </Card>
@@ -456,7 +457,8 @@ class Challenge
                       minSize={150}
                       snap={true}
                       visible={
-                        this.state.editorState === ChallengeStatus.RUNNING ||
+                        this.state.editorState ===
+                          ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                         this.state.editorState ===
                           ChallengeStatus.ON_BREAKPOINT ||
                         this.state.editorState ===
@@ -470,7 +472,8 @@ class Challenge
                           ChallengeStatus.ON_BREAKPOINT
                         }
                         canKill={
-                          this.state.editorState === ChallengeStatus.RUNNING ||
+                          this.state.editorState ===
+                            ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                           this.state.editorState ===
                             ChallengeStatus.ON_BREAKPOINT ||
                           this.state.editorState ===

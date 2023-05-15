@@ -225,7 +225,9 @@ class ChallengeContextClass {
             : null,
         step: step,
       });
-      this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
+      this.challenge.setState({
+        editorState: ChallengeStatus.RUNNING_WITH_DEBUGGER,
+      });
     },
     step: () => this.actions["continue"](true),
     "debug-finished": (data: DebugFinishedData) => {
@@ -379,7 +381,10 @@ class ChallengeContextClass {
           breakpoints: breakpoints,
         });
         this.challenge.setState({
-          editorState: ChallengeStatus.RUNNING,
+          editorState:
+            mode === "debug"
+              ? ChallengeStatus.RUNNING_WITH_DEBUGGER
+              : ChallengeStatus.RUNNING,
         });
         this.challenge.breakpointsChanged = false;
         this.actions["cls"]();
