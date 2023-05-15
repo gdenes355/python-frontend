@@ -1,4 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import SessionContext, { WsResponse } from "./SessionContext";
 import Login from "./Login";
 import LoginInfo from "./LoginInfo";
@@ -115,8 +121,9 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     },
     []
   );
-  const onWsOpen = useMemo(
-    () => (event: WebSocketEventMap["open"]) => {
+  const onWsOpen = useCallback(
+    (event: WebSocketEventMap["open"]) => {
+      console.log("WS OPEN");
       if (bookPath && token) {
         setWsOpen(true);
         ws.current?.send(
@@ -133,8 +140,11 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   );
   const onWsClose = useMemo(
     () => (event: WebSocketEventMap["close"]) => {
+      console.log("WS CLOSE", ws.current === event.target, event.target);
       wsMap.forEach((then) => then({ res: "error" }));
-      setWsOpen(false);
+      if (ws.current === event.target) {
+        setWsOpen(false);
+      }
     },
     []
   );
@@ -158,18 +168,28 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     setWsConnectionUrl(wsEndPoint);
   }, [wsConnectionUrl, wsEndPoint, token]);
 
-  useEffect(() => {
-    if (!wsConnectionUrl) {
+  const wsReconnect = useCallback(() => {
+    console.log("wsConnectionUrl", wsConnectionUrl);
+    if (ws.current) {
+      if (ws.current) {
+        ws.current.close();
+      }
       ws.current = undefined;
-      setWsOpen(false);
+    }
+    if (!wsConnectionUrl) {
       return;
     }
+
     ws.current = new WebSocket(wsConnectionUrl);
     ws.current.onmessage = onWsMessage;
     ws.current.onerror = onWsError;
     ws.current.onopen = onWsOpen;
     ws.current.onclose = onWsClose;
   }, [wsConnectionUrl, onWsError, onWsOpen, onWsMessage, onWsClose]);
+
+  useEffect(() => {
+    wsReconnect?.();
+  }, [wsReconnect]);
 
   const wsSend = (msg: any, then: WsResponse | undefined = undefined) => {
     let res = undefined;
@@ -180,9 +200,14 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         wsMap.set(msg.i, resp);
       }).then(then);
     }
-    ws.current?.send(JSON.stringify(msg));
+    try {
+      ws.current?.send(JSON.stringify(msg));
+    } catch (e) {
+      console.log("failed to send websocket packet", e);
+    }
     return res;
   };
+
   return (
     <SessionContext.Provider
       value={{
@@ -196,6 +221,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
         resultsEndpoint,
         wsOpen,
         wsSend,
+        wsReconnect,
         registerAdditionalWsHandler,
         unregisterAdditionalWsHandler,
       }}
