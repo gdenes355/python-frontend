@@ -379,7 +379,9 @@ class ChallengeContextClass {
       this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
         const escContents = this.challenge.state.additionalFilesLoaded[
           file.filename
-        ].replace(/"/g, '\\"');
+        ]
+          .replace(/"/g, '\\"')
+          .replace(/\\/g, "\\\\");
         additionalCode += `with open("${file.filename}", "w") as f:f.write("""${escContents}""")\n`;
       });
 
@@ -459,7 +461,9 @@ class ChallengeContextClass {
         this.challenge.props.bookNode.additionalFiles?.forEach((file) => {
           const escContents = this.challenge.state.additionalFilesLoaded[
             file.filename
-          ].replace(/"/g, '\\"');
+          ]
+            .replace(/"/g, '\\"')
+            .replace(/\\/g, "\\\\");
           additionalCode += `with open("${file.filename}", "w") as f:f.write("""${escContents}""")\n`;
         });
 
@@ -640,7 +644,7 @@ class ChallengeContextClass {
       });
     },
     "activate-file": (filename: string, contents: string) => {
-      const escContents = contents.replace(/"/g, '\\"');
+      const escContents = contents.replace(/"/g, '\\"').replace(/\\/g, "\\\\");
       let code = `with open("${filename}", "w") as f:f.write(r"""${escContents}""")`;
       this.challenge.worker?.postMessage({
         cmd: "run",
