@@ -1,4 +1,5 @@
 import { TestCases } from "./Tests";
+import { Solution } from "./Solution";
 import { AdditionalFiles } from "./AdditionalFiles";
 
 type BookNodeModel = {
@@ -7,6 +8,7 @@ type BookNodeModel = {
   children?: BookNodeModel[];
   py?: string;
   guide?: string;
+  solution?: Solution;
   tests: TestCases;
   additionalFiles?: AdditionalFiles;
   bookLink?: string;

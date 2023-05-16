@@ -146,6 +146,7 @@ class ChallengeEditor
       name: node.name,
       isExample: node.isExample,
       typ: node.typ,
+      solution: node.solution,
       tests: node.tests,
       additionalFiles: node.additionalFiles,
     };
@@ -192,6 +193,10 @@ class ChallengeEditor
         });
       }
     });
+
+    if (this.props.bookNode.solution) {
+      files.push(this.props.bookNode.solution.filename);
+    }
 
     files.forEach((file) => {
       if (!(file in this.state.additionalFilesLoaded)) {
@@ -335,6 +340,10 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.typ = editedNode.typ;
     }
+    if (editedNode.solution !== this.props.bookNode.solution) {
+      changed = true;
+      this.props.bookNode.solution = editedNode.solution;
+    }
     if (editedNode.tests !== this.props.tests) {
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
@@ -386,6 +395,10 @@ class ChallengeEditor
       (file) => file.filename
     );
 
+    if (this.props.bookNode.solution) {
+      files.push(this.props.bookNode.solution.filename);
+    }
+
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
@@ -403,6 +416,16 @@ class ChallengeEditor
     const files = (this.props.bookNode.additionalFiles || []).map(
       (file) => file.filename
     );
+
+    if (this.props.bookNode.solution) {
+      if (!files.includes(this.props.bookNode.solution.filename)) {
+        filesProperties.push({
+          filename: this.props.bookNode.solution.filename,
+          visible: true,
+        });
+        files.push(this.props.bookNode.solution.filename);
+      }
+    }
 
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {

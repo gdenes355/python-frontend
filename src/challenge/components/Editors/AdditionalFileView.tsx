@@ -3,6 +3,7 @@ import React, { useRef } from "react";
 type AdditionalFileViewProps = {
   defaultValue: string;
   readonly: boolean;
+  disabled?: boolean;
   onChange?: () => void;
 };
 
@@ -36,6 +37,14 @@ const AdditionalFileView = React.forwardRef<
           paddingLeft: "5px",
           paddingRight: "5px",
           paddingTop: "0px",
+          ...(props.disabled
+            ? {
+                "-moz-user-select": "none",
+                "-webkit-user-select": "none",
+                "-ms-user-select": "none",
+                "user-select": "none",
+              }
+            : {}),
         }}
       >
         <pre>{props.defaultValue}</pre>

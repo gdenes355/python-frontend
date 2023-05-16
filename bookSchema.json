@@ -48,6 +48,9 @@
         "isExample": {
           "$ref": "#/$defs/isExample"
         },
+        "solution": {
+          "$ref": "#/$defs/solution"
+        },
         "tests": {
           "$ref": "#/$defs/tests"
         },
@@ -93,6 +96,25 @@
     "isExample": {
       "description": "is this just an example code? Students need to debug example challenges, but no changes are required",
       "type": "boolean"
+    },
+    "solution": {
+      "description": "optional solution code",
+      "type": "object",
+      "properties": {
+        "filename": {
+          "description": "name of file inc. extension to be found within the challenge folder or zip",
+          "type": "string"
+        },
+        "submits": {
+          "description": "the number of submissions needed before it becomes visible",
+          "type": "number"
+        },
+        "comment": {
+          "$ref": "#/$defs/comment"
+        }
+      },
+      "required": ["filename"],
+      "additionalProperties": false
     },
     "tests": {
       "description": "optional list of tests",

@@ -8,6 +8,11 @@
             "name": "Hello world",
             "guide": "c01.md",
             "py": "c01.py",
+            "solution": {
+                "filename": "hello_sol.py",
+                "submits": 3,
+                "description": "The solution challenge - visible after 3 submits"
+            },            
             "tests": [
                 {
                     "in": "",
