@@ -144,6 +144,10 @@ class Challenge
       (file) => file.filename
     );
 
+    if (this.props.bookNode.hasSolution) {
+      files.push(`solutions/${this.props.bookNode.py}`);
+    }
+
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
@@ -211,6 +215,45 @@ class Challenge
     return this.state.editorState === ChallengeStatus.LOADING
       ? undefined
       : visible;
+  };
+
+  getDisplayFiles = () => {
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    if (
+      this.props.bookNode.hasSolution &&
+      (this.props.bookNode.showSolution === 0 ||
+        this.props.bookNode.showSolution === true)
+    ) {
+      files.push(`solutions/${this.props.bookNode.py}`);
+    }
+
+    return files;
+  };
+
+  getDisplayFilesProperties = () => {
+    const filesProperties = this.props.bookNode.additionalFiles || [];
+    const files = (this.props.bookNode.additionalFiles || []).map(
+      (file) => file.filename
+    );
+
+    if (
+      this.props.bookNode.hasSolution &&
+      (this.props.bookNode.showSolution === 0 ||
+        this.props.bookNode.showSolution === true)
+    ) {
+      if (!files.includes(`solutions/${this.props.bookNode.py}`)) {
+        filesProperties.push({
+          filename: `solutions/${this.props.bookNode.py}`,
+          visible: true,
+        });
+        files.push(`solutions/${this.props.bookNode.py}`);
+      }
+    }
+
+    return filesProperties;
   };
 
   renderEditor() {
@@ -402,23 +445,18 @@ class Challenge
                           />
                         }
                         files={
-                          this.props.bookNode.additionalFiles?.map(
-                            (file, index) => (
-                              <AdditionalFileView
-                                key={index}
-                                defaultValue={
-                                  this.state.additionalFilesLoaded[
-                                    file.filename
-                                  ]
-                                }
-                                readonly={true}
-                              />
-                            )
-                          ) || []
+                          this.getDisplayFiles().map((file, index) => (
+                            <AdditionalFileView
+                              key={index}
+                              defaultValue={
+                                this.state.additionalFilesLoaded[file]
+                              }
+                              readonly={true}
+                              disabled={true}
+                            />
+                          )) || []
                         }
-                        fileProperties={
-                          this.props.bookNode.additionalFiles || []
-                        }
+                        fileProperties={this.getDisplayFilesProperties()}
                         fileShowAll={false}
                       />
                     </Allotment.Pane>

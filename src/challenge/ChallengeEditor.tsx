@@ -146,6 +146,8 @@ class ChallengeEditor
       name: node.name,
       isExample: node.isExample,
       typ: node.typ,
+      hasSolution: node.hasSolution,
+      showSolution: node.showSolution,
       tests: node.tests,
       additionalFiles: node.additionalFiles,
     };
@@ -192,6 +194,10 @@ class ChallengeEditor
         });
       }
     });
+
+    if (this.props.bookNode.hasSolution) {
+      files.push(`solutions/${this.props.bookNode.py}`);
+    }
 
     files.forEach((file) => {
       if (!(file in this.state.additionalFilesLoaded)) {
@@ -335,6 +341,14 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.typ = editedNode.typ;
     }
+    if (editedNode.hasSolution !== this.props.bookNode.hasSolution) {
+      changed = true;
+      this.props.bookNode.hasSolution = editedNode.hasSolution;
+    }
+    if (editedNode.showSolution !== this.props.bookNode.showSolution) {
+      changed = true;
+      this.props.bookNode.showSolution = editedNode.showSolution;
+    }
     if (editedNode.tests !== this.props.tests) {
       changed = true;
       this.props.bookNode.tests = editedNode.tests;
@@ -386,6 +400,10 @@ class ChallengeEditor
       (file) => file.filename
     );
 
+    if (this.props.bookNode.hasSolution && this.props.bookNode.py) {
+      files.push(`solutions/${this.props.bookNode.py}`);
+    }
+
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {
         test.out.forEach((out) => {
@@ -403,6 +421,16 @@ class ChallengeEditor
     const files = (this.props.bookNode.additionalFiles || []).map(
       (file) => file.filename
     );
+
+    if (this.props.bookNode.hasSolution && this.props.bookNode.py) {
+      if (!files.includes(this.props.bookNode.py)) {
+        filesProperties.push({
+          filename: `solutions/${this.props.bookNode.py}`,
+          visible: true,
+        });
+        files.push(`solutions/${this.props.bookNode.py}`);
+      }
+    }
 
     this.props.bookNode.tests?.forEach((test) => {
       if (test.out instanceof Array) {

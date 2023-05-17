@@ -39,6 +39,16 @@ export default class BookZipper {
         this.zip.file(node.py, await resp.text());
       }
     }
+    if (node.hasSolution) {
+      let absPath = absolutisePath(
+        `solutions/${node.py}`,
+        node.bookMainUrl || this.fetcher.getBookPathAbsolute()
+      );
+      let resp = await this.fetcher.fetch(absPath, authContext);
+      if (resp.ok) {
+        this.zip.folder("solutions")?.file(`${node.py}`, await resp.text());
+      }
+    }
     if (node.additionalFiles) {
       for (const file of node.additionalFiles) {
         let absPath = absolutisePath(

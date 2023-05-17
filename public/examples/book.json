@@ -8,6 +8,8 @@
             "name": "Hello world",
             "guide": "c01.md",
             "py": "c01.py",
+            "hasSolution": true,
+            "showSolution": 5,
             "tests": [
                 {
                     "in": "",

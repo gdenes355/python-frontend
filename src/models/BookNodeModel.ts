@@ -7,6 +7,8 @@ type BookNodeModel = {
   children?: BookNodeModel[];
   py?: string;
   guide?: string;
+  hasSolution?: boolean;
+  showSolution?: boolean | number;
   tests: TestCases;
   additionalFiles?: AdditionalFiles;
   bookLink?: string;

@@ -32,6 +32,19 @@ async function addNode(
       localStorage.setItem("edit://edit/" + node.py, await resp.text());
     }
   }
+  if (node.hasSolution) {
+    let absPath = absolutisePath(
+      `solutions/${node.py}`,
+      node.bookMainUrl || fetcher.getBookPathAbsolute()
+    );
+    let resp = await fetcher.fetch(absPath, authContext);
+    if (resp.ok) {
+      localStorage.setItem(
+        "edit://edit/solutions/" + node.py,
+        await resp.text()
+      );
+    }
+  }
   if (node.additionalFiles) {
     node.additionalFiles.forEach(async (file) => {
       let absPath = absolutisePath(
