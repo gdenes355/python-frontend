@@ -56,8 +56,8 @@ const StartPage = () => {
         <p>
           To clone a book for editing, you can just append{" "}
           <code>clone=true</code> in the query path. E.g.:
-          <a href="/?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
-            ?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
+          <a href="/?bk=.%2Fexamples%2Fbook.json&edit=clone">
+            ?bk=.%2Fexamples%2Fbook.json&edit=clone
           </a>
           .
           <p>

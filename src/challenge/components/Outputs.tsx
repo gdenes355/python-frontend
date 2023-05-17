@@ -63,7 +63,9 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
   if (props.fileProperties) {
     props.fileProperties.forEach((file, index) => {
       panes.push({
-        label: file.filename,
+        label: file.filename.startsWith("solutions")
+          ? "Solution"
+          : file.filename,
         content: props.files[index],
         show: file.visible || props.fileShowAll,
         name: file.filename,

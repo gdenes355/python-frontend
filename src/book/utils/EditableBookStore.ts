@@ -32,15 +32,15 @@ async function addNode(
       localStorage.setItem("edit://edit/" + node.py, await resp.text());
     }
   }
-  if (node.solution) {
+  if (node.hasSolution) {
     let absPath = absolutisePath(
-      node.solution.filename,
+      `solutions/${node.py}`,
       node.bookMainUrl || fetcher.getBookPathAbsolute()
     );
     let resp = await fetcher.fetch(absPath, authContext);
     if (resp.ok) {
       localStorage.setItem(
-        "edit://edit/" + node.solution.filename,
+        "edit://edit/solutions/" + node.py,
         await resp.text()
       );
     }

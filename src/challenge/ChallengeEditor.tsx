@@ -146,7 +146,8 @@ class ChallengeEditor
       name: node.name,
       isExample: node.isExample,
       typ: node.typ,
-      solution: node.solution,
+      hasSolution: node.hasSolution,
+      showSolution: node.showSolution,
       tests: node.tests,
       additionalFiles: node.additionalFiles,
     };
@@ -194,8 +195,8 @@ class ChallengeEditor
       }
     });
 
-    if (this.props.bookNode.solution) {
-      files.push(this.props.bookNode.solution.filename);
+    if (this.props.bookNode.hasSolution) {
+      files.push(`solutions/${this.props.bookNode.py}`);
     }
 
     files.forEach((file) => {
@@ -340,9 +341,13 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.typ = editedNode.typ;
     }
-    if (editedNode.solution !== this.props.bookNode.solution) {
+    if (editedNode.hasSolution !== this.props.bookNode.hasSolution) {
       changed = true;
-      this.props.bookNode.solution = editedNode.solution;
+      this.props.bookNode.hasSolution = editedNode.hasSolution;
+    }
+    if (editedNode.showSolution !== this.props.bookNode.showSolution) {
+      changed = true;
+      this.props.bookNode.showSolution = editedNode.showSolution;
     }
     if (editedNode.tests !== this.props.tests) {
       changed = true;
@@ -395,8 +400,8 @@ class ChallengeEditor
       (file) => file.filename
     );
 
-    if (this.props.bookNode.solution) {
-      files.push(this.props.bookNode.solution.filename);
+    if (this.props.bookNode.hasSolution && this.props.bookNode.py) {
+      files.push(`solutions/${this.props.bookNode.py}`);
     }
 
     this.props.bookNode.tests?.forEach((test) => {
@@ -417,13 +422,13 @@ class ChallengeEditor
       (file) => file.filename
     );
 
-    if (this.props.bookNode.solution) {
-      if (!files.includes(this.props.bookNode.solution.filename)) {
+    if (this.props.bookNode.hasSolution && this.props.bookNode.py) {
+      if (!files.includes(this.props.bookNode.py)) {
         filesProperties.push({
-          filename: this.props.bookNode.solution.filename,
+          filename: `solutions/${this.props.bookNode.py}`,
           visible: true,
         });
-        files.push(this.props.bookNode.solution.filename);
+        files.push(`solutions/${this.props.bookNode.py}`);
       }
     }
 

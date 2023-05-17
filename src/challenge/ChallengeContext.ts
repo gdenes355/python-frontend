@@ -338,6 +338,11 @@ class ChallengeContextClass {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, [], mode);
+          if (typeof this.challenge.props.bookNode.showSolution === "number") {
+            if (this.challenge.props.bookNode.showSolution > 0) {
+              this.challenge.props.bookNode.showSolution -= 1;
+            }
+          }
         }
       } else {
         let code = this.challenge.editorRef.current?.getValue();
@@ -345,6 +350,11 @@ class ChallengeContextClass {
         this.challenge.canvasDisplayRef?.current?.turtleReset();
         if (code || code === "") {
           this.actions["debugpy"](code, bkpts, mode);
+          if (typeof this.challenge.props.bookNode.showSolution === "number") {
+            if (this.challenge.props.bookNode.showSolution > 0) {
+              this.challenge.props.bookNode.showSolution -= 1;
+            }
+          }
         }
       }
     },

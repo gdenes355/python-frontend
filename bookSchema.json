@@ -48,9 +48,12 @@
         "isExample": {
           "$ref": "#/$defs/isExample"
         },
-        "solution": {
-          "$ref": "#/$defs/solution"
+        "hasSolution": {
+          "$ref": "#/$defs/hasSolution"
         },
+        "showSolution": {
+          "$ref": "#/$defs/showSolution"
+        },        
         "tests": {
           "$ref": "#/$defs/tests"
         },
@@ -97,25 +100,14 @@
       "description": "is this just an example code? Students need to debug example challenges, but no changes are required",
       "type": "boolean"
     },
-    "solution": {
-      "description": "optional solution code",
-      "type": "object",
-      "properties": {
-        "filename": {
-          "description": "name of file inc. extension to be found within the challenge folder or zip",
-          "type": "string"
-        },
-        "submits": {
-          "description": "the number of submissions needed before it becomes visible",
-          "type": "number"
-        },
-        "comment": {
-          "$ref": "#/$defs/comment"
-        }
-      },
-      "required": ["filename"],
-      "additionalProperties": false
+    "hasSolution": {
+      "description": "whether optional solution code is available - with the same name as the challenge file but in a solutions subfolder",
+      "type": "boolean"
     },
+    "showSolution": {
+      "description": "show solution immediately or only after clicking debug a certain number of times",
+      "type": ["boolean", "number"]
+    },    
     "tests": {
       "description": "optional list of tests",
       "type": "array",

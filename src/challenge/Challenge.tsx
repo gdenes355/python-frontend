@@ -144,8 +144,8 @@ class Challenge
       (file) => file.filename
     );
 
-    if (this.props.bookNode.solution) {
-      files.push(this.props.bookNode.solution.filename);
+    if (this.props.bookNode.hasSolution) {
+      files.push(`solutions/${this.props.bookNode.py}`);
     }
 
     this.props.bookNode.tests?.forEach((test) => {
@@ -222,8 +222,12 @@ class Challenge
       (file) => file.filename
     );
 
-    if (this.props.bookNode.solution) {
-      files.push(this.props.bookNode.solution.filename);
+    if (
+      this.props.bookNode.hasSolution &&
+      (this.props.bookNode.showSolution === 0 ||
+        this.props.bookNode.showSolution === true)
+    ) {
+      files.push(`solutions/${this.props.bookNode.py}`);
     }
 
     return files;
@@ -235,13 +239,17 @@ class Challenge
       (file) => file.filename
     );
 
-    if (this.props.bookNode.solution) {
-      if (!files.includes(this.props.bookNode.solution.filename)) {
+    if (
+      this.props.bookNode.hasSolution &&
+      (this.props.bookNode.showSolution === 0 ||
+        this.props.bookNode.showSolution === true)
+    ) {
+      if (!files.includes(`solutions/${this.props.bookNode.py}`)) {
         filesProperties.push({
-          filename: this.props.bookNode.solution.filename,
+          filename: `solutions/${this.props.bookNode.py}`,
           visible: true,
         });
-        files.push(this.props.bookNode.solution.filename);
+        files.push(`solutions/${this.props.bookNode.py}`);
       }
     }
 
