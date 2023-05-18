@@ -42,6 +42,7 @@ const StyledTable = styled("div")(
 
 const DebugPane = (props: DebugPaneProps) => {
   const challengeContext = useContext(ChallengeContext);
+  const hasLocals = props.debugContext.locals.size > 0;
   return (
     <Stack sx={{ height: "100%" }}>
       <Paper sx={{ width: "100%", pl: 1, pb: 1 }}>
@@ -89,7 +90,7 @@ const DebugPane = (props: DebugPaneProps) => {
                 style={{ marginTop: 0 }}
               >
                 <TableBody>
-                  {props.debugContext.locals.size > 0 ? (
+                  {hasLocals ? (
                     <>
                       <TableRow key="local">
                         <TableCell className="hh" colSpan={2}>
@@ -110,7 +111,7 @@ const DebugPane = (props: DebugPaneProps) => {
                   ) : undefined}
                   <TableRow key="global">
                     <TableCell className="hh" colSpan={2}>
-                      GLOBAL VARIABLES
+                      {hasLocals ? "GLOBAL VARIABLES" : "VARIABLES"}
                     </TableCell>
                   </TableRow>
                   {Array.from(props.debugContext.globals.keys()).map((key) => (
