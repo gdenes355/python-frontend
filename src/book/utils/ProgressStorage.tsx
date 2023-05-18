@@ -104,12 +104,21 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
 
       // check for ws
       if (sessionContext.wsOpen && sessionContext.wsSend) {
-        sessionContext.wsSend({
-          cmd: "set-result",
-          id: challenge.id,
-          outcome,
-          code,
-        });
+        new Promise(() =>
+          sessionContext.wsSend!(
+            {
+              cmd: "set-result",
+              id: challenge.id,
+              outcome,
+              code,
+            },
+            (msg: any) => {
+              if (msg.showSolution === true) {
+                challenge.showSolution = true;
+              }
+            }
+          )
+        );
         return;
       }
 
