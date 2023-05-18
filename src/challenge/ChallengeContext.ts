@@ -545,7 +545,8 @@ class ChallengeContextClass {
       this.challenge.setState({
         debugContext: {
           lineno: data.lineno,
-          env: new Map([...data.env.entries()].sort()),
+          locals: new Map([...data.locals.entries()].sort()),
+          globals: new Map([...data.globals.entries()].sort()),
         },
         editorState: ChallengeStatus.ON_BREAKPOINT,
       });

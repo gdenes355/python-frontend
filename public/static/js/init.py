@@ -626,16 +626,16 @@ def pydebug(code, breakpoints):
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
 
     parsed_stmts = ast.parse(code)
-    parsed_break = ast.parse("hit_breakpoint(99, locals(), globals())")
+    parsed_break = ast.parse("hit_breakpoint(99, locals(), globals(), False)")
     breakpoint_map = {}
 
     injected_breakpoints = set()
 
     # walk the AST and inject breakpoint commands after each line
     workqueue = deque()  # stores (node, parent). The latter two are needed for instrumentation
-    workqueue.extend([(parsed_stmts.body[i], parsed_stmts.body)
-                     for i in range(len(parsed_stmts.body))])
+    workqueue.extend([(parsed_stmts.body[i], parsed_stmts.body) for i in range(len(parsed_stmts.body))])
     last_line = 0
+    CHILDREN_TO_EXPLORE = ['body', 'orelse',  'finalbody']
 
     # walk the AST and inject breakpoint commands on each line
     while workqueue:
@@ -643,22 +643,22 @@ def pydebug(code, breakpoints):
         if node.lineno in injected_breakpoints:
             continue
         break_cmd = copy.deepcopy(parsed_break.body[0])
-        break_cmd.value.lineno = node.lineno
-        break_cmd.value.end_lineno = node.lineno
-        break_cmd.value.args[0] = ast.Constant(
-            node.lineno, lineno=0, col_offset=0)
+        break_cmd.value.lineno, break_cmd.value.end_lineno, break_cmd.value.args[0] = node.lineno, node.lineno, ast.Constant(node.lineno, lineno=0, col_offset=0)
         idx = parentl.index(node)
         parentl.insert(idx, break_cmd)
         injected_breakpoints.add(node.lineno)
         last_line = max(last_line, node.lineno)
-        if hasattr(node, 'body'):
-            workqueue.extend([(node.body[i], node.body)
-                            for i in range(len(node.body))])
-        if hasattr(node, 'orelse'):
-            workqueue.extend([(node.orelse[i], node.orelse)
-                            for i in range(len(node.orelse))])
+        for t in CHILDREN_TO_EXPLORE:
+            if hasattr(node, t):
+                workqueue.extend([(getattr(node, t)[i], getattr(node, t)) for i in range(len(getattr(node, t)))])
+        if hasattr(node, 'handlers'):
+            # instrument handlers with break
+            for handler in node.handlers:
+                if hasattr(handler, 'body'):
+                    workqueue.extend([(handler.body[i], handler.body) for i in range(len(handler.body))])
         if hasattr(node, 'test'):
             # instrument test with break
+            break_cmd.value.args[3] = ast.Constant(True, lineno=0, col_offset=0)
             node.test = ast.BoolOp(ast.And(), [break_cmd.value, node.test], lineno=node.lineno, col_offset=1)
             
     # find lines with no breakpoints and map them to the next line with a breakpoint
@@ -756,10 +756,10 @@ def run_turtle_cmd(msg):
     return synchronise('/@turtle@/req.js')   
 
 
-def hit_breakpoint(lineno, alocals, aglobals):
+def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
     global step_into
     global last_seen_lineno
-    if last_seen_lineno == lineno:
+    if is_secondary and last_seen_lineno == lineno:
         return True
     last_seen_lineno = lineno
     if step_into or lineno in active_breakpoints:
@@ -769,12 +769,13 @@ def hit_breakpoint(lineno, alocals, aglobals):
         VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__",
                           "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
                           "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time", "last_seen_lineno"]
-        vars = aglobals.copy()
-        vars.update(alocals)
-        env = {k: str(
-            vars[k]) for k in vars if k not in VARS_TO_REMOVE and not callable(vars[k])}
+        globals = {k: repr(aglobals[k]) for k in aglobals if k not in VARS_TO_REMOVE and not callable(aglobals[k])}
+        if alocals != aglobals:
+            locals = {k: repr(alocals[k]) for k in alocals if k not in VARS_TO_REMOVE and not callable(alocals[k])}
+        else:
+            locals = {}
 
-        post_message({"cmd": "breakpt", "lineno": lineno, "env": env})
+        post_message({"cmd": "breakpt", "lineno": lineno, "globals": globals, "locals": locals})
         resp = json.loads(synchronise('/@debug@/break.js'))
         if (resp.get("breakpoints")):
             update_breakpoints(resp["breakpoints"])

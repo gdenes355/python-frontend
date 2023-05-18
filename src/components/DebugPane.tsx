@@ -6,7 +6,6 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   Paper,
 } from "@mui/material";
@@ -24,10 +23,19 @@ const StyledTable = styled("div")(
   () => `
     width: 100%;
     height: 100%;
-    margin-top: 10px;
-    & th {
-        background-color: rgb(212, 211, 211) !important;
-        border: 1px solid black !important;
+    margin-top: 5px;
+    
+    & td {
+      padding-top: 1px;
+      padding-bottom: 1px;
+      padding-left: 3em;
+      font-family: monospace;
+    }
+    & .hh {
+      background-color: transparent !important;
+      padding-left: 1em;
+      font-weight: bold;
+
     }
 `
 );
@@ -80,18 +88,36 @@ const DebugPane = (props: DebugPaneProps) => {
                 stickyHeader
                 style={{ marginTop: 0 }}
               >
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Variable</TableCell>
-                    <TableCell align="right">Value</TableCell>
-                  </TableRow>
-                </TableHead>
                 <TableBody>
-                  {Array.from(props.debugContext.env.keys()).map((key) => (
-                    <TableRow key={key} hover>
+                  {props.debugContext.locals.size > 0 ? (
+                    <>
+                      <TableRow key="local">
+                        <TableCell className="hh" colSpan={2}>
+                          LOCAL VARIABLES
+                        </TableCell>
+                      </TableRow>
+                      {Array.from(props.debugContext.locals.keys()).map(
+                        (key) => (
+                          <TableRow key={`local-${key}`} hover>
+                            <TableCell>{key}</TableCell>
+                            <TableCell align="right">
+                              {props.debugContext.locals.get(key)}
+                            </TableCell>
+                          </TableRow>
+                        )
+                      )}
+                    </>
+                  ) : undefined}
+                  <TableRow key="global">
+                    <TableCell className="hh" colSpan={2}>
+                      GLOBAL VARIABLES
+                    </TableCell>
+                  </TableRow>
+                  {Array.from(props.debugContext.globals.keys()).map((key) => (
+                    <TableRow key={`global-${key}`} hover>
                       <TableCell>{key}</TableCell>
                       <TableCell align="right">
-                        {props.debugContext.env.get(key)}
+                        {props.debugContext.globals.get(key)}
                       </TableCell>
                     </TableRow>
                   ))}

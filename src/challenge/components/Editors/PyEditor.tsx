@@ -67,6 +67,10 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
     const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
     const monacoRef = useRef<Monaco | null>(null);
 
+    // local cache of props to get hover callback to behave
+    const isOnBreakPoint = useRef<boolean>(false);
+    const debugContext = useRef<DebugContext>(props.debugContext);
+
     const getValue = () => {
       return editorRef?.current?.getValue() || "";
     };
@@ -83,6 +87,13 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
     const revealLine = (lineNo: number) => {
       editorRef.current?.revealLine(lineNo);
     };
+
+    useEffect(() => {
+      isOnBreakPoint.current = props.isOnBreakPoint;
+    }, [props.isOnBreakPoint]);
+    useEffect(() => {
+      debugContext.current = props.debugContext;
+    }, [props.debugContext]);
 
     useImperativeHandle(ref, () => ({
       getValue,
@@ -203,19 +214,18 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
       monaco.languages.registerHoverProvider("python", {
         provideHover: (model, position) => {
           // Log the current word in the console, you probably want to do something else here.
-          if (props.isOnBreakPoint) {
+          if (isOnBreakPoint.current) {
             let word = model.getWordAtPosition(position);
-            if (
-              word?.word !== undefined &&
-              props.debugContext.env.has(word.word)
-            ) {
+            if (!word?.word) return;
+            let value =
+              debugContext.current.locals.get(word.word) ||
+              debugContext.current.globals.get(word.word);
+            console.log(word.word, value);
+            if (value) {
               return {
                 contents: [
                   {
-                    value:
-                      "```text\n" +
-                      props.debugContext.env.get(word.word) +
-                      "\n```",
+                    value: "```text\n" + value + "\n```",
                   },
                 ],
               };

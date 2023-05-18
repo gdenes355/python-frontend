@@ -117,7 +117,7 @@ class ChallengeEditor
     savedCode: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
-    debugContext: { lineno: 0, env: new Map() },
+    debugContext: { lineno: 0, locals: new Map(), globals: new Map() },
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],
