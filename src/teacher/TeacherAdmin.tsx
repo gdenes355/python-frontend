@@ -283,7 +283,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       if (resp.status === 200) {
         groups.push({ name: groupName, students: [] });
         setActiveGroup(groups[groups.length - 1]);
-        forceUpdate();
+        window.location.reload(); // happens rarely enough and when it does, the cache would need to be purged anyway
       }
     });
   };
