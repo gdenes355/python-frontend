@@ -220,7 +220,6 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
             let value =
               debugContext.current.locals.get(word.word) ||
               debugContext.current.globals.get(word.word);
-            console.log(word.word, value);
             if (value) {
               return {
                 contents: [
