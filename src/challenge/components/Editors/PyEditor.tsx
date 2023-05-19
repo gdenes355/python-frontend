@@ -93,6 +93,16 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
       download,
     }));
 
+    function changeCommandKeybinding(editor: any, id: string, keybinding: any) {
+      editor._standaloneKeybindingService.addDynamicKeybinding(
+        id,
+        keybinding,
+        () => {
+          editor.trigger("", id, null);
+        }
+      );
+    }
+
     useEffect(() => {
       canRunCondition?.current?.set(props.canRun);
     }, [props.canRun, canRunCondition]);
@@ -112,6 +122,18 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
       canPlaceBreakpointCondition.current = editor.createContextKey(
         "canPlaceBreakpoint",
         false
+      );
+
+      changeCommandKeybinding(
+        editor,
+        "editor.action.fontZoomIn",
+        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Period
+      );
+
+      changeCommandKeybinding(
+        editor,
+        "editor.action.fontZoomOut",
+        monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Comma
       );
 
       editor.onMouseDown((event) => {
