@@ -5,6 +5,11 @@ import {
   Button,
   Checkbox,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
   IconButton,
   Stack,
@@ -51,6 +56,7 @@ const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
   const sessionContext = useContext(SessionContext);
+  const textfieldUsernamesRef = useRef<HTMLInputElement>(null);
 
   const [groups, setGroups] = useState<Array<ClassModel>>([]);
   const [groupInputValue, setGroupInputValue] = React.useState("");
@@ -288,23 +294,29 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     });
   };
 
-  const onAddStudent = (username: string) => {
+  const onAddStudents = (usernames: string) => {
     setDialogState("");
-    if (!activeGroup || !username) return;
-    if (activeGroup.students.includes(username)) return;
-
-    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
-      method: "post",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ user: username }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        activeGroup?.students.push(username);
-        forceUpdate();
+    if (!activeGroup || !usernames) return;
+    usernames.split("\n").forEach((username) => {
+      username = username.trim();
+      if (username !== "" && !activeGroup.students.includes(username)) {
+        fetch(
+          `${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`,
+          {
+            method: "post",
+            cache: "no-cache",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionContext.token}`,
+            },
+            body: JSON.stringify({ user: username }),
+          }
+        ).then((resp) => {
+          if (resp.status === 200) {
+            activeGroup?.students.push(username);
+            forceUpdate();
+          }
+        });
       }
     });
   };
@@ -398,15 +410,39 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             </Grid>
           </React.Fragment>
         </HeaderBar>
-        <InputDialog
-          title="Add student"
-          defaultValue=""
-          inputLabel="username"
-          onInputEntered={onAddStudent}
-          okButtonLabel="Add"
+        <Dialog
           open={dialogState === "addStudent"}
           onClose={() => setDialogState("")}
-        />
+          title="Add students"
+        >
+          <DialogTitle>Add Students</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Enter students below, one per line, with or without the @ email
+              suffix.
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="usernames"
+              label="Student usernames"
+              fullWidth
+              variant="standard"
+              multiline
+              inputRef={textfieldUsernamesRef}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogState("")}>Cancel</Button>
+            <Button
+              onClick={() =>
+                onAddStudents(textfieldUsernamesRef?.current?.value || "")
+              }
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
         <InputDialog
           type="combo"
           options={bookTitles}
@@ -560,7 +596,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                     onClick={() => setDialogState("addStudent")}
                   >
                     <AddIcon />
-                    Add student
+                    Add students
                   </IconButton>
                 ) : undefined}
               </React.Fragment>
