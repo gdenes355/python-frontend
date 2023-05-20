@@ -64,6 +64,8 @@ interface IChallenge {
   currentFixedUserInput: string[];
   workerFullyInitialised: boolean;
 
+  forceStopping: boolean;
+
   props: IChallengeProps;
   state: IChallengeState;
   setState: (newState: any) => void; // this seems hacky

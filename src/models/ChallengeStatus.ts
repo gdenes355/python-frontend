@@ -6,6 +6,7 @@ enum ChallengeStatus {
   AWAITING_INPUT,
   ON_BREAKPOINT,
   RUNNING,
+  RUNNING_WITH_DEBUGGER,
 }
 
 export default ChallengeStatus;

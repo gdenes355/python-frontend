@@ -65,6 +65,7 @@ class ChallengeContextClass {
   public actions = {
     "init-done": () => {
       this.challenge.workerFullyInitialised = true;
+      this.challenge.forceStopping = false;
       this.challenge.setState({ editorState: ChallengeStatus.READY });
     },
     print: (data: PrintData) => {
@@ -225,10 +226,13 @@ class ChallengeContextClass {
             : null,
         step: step,
       });
-      this.challenge.setState({ editorState: ChallengeStatus.RUNNING });
+      this.challenge.setState({
+        editorState: ChallengeStatus.RUNNING_WITH_DEBUGGER,
+      });
     },
     step: () => this.actions["continue"](true),
     "debug-finished": (data: DebugFinishedData) => {
+      this.challenge.forceStopping = false;
       let msg = {
         ok: "Program finished ok. Press run/debug to run again...",
         error:
@@ -246,12 +250,27 @@ class ChallengeContextClass {
       this.actions["print-console"]("\n" + msg + "\n");
       this.challenge.canvasDisplayRef?.current?.runTurtleClearup();
     },
-    kill: () =>
+    kill: () => {
+      if (this.challenge.forceStopping) return;
+
+      this.challenge.forceStopping = true;
+      setTimeout(() => {
+        if (this.challenge.forceStopping) {
+          // clear interrupt buffer, as it clearly didn't work
+          this.challenge.interruptBuffer = null;
+          this.actions["restart-worker"]({
+            msg: "Restart Python...",
+            force: true,
+          });
+        }
+      }, 2000);
       this.actions["restart-worker"]({
         msg: "Interrupted...",
         force: true,
-      }),
+      });
+    },
     "test-finished": (data: TestFinishedData) => {
+      this.challenge.forceStopping = false;
       this.actions["report-result"](data.results, data.code, data.bookNode);
       this.challenge.setState({
         testResults: data.results,
@@ -259,6 +278,7 @@ class ChallengeContextClass {
       });
     },
     "draw-turtle-example-finished": (data: { bookNode: BookNodeModel }) => {
+      this.challenge.forceStopping = false;
       this.challenge.setState({
         editorState: ChallengeStatus.READY,
       });
@@ -299,6 +319,7 @@ class ChallengeContextClass {
         return; // we can just issue an interrupt, no need to kill worker
       }
       this.challenge.worker?.terminate();
+      this.challenge.forceStopping = false;
       let worker = new Worker("/static/js/pyworker_sw.js");
       worker.addEventListener("message", (msg: MessageEvent<WorkerResponse>) =>
         // @ts-ignore  dybamic dispatch from worker
@@ -381,7 +402,10 @@ class ChallengeContextClass {
           breakpoints: breakpoints,
         });
         this.challenge.setState({
-          editorState: ChallengeStatus.RUNNING,
+          editorState:
+            mode === "debug"
+              ? ChallengeStatus.RUNNING_WITH_DEBUGGER
+              : ChallengeStatus.RUNNING,
         });
         this.challenge.breakpointsChanged = false;
         this.actions["cls"]();
@@ -521,7 +545,8 @@ class ChallengeContextClass {
       this.challenge.setState({
         debugContext: {
           lineno: data.lineno,
-          env: new Map([...data.env.entries()].sort()),
+          locals: new Map([...data.locals.entries()].sort()),
+          globals: new Map([...data.globals.entries()].sort()),
         },
         editorState: ChallengeStatus.ON_BREAKPOINT,
       });

@@ -93,6 +93,7 @@ class ChallengeEditor
   workerFullyInitialised: boolean = false;
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
+  forceStopping: boolean = false;
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
@@ -116,7 +117,7 @@ class ChallengeEditor
     savedCode: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
-    debugContext: { lineno: 0, env: new Map() },
+    debugContext: { lineno: 0, locals: new Map(), globals: new Map() },
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],
@@ -438,6 +439,7 @@ class ChallengeEditor
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={false}
             testResults={[]}
+            canKill={this.state.editorState === ChallengeStatus.RUNNING}
           />
         </CardContent>
       </Card>
@@ -657,7 +659,8 @@ class ChallengeEditor
                     minSize={150}
                     snap={true}
                     visible={
-                      this.state.editorState === ChallengeStatus.RUNNING ||
+                      this.state.editorState ===
+                        ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                       this.state.editorState ===
                         ChallengeStatus.ON_BREAKPOINT ||
                       this.state.editorState === ChallengeStatus.AWAITING_INPUT
@@ -669,7 +672,8 @@ class ChallengeEditor
                         this.state.editorState === ChallengeStatus.ON_BREAKPOINT
                       }
                       canKill={
-                        this.state.editorState === ChallengeStatus.RUNNING ||
+                        this.state.editorState ===
+                          ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                         this.state.editorState ===
                           ChallengeStatus.ON_BREAKPOINT ||
                         this.state.editorState ===
