@@ -46,10 +46,13 @@ const HeaderBar = (props: HeaderBarProps) => {
           item
           sx={{
             verticalAlign: "middle",
-            color: "primary.main",
+            color: `color-mix(in srgb, #076669 75%, ${
+              themeContext.theme === "vs-dark" ? "#fff" : "#000"
+            })`,
             fontWeight: "bold",
             marginLeft: 2,
             margin: "auto",
+            fontSize: "1.2rem",
           }}
         >
           <span>{props.title || ""}</span>

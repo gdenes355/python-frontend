@@ -321,7 +321,9 @@ class Challenge
               }}
             >
               <HeaderBar
-                title={this.props.title || this.props.bookNode?.name || ""}
+                title={`${
+                  this.props.title ? this.props.title + " \u203A " : ""
+                }  ${this.props.bookNode?.name}`}
                 onHelpOpen={(open) => this.setState({ helpOpen: open })}
                 menuItems={
                   <HeaderMenu
