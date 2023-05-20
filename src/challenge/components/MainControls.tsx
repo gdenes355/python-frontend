@@ -11,6 +11,7 @@ type MainControlsProps = {
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
+  canKill: boolean;
   onGuideDisplayToggle: () => void;
 };
 
@@ -65,6 +66,18 @@ const MainControlsStack = (props: MainControlsProps) => {
           </Button>
         </Box>
       ) : null}
+
+      <Box>
+        <Button
+          variant="contained"
+          color="error"
+          disabled={!props.canKill}
+          onClick={() => challengeContext?.actions["kill"]()}
+        >
+          Stop
+        </Button>
+      </Box>
+
       <TestResultsIndicator testResults={props.testResults} />
     </Stack>
   );
@@ -95,6 +108,16 @@ const MainControlsGrid = (props: MainControlsProps) => {
         </Stack>
       </Grid>
       <Grid item>
+        <Button
+          variant="contained"
+          color="error"
+          disabled={!props.canKill}
+          onClick={() => challengeContext?.actions["kill"]()}
+          sx={{ mr: 1 }}
+        >
+          Stop
+        </Button>
+
         <IconButton
           onClick={() => {
             props.onGuideDisplayToggle();

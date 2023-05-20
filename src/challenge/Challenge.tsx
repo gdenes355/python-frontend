@@ -84,6 +84,8 @@ class Challenge
   keyDownBuffer: Uint8Array | null = null;
   workerFullyInitialised: boolean = false;
 
+  forceStopping: boolean = false;
+
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
@@ -104,7 +106,7 @@ class Challenge
     savedCode: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
-    debugContext: { lineno: 0, env: new Map() },
+    debugContext: { lineno: 0, locals: new Map(), globals: new Map() },
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],
@@ -266,6 +268,7 @@ class Challenge
               (this.props.tests !== null || this.props.typ === "parsons")
             }
             testResults={this.state.testResults}
+            canKill={this.state.editorState === ChallengeStatus.RUNNING}
           />
         </CardContent>
       </Card>
@@ -365,9 +368,7 @@ class Challenge
                         !this.state.editorFullScreen
                       )}
                       maxSize={550}
-                      minSize={
-                        this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
-                      }
+                      minSize={150}
                     >
                       <Outputs
                         ref={this.outputsRef}
@@ -456,7 +457,8 @@ class Challenge
                       minSize={150}
                       snap={true}
                       visible={
-                        this.state.editorState === ChallengeStatus.RUNNING ||
+                        this.state.editorState ===
+                          ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                         this.state.editorState ===
                           ChallengeStatus.ON_BREAKPOINT ||
                         this.state.editorState ===
@@ -470,7 +472,8 @@ class Challenge
                           ChallengeStatus.ON_BREAKPOINT
                         }
                         canKill={
-                          this.state.editorState === ChallengeStatus.RUNNING ||
+                          this.state.editorState ===
+                            ChallengeStatus.RUNNING_WITH_DEBUGGER ||
                           this.state.editorState ===
                             ChallengeStatus.ON_BREAKPOINT ||
                           this.state.editorState ===

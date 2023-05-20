@@ -1,6 +1,7 @@
 type DebugContext = {
   lineno: number;
-  env: Map<string, string>;
+  locals: Map<string, string>;
+  globals: Map<string, string>;
 };
 
 export default DebugContext;
