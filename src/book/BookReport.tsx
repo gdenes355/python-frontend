@@ -17,7 +17,7 @@ import {
 import BookNodeModel from "../models/BookNodeModel";
 import { AllTestResults } from "../models/Tests";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
@@ -137,7 +137,7 @@ const ResultRow = (props: { node: ResultsDecorator }) => {
               size="small"
               onClick={() => setOpen(!open)}
             >
-              {open ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+              {open ? <KeyboardArrowDownIcon /> : <KeyboardArrowRightIcon />}
             </IconButton>
           )}
         </TableCell>
