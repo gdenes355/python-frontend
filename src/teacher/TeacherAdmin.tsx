@@ -297,7 +297,15 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const onAddStudents = (usernames: string) => {
     setDialogState("");
     if (!activeGroup || !usernames) return;
-    usernames.split("\n").forEach((username) => {
+
+    // check no more than 60 students being added at a time
+    const studentsToAdd = usernames.split("\n");
+    if (studentsToAdd.length > 60) {
+      studentsToAdd.length = 60;
+      console.log("Truncating students to 60");
+    }
+
+    studentsToAdd.forEach((username) => {
       username = username.trim();
       if (username !== "" && !activeGroup.students.includes(username)) {
         fetch(
@@ -430,6 +438,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
               variant="standard"
               multiline
               inputRef={textfieldUsernamesRef}
+              inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
             />
           </DialogContent>
           <DialogActions>
