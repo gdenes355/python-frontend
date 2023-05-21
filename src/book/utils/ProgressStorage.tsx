@@ -150,6 +150,12 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
                 bookPath: bookPath,
               });
             });
+          } else {
+            response.json().then((data) => {
+              if (data.showSolution === true) {
+                challenge.showSolution = true;
+              }
+            });
           }
         });
       }
