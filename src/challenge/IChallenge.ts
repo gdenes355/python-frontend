@@ -59,6 +59,7 @@ interface IChallenge {
   printCallback: DebouncedFunc<() => void>;
   canvasMountedCallback: () => void;
   canvasPromiseResolve?: (value: any) => void;
+  showSolution: () => void;
 
   currentConsoleText: string;
   currentFixedUserInput: string[];

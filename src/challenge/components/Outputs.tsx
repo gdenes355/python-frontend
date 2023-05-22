@@ -1,4 +1,4 @@
-import React, { useRef, useImperativeHandle } from "react";
+import React, { useRef, useImperativeHandle, useState } from "react";
 import { Box } from "@mui/material";
 
 import TabbedView, { TabbedViewHandle } from "../../components/TabbedView";
@@ -8,6 +8,7 @@ import { AdditionalFiles } from "../../models/AdditionalFiles";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;
+  showSolution: () => void;
 };
 
 type OutputsProps = {
@@ -23,6 +24,7 @@ type OutputsProps = {
 
 const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
   const tabbedViewRef = useRef<TabbedViewHandle>(null);
+  const [showingSolution, setShowingSolution] = useState<boolean>(false);
 
   let panes = [
     {
@@ -67,7 +69,10 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
           ? "Solution"
           : file.filename,
         content: props.files[index],
-        show: file.visible || props.fileShowAll,
+        show:
+          file.visible ||
+          props.fileShowAll ||
+          (file.filename.startsWith("solutions") && showingSolution),
         name: file.filename,
       });
     });
@@ -77,7 +82,11 @@ const Outputs = React.forwardRef<OutputsHandle, OutputsProps>((props, ref) => {
     tabbedViewRef.current?.requestPane(pane);
   };
 
-  useImperativeHandle(ref, () => ({ focusPane }));
+  const showSolution = () => {
+    setShowingSolution(true);
+  };
+
+  useImperativeHandle(ref, () => ({ focusPane, showSolution }));
 
   return (
     <Box

@@ -3,6 +3,7 @@ import SessionContext from "../../auth/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 import { throttle } from "lodash";
+import IChallenge from "../../challenge/IChallenge";
 
 const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
@@ -63,7 +64,8 @@ const saveTestStateLocal: (
 type ProgressStorage = {
   allTestResults: AllTestResults;
   setResult: (
-    challenge: BookNodeModel,
+    challenge: IChallenge,
+    challengeBookNode: BookNodeModel,
     outcome?: boolean,
     code?: string
   ) => void;
@@ -93,7 +95,12 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   };
 
   const persistInServer = throttle(
-    (challenge: BookNodeModel, outcome?: boolean, code?: string) => {
+    (
+      challenge,
+      challengeBookNode: BookNodeModel,
+      outcome?: boolean,
+      code?: string
+    ) => {
       if (!sessionContext.isLoggedIn()) return;
 
       code = code?.trimEnd();
@@ -108,13 +115,14 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           sessionContext.wsSend!(
             {
               cmd: "set-result",
-              id: challenge.id,
+              id: challengeBookNode.id,
               outcome,
               code,
             },
             (msg: any) => {
               if (msg.showSolution === true) {
-                challenge.showSolution = true;
+                challengeBookNode.showSolution = true;
+                challenge.showSolution();
               }
             }
           )
@@ -133,7 +141,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           },
           body: JSON.stringify({
             book: bookPath,
-            id: challenge.id,
+            id: challengeBookNode.id,
             outcome,
             code,
           }),
@@ -153,7 +161,8 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           } else {
             response.json().then((data) => {
               if (data.showSolution === true) {
-                challenge.showSolution = true;
+                challengeBookNode.showSolution = true;
+                challenge.showSolution();
               }
             });
           }
@@ -168,7 +177,8 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   }, [bookPath]);
 
   const setResult = (
-    challenge: BookNodeModel,
+    challenge: IChallenge,
+    challengeBookNode: BookNodeModel,
     outcome?: boolean,
     code?: string
   ) => {
@@ -176,9 +186,9 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
       //ignore
       return;
     }
-    persistInMemory(challenge, outcome);
-    saveTestStateLocal(challenge, outcome); // persist in local storage
-    persistInServer(challenge, outcome, code); // push to server
+    persistInMemory(challengeBookNode, outcome);
+    saveTestStateLocal(challengeBookNode, outcome); // persist in local storage
+    persistInServer(challenge, challengeBookNode, outcome, code); // push to server
   };
 
   const getResult = (challenge: BookNodeModel) => {

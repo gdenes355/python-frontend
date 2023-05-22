@@ -83,11 +83,18 @@ class Challenge
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
   workerFullyInitialised: boolean = false;
+  solutionVisibilityObservers: (() => void)[] = [];
 
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
   );
+
+  showSolution = () => {
+    this.solutionVisibilityObservers.forEach((observer) => {
+      observer();
+    });
+  };
 
   canvasMountedCallback = () => {
     if (this.canvasPromiseResolve) {
@@ -222,11 +229,7 @@ class Challenge
       (file) => file.filename
     );
 
-    if (
-      this.props.bookNode.hasSolution &&
-      (this.props.bookNode.showSolution === 0 ||
-        this.props.bookNode.showSolution === true)
-    ) {
+    if (this.props.bookNode.hasSolution) {
       files.push(`solutions/${this.props.bookNode.py}`);
     }
 
@@ -239,15 +242,11 @@ class Challenge
       (file) => file.filename
     );
 
-    if (
-      this.props.bookNode.hasSolution &&
-      (this.props.bookNode.showSolution === 0 ||
-        this.props.bookNode.showSolution === true)
-    ) {
+    if (this.props.bookNode.hasSolution) {
       if (!files.includes(`solutions/${this.props.bookNode.py}`)) {
         filesProperties.push({
           filename: `solutions/${this.props.bookNode.py}`,
-          visible: true,
+          visible: false,
         });
         files.push(`solutions/${this.props.bookNode.py}`);
       }
@@ -413,7 +412,14 @@ class Challenge
                       }
                     >
                       <Outputs
-                        ref={this.outputsRef}
+                        ref={(c) => {
+                          if (c) {
+                            this.solutionVisibilityObservers.push(
+                              c.showSolution
+                            );
+                            return c;
+                          }
+                        }}
                         visiblePanes={[
                           "console",
                           ...(this.state.typ === ChallengeTypes.TYP_CANVAS

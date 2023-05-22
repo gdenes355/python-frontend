@@ -94,6 +94,8 @@ class ChallengeEditor
   interruptBuffer: Uint8Array | null = null;
   keyDownBuffer: Uint8Array | null = null;
 
+  showSolution = () => {};
+
   printCallback = throttle(
     () => this.setState({ consoleText: this.currentConsoleText }),
     100
@@ -220,25 +222,6 @@ class ChallengeEditor
         this.state.editorState === ChallengeStatus.ON_BREAKPOINT)
     ) {
       this.editorRef.current.updateEditorDecorations();
-    }
-
-    if (this.state.testResults !== prevState.testResults) {
-      let newTestResult =
-        this.state.testResults.length === 0
-          ? undefined
-          : this.state.testResults.filter((x) => x.outcome !== true).length ===
-            0;
-      this.setState({ testsPassing: newTestResult });
-    }
-
-    if (this.state.testsPassing !== prevState.testsPassing) {
-      if (this.props.progressStorage) {
-        this.props.progressStorage.setResult(
-          this.props.bookNode,
-          this.state.testsPassing,
-          this.chContext.actions["get-code"]()
-        );
-      }
     }
 
     if (this.props.bookNode !== prevProps.bookNode) {

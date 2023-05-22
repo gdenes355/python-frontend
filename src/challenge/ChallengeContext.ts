@@ -334,26 +334,28 @@ class ChallengeContextClass {
       }
     },
     debug: (mode: "debug" | "run" = "debug") => {
+      let code: string | undefined = "";
       if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
-        let code = this.challenge.parsonsEditorRef.current?.getValue();
+        code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, [], mode);
-          if (typeof this.challenge.props.bookNode.showSolution === "number") {
-            if (this.challenge.props.bookNode.showSolution > 0) {
-              this.challenge.props.bookNode.showSolution -= 1;
-            }
-          }
         }
       } else {
-        let code = this.challenge.editorRef.current?.getValue();
+        code = this.challenge.editorRef.current?.getValue();
         let bkpts = this.challenge.editorRef.current?.getBreakpoints() || [];
         this.challenge.canvasDisplayRef?.current?.turtleReset();
         if (code || code === "") {
           this.actions["debugpy"](code, bkpts, mode);
-          if (typeof this.challenge.props.bookNode.showSolution === "number") {
-            if (this.challenge.props.bookNode.showSolution > 0) {
-              this.challenge.props.bookNode.showSolution -= 1;
-            }
+        }
+      }
+      if (code) {
+        if (
+          typeof this.challenge.props.bookNode.showSolution === "number" &&
+          this.challenge.props.bookNode.showSolution > 0
+        ) {
+          this.challenge.props.bookNode.showSolution -= 1;
+          if (this.challenge.props.bookNode.showSolution === 0) {
+            this.challenge.showSolution();
           }
         }
       }
@@ -427,6 +429,7 @@ class ChallengeContextClass {
           : results.filter((x) => x.outcome !== true).length === 0;
       if (this.challenge.props.progressStorage) {
         this.challenge.props.progressStorage.setResult(
+          this.challenge,
           bookNode,
           newTestOutcome,
           code
