@@ -48,6 +48,9 @@
         "isExample": {
           "$ref": "#/$defs/isExample"
         },
+        "isAssessment": {
+          "$ref": "#/$defs/isAssessment"
+        },
         "tests": {
           "$ref": "#/$defs/tests"
         },
@@ -94,6 +97,10 @@
       "description": "is this just an example code? Students need to debug example challenges, but no changes are required",
       "type": "boolean"
     },
+    "isAssessment": {
+      "description": "is this for an assessment? Students can submit but will get no test feedback - setting inherited by all children",
+      "type": "boolean"
+    },    
     "tests": {
       "description": "optional list of tests",
       "type": "array",

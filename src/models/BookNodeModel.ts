@@ -11,6 +11,7 @@ type BookNodeModel = {
   additionalFiles?: AdditionalFiles;
   bookLink?: string;
   isExample?: boolean;
+  isAssessment?: boolean;
   typ?: "py" | "parsons" | "canvas";
 
   // cached

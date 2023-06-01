@@ -22,6 +22,7 @@ type IChallengeProps = {
   uid: string;
   tests?: TestCases | null;
   isExample?: boolean;
+  isAssessment?: boolean;
   guidePath: string;
   codePath: string;
   fetcher: IBookFetcher;
@@ -57,6 +58,7 @@ interface IChallenge {
   keyDownBuffer: Uint8Array | null;
 
   printCallback: DebouncedFunc<() => void>;
+  submittedCallback?: () => void;
   canvasMountedCallback: () => void;
   canvasPromiseResolve?: (value: any) => void;
 

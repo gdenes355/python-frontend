@@ -326,6 +326,7 @@ const Book = (props: BookProps) => {
                 uid={bookPath + bookChallengeId}
                 progressStorage={progressStorage}
                 isExample={activeNode.isExample}
+                isAssessment={activeNode.isAssessment}
                 typ={activeNode.typ}
                 onBookUploaded={props.onBookUploaded}
                 authContext={authContext}

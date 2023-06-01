@@ -146,6 +146,7 @@ class ChallengeEditor
     let proxy = {
       name: node.name,
       isExample: node.isExample,
+      isAssessment: node.isAssessment,
       typ: node.typ,
       tests: node.tests,
       additionalFiles: node.additionalFiles,
@@ -331,6 +332,10 @@ class ChallengeEditor
     if (editedNode.isExample !== this.props.bookNode.isExample) {
       changed = true;
       this.props.bookNode.isExample = editedNode.isExample;
+    }
+    if (editedNode.isAssessment !== this.props.bookNode.isAssessment) {
+      changed = true;
+      this.props.bookNode.isAssessment = editedNode.isAssessment;
     }
     if (editedNode.typ !== this.props.bookNode.typ) {
       changed = true;

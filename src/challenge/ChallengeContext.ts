@@ -427,6 +427,12 @@ class ChallengeContextClass {
         let tests = this.challenge.props.tests;
         if (code && tests) {
           this.actions["testpy"](code, tests);
+        } else if (code && this.challenge.props.isAssessment) {
+          this.actions["report-result"](
+            [],
+            code,
+            this.challenge.props.bookNode
+          );
         }
       }
     },
@@ -442,9 +448,12 @@ class ChallengeContextClass {
       if (this.challenge.props.progressStorage) {
         this.challenge.props.progressStorage.setResult(
           bookNode,
-          newTestOutcome,
+          newTestOutcome || this.challenge.props.isAssessment,
           code
         );
+      }
+      if (this.challenge.submittedCallback) {
+        this.challenge.submittedCallback();
       }
     },
     testpy: (code: string, tests: TestCases) => {

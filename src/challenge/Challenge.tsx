@@ -43,6 +43,7 @@ type ChallengeState = IChallengeState & {
   savedCode: string | null;
   editorFullScreen: boolean;
   testsPassing: boolean | undefined;
+  isSubmitted: boolean;
   helpOpen: boolean;
   guideMinimised: boolean;
   showBookUpload: boolean;
@@ -91,6 +92,8 @@ class Challenge
     100
   );
 
+  submittedCallback = () => this.setState({ isSubmitted: true });
+
   canvasMountedCallback = () => {
     if (this.canvasPromiseResolve) {
       const local = this.canvasPromiseResolve;
@@ -111,6 +114,7 @@ class Challenge
     editorFullScreen: false,
     testResults: [],
     testsPassing: undefined,
+    isSubmitted: false,
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
@@ -182,6 +186,7 @@ class Challenge
       this.setState({
         testResults: testRes === undefined ? [] : [{ outcome: testRes }],
         testsPassing: testRes,
+        isSubmitted: false,
       });
     }
     if (prevProps.typ !== this.props.typ) {
@@ -264,10 +269,14 @@ class Challenge
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canSubmit={
-              !this.props.isExample &&
-              (this.props.tests !== null || this.props.typ === "parsons")
+              (!this.props.isExample &&
+                (this.props.tests !== null || this.props.typ === "parsons")) ||
+              (this.props.isAssessment !== undefined && this.props.isAssessment)
             }
             testResults={this.state.testResults}
+            isSubmitted={
+              this.props.isAssessment ? this.state.isSubmitted : undefined
+            }
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
           />
         </CardContent>

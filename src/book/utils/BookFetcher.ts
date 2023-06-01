@@ -167,7 +167,8 @@ class BookFetcher implements IBookFetcher {
     mainUrl: string,
     allRes: AllTestResults,
     fileRoot: boolean,
-    authContext?: SessionContextType
+    authContext?: SessionContextType,
+    isAssessment: boolean = false
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
@@ -175,9 +176,21 @@ class BookFetcher implements IBookFetcher {
       allRes.passed = new Set([...allRes.passed, ...localRes.passed]);
       allRes.failed = new Set([...allRes.failed, ...localRes.failed]);
     }
+
+    if (isAssessment) {
+      bookNode.isAssessment = true;
+    }
+
     if (bookNode.children) {
       for (const child of bookNode.children) {
-        await this.expandBookLinks(child, mainUrl, allRes, false, authContext);
+        await this.expandBookLinks(
+          child,
+          mainUrl,
+          allRes,
+          false,
+          authContext,
+          isAssessment || bookNode.isAssessment
+        );
       }
     }
     if (bookNode.bookLink) {
