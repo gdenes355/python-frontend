@@ -25,17 +25,20 @@ import ResultsTableRow, {
   ResultsTableRowRef,
   resultFromId,
 } from "./ResultsTableRow";
+import SolutionShowTableRow from "./SolutionShowTableRow";
 
 type ResultsTableProps = {
   group?: ClassModel;
   bookTitle?: string;
   book?: BookNodeModel;
   results?: Array<ResultsModel>;
+  solutionShow?: Array<string>;
   updateCtr: number;
   onResultsSelected: (res: ChallengeResultComplexModel[]) => void;
   onResultSelected: (res: ChallengeResultComplexModel) => void;
   onResultAdd: (res: ChallengeResultComplexModel) => void;
   onDeleteStudent: (student: string) => void;
+  onSolutionShowSelected: (challengeid: string) => void;
 };
 
 type ResultsTableRef = {
@@ -101,6 +104,10 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
       }
     };
 
+    const onSolutionShowSelected = (challengeid: string) => {
+      props.onSolutionShowSelected(challengeid);
+    };
+
     return (
       <Box sx={{ width: "100%" }}>
         <TableContainer>
@@ -138,6 +145,13 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
                 );
               })}
             </TableBody>
+            <TableHead>
+              <SolutionShowTableRow
+                challengeInfo={challengeInfo}
+                showing={props.solutionShow}
+                onSolutionShowSelected={onSolutionShowSelected}
+              />
+            </TableHead>
           </Table>
         </TableContainer>
         <StudentPopupMenu

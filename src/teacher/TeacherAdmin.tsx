@@ -76,6 +76,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const [dialogState, setDialogState] = useState<string>("");
 
   const [results, setResults] = useState<Array<ResultsModel>>([]);
+  const [solutionShow, setSolutionShow] = useState<Array<string>>([]);
 
   const [stagedResults, setStagedResults] = useState<
     Map<string, ChallengeResultComplexModel>
@@ -203,6 +204,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     )
       .then(setResults)
       .catch((e) => setError(e.reason));
+
+    request(
+      `api/admin/classes/${activeGroup.name}/books/${encodeURIComponent(
+        activeBook.bookTitle
+      )}/solutionshow`
+    )
+      .then(setSolutionShow)
+      .catch((e) => setError(e.reason));
   }, [activeBook, request, activeGroup, updateCtr]);
 
   useEffect(() => {
@@ -327,6 +336,33 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
           (s) => s !== student
         );
         forceUpdate();
+      }
+    });
+  };
+
+  const onSolutionShowSelected = (challengeid: string) => {
+    if (!activeGroup || !activeBook) return;
+    fetch(
+      `${props.baseUrl}/api/admin/classes/${
+        activeGroup.name
+      }/books/${encodeURIComponent(
+        activeBook.bookTitle
+      )}/challenges/${encodeURIComponent(challengeid)}/solutionshow`,
+      {
+        method: "post",
+        cache: "no-cache",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${sessionContext.token}`,
+        },
+      }
+    ).then((resp) => {
+      if (resp.status === 200) {
+        if (solutionShow.includes(challengeid)) {
+          setSolutionShow(solutionShow.filter((id) => id !== challengeid));
+        } else {
+          setSolutionShow([...solutionShow, challengeid]);
+        }
       }
     });
   };
@@ -549,7 +585,9 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   group={activeGroup}
                   updateCtr={updateCtr}
                   results={results}
+                  solutionShow={solutionShow}
                   onResultSelected={onResultSet}
+                  onSolutionShowSelected={onSolutionShowSelected}
                   onResultAdd={onResultAdd}
                   onResultsSelected={onResultsSet}
                   onDeleteStudent={onDeleteStudent}
