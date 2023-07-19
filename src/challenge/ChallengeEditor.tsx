@@ -125,6 +125,7 @@ class ChallengeEditor
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
+    origTyp: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     isEditingGuide: false,
     dialogInfoText: undefined,
@@ -172,9 +173,15 @@ class ChallengeEditor
 
     if (prevProps.codePath !== this.props.codePath) {
       this.chContext.actions["fetch-code"](); // from local storage
+
+      const challengeTyp =
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+
       this.setState({
-        typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+        typ: challengeTyp,
+        origTyp: challengeTyp,
       });
+
       this.chContext.actions["restart-worker"]({});
       this.setState({ testResults: [], testsPassing: undefined });
       this.setState({ hasEdited: false });
