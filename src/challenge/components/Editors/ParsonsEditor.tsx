@@ -13,6 +13,8 @@ import ParsonsEditorThemeWrapper from "./ParsonsEditorThemeWrapper";
 import { TestResults } from "../../../models/Tests";
 
 import "./ParsonsEditor.css";
+import PyEditor from "./PyEditor";
+import ParsonsEditorThemeSplitWrapper from "./ParsonsEditorThemeSplitWrapper";
 
 const loadJS = (url: string) =>
   new Promise<void>((r) => {
@@ -58,21 +60,10 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
     const [parsons, setParsons] = useState<ParsonsWidget | null>(null);
     const jsLoaded = useRef("unloaded");
 
+    const CODE_PLACEHOLDER =
+      "##############################\n# ==> YOUR CODE WILL BE INSERTED HERE\n##############################\n";
+
     const themeContext = useContext(VsThemeContext);
-
-    const getValue = () => {
-      let result = "";
-      if (parsons) {
-        let lines = parsons.normalizeIndents(
-          parsons.getModifiedCode("#ul-" + parsons.options.sortableId)
-        );
-
-        for (let line of lines) {
-          result += "  ".repeat(line.indent) + line.code + "\n";
-        }
-      }
-      return result;
-    };
 
     const runTests = () => {
       let errors = parsons?.getFeedback() || "initialising";
@@ -85,6 +76,54 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
 
     const reset = () => {
       parsons?.shuffleLines();
+    };
+
+    const getHeaderFooterCode = (starterCode: string) => {
+      let codeTemplate = "";
+      let inbody = false;
+      let lines = starterCode.split("\n");
+
+      for (let line of lines) {
+        if (line.toLowerCase().replace(" ", "").startsWith("#start")) {
+          inbody = true;
+          codeTemplate += CODE_PLACEHOLDER;
+        } else if (line.toLowerCase().replace(" ", "").startsWith("#end")) {
+          inbody = false;
+        } else if (!inbody) {
+          codeTemplate += line + "\n";
+        }
+      }
+      return codeTemplate;
+    };
+
+    const hasHeaderFooterCode = (starterCode: string) => {
+      let starterCodeAdjusted = starterCode.replace(/ /g, "").toLowerCase();
+      return (
+        starterCodeAdjusted.includes("#start") &&
+        starterCodeAdjusted.includes("#end")
+      );
+    };
+
+    const getValue = () => {
+      let result = "";
+      if (parsons) {
+        let lines = parsons.normalizeIndents(
+          parsons.getModifiedCode("#ul-" + parsons.options.sortableId)
+        );
+
+        for (let line of lines) {
+          result += "  ".repeat(line.indent) + line.code + "\n";
+        }
+      }
+
+      if (!hasHeaderFooterCode(props.starterCode)) {
+        return result;
+      } else {
+        return getHeaderFooterCode(props.starterCode).replace(
+          CODE_PLACEHOLDER,
+          result
+        );
+      }
     };
 
     useImperativeHandle(ref, () => ({ getValue, runTests, reset }));
@@ -121,22 +160,71 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
       if (jsLoaded.current !== "loaded" || !parsons) {
         return;
       }
-      parsons.init(props.starterCode);
+
+      const getParsonsCode = (starterCode: string) => {
+        if (!hasHeaderFooterCode(starterCode)) {
+          return starterCode;
+        }
+
+        let codeParsons = "";
+        let inbody = false;
+        let lines = starterCode.split("\n");
+
+        for (let line of lines) {
+          if (line.toLowerCase().replace(" ", "").startsWith("#start")) {
+            inbody = true;
+          } else if (line.toLowerCase().replace(" ", "").startsWith("#end")) {
+            inbody = false;
+          } else if (inbody) {
+            codeParsons += line + "\n";
+          }
+        }
+        return codeParsons;
+      };
+
+      parsons.init(getParsonsCode(props.starterCode));
       parsons.shuffleLines();
     }, [parsons, props.starterCode]);
 
-    return (
-      <ParsonsEditorThemeWrapper>
-        <div
-          id="sortableTrash"
-          className={"sortable-code " + themeContext.theme}
-        ></div>
-        <div
-          id="sortable"
-          className={"sortable-code " + themeContext.theme}
-        ></div>
-      </ParsonsEditorThemeWrapper>
-    );
+    if (!hasHeaderFooterCode(props.starterCode)) {
+      return (
+        <ParsonsEditorThemeWrapper>
+          <div
+            id="sortableTrash"
+            className={"sortable-code " + themeContext.theme}
+          ></div>
+          <div
+            id="sortable"
+            className={"sortable-code " + themeContext.theme}
+          ></div>
+        </ParsonsEditorThemeWrapper>
+      );
+    } else {
+      return (
+        <>
+          <ParsonsEditorThemeSplitWrapper>
+            <div
+              id="sortableTrash"
+              className={"sortable-code " + themeContext.theme}
+            ></div>
+            <div
+              id="sortable"
+              className={"sortable-code " + themeContext.theme}
+            ></div>
+          </ParsonsEditorThemeSplitWrapper>
+          <PyEditor
+            canRun={false}
+            canEdit={false}
+            height="40%"
+            canPlaceBreakpoint={false}
+            isOnBreakPoint={false}
+            starterCode={getHeaderFooterCode(props.starterCode)}
+            onToggleFullScreen={() => {}}
+            debugContext={{ lineno: 0, locals: new Map(), globals: new Map() }}
+          />
+        </>
+      );
+    }
   }
 );
 

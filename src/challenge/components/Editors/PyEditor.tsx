@@ -22,10 +22,12 @@ if (STANDALONE_BUILD) {
 }
 type PyEditorProps = {
   canRun: boolean;
+  canEdit?: boolean | undefined;
   isOnBreakPoint: boolean;
   canPlaceBreakpoint: boolean;
   starterCode: string;
   debugContext: DebugContext;
+  height?: string | undefined;
   onToggleFullScreen: () => void;
 };
 
@@ -341,7 +343,13 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
       return <p>Loading code...</p>;
     }
     return (
-      <div style={{ width: "100%", height: "100%" }}>
+      <div
+        style={
+          props.height !== undefined
+            ? { width: "100%", height: props.height }
+            : { width: "100%", height: "100%" }
+        }
+      >
         <Editor
           className={"theme-" + themeContext.theme}
           width="100%"
@@ -358,6 +366,7 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
             wordWrap: "on",
             lineNumbersMinChars: 4,
             padding: { top: 10 },
+            readOnly: props.canEdit === false,
           }}
           onChange={handleEditorChange}
         />

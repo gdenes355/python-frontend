@@ -279,6 +279,7 @@ class Challenge
               })
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
+            canRunOnly={this.state.origTyp === "parsons" ? true : false}
             canSubmit={
               !this.props.isExample &&
               (this.props.tests !== null || this.props.typ === "parsons")

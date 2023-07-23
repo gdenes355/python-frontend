@@ -444,6 +444,7 @@ class ChallengeEditor
               })
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
+            canRunOnly={this.props.typ === "parsons"}
             canSubmit={false}
             testResults={[]}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
