@@ -98,10 +98,7 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
 
     const hasHeaderFooterCode = (starterCode: string) => {
       let starterCodeAdjusted = starterCode.replace(/ /g, "").toLowerCase();
-      return (
-        starterCodeAdjusted.includes("#start") &&
-        starterCodeAdjusted.includes("#end")
-      );
+      return starterCodeAdjusted.includes("#start");
     };
 
     const getValue = () => {
