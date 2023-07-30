@@ -471,7 +471,7 @@ def pyexec(code, expected_input, expected_output):
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
-    
+
     # ensure turtle canvas cleared if used
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
 
@@ -580,9 +580,13 @@ def pyexec(code, expected_input, expected_output):
                 # similar to whitespace, this is a bit of a hack
                 # remove all punctuations from the actual
                 test_string = re.sub(r"[^\w*\s]", "", test_string)
-                # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
+                # from expected, do a quick hack to remove a few common punctuations including .,?!:;*"'£$%^&()[]{}<>/
                 # This is not a perfect solution, but it's good enough for most cases
-                pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
+                pattern = re.sub(r";|:|£|%|&|<|>|\\\$|\\\^|\\\(|\\\)|\\\[|\\\]|\\\{|\\\}|\\\.|,|\\\?|\\\*|\\\!|\"|'|\\\/", "", pattern)
+
+            # leaving this in to help with pattern debugging when writing books!
+            js.console.log("pattern", pattern)
+            js.console.log("test_string", test_string)
 
             actual_count = len(re.findall(pattern, test_string, flags))
             outcome = True
