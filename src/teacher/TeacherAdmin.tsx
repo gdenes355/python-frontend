@@ -301,32 +301,26 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     if (!activeGroup || !usernames) return;
 
     // check no more than 60 students being added at a time
-    const studentsToAdd = usernames.split("\n");
+    const studentsToAdd = usernames
+      .split("\n")
+      .map((u) => u.trim())
+      .filter((u) => u !== "" && !activeGroup.students.includes(u));
     if (studentsToAdd.length > 60) {
       studentsToAdd.length = 60;
       console.log("Truncating students to 60");
     }
-
-    studentsToAdd.forEach((username) => {
-      username = username.trim();
-      if (username !== "" && !activeGroup.students.includes(username)) {
-        fetch(
-          `${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`,
-          {
-            method: "post",
-            cache: "no-cache",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${sessionContext.token}`,
-            },
-            body: JSON.stringify({ user: username }),
-          }
-        ).then((resp) => {
-          if (resp.status === 200) {
-            activeGroup?.students.push(username);
-            forceUpdate();
-          }
-        });
+    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
+      method: "post",
+      cache: "no-cache",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${sessionContext.token}`,
+      },
+      body: JSON.stringify({ user: studentsToAdd }),
+    }).then((resp) => {
+      if (resp.status === 200) {
+        activeGroup?.students.push(...studentsToAdd);
+        forceUpdate();
       }
     });
   };
@@ -429,7 +423,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
           <DialogContent>
             <DialogContentText>
               Enter students below, one per line, with or without the @ email
-              suffix.
+              suffix. You can also paste a list of students from Outlook.
             </DialogContentText>
             <TextField
               autoFocus
