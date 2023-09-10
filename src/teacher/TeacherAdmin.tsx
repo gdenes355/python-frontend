@@ -616,7 +616,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   onResultsSelected={onResultsSet}
                   onDeleteStudent={onDeleteStudent}
                 />
-                {activeGroup && book ? (
+                {activeGroup ? (
                   <IconButton
                     size="small"
                     onClick={() => setDialogState("addStudent")}
