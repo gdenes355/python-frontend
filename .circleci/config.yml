@@ -8,7 +8,7 @@ jobs:
   build:
     working_directory: ~/repo
     docker:
-      - image: cimg/node:16.13.2
+      - image: cimg/node:20.6.0
     steps:
       - checkout
       - add_ssh_keys:
