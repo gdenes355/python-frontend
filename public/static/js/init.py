@@ -568,7 +568,7 @@ def pyexec(code, expected_input, expected_output):
             expected_count = int(requirement.get("count", -1))
 
             # first, deal with the tricky ignore cases  w: whitespace, c: case, p: punctuation
-            flags = re.IGNORECASE if "c" in ignore else 0
+            flags = (re.IGNORECASE if "c" in ignore else 0) | re.DOTALL
             if "w" in ignore:  
                 # no lib support for this, so we just strip whitespaces from both the actual and the expected
                 # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
