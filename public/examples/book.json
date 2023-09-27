@@ -198,6 +198,13 @@
                     "guide": "parsons2.md",
                     "py": "parsons2.py",
                     "typ": "parsons"
+                },
+                {
+                    "id": "88fd5261-8de5-4303-8c62-bb4399288985",
+                    "name": "Parsons 3",
+                    "guide": "parsons3.md",
+                    "py": "parsons3.py",
+                    "typ": "parsons"
                 }
             ]
         }

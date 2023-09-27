@@ -9,9 +9,11 @@ import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import ChallengeContext from "../ChallengeContext";
+import Box from "@mui/material/Box";
 
 type RunSplitButtonProps = {
   disabled: boolean;
+  canRunOnly: boolean;
 };
 
 const options = ["DEBUG", "RUN"];
@@ -47,7 +49,18 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
     setOpen(false);
   };
 
-  return (
+  return props.canRunOnly ? (
+    <Box>
+      <Button
+        variant="contained"
+        color="primary"
+        disabled={props.disabled}
+        onClick={() => challengeContext?.actions["debug"]("run")}
+      >
+        RUN
+      </Button>
+    </Box>
+  ) : (
     <React.Fragment>
       <ButtonGroup
         variant="contained"

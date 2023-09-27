@@ -8,6 +8,7 @@ import ChallengeContext from "../ChallengeContext";
 
 type MainControlsProps = {
   canDebug: boolean;
+  canRunOnly: boolean;
   canSubmit: boolean;
   testResults: TestResults;
   guideMinimised: boolean;
@@ -34,16 +35,18 @@ const MainControlsStack = (props: MainControlsProps) => {
       >
         <DevicesFoldRounded />
       </IconButton>
-      <Box>
-        <Button
-          variant="contained"
-          color="primary"
-          disabled={!props.canDebug}
-          onClick={() => challengeContext?.actions["debug"]()}
-        >
-          DEBUG
-        </Button>
-      </Box>
+      {props.canRunOnly ? null : (
+        <Box>
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!props.canDebug}
+            onClick={() => challengeContext?.actions["debug"]()}
+          >
+            DEBUG
+          </Button>
+        </Box>
+      )}
       <Box>
         <Button
           variant="contained"
@@ -90,7 +93,10 @@ const MainControlsGrid = (props: MainControlsProps) => {
       <Grid item style={{ flexGrow: 1 }}>
         <Stack spacing={2} direction="row">
           <Box>
-            <RunSplitButton disabled={!props.canDebug} />
+            <RunSplitButton
+              disabled={!props.canDebug}
+              canRunOnly={props.canRunOnly}
+            />
           </Box>
           {props.canSubmit ? (
             <Box>
