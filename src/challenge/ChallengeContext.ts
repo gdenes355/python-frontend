@@ -80,7 +80,7 @@ class ChallengeContextClass {
     draw: (data: DrawData) => {
       const commands = JSON.parse(data.msg) as any[];
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+        if (this.challenge.state.origTyp === ChallengeTypes.TYP_PY) {
           if (commands.length === 1 && commands[0]?.action === "reset") {
             //ignore single initial reset if we are meant to be a standard
             // Python challenge
@@ -94,7 +94,7 @@ class ChallengeContextClass {
     },
     audio: (data: AudioData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
@@ -102,7 +102,7 @@ class ChallengeContextClass {
     },
     awaitCanvas: () => {
       return new Promise((resolve) => {
-        if (this.challenge.state.typ === ChallengeTypes.TYP_PY) {
+        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
           this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
         }
         if (this.challenge.canvasDisplayRef.current) {
@@ -137,7 +137,9 @@ class ChallengeContextClass {
       }
     },
     "hide-turtle": () => {
-      this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
+      if (this.challenge.state.typ === ChallengeTypes.TYP_CANVAS) {
+        this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
+      }
     },
     "draw-turtle-example": () => {
       // draws the first turtle test case
@@ -348,14 +350,14 @@ class ChallengeContextClass {
       this.actions["print-console"](msg);
     },
     "get-code": () => {
-      if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
+      if (this.challenge.state.origTyp === ChallengeTypes.TYP_PARSONS) {
         return this.challenge.parsonsEditorRef.current?.getValue();
       } else {
         return this.challenge.editorRef.current?.getValue();
       }
     },
     debug: (mode: "debug" | "run" = "debug") => {
-      if (this.challenge.state.typ === ChallengeTypes.TYP_PARSONS) {
+      if (this.challenge.state.origTyp === ChallengeTypes.TYP_PARSONS) {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, [], mode);
@@ -413,7 +415,7 @@ class ChallengeContextClass {
       this.actions["save-code"]({ code });
     },
     test: () => {
-      if (this.challenge.state.typ === "parsons") {
+      if (this.challenge.state.origTyp === "parsons") {
         let newResults =
           this.challenge.parsonsEditorRef.current?.runTests() || [];
         let code = this.challenge.parsonsEditorRef.current?.getValue() || "";
@@ -523,7 +525,7 @@ class ChallengeContextClass {
       // otherwise no need to set the lazy flag, breakpoints will be queried when debugging
     },
     "reset-code": () => {
-      if (this.challenge.state.typ === "parsons") {
+      if (this.challenge.state.origTyp === "parsons") {
         this.challenge.parsonsEditorRef.current?.reset();
         return;
       }
