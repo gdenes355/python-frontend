@@ -208,7 +208,7 @@ However, `"in"` can be also provided as a list of string/numerical values, such 
 The `"out"` property can be a string, such as `"Hello Alice"`. If you pick this option, then you can use the `\n` to match new lines and `.*` to match anything up to the end of a line. Blank new lines at the end of the output are ignored. Comparison is case sensitive.
 
 However, `"out"` can be also provided as a list of matching requirements, where each requirement contains a
-* `pattern` is a regular expression. Note that `\` needs to be escaped in json, so `\\d` means a digit.
+* `pattern` is a **regular expression**. Note that `\` needs to be escaped in json, so `\\d` means a digit. If you would like to handle `pattern` as plaintext, you can set `"regex": false`
 * optional `typ`:
   * `+` means output must match this requirement (default)
   * `-` means output must not match this requirement
@@ -220,6 +220,7 @@ However, `"out"` can be also provided as a list of matching requirements, where 
   * `s-` means that the value of the code specified by statement, when evaluated & cast to a string, must not match this requirement
 * optional `ignore`: each output requirement can include `ignore` flags so that tests can pass with slight differences to the expected output, as students can make small mistakes that are not relevant to the overall pass/fail result. 3 classes of errors that can be ignored are **w**hitespace, **p**unctuation and **c**apitalization (case) of text. If the difference between the expected and actual output fall into an ignore class, then the test should pass. This is given as a string of flag initial letter.
 * `count`: interpreted to mean that the output must occur exactly `count` number of times. If not given, this defaults to -1, which means we don't care how many times the match occured. A `count` with a type `–` means that the string must not occur **exactly** `count` times.
+* `regex`: is the pattern a regex? Default is **true**.
 
 E.g.
 

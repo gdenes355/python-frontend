@@ -520,6 +520,9 @@ def pyexec(code, expected_input, expected_output):
             requirement = requirement.as_object_map()
             typ = requirement.get("typ", "+")
             pattern = requirement.get("pattern","")  # the pattern to match. Must be present unless turtle
+            is_regex = requirement.get("regex", True)
+            if not is_regex:
+                pattern = re.escape(pattern)
 
             if typ[0] == "c":
                 test_string = code
