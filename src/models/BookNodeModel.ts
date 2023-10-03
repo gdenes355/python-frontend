@@ -1,6 +1,11 @@
 import { TestCases } from "./Tests";
 import { AdditionalFiles } from "./AdditionalFiles";
 
+type Solution = {
+  file: string;
+  showSolution?: number | boolean;
+};
+
 type BookNodeModel = {
   name: string;
   id: string;
@@ -12,6 +17,7 @@ type BookNodeModel = {
   bookLink?: string;
   isExample?: boolean;
   typ?: "py" | "parsons" | "canvas";
+  sol?: Solution;
 
   // cached
   // what is the main URL of this book (md, py and bookLinks are relative to this)
