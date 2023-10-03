@@ -83,9 +83,14 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
           flexDirection: "column",
         }}
       >
-        <Box>Test runner: {props.codeRunner?.state}</Box>
-        <Button onClick={props.onRunTests}>Rerun tests</Button>
-        <Divider />
+        {props.codeRunner ? (
+          <>
+            <Box>Code runner: {props.codeRunner?.state}</Box>
+            <Button onClick={props.onRunTests}>Rerun tests</Button>
+            <Divider />
+          </>
+        ) : null}
+
         <Box
           sx={{ width: 250, overflowX: "hidden", flexGrow: "1" }}
           role="presentation"
