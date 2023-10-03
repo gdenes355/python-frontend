@@ -46,12 +46,21 @@ import {
   ArrowForward,
   DriveFileRenameOutline,
 } from "@mui/icons-material";
+import CancelIcon from "@mui/icons-material/Cancel";
+import DoneIcon from "@mui/icons-material/Done";
+
+type EditorTestResults = {
+  passed: Set<string>;
+  failed: Set<string>;
+  runningId?: string;
+};
 
 type BookEditorContentsProps = {
   bookRoot: BookNodeModel;
   activePageId?: string;
   onNodeSelected: (node: BookNodeModel) => void;
   onBookModified: () => void;
+  testRes?: EditorTestResults;
 };
 
 type PopupMenuProps = {
@@ -160,6 +169,7 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
 type RecursiveItemProps = {
   node: BookNodeModel;
   menu: React.RefObject<PopupMenuHandle>;
+  testRes?: EditorTestResults;
 };
 
 function RecursiveItem(props: RecursiveItemProps) {
@@ -197,17 +207,31 @@ function RecursiveItem(props: RecursiveItemProps) {
   return (
     <div style={dropStyle} ref={setNodeDropRef}>
       <TreeItem
+        label={
+          <div className="test-state-icon">
+            {props.testRes?.passed.has(node.id) ? (
+              <DoneIcon color="success"></DoneIcon>
+            ) : props.testRes?.failed.has(node.id) ? (
+              <CancelIcon color="error"></CancelIcon>
+            ) : null}
+            {node.name}
+          </div>
+        }
         ref={setNodeDragRef}
         style={style}
         {...listeners}
         {...attributes}
-        label={<div className="test-state-icon">{node.name}</div>}
         nodeId={node.id}
         onContextMenu={(e) => menu.current?.handleContextMenu(e, node)}
       >
         {hasChildren &&
           node.children?.map((item) => (
-            <RecursiveItem key={item.id} node={item} menu={menu} />
+            <RecursiveItem
+              key={item.id}
+              node={item}
+              menu={menu}
+              testRes={props.testRes}
+            />
           ))}
       </TreeItem>
     </div>
@@ -321,7 +345,11 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
           onNodeSelect={handleSelect}
           sx={{ maxWidth: 400 }}
         >
-          <RecursiveItem node={props.bookRoot} menu={popupMenuRef} />
+          <RecursiveItem
+            node={props.bookRoot}
+            menu={popupMenuRef}
+            testRes={props.testRes}
+          />
         </TreeView>
       </DndContext>
       <PopupMenu
@@ -353,3 +381,4 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
 };
 
 export default BookEditorContents;
+export { EditorTestResults };

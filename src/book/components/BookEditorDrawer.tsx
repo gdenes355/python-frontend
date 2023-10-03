@@ -2,13 +2,14 @@ import React from "react";
 import { Box, Drawer, Divider, Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 
-import BookEditorContents from "./BookEditorContents";
+import BookEditorContents, { EditorTestResults } from "./BookEditorContents";
 
 import BookNodeModel, { extractFileNames } from "../../models/BookNodeModel";
 import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
 import { findParent } from "../../models/BookNodeModel";
+import { CodeRunnerRef } from "../../coderunner/CodeRunner";
 
 type BookEditorDrawerProps = {
   open: boolean;
@@ -19,6 +20,9 @@ type BookEditorDrawerProps = {
   onRequestOpen: (open: boolean) => void;
   onNodeSelected: (node: BookNodeModel) => void;
   onBookModified: () => void;
+  codeRunner?: CodeRunnerRef;
+  testResults?: EditorTestResults;
+  onRunTests?: () => void;
 };
 
 const BookEditorDrawer = (props: BookEditorDrawerProps) => {
@@ -79,6 +83,9 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
           flexDirection: "column",
         }}
       >
+        <Box>Test runner: {props.codeRunner?.state}</Box>
+        <Button onClick={props.onRunTests}>Rerun tests</Button>
+        <Divider />
         <Box
           sx={{ width: 250, overflowX: "hidden", flexGrow: "1" }}
           role="presentation"
@@ -88,6 +95,7 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
             onNodeSelected={props.onNodeSelected}
             activePageId={props.activePageId}
             onBookModified={props.onBookModified}
+            testRes={props.testResults}
           />
         </Box>
         <Divider />
