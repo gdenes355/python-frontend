@@ -191,6 +191,7 @@ const Book = (props: BookProps) => {
       .fetchBook(authContext)
       .then((result) => {
         progressStorage.updateResults(result.allResults);
+        progressStorage.fetchResults(result.book, result.allResults);
         setRootNode(result.book);
         if (result.singlePageBook) {
           openNode(result.singlePageBook);
