@@ -22,6 +22,7 @@ type IChallengeProps = {
   uid: string;
   tests?: TestCases | null;
   isExample?: boolean;
+  isAssessment?: boolean;
   guidePath: string;
   codePath: string;
   fetcher: IBookFetcher;

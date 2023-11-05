@@ -427,7 +427,17 @@ class ChallengeContextClass {
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let tests = this.challenge.props.tests;
-        if (code && tests) {
+
+        if (code && this.challenge.props.isAssessment) {
+          this.challenge.setState({
+            testResults: [{ outcome: true }],
+          });
+          this.actions["report-result"](
+            [{ outcome: true }],
+            code,
+            this.challenge.props.bookNode
+          );
+        } else if (code && tests) {
           this.actions["testpy"](code, tests);
         }
       }
