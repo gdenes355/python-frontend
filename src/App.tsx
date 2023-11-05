@@ -35,12 +35,15 @@ const AppContainer = () => {
 
   const openBookFromZip = (file: File, edit: boolean) => {
     setBookFile(file);
-    navigate({ search: `?bk=book.json${edit ? "&edit=clone" : ""}` });
+    navigate({
+      pathname: "/",
+      search: `?bk=book.json${edit ? "&edit=clone" : ""}`,
+    });
   };
 
   const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
     setLocalFolder(folder);
-    navigate({ search: "?bk=book.json&edit=localpreview" });
+    navigate({ pathname: "/", search: "?bk=book.json&edit=localpreview" });
   };
 
   useEffect(() => {

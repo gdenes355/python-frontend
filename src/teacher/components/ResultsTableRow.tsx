@@ -32,6 +32,7 @@ type ResultsTableRowRef = {
 
 type ResultsTableRowProps = {
   student: string;
+  bookSelected: boolean;
   results?: Array<ResultsModel>;
   challengeInfo?: ChallengeInfo;
   menu: React.RefObject<StudentPopupMenuHandle>;
@@ -84,7 +85,8 @@ const ResultsTableRow = React.forwardRef<
   };
 
   const correctCount = useMemo(() => {
-    if (!myResults || !props.challengeInfo?.ids) return undefined;
+    if (!props.bookSelected || !myResults || !props.challengeInfo?.ids)
+      return undefined;
     let count = 0;
 
     props.challengeInfo.ids.forEach((id) => {
@@ -97,7 +99,7 @@ const ResultsTableRow = React.forwardRef<
       }
     });
     return count;
-  }, [myResults, props.challengeInfo]);
+  }, [myResults, props.challengeInfo, props.bookSelected]);
 
   useEffect(() => {
     if (!props.results?.length) {
@@ -186,43 +188,57 @@ const ResultsTableRow = React.forwardRef<
         {props.student}
       </TableCell>
       <TableCell>
-        {correctCount || "?"}/{props.challengeInfo?.ids?.length}
+        {props.bookSelected ? (
+          <span>
+            {correctCount || "?"}/{props.challengeInfo?.ids?.length}
+          </span>
+        ) : (
+          <span />
+        )}
       </TableCell>
       <TableCell>
-        <div className="res-container">
-          {hasResults === true && props.challengeInfo ? (
-            props.challengeInfo?.ids?.map((id) => {
-              let p = passed(id);
-              return (
-                <Tooltip
-                  key={id}
-                  className={" res res-" + p}
-                  title={props.challengeInfo?.map.get(id)?.name}
-                  onClick={(e) => onIndividialResultClicked(e, id)}
-                >
-                  <StyledResCell />
-                </Tooltip>
-              );
-            })
-          ) : hasResults === undefined || !props.challengeInfo ? (
-            <Skeleton
-              animation="wave"
-              sx={{ width: "100%" }}
-              variant="rectangular"
-            />
-          ) : (
-            <span>no results</span>
-          )}
-        </div>
+        {props.bookSelected ? (
+          <div className="res-container">
+            {hasResults === true && props.challengeInfo ? (
+              props.challengeInfo?.ids?.map((id) => {
+                let p = passed(id);
+                return (
+                  <Tooltip
+                    key={id}
+                    className={" res res-" + p}
+                    title={props.challengeInfo?.map.get(id)?.name}
+                    onClick={(e) => onIndividialResultClicked(e, id)}
+                  >
+                    <StyledResCell />
+                  </Tooltip>
+                );
+              })
+            ) : hasResults === undefined || !props.challengeInfo ? (
+              <Skeleton
+                animation="wave"
+                sx={{ width: "100%" }}
+                variant="rectangular"
+              />
+            ) : (
+              <span>no results</span>
+            )}
+          </div>
+        ) : (
+          <span />
+        )}
       </TableCell>
       <TableCell>
-        <IconButton
-          size="small"
-          sx={{ padding: "0px" }}
-          onClick={(e) => selectAllResults()}
-        >
-          <SelectAllIcon />
-        </IconButton>
+        {props.bookSelected ? (
+          <IconButton
+            size="small"
+            sx={{ padding: "0px" }}
+            onClick={(e) => selectAllResults()}
+          >
+            <SelectAllIcon />
+          </IconButton>
+        ) : (
+          <span />
+        )}
       </TableCell>
     </TableRow>
   );

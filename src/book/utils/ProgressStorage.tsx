@@ -3,6 +3,10 @@ import SessionContext from "../../auth/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 import { throttle } from "lodash";
+import {
+  ChallengeResultComplexModel,
+  ResultsModel,
+} from "../../teacher/Models";
 
 const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
@@ -69,6 +73,7 @@ type ProgressStorage = {
   ) => void;
   getResult: (challenge: BookNodeModel) => boolean | undefined;
   updateResults: (newResults: AllTestResults) => void;
+  fetchResults: (root: BookNodeModel, currentRes: AllTestResults) => void;
 };
 
 const useProgressStorage: (bookPath: string) => ProgressStorage = (
@@ -190,7 +195,87 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     setAllTestResults(allTestResults);
   };
 
-  return { setResult, getResult, allTestResults, updateResults };
+  const mergeResults = (
+    node: BookNodeModel,
+    newResults: ResultsModel,
+    currentRes: AllTestResults,
+    newPasses: Set<string>
+  ) => {
+    // let's be optimistic and take all new passes
+    let res = (newResults as any)[node.id] as ChallengeResultComplexModel;
+    if (res && res.correct && !currentRes.passed.has(node.id)) {
+      saveTestStateLocal(node, true);
+      newPasses.add(node.id);
+    }
+    if (node.children) {
+      for (let child of node.children) {
+        mergeResults(child, newResults, currentRes, newPasses);
+      }
+    }
+  };
+
+  const fetchResults = (root: BookNodeModel, currentRes: AllTestResults) => {
+    if (sessionContext.isLoggedIn()) {
+      if (sessionContext.wsOpen && sessionContext.wsSend) {
+        console.log("requesting results from server");
+        sessionContext.wsSend(
+          {
+            cmd: "get-results",
+          },
+          (msg: any) => {
+            // merge results!
+            if (msg.res === "succ" && msg.data) {
+              let newPasses = new Set<string>();
+              mergeResults(root, msg.data, currentRes, newPasses);
+              updateResults({
+                passed: newPasses,
+                failed: new Set(),
+              });
+            }
+          }
+        );
+      } else if (sessionContext.resultsEndpoint) {
+        // TODO: fall back to REST if available
+        fetch(
+          sessionContext.resultsEndpoint +
+            `?book=${encodeURIComponent(bookPath)}`,
+          {
+            method: "GET",
+            cache: "no-cache",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${sessionContext.token}`,
+            },
+          }
+        ).then((response) => {
+          if (response.status === 401) {
+            response.json().then((data) => {
+              sessionContext.login({
+                clientId: data.clientId,
+                tenantId: data.tenantId || "common",
+                jwtEndpoint: data.jwtEndpoint,
+                startUrl: window.location.href,
+                resultsEndpoint: data.resultsEndpoint,
+                wsEndPoint: data.wsEndPoint,
+                bookPath: bookPath,
+              });
+            });
+          } else if (response.status === 200) {
+            response.json().then((data) => {
+              let newPasses = new Set<string>();
+              mergeResults(root, data.data, currentRes, newPasses);
+              updateResults({
+                passed: newPasses,
+                failed: new Set(),
+              });
+            });
+          }
+        });
+      }
+    }
+  };
+
+  return { setResult, getResult, allTestResults, updateResults, fetchResults };
 };
 
 export {

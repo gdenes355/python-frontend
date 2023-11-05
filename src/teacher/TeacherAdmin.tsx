@@ -5,6 +5,11 @@ import {
   Button,
   Checkbox,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Grid,
   IconButton,
   Stack,
@@ -36,6 +41,7 @@ import AddGroupDialog from "./components/AddGroupDialog";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
+import { sanitisePastedEmails } from "./utils";
 
 type TeacherAdminProps = {
   baseUrl: string;
@@ -51,6 +57,7 @@ const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
 const TeacherAdmin = (props: TeacherAdminProps) => {
   const sessionContext = useContext(SessionContext);
+  const textfieldUsernamesRef = useRef<HTMLTextAreaElement>(null);
 
   const [groups, setGroups] = useState<Array<ClassModel>>([]);
   const [groupInputValue, setGroupInputValue] = React.useState("");
@@ -144,6 +151,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   useEffect(() => {
     request("api/admin/classes").then((data) => {
+      data = data.filter((cls: ClassModel) => !!cls.active); // remove inactive classes
       setGroups(data);
       const prevActGroup = localStorage.getItem("teacher-activeGroup");
       if (prevActGroup) {
@@ -288,11 +296,19 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     });
   };
 
-  const onAddStudent = (username: string) => {
+  const onAddStudents = (usernames: string) => {
     setDialogState("");
-    if (!activeGroup || !username) return;
-    if (activeGroup.students.includes(username)) return;
+    if (!activeGroup || !usernames) return;
 
+    // check no more than 60 students being added at a time
+    const studentsToAdd = usernames
+      .split("\n")
+      .map((u) => u.trim())
+      .filter((u) => u !== "" && !activeGroup.students.includes(u));
+    if (studentsToAdd.length > 60) {
+      studentsToAdd.length = 60;
+      console.log("Truncating students to 60");
+    }
     fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
       method: "post",
       cache: "no-cache",
@@ -300,10 +316,10 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${sessionContext.token}`,
       },
-      body: JSON.stringify({ user: username }),
+      body: JSON.stringify({ user: studentsToAdd }),
     }).then((resp) => {
       if (resp.status === 200) {
-        activeGroup?.students.push(username);
+        activeGroup?.students.push(...studentsToAdd);
         forceUpdate();
       }
     });
@@ -398,15 +414,61 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             </Grid>
           </React.Fragment>
         </HeaderBar>
-        <InputDialog
-          title="Add student"
-          defaultValue=""
-          inputLabel="username"
-          onInputEntered={onAddStudent}
-          okButtonLabel="Add"
+        <Dialog
           open={dialogState === "addStudent"}
           onClose={() => setDialogState("")}
-        />
+          title="Add students"
+        >
+          <DialogTitle>Add Students</DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              Enter students below, one per line, with or without the @ email
+              suffix. You can also paste a list of students from Outlook.
+            </DialogContentText>
+            <TextField
+              autoFocus
+              margin="dense"
+              id="usernames"
+              label="Student usernames"
+              fullWidth
+              variant="standard"
+              multiline
+              inputRef={textfieldUsernamesRef}
+              inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
+              onPaste={(e) => {
+                if (
+                  e.clipboardData.getData("Text") &&
+                  textfieldUsernamesRef.current
+                ) {
+                  let txt = sanitisePastedEmails(
+                    e.clipboardData.getData("Text")
+                  );
+                  let textarea = textfieldUsernamesRef.current;
+                  let start_position = textarea.selectionStart;
+                  let end_position = textarea.selectionEnd;
+                  textarea.value = `${textarea.value.substring(
+                    0,
+                    start_position
+                  )}${txt}${textarea.value.substring(
+                    end_position,
+                    textarea.value.length
+                  )}`;
+                  e.preventDefault();
+                }
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDialogState("")}>Cancel</Button>
+            <Button
+              onClick={() =>
+                onAddStudents(textfieldUsernamesRef?.current?.value || "")
+              }
+            >
+              Confirm
+            </Button>
+          </DialogActions>
+        </Dialog>
         <InputDialog
           type="combo"
           options={bookTitles}
@@ -554,13 +616,13 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
                   onResultsSelected={onResultsSet}
                   onDeleteStudent={onDeleteStudent}
                 />
-                {activeGroup && book ? (
+                {activeGroup ? (
                   <IconButton
                     size="small"
                     onClick={() => setDialogState("addStudent")}
                   >
                     <AddIcon />
-                    Add student
+                    Add students
                   </IconButton>
                 ) : undefined}
               </React.Fragment>

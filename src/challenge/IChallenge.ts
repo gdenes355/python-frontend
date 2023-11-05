@@ -35,7 +35,8 @@ type IChallengeProps = {
 type IChallengeState = {
   starterCode: string | null;
   editorState: ChallengeStatus;
-  typ: ChallengeTypes;
+  typ: ChallengeTypes; // used to determine which editor to show - a live type because it can change dynamically e.g. on turtle command
+  origTyp: ChallengeTypes; // used as a backup when switching between parsons/py and canvas for restoration
   usesFixedInput: boolean;
   guideMd: string;
   debugContext: DebugContext;

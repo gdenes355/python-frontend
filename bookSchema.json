@@ -186,6 +186,11 @@
             "type": "string",
             "description": "regex pattern to match"
           },
+          "regex": {
+            "type": "boolean",
+            "description": "whether to treat pattern as regex or not",
+            "default": true
+          },
           "typ": {
             "type": "string",
             "description": "should the output match this requirement or not",

@@ -74,10 +74,6 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
       return <p>Please pick a group to display results.</p>;
     }
 
-    if (!props.bookTitle) {
-      return <p>Please pick a book to display results.</p>;
-    }
-
     const onResultSelected = (
       res: ChallengeResultComplexModel,
       shift: boolean,
@@ -125,6 +121,7 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
                   <ResultsTableRow
                     key={student}
                     student={student}
+                    bookSelected={!!props.book}
                     menu={popupMenuRef}
                     challengeInfo={challengeInfo}
                     results={props.results}

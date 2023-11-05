@@ -27,6 +27,7 @@ import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
 import SessionContext from "../auth/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
+import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
 
 type BookProps = {
   zipFile?: File;
@@ -190,6 +191,7 @@ const Book = (props: BookProps) => {
       .fetchBook(authContext)
       .then((result) => {
         progressStorage.updateResults(result.allResults);
+        progressStorage.fetchResults(result.book, result.allResults);
         setRootNode(result.book);
         if (result.singlePageBook) {
           openNode(result.singlePageBook);
@@ -304,34 +306,58 @@ const Book = (props: BookProps) => {
           />
         </Box>
       );
-    } else if (activeNode && paths.guidePath && paths.pyPath) {
+    } else if (activeNode && paths.guidePath) {
       if (
         !editState ||
         editState === "preview" ||
         editState === "localpreview"
       ) {
-        return (
-          <React.Fragment>
-            <ErrorBounday>
-              <Challenge
-                fetcher={bookFetcher}
+        if (paths.pyPath) {
+          return (
+            <React.Fragment>
+              <ErrorBounday>
+                <Challenge
+                  fetcher={bookFetcher}
+                  guidePath={paths.guidePath}
+                  codePath={paths.pyPath}
+                  tests={tests && tests.length > 0 ? tests : null}
+                  bookNode={activeNode}
+                  title={rootNode.name}
+                  openBookDrawer={openDrawer}
+                  onRequestPreviousChallenge={requestPreviousChallenge}
+                  onRequestNextChallenge={requestNextChallenge}
+                  uid={bookPath + bookChallengeId}
+                  progressStorage={progressStorage}
+                  isExample={activeNode.isExample}
+                  typ={activeNode.typ}
+                  onBookUploaded={props.onBookUploaded}
+                  authContext={authContext}
+                  canReloadBook={editState === "localpreview"}
+                  onBookReloadRequested={() => requestBookReload()}
+                />
+                <BookDrawer
+                  bookRoot={rootNode}
+                  allTestResults={progressStorage.allTestResults}
+                  activePageId={bookChallengeId || undefined}
+                  onRequestOpen={openDrawer}
+                  onNodeSelected={openNode}
+                  open={drawerOpen}
+                  onOpenReport={() => openReport(true)}
+                />
+              </ErrorBounday>
+            </React.Fragment>
+          );
+        } else {
+          return (
+            <>
+              <GuideOnlyChallenge
                 guidePath={paths.guidePath}
-                codePath={paths.pyPath}
-                tests={tests && tests.length > 0 ? tests : null}
                 bookNode={activeNode}
                 title={rootNode.name}
-                openBookDrawer={openDrawer}
-                onRequestPreviousChallenge={requestPreviousChallenge}
                 onRequestNextChallenge={requestNextChallenge}
-                uid={bookPath + bookChallengeId}
-                progressStorage={progressStorage}
-                isExample={activeNode.isExample}
-                isAssessment={activeNode.isAssessment}
-                typ={activeNode.typ}
-                onBookUploaded={props.onBookUploaded}
-                authContext={authContext}
-                canReloadBook={editState === "localpreview"}
-                onBookReloadRequested={() => requestBookReload()}
+                onRequestPreviousChallenge={requestPreviousChallenge}
+                openBookDrawer={openDrawer}
+                fetcher={bookFetcher}
               />
               <BookDrawer
                 bookRoot={rootNode}
@@ -342,9 +368,9 @@ const Book = (props: BookProps) => {
                 open={drawerOpen}
                 onOpenReport={() => openReport(true)}
               />
-            </ErrorBounday>
-          </React.Fragment>
-        );
+            </>
+          );
+        }
       } else if (!editableBookStore) {
         return <p>Something went wrong. Please refresh the page</p>;
       } else {
@@ -354,7 +380,7 @@ const Book = (props: BookProps) => {
               bookStore={editableBookStore}
               fetcher={bookFetcher}
               guidePath={paths.guidePath}
-              codePath={paths.pyPath}
+              codePath={paths.pyPath!}
               tests={tests && tests.length > 0 ? tests : null}
               bookNode={activeNode}
               title={rootNode.name}

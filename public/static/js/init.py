@@ -471,7 +471,7 @@ def pyexec(code, expected_input, expected_output):
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
-    
+
     # ensure turtle canvas cleared if used
     code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
 
@@ -520,6 +520,9 @@ def pyexec(code, expected_input, expected_output):
             requirement = requirement.as_object_map()
             typ = requirement.get("typ", "+")
             pattern = requirement.get("pattern","")  # the pattern to match. Must be present unless turtle
+            is_regex = requirement.get("regex", True)
+            if not is_regex:
+                pattern = re.escape(pattern)
 
             if typ[0] == "c":
                 test_string = code
@@ -568,7 +571,7 @@ def pyexec(code, expected_input, expected_output):
             expected_count = int(requirement.get("count", -1))
 
             # first, deal with the tricky ignore cases  w: whitespace, c: case, p: punctuation
-            flags = re.IGNORECASE if "c" in ignore else 0
+            flags = (re.IGNORECASE if "c" in ignore else 0) | re.DOTALL
             if "w" in ignore:  
                 # no lib support for this, so we just strip whitespaces from both the actual and the expected
                 # not a perfect strategy though, as user might have \s, \t, \n in their regex. 
@@ -580,9 +583,13 @@ def pyexec(code, expected_input, expected_output):
                 # similar to whitespace, this is a bit of a hack
                 # remove all punctuations from the actual
                 test_string = re.sub(r"[^\w*\s]", "", test_string)
-                # from expected, do a quick hack to remove a few common punctuations including .,?!:;"'
+                # from expected, do a quick hack to remove a few common punctuations including .,?!:;*"'£$%^&()[]{}<>/
                 # This is not a perfect solution, but it's good enough for most cases
-                pattern = re.sub(r";|:|\\\.|,|\\\?|\\\!|\"|'|\\\/", "", pattern)
+                pattern = re.sub(r";|:|£|%|&|<|>|\\\$|\\\^|\\\(|\\\)|\\\[|\\\]|\\\{|\\\}|\\\.|,|\\\?|\\\*|\\\!|\"|'|\\\/", "", pattern)
+
+            # leaving this in to help with pattern debugging when writing books!
+            js.console.log("pattern", pattern)
+            js.console.log("test_string", test_string)
 
             actual_count = len(re.findall(pattern, test_string, flags))
             outcome = True

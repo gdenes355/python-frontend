@@ -118,6 +118,7 @@ class Challenge
     helpOpen: false,
     guideMinimised: false,
     typ: ChallengeTypes.TYP_PY,
+    origTyp: ChallengeTypes.TYP_PY,
     usesFixedInput: false,
     showBookUpload: false,
     additionalFilesLoaded: {},
@@ -136,8 +137,13 @@ class Challenge
     this.chContext.actions["fetch-guide"]();
 
     this.chContext.actions["restart-worker"]({ force: true });
+
+    const challengeTyp =
+      (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+
     this.setState({
-      typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+      typ: challengeTyp,
+      origTyp: challengeTyp,
     });
   }
 
@@ -175,9 +181,15 @@ class Challenge
 
     if (prevProps.codePath !== this.props.codePath) {
       this.chContext.actions["fetch-code"]();
+
+      const challengeTyp =
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+
       this.setState({
-        typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+        typ: challengeTyp,
+        origTyp: challengeTyp,
       });
+
       this.chContext.actions["restart-worker"]({});
       this.chContext.actions["load-saved-code"]();
       let testRes = this.props.bookNode
@@ -190,8 +202,12 @@ class Challenge
       });
     }
     if (prevProps.typ !== this.props.typ) {
+      const challengeTyp =
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+
+      // this is a live typ change so we don't change the origTyp
       this.setState({
-        typ: (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY,
+        typ: challengeTyp,
       });
     }
     if (
@@ -268,6 +284,7 @@ class Challenge
               })
             }
             canDebug={this.state.editorState === ChallengeStatus.READY}
+            canRunOnly={this.state.origTyp === "parsons" ? true : false}
             canSubmit={
               (!this.props.isExample &&
                 (this.props.tests !== null || this.props.typ === "parsons")) ||
