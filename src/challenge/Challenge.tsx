@@ -288,6 +288,7 @@ class Challenge
             }
             testResults={this.state.testResults}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
+            isAssessment={!!this.props.isAssessment}
           />
         </CardContent>
       </Card>

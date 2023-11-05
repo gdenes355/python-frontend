@@ -429,6 +429,9 @@ class ChallengeContextClass {
         let tests = this.challenge.props.tests;
 
         if (code && this.challenge.props.isAssessment) {
+          this.challenge.setState({
+            testResults: [{ outcome: true }],
+          });
           this.actions["report-result"](
             [{ outcome: true }],
             code,
@@ -451,7 +454,7 @@ class ChallengeContextClass {
       if (this.challenge.props.progressStorage) {
         this.challenge.props.progressStorage.setResult(
           bookNode,
-          newTestOutcome || this.challenge.props.isAssessment,
+          newTestOutcome,
           code
         );
       }

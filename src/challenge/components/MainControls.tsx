@@ -11,6 +11,7 @@ type MainControlsProps = {
   canRunOnly: boolean;
   canSubmit: boolean;
   testResults: TestResults;
+  isAssessment: boolean;
   guideMinimised: boolean;
   canKill: boolean;
   onGuideDisplayToggle: () => void;
@@ -81,7 +82,10 @@ const MainControlsStack = (props: MainControlsProps) => {
         </Button>
       </Box>
 
-      <TestResultsIndicator testResults={props.testResults} />
+      <TestResultsIndicator
+        testResults={props.testResults}
+        isAssessment={props.isAssessment}
+      />
     </Stack>
   );
 };
@@ -110,7 +114,10 @@ const MainControlsGrid = (props: MainControlsProps) => {
               </Button>
             </Box>
           ) : null}
-          <TestResultsIndicator testResults={props.testResults} />
+          <TestResultsIndicator
+            testResults={props.testResults}
+            isAssessment={props.isAssessment}
+          />
         </Stack>
       </Grid>
       <Grid item>

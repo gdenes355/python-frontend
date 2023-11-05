@@ -453,6 +453,7 @@ class ChallengeEditor
             canSubmit={false}
             testResults={[]}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
+            isAssessment={!!this.props.isAssessment}
           />
         </CardContent>
       </Card>
