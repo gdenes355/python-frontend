@@ -1,9 +1,4 @@
-import React, {
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useState,
-} from "react";
+import React, { useImperativeHandle, useMemo, useState } from "react";
 import {
   ChallengeResultComplexModel,
   ChallengeResultModel,
@@ -32,8 +27,10 @@ type ResultsTableRowRef = {
 
 type ResultsTableRowProps = {
   student: string;
+  name: string;
+  passCount?: number;
+  results?: ResultsModel | null;
   bookSelected: boolean;
-  results?: Array<ResultsModel>;
   challengeInfo?: ChallengeInfo;
   menu: React.RefObject<StudentPopupMenuHandle>;
   onResultSelected: (
@@ -74,48 +71,11 @@ const ResultsTableRow = React.forwardRef<
 >((props, ref) => {
   useImperativeHandle(ref, () => ({ updateCell }));
 
-  const [myResults, setMyResults] = useState<ResultsModel | undefined>(
-    undefined
-  );
-  const [hasResults, setHasResults] = useState<boolean | undefined>(undefined);
   const [updateCtr, setUpdateCtr] = useState<number>(0);
 
   const updateCell = (id: string) => {
     setUpdateCtr((updateCtr) => updateCtr + 1);
   };
-
-  const correctCount = useMemo(() => {
-    if (!props.bookSelected || !myResults || !props.challengeInfo?.ids)
-      return undefined;
-    let count = 0;
-
-    props.challengeInfo.ids.forEach((id) => {
-      let r = (myResults as any)[id] as any;
-      if (
-        (r instanceof Boolean && (r as boolean)) ||
-        (r as ChallengeResultComplexModel)?.correct
-      ) {
-        count++;
-      }
-    });
-    return count;
-  }, [myResults, props.challengeInfo, props.bookSelected]);
-
-  useEffect(() => {
-    if (!props.results?.length) {
-      setMyResults(undefined);
-      setHasResults(undefined);
-      return;
-    }
-    for (const res of props.results) {
-      if (res.user === props.student) {
-        setMyResults(res);
-        setHasResults(true);
-        return;
-      }
-    }
-    setHasResults(false);
-  }, [props.results, props.student, updateCtr]);
 
   const resultToCode = (
     outcome: boolean,
@@ -130,7 +90,7 @@ const ResultsTableRow = React.forwardRef<
 
   const passed = (id: string) => {
     let res = (
-      myResults ? (myResults as any)[id] : undefined
+      props.results ? (props.results as any)[id] : undefined
     ) as ChallengeResultModel;
     if (res === undefined) {
       return 0;
@@ -160,17 +120,27 @@ const ResultsTableRow = React.forwardRef<
   );
 
   const onIndividialResultClicked = (e: React.MouseEvent, id: string) => {
-    if (!myResults) return;
-    let res = resultFromId(id, myResults, props.student, props.challengeInfo);
+    if (!props.results) return;
+    let res = resultFromId(
+      id,
+      props.results,
+      props.student,
+      props.challengeInfo
+    );
     if (res === undefined) return;
     props.onResultSelected(res, e.shiftKey, e.altKey);
   };
 
   const selectAllResults = () => {
-    if (!myResults) return;
+    if (!props.results) return;
     let results: ChallengeResultComplexModel[] = [];
     for (let id of props.challengeInfo?.ids || []) {
-      let res = resultFromId(id, myResults, props.student, props.challengeInfo);
+      let res = resultFromId(
+        id,
+        props.results,
+        props.student,
+        props.challengeInfo
+      );
       if (res) {
         results.push(res);
       }
@@ -185,12 +155,13 @@ const ResultsTableRow = React.forwardRef<
           props.menu.current?.handleContextMenu(e, props.student)
         }
       >
-        {props.student}
+        {props.name}
+        <span style={{ visibility: "collapse" }}>{updateCtr}</span>
       </TableCell>
       <TableCell>
         {props.bookSelected ? (
           <span>
-            {correctCount || "?"}/{props.challengeInfo?.ids?.length}
+            {props.passCount || "?"}/{props.challengeInfo?.ids?.length}
           </span>
         ) : (
           <span />
@@ -199,7 +170,7 @@ const ResultsTableRow = React.forwardRef<
       <TableCell>
         {props.bookSelected ? (
           <div className="res-container">
-            {hasResults === true && props.challengeInfo ? (
+            {props.results !== null && props.challengeInfo ? (
               props.challengeInfo?.ids?.map((id) => {
                 let p = passed(id);
                 return (
@@ -213,7 +184,7 @@ const ResultsTableRow = React.forwardRef<
                   </Tooltip>
                 );
               })
-            ) : hasResults === undefined || !props.challengeInfo ? (
+            ) : props.results === null || !props.challengeInfo ? (
               <Skeleton
                 animation="wave"
                 sx={{ width: "100%" }}
