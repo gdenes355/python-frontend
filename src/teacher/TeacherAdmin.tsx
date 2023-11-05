@@ -15,6 +15,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
+import { saveAs } from "file-saver";
 import { Container } from "@mui/system";
 import { Allotment, AllotmentHandle } from "allotment";
 import React, {
@@ -24,6 +25,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+import DownloadIcon from "@mui/icons-material/Download";
+import DoneIcon from "@mui/icons-material/Done";
+import ErrorIcon from "@mui/icons-material/Error";
 import SessionContext from "../auth/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
 import InputDialog from "../components/dialogs/InputDialog";
@@ -41,7 +45,7 @@ import AddGroupDialog from "./components/AddGroupDialog";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
-import { sanitisePastedEmails } from "./utils";
+import { sanitisePastedEmails, zipResults } from "./utils";
 
 type TeacherAdminProps = {
   baseUrl: string;
@@ -51,6 +55,8 @@ type GroupBook = {
   bookTitle: string;
   enabled: boolean;
 };
+
+type DownloadState = "idle" | "downloading" | "done" | "error";
 
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
@@ -83,6 +89,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const [dialogState, setDialogState] = useState<string>("");
 
   const [results, setResults] = useState<Array<ResultsModel>>([]);
+
+  const [downloadState, setDownloadState] = useState<DownloadState>("idle");
 
   const [stagedResults, setStagedResults] = useState<
     Map<string, ChallengeResultComplexModel>
@@ -385,6 +393,31 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     });
   };
 
+  const onDownloadResults = () => {
+    if (!results.length || !book) {
+      setDownloadState("error");
+      setTimeout(() => {
+        setDownloadState("idle");
+      }, 3000);
+      return;
+    }
+    setDownloadState("downloading");
+    zipResults(results, book)
+      .then((blob) => saveAs(blob, `results-${book.name}.zip`))
+      .then(() => {
+        setDownloadState("done");
+      })
+      .catch((e: any) => {
+        setDownloadState("error");
+        console.log(e);
+      })
+      .then(() => {
+        setTimeout(() => {
+          setDownloadState("idle");
+        }, 3000);
+      });
+  };
+
   return (
     <div className="h-100">
       <Box
@@ -404,6 +437,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
             </Grid>
             <Grid item key="reset-view">
               <Button
+                style={{ height: "100%" }}
                 onClick={() => {
                   allotmentRef.current?.reset();
                   onResultsSet([]);
@@ -411,6 +445,24 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
               >
                 Reset view
               </Button>
+              <IconButton
+                aria-label="download results"
+                size="small"
+                onClick={() => onDownloadResults()}
+                style={{ height: "100%", borderRadius: "0px" }}
+                disabled={downloadState !== "idle" || !book || !results.length}
+                color="primary"
+              >
+                {downloadState === "downloading" ? (
+                  <CircularProgress size={24} />
+                ) : downloadState === "done" ? (
+                  <DoneIcon />
+                ) : downloadState === "error" ? (
+                  <ErrorIcon />
+                ) : downloadState === "idle" ? (
+                  <DownloadIcon />
+                ) : undefined}
+              </IconButton>
             </Grid>
           </React.Fragment>
         </HeaderBar>

@@ -1,3 +1,7 @@
+import BookNodeModel, { extractIds } from "../models/BookNodeModel";
+import { ChallengeResultComplexModel, ResultsModel } from "./Models";
+import JSZip from "jszip";
+
 const sanitiseSingleEmail = (email: string) => {
   email = email.trim();
   if (email.includes("<") && email.includes(">")) {
@@ -20,4 +24,57 @@ const sanitisePastedEmails = (emails: string) => {
   return emails;
 };
 
-export { sanitisePastedEmails };
+type Result = {
+  user: string;
+  res: ChallengeResultComplexModel;
+};
+
+const zipResults = async (results: ResultsModel[], book: BookNodeModel) => {
+  let zip = new JSZip();
+
+  let nodes = extractIds(book);
+
+  // make student folders with their submitted code
+  for (let node of nodes) {
+    if (!node[1].py) continue;
+    for (let res of results) {
+      let r = (res as any)[node[0]] as ChallengeResultComplexModel;
+      let folder = zip.folder(res.user);
+      if (!folder) continue;
+      let code =
+        (r && (r["correct-code"] || r["wrong-code"])) || "print('blank')";
+      folder.file(node[1].py, code);
+    }
+  }
+
+  let compiledResults = new Map<string, Result[]>();
+  for (let node of nodes) {
+    if (!node[1].py) continue;
+    let nodeResults = results
+      .map((res) => {
+        let r = (res as any)[node[0]] as any;
+        return { user: res.user, res: r as ChallengeResultComplexModel };
+      })
+      .filter((p) => p.res !== undefined);
+    if (nodeResults.length === 0) continue;
+    compiledResults.set(node[1].py, nodeResults);
+  }
+  for (let [py, res] of compiledResults) {
+    let merged = res
+      .map(
+        (r) =>
+          `########################################\n# Student ${
+            r.user
+          }\n# Hand-marked below\n########################################\n${
+            r.res["correct-code"] || r.res["wrong-code"] || ""
+          }`
+      )
+      .join("\n");
+    zip.file(py, merged);
+  }
+
+  let blob = await zip.generateAsync({ type: "blob" });
+  return blob;
+};
+
+export { sanitisePastedEmails, zipResults };
