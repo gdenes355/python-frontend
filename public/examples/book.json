@@ -126,7 +126,13 @@
                         {"typ": "t", "filename":"turtletest_sol.py"}
                     ]
                 }                
-            ]
+            ],
+            "additionalFiles": [
+				{
+					"filename": "turtletest_sol.py",
+					"visible": false
+				}
+			]
         },            
         {
             "id": "f79a3f47-0e12-4a8c-9913-2d325b1dd245",
