@@ -7,7 +7,13 @@ import {
   TableRow,
 } from "@mui/material";
 import { Box } from "@mui/system";
-import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import BookNodeModel, {
   extractIdsWithTestsInOrder,
   extractIds,
@@ -70,6 +76,35 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
 
     const popupMenuRef = useRef<StudentPopupMenuHandle>(null);
 
+    const resultsProcessed = useMemo(
+      () =>
+        new Map(
+          props.group?.students.map((student) => {
+            let res = props.results?.length
+              ? props.results?.filter((r) => r.user === student).at(0)
+              : null;
+            let passCount: number | undefined = undefined;
+            if (res && challengeInfo) {
+              passCount = 0;
+              for (let id of challengeInfo.ids) {
+                let r = (res as any)[id] as any;
+                if (
+                  (r instanceof Boolean && (r as boolean)) ||
+                  (r as ChallengeResultComplexModel)?.correct
+                ) {
+                  passCount++;
+                }
+              }
+            }
+            return [
+              student,
+              { student: student, results: res, passCount: passCount },
+            ];
+          })
+        ),
+      [props.results, props.group, challengeInfo]
+    );
+
     if (!props.group) {
       return <p>Please pick a group to display results.</p>;
     }
@@ -117,14 +152,17 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
             </TableHead>
             <TableBody>
               {props.group.students.sort().map((student) => {
+                let res = resultsProcessed.get(student);
                 return (
                   <ResultsTableRow
                     key={student}
                     student={student}
+                    name={res?.results?.name || student}
                     bookSelected={!!props.book}
                     menu={popupMenuRef}
                     challengeInfo={challengeInfo}
-                    results={props.results}
+                    passCount={res?.passCount}
+                    results={res?.results}
                     onResultSelected={onResultSelected}
                     onResultsSelected={props.onResultsSelected}
                     ref={(r) => {

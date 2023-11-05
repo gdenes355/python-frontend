@@ -21,6 +21,7 @@ type ChallengeResultModel = boolean | ChallengeResultComplexModel;
 
 type ResultsModel = {
   user: string;
+  name: string;
   book: string;
   //results?: Map<string, ChallengeResultModel>;
   // and all the other fields are string keys
