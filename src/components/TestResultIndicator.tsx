@@ -17,7 +17,6 @@ import { TestResults, TestResult } from "../models/Tests";
 
 type TestResultsIndicatorProps = {
   testResults: TestResults;
-  isSubmitted?: boolean;
 };
 
 const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -137,17 +136,11 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
   const [allPassing, setAllPassing] = useState<boolean | null>(null);
   useEffect(
     () =>
-      setAllPassing(
-        props.testResults.filter((x) => !x.outcome).length === 0 ||
-          (props.isSubmitted !== undefined && props.isSubmitted)
-      ),
-    [props.testResults, props.isSubmitted]
+      setAllPassing(props.testResults.filter((x) => !x.outcome).length === 0),
+    [props.testResults]
   );
 
-  if (
-    (props.testResults.length < 1 && props.isSubmitted === undefined) ||
-    (props.isSubmitted !== undefined && !props.isSubmitted)
-  ) {
+  if (props.testResults.length < 1) {
     return <span></span>;
   }
 

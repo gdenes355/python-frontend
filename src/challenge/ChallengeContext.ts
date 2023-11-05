@@ -427,14 +427,15 @@ class ChallengeContextClass {
       } else {
         let code = this.challenge.editorRef.current?.getValue();
         let tests = this.challenge.props.tests;
-        if (code && tests) {
-          this.actions["testpy"](code, tests);
-        } else if (code && this.challenge.props.isAssessment) {
+
+        if (code && this.challenge.props.isAssessment) {
           this.actions["report-result"](
-            [],
+            [{ outcome: true }],
             code,
             this.challenge.props.bookNode
           );
+        } else if (code && tests) {
+          this.actions["testpy"](code, tests);
         }
       }
     },
@@ -453,9 +454,6 @@ class ChallengeContextClass {
           newTestOutcome || this.challenge.props.isAssessment,
           code
         );
-      }
-      if (this.challenge.submittedCallback) {
-        this.challenge.submittedCallback();
       }
     },
     testpy: (code: string, tests: TestCases) => {
