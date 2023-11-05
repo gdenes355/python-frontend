@@ -13,10 +13,12 @@ import { TooltipProps, tooltipClasses } from "@mui/material/Tooltip";
 import { styled } from "@mui/material/styles";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
+import GradingIcon from "@mui/icons-material/Grading";
 import { TestResults, TestResult } from "../models/Tests";
 
 type TestResultsIndicatorProps = {
   testResults: TestResults;
+  isAssessment: boolean;
 };
 
 const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -145,6 +147,21 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
   }
 
   if (allPassing) {
+    if (props.isAssessment) {
+      return (
+        <HtmlTooltip title="Submitted for manual marking">
+          <GradingIcon
+            style={{
+              display: "inline-block",
+              verticalAlign: "middle",
+              height: "100%",
+            }}
+            color="success"
+            fontSize="large"
+          />
+        </HtmlTooltip>
+      );
+    }
     return (
       <DoneIcon
         style={{

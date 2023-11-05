@@ -5,6 +5,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
+import GradingIcon from "@mui/icons-material/Grading";
 
 import BookNodeModel, { extractIds } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
@@ -30,7 +31,11 @@ function RecursiveItem({ node, allTestResults }: RecursiveArgs) {
       label={
         <div className="test-state-icon">
           {allTestResults.passed.has(node.id) ? (
-            <DoneIcon color="success"></DoneIcon>
+            node.isAssessment ? (
+              <GradingIcon color="success"></GradingIcon>
+            ) : (
+              <DoneIcon color="success"></DoneIcon>
+            )
           ) : allTestResults.failed.has(node.id) ? (
             <CancelIcon color="error"></CancelIcon>
           ) : null}

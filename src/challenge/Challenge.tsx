@@ -43,6 +43,7 @@ type ChallengeState = IChallengeState & {
   savedCode: string | null;
   editorFullScreen: boolean;
   testsPassing: boolean | undefined;
+
   helpOpen: boolean;
   guideMinimised: boolean;
   showBookUpload: boolean;
@@ -281,11 +282,13 @@ class Challenge
             canDebug={this.state.editorState === ChallengeStatus.READY}
             canRunOnly={this.state.origTyp === "parsons" ? true : false}
             canSubmit={
-              !this.props.isExample &&
-              (this.props.tests !== null || this.props.typ === "parsons")
+              (!this.props.isExample &&
+                (this.props.tests !== null || this.props.typ === "parsons")) ||
+              !!this.props.isAssessment
             }
             testResults={this.state.testResults}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
+            isAssessment={!!this.props.isAssessment}
           />
         </CardContent>
       </Card>

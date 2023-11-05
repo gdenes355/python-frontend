@@ -147,6 +147,7 @@ class ChallengeEditor
     let proxy = {
       name: node.name,
       isExample: node.isExample,
+      isAssessment: node.isAssessment,
       typ: node.typ,
       tests: node.tests,
       additionalFiles: node.additionalFiles,
@@ -339,6 +340,10 @@ class ChallengeEditor
       changed = true;
       this.props.bookNode.isExample = editedNode.isExample;
     }
+    if (editedNode.isAssessment !== this.props.bookNode.isAssessment) {
+      changed = true;
+      this.props.bookNode.isAssessment = editedNode.isAssessment;
+    }
     if (editedNode.typ !== this.props.bookNode.typ) {
       changed = true;
       this.props.bookNode.typ = editedNode.typ;
@@ -448,6 +453,7 @@ class ChallengeEditor
             canSubmit={false}
             testResults={[]}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
+            isAssessment={!!this.props.isAssessment}
           />
         </CardContent>
       </Card>
