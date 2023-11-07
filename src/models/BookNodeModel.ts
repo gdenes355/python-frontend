@@ -248,7 +248,13 @@ const _extractIdsWithTestsInOrder = (
   node: BookNodeModel,
   arr: Array<string>
 ) => {
-  if (node.isExample || node.tests || node.typ === "parsons") arr.push(node.id);
+  if (
+    node.isExample ||
+    node.tests ||
+    node.typ === "parsons" ||
+    (node.isAssessment && node.py)
+  )
+    arr.push(node.id);
   if (node.children) {
     for (let child of node.children) {
       _extractIdsWithTestsInOrder(child, arr);
