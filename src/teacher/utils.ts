@@ -27,19 +27,26 @@ const sanitisePastedEmails = (emails: string) => {
 type Result = {
   user: string;
   res: ChallengeResultComplexModel;
+  name: string;
 };
 
 const zipResults = async (results: ResultsModel[], book: BookNodeModel) => {
   let zip = new JSZip();
 
   let nodes = extractIds(book);
+  let userToFolder = new Map<string, string>();
 
   // make student folders with their submitted code
   for (let node of nodes) {
     if (!node[1].py) continue;
     for (let res of results) {
       let r = (res as any)[node[0]] as ChallengeResultComplexModel;
-      let folder = zip.folder(res.user);
+      let name =
+        !res.name || res.user === res.name
+          ? res.user
+          : `${res.name.replace(" ", "-")}-${res.user}`;
+      userToFolder.set(res.user, name);
+      let folder = zip.folder(name);
       if (!folder) continue;
       let code =
         (r && (r["correct-code"] || r["wrong-code"])) || "print('blank')";
@@ -53,7 +60,8 @@ const zipResults = async (results: ResultsModel[], book: BookNodeModel) => {
     let nodeResults = results
       .map((res) => {
         let r = (res as any)[node[0]] as any;
-        return { user: res.user, res: r as ChallengeResultComplexModel };
+        let name = userToFolder.get(res.user) || res.user;
+        return { user: res.user, res: r as ChallengeResultComplexModel, name };
       })
       .filter((p) => p.res !== undefined);
     if (nodeResults.length === 0) continue;
@@ -64,7 +72,7 @@ const zipResults = async (results: ResultsModel[], book: BookNodeModel) => {
       .map(
         (r) =>
           `########################################\n# Student ${
-            r.user
+            r.name
           }\n# Hand-marked below\n########################################\n${
             r.res["correct-code"] || r.res["wrong-code"] || ""
           }`
