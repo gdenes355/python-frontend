@@ -173,9 +173,9 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
       if (orderBy === "student") {
         return orderDir === "asc"
           ? (a: any, b: any) =>
-              (a["student"] as string).localeCompare(b["student"] as string)
+              (a["name"] as string).localeCompare(b["student"] as string)
           : (a: any, b: any) =>
-              (b["student"] as string).localeCompare(a["student"] as string);
+              (b["name"] as string).localeCompare(a["student"] as string);
       }
       if (orderBy === "pass") {
         return orderDir === "asc"
