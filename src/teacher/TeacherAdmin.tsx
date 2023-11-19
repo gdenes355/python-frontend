@@ -111,7 +111,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
         let headers = new Headers();
         headers.append("Authorization", `Bearer ${sessionContext.token}`);
         fetch(`${props.baseUrl}/${req}`, { headers })
-          .then((data) => data.json())
+          .then((resp: Response) => {
+            if (resp.status !== 200) {
+              throw new Error(
+                `Failed to fetch ${req} with status ${resp.status}`
+              );
+            }
+            return resp.json();
+          })
           .then((data) => {
             requestRef.current.set(req, data.data);
             res(data.data);
@@ -217,7 +224,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
         activeBook.bookTitle
       )}/results`
     )
-      .then(setResults)
+      .then((r) => setResults(r))
       .catch((e) => setError(e.reason));
   }, [activeBook, request, activeGroup, updateCtr]);
 

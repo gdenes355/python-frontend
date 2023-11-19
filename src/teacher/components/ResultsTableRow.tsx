@@ -155,7 +155,7 @@ const ResultsTableRow = React.forwardRef<
           props.menu.current?.handleContextMenu(e, props.student)
         }
       >
-        {props.name}
+        {props.name.replace(/ /g, "\u00A0")}
         <span style={{ visibility: "collapse" }}>{updateCtr}</span>
       </TableCell>
       <TableCell>
