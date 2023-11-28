@@ -69,6 +69,7 @@ const zipResults = async (results: ResultsModel[], book: BookNodeModel) => {
   }
   for (let [py, res] of compiledResults) {
     let merged = res
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map(
         (r) =>
           `########################################\n# Student ${

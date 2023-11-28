@@ -15,6 +15,7 @@ type ChallengeResultComplexModel = {
   id?: string;
   student?: string;
   title?: string;
+  name?: string;
 };
 
 type ChallengeResultModel = boolean | ChallengeResultComplexModel;

@@ -152,7 +152,13 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
         // alt means we picked this column
         let ress: ChallengeResultComplexModel[] = [];
         for (let ares of props.results || []) {
-          let aresT = resultFromId(res.id, ares, ares.user, challengeInfo);
+          let aresT = resultFromId(
+            res.id,
+            ares,
+            ares.user,
+            ares.name || ares.user,
+            challengeInfo
+          );
           if (aresT) {
             ress.push(aresT);
           }
