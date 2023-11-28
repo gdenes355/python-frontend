@@ -62,7 +62,9 @@ const ResultCard = (props: ResultCardProps) => {
   return (
     <Box sx={{ backgroundColor, paddingLeft: 1, paddingRight: 1 }}>
       <Grid container spacing={2} style={{ display: "flex" }}>
-        <Grid item>{`${result.student} for challenge ${result.title}`}</Grid>
+        <Grid item>{`${result.name || result.student} for challenge ${
+          result.title
+        }`}</Grid>
         <Grid
           item
           sx={{ flexGrow: 1, justifyContent: "center", display: "flex" }}
@@ -112,11 +114,16 @@ const ResultCard = (props: ResultCardProps) => {
 };
 
 const ResultCodePane = (props: ResultCodePaneProps) => {
+  console.log(props);
   return (
     <Stack spacing={1} sx={{ paddingLeft: 1, paddingRight: 1 }}>
-      {props.results.map((res) => (
-        <ResultCard key={`${res.student}-${res.id}`} result={res} />
-      ))}
+      {props.results
+        .sort((a, b) =>
+          (a.name || a.student || "").localeCompare(b.name || b.student || "")
+        )
+        .map((res) => (
+          <ResultCard key={`${res.student}-${res.id}`} result={res} />
+        ))}
     </Stack>
   );
 };

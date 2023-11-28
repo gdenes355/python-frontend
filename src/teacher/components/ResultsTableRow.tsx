@@ -45,6 +45,7 @@ const resultFromId = (
   id: string,
   myResults: ResultsModel,
   student: string,
+  name: string,
   challengeInfo?: ChallengeInfo
 ) => {
   let res = (myResults as any)[id];
@@ -55,12 +56,14 @@ const resultFromId = (
       id,
       student: student,
       title: challengeInfo?.map.get(id)?.name,
+      name,
     };
   } else {
     let resc = res as ChallengeResultComplexModel;
     resc.student = student;
     resc.id = id;
     resc.title = challengeInfo?.map.get(id)?.name;
+    resc.name = name;
     return resc;
   }
 };
@@ -120,11 +123,13 @@ const ResultsTableRow = React.forwardRef<
   );
 
   const onIndividialResultClicked = (e: React.MouseEvent, id: string) => {
+    console.log(props.results);
     if (!props.results) return;
     let res = resultFromId(
       id,
       props.results,
       props.student,
+      props.results.name || props.student,
       props.challengeInfo
     );
     if (res === undefined) return;
@@ -139,6 +144,7 @@ const ResultsTableRow = React.forwardRef<
         id,
         props.results,
         props.student,
+        props.results.name || props.student,
         props.challengeInfo
       );
       if (res) {
