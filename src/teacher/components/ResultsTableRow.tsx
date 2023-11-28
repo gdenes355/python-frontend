@@ -123,7 +123,6 @@ const ResultsTableRow = React.forwardRef<
   );
 
   const onIndividialResultClicked = (e: React.MouseEvent, id: string) => {
-    console.log(props.results);
     if (!props.results) return;
     let res = resultFromId(
       id,

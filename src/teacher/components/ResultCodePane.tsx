@@ -114,7 +114,6 @@ const ResultCard = (props: ResultCardProps) => {
 };
 
 const ResultCodePane = (props: ResultCodePaneProps) => {
-  console.log(props);
   return (
     <Stack spacing={1} sx={{ paddingLeft: 1, paddingRight: 1 }}>
       {props.results
