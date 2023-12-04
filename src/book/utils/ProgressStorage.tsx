@@ -183,33 +183,34 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
 
   const updateResults = (newResults: AllTestResults) => {
     // let's be optimistic and take all new passes
-    allTestResults.passed = new Set([
-      ...allTestResults.passed,
-      ...newResults.passed,
-    ]);
-    allTestResults.failed = new Set(
+    let passed = new Set([...allTestResults.passed, ...newResults.passed]);
+    let failed = new Set(
       [...allTestResults.failed, ...newResults.failed].filter(
         (x) => !allTestResults.passed.has(x)
       )
     );
-    setAllTestResults(allTestResults);
+    setAllTestResults({ passed, failed });
   };
 
   const mergeResults = (
     node: BookNodeModel,
     newResults: ResultsModel,
     currentRes: AllTestResults,
-    newPasses: Set<string>
+    newPasses: Set<string>,
+    newCode: Map<string, string>
   ) => {
     // let's be optimistic and take all new passes
     let res = (newResults as any)[node.id] as ChallengeResultComplexModel;
     if (res && res.correct && !currentRes.passed.has(node.id)) {
       saveTestStateLocal(node, true);
       newPasses.add(node.id);
+      if (res["correct-code"]) {
+        newCode.set(node.id, res["correct-code"]);
+      }
     }
     if (node.children) {
       for (let child of node.children) {
-        mergeResults(child, newResults, currentRes, newPasses);
+        mergeResults(child, newResults, currentRes, newPasses, newCode);
       }
     }
   };
@@ -226,7 +227,11 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
             // merge results!
             if (msg.res === "succ" && msg.data) {
               let newPasses = new Set<string>();
-              mergeResults(root, msg.data, currentRes, newPasses);
+              let newCode = new Map<string, string>();
+              mergeResults(root, msg.data, currentRes, newPasses, newCode);
+              for (let [id, code] of newCode) {
+                localStorage.setItem("code-" + encodeURIComponent(id), code);
+              }
               updateResults({
                 passed: newPasses,
                 failed: new Set(),
@@ -263,7 +268,14 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           } else if (response.status === 200) {
             response.json().then((data) => {
               let newPasses = new Set<string>();
-              mergeResults(root, data.data, currentRes, newPasses);
+              let newCode = new Map<string, string>();
+              mergeResults(root, data.data, currentRes, newPasses, newCode);
+              for (let [id, code] of newCode) {
+                localStorage.setItem(
+                  "code-" + encodeURIComponent(bookPath + id),
+                  code
+                );
+              }
               updateResults({
                 passed: newPasses,
                 failed: new Set(),

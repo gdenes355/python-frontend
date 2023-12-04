@@ -437,6 +437,7 @@ class ChallengeContextClass {
             code,
             this.challenge.props.bookNode
           );
+          this.actions["save-code"]({ code });
         } else if (code && tests) {
           this.actions["testpy"](code, tests);
         }
