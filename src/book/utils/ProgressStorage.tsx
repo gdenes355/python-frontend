@@ -72,7 +72,10 @@ type ProgressStorage = {
     code?: string
   ) => void;
   getResult: (challenge: BookNodeModel) => boolean | undefined;
-  updateResults: (newResults: AllTestResults) => void;
+  updateResults: (
+    currResults: AllTestResults,
+    newResults: AllTestResults
+  ) => void;
   fetchResults: (root: BookNodeModel, currentRes: AllTestResults) => void;
 };
 
@@ -181,9 +184,12 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     return undefined;
   };
 
-  const updateResults = (newResults: AllTestResults) => {
+  const updateResults = (
+    currResults: AllTestResults,
+    newResults: AllTestResults
+  ) => {
     // let's be optimistic and take all new passes
-    let passed = new Set([...allTestResults.passed, ...newResults.passed]);
+    let passed = new Set([...currResults.passed, ...newResults.passed]);
     let failed = new Set(
       [...allTestResults.failed, ...newResults.failed].filter(
         (x) => !allTestResults.passed.has(x)
@@ -199,6 +205,10 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     newPasses: Set<string>,
     newCode: Map<string, string>
   ) => {
+    currentRes = {
+      passed: new Set(currentRes.passed),
+      failed: new Set(currentRes.failed),
+    }; // make a copy
     // let's be optimistic and take all new passes
     let res = (newResults as any)[node.id] as ChallengeResultComplexModel;
     if (res && res.correct && !currentRes.passed.has(node.id)) {
@@ -232,7 +242,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
               for (let [id, code] of newCode) {
                 localStorage.setItem("code-" + encodeURIComponent(id), code);
               }
-              updateResults({
+              updateResults(currentRes, {
                 passed: newPasses,
                 failed: new Set(),
               });
@@ -276,7 +286,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
                   code
                 );
               }
-              updateResults({
+              updateResults(currentRes, {
                 passed: newPasses,
                 failed: new Set(),
               });
