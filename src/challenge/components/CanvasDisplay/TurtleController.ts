@@ -5,7 +5,7 @@ const TURTLE_IMG_SRC =
 const TURTLE_IMG_WIDTH = 16;
 const TURTLE_IMG_HEIGHT = 16;
 const TURTLE_UNIT_MOVE_STEP = 6;
-const TURTLE_TIME_PAUSE = 40;
+const TURTLE_TIME_PAUSE = 30;
 const TURTLE_ANGLE_ADJUSTMENT = 6;
 
 class SimpleTurtle {
@@ -233,7 +233,7 @@ class SimpleTurtle {
     let ch_h = 0;
 
     // set heading first if needed
-    if (Math.abs(this.state.heading - heading) < 3) {
+    if (Math.abs(this.state.heading - heading) <= TURTLE_ANGLE_ADJUSTMENT) {
       this.state.heading = heading;
       repeatAngle = false;
     } else {
