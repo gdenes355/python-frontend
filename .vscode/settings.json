@@ -12,5 +12,6 @@
     "[css]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode"        
-    }
+    },
+    "cloudcode.duetAI.inlineSuggestions.enableAuto": false
 }
