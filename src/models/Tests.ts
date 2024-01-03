@@ -49,6 +49,7 @@ type AdvancedOutRequirement = {
 type TestCase = {
   in: string | Array<string | number>;
   out: string | Array<AdvancedOutRequirement>;
+  reveal?: boolean;
 };
 
 type TestCases = Array<TestCase>;
