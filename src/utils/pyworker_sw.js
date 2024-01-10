@@ -80,7 +80,7 @@ onmessage = function (e) {
           e.data.code,
           test.in,
           test.out,
-          test.reveal ?? false
+          test.reveal ?? true
         )
       );
     } catch (err) {
