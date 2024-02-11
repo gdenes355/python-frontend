@@ -15,6 +15,7 @@ type MainControlsProps = {
   guideMinimised: boolean;
   canKill: boolean;
   onGuideDisplayToggle: () => void;
+  onRunning: () => void;
 };
 
 const MainControlsStack = (props: MainControlsProps) => {
@@ -42,7 +43,10 @@ const MainControlsStack = (props: MainControlsProps) => {
             variant="contained"
             color="primary"
             disabled={!props.canDebug}
-            onClick={() => challengeContext?.actions["debug"]()}
+            onClick={() => {
+              props.onRunning();
+              challengeContext?.actions["debug"]();
+            }}
           >
             DEBUG
           </Button>
@@ -53,7 +57,10 @@ const MainControlsStack = (props: MainControlsProps) => {
           variant="contained"
           color="primary"
           disabled={!props.canDebug}
-          onClick={() => challengeContext?.actions["debug"]("run")}
+          onClick={() => {
+            props.onRunning();
+            challengeContext?.actions["debug"]("run");
+          }}
         >
           RUN
         </Button>
@@ -64,7 +71,10 @@ const MainControlsStack = (props: MainControlsProps) => {
             variant="contained"
             color="primary"
             disabled={!props.canDebug}
-            onClick={() => challengeContext?.actions["test"]()}
+            onClick={() => {
+              props.onRunning();
+              challengeContext?.actions["test"]();
+            }}
           >
             Submit
           </Button>
@@ -100,6 +110,7 @@ const MainControlsGrid = (props: MainControlsProps) => {
             <RunSplitButton
               disabled={!props.canDebug}
               canRunOnly={props.canRunOnly}
+              onRunning={props.onRunning}
             />
           </Box>
           {props.canSubmit ? (
@@ -108,7 +119,10 @@ const MainControlsGrid = (props: MainControlsProps) => {
                 variant="contained"
                 color="primary"
                 disabled={!props.canDebug}
-                onClick={() => challengeContext?.actions["test"]()}
+                onClick={() => {
+                  props.onRunning();
+                  challengeContext?.actions["test"]();
+                }}
               >
                 Submit
               </Button>
