@@ -120,6 +120,8 @@ class Challenge
     showBookUpload: false,
     additionalFilesLoaded: {},
     turtleExampleRendered: undefined,
+    paneSizes: [700, 300],
+    renderKey: 0,
   };
 
   constructor(props: ChallengeProps) {
@@ -232,6 +234,13 @@ class Challenge
       : visible;
   };
 
+  changeSizeAtRuntime = () => {
+    this.setState((prevState) => ({
+      paneSizes: [300, 700],
+      renderKey: prevState.renderKey + 1, // Increment render key to trigger refresh
+    }));
+  };
+
   renderEditor() {
     if (this.props.typ === "parsons") {
       return (
@@ -289,6 +298,7 @@ class Challenge
             testResults={this.state.testResults}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
             isAssessment={!!this.props.isAssessment}
+            onRunning={this.changeSizeAtRuntime}
           />
         </CardContent>
       </Card>
@@ -383,7 +393,11 @@ class Challenge
 
               <Allotment className="h-100" defaultSizes={[650, 350]}>
                 <Allotment.Pane>
-                  <Allotment vertical defaultSizes={[650, 350]}>
+                  <Allotment
+                    vertical
+                    defaultSizes={this.state.paneSizes}
+                    key={`allotment_${this.state.renderKey}`}
+                  >
                     <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                     <Allotment.Pane
                       visible={this.getVisibilityWithHack(

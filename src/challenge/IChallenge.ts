@@ -44,6 +44,8 @@ type IChallengeState = {
   testResults: TestResults;
   additionalFilesLoaded: AdditionalFilesContents;
   turtleExampleRendered: string | undefined;
+  paneSizes: number[];
+  renderKey: number; // Initial render key used for resetting the allotment pane sizes
 };
 
 interface IChallenge {

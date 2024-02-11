@@ -14,6 +14,7 @@ import Box from "@mui/material/Box";
 type RunSplitButtonProps = {
   disabled: boolean;
   canRunOnly: boolean;
+  onRunning: () => void;
 };
 
 const options = ["DEBUG", "RUN"];
@@ -27,6 +28,7 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
 
   const handleClick = () => {
     let mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
+    props.onRunning();
     challengeContext?.actions["debug"](mode);
   };
 

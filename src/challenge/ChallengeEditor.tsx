@@ -133,6 +133,8 @@ class ChallengeEditor
     saveDialogProps: undefined,
     additionalFilesLoaded: {},
     turtleExampleRendered: undefined,
+    paneSizes: [700, 300],
+    renderKey: 0,
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -394,6 +396,13 @@ class ChallengeEditor
       : visible;
   };
 
+  changeSizeAtRuntime = () => {
+    this.setState((prevState) => ({
+      paneSizes: [300, 700],
+      renderKey: prevState.renderKey + 1, // Increment render key to trigger refresh
+    }));
+  };
+
   getDisplayFiles = () => {
     const files = (this.props.bookNode.additionalFiles || []).map(
       (file) => file.filename
@@ -454,6 +463,7 @@ class ChallengeEditor
             testResults={[]}
             canKill={this.state.editorState === ChallengeStatus.RUNNING}
             isAssessment={!!this.props.isAssessment}
+            onRunning={this.changeSizeAtRuntime}
           />
         </CardContent>
       </Card>
@@ -534,7 +544,11 @@ class ChallengeEditor
 
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={[650, 350]}>
+                <Allotment
+                  vertical
+                  defaultSizes={this.state.paneSizes}
+                  key={`allotment_${this.state.renderKey}`}
+                >
                   <Allotment.Pane>
                     <PyEditor
                       ref={this.editorRef}
