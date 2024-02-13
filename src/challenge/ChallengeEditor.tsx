@@ -16,7 +16,7 @@ import FixedInputField, {
 import Guide from "../components/Guide";
 import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
-import { Allotment } from "allotment";
+import { Allotment, AllotmentHandle } from "allotment";
 import HeaderBar from "../components/HeaderBar";
 import "allotment/dist/style.css";
 import { throttle } from "lodash";
@@ -78,6 +78,9 @@ class ChallengeEditor
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  vertAllotmentRef = React.createRef<AllotmentHandle>();
+  vertAllotmentRefSize: MutableRefObject<number[] | null> =
+    React.createRef<number[]>();
   fileReader = new FileReader();
 
   currentConsoleText: string = "";
@@ -110,6 +113,10 @@ class ChallengeEditor
     }
   };
 
+  vertAllotmentChangeCallback = (sizes: number[]) => {
+    this.vertAllotmentRefSize.current = sizes;
+  };
+
   canvasPromiseResolve?: (value: any) => void;
 
   state: ChallengeEditorState = {
@@ -133,8 +140,6 @@ class ChallengeEditor
     saveDialogProps: undefined,
     additionalFilesLoaded: {},
     turtleExampleRendered: undefined,
-    paneSizes: [700, 300],
-    renderKey: 0,
   };
 
   constructor(props: ChallengeEditorProps) {
@@ -143,6 +148,7 @@ class ChallengeEditor
     this.exportAsZip.bind(this);
     this.save.bind(this);
     this.actionWithSaveCheck.bind(this);
+    this.vertAllotmentRefSize.current = [700, 300]; // Initial size of the vertical allotment before any user interaction
   }
 
   nodeToJson(node: BookNodeModel) {
@@ -397,10 +403,7 @@ class ChallengeEditor
   };
 
   changeSizeAtRuntime = () => {
-    this.setState((prevState) => ({
-      paneSizes: [300, 700],
-      renderKey: prevState.renderKey + 1, // Increment render key to trigger refresh
-    }));
+    this.vertAllotmentRef.current?.resize([300, 700]);
   };
 
   getDisplayFiles = () => {
@@ -546,8 +549,9 @@ class ChallengeEditor
               <Allotment.Pane>
                 <Allotment
                   vertical
-                  defaultSizes={this.state.paneSizes}
-                  key={`allotment_${this.state.renderKey}`}
+                  ref={this.vertAllotmentRef}
+                  defaultSizes={[700, 300]}
+                  onChange={this.vertAllotmentChangeCallback}
                 >
                   <Allotment.Pane>
                     <PyEditor
@@ -575,7 +579,7 @@ class ChallengeEditor
                     visible={this.getVisibilityWithHack(
                       !this.state.editorFullScreen
                     )}
-                    maxSize={550}
+                    maxSize={700}
                     minSize={
                       this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
                     }

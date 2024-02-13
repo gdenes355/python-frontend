@@ -3,7 +3,7 @@ import { throttle } from "lodash";
 import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
 import CachedIcon from "@mui/icons-material/Cached";
 
-import { Allotment } from "allotment";
+import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 
 import IChallenge, { IChallengeState, IChallengeProps } from "./IChallenge";
@@ -70,6 +70,9 @@ class Challenge
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
+  vertAllotmentRef = React.createRef<AllotmentHandle>();
+  vertAllotmentRefSize: MutableRefObject<number[] | null> =
+    React.createRef<number[]>();
   fileReader = new FileReader();
   canvasPromiseResolve?: (value: any) => void;
 
@@ -102,6 +105,10 @@ class Challenge
     }
   };
 
+  vertAllotmentChangeCallback = (sizes: number[]) => {
+    this.vertAllotmentRefSize.current = sizes;
+  };
+
   state: ChallengeState = {
     starterCode: null,
     savedCode: null,
@@ -120,13 +127,12 @@ class Challenge
     showBookUpload: false,
     additionalFilesLoaded: {},
     turtleExampleRendered: undefined,
-    paneSizes: [700, 300],
-    renderKey: 0,
   };
 
   constructor(props: ChallengeProps) {
     super(props);
     this.getVisibilityWithHack.bind(this);
+    this.vertAllotmentRefSize.current = [700, 300]; // Initial size of the vertical allotment before any user interaction
   }
 
   componentDidMount() {
@@ -235,10 +241,7 @@ class Challenge
   };
 
   changeSizeAtRuntime = () => {
-    this.setState((prevState) => ({
-      paneSizes: [300, 700],
-      renderKey: prevState.renderKey + 1, // Increment render key to trigger refresh
-    }));
+    this.vertAllotmentRef.current?.resize([300, 700]);
   };
 
   renderEditor() {
@@ -395,15 +398,16 @@ class Challenge
                 <Allotment.Pane>
                   <Allotment
                     vertical
-                    defaultSizes={this.state.paneSizes}
-                    key={`allotment_${this.state.renderKey}`}
+                    defaultSizes={[700, 300]}
+                    ref={this.vertAllotmentRef}
+                    onChange={this.vertAllotmentChangeCallback}
                   >
                     <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
                     <Allotment.Pane
                       visible={this.getVisibilityWithHack(
                         !this.state.editorFullScreen
                       )}
-                      maxSize={550}
+                      maxSize={700}
                       minSize={150}
                     >
                       <Outputs
