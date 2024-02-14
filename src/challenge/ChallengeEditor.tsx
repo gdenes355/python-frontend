@@ -114,7 +114,10 @@ class ChallengeEditor
   };
 
   vertAllotmentChangeCallback = (sizes: number[]) => {
-    this.vertAllotmentRefSize.current = sizes;
+    if (this.vertAllotmentRefSize.current?.length === 2) {
+      // if the length is 3 then the resize is an auto one and we don't want to store it
+      this.vertAllotmentRefSize.current = sizes;
+    }
   };
 
   canvasPromiseResolve?: (value: any) => void;
@@ -256,6 +259,20 @@ class ChallengeEditor
       this.jsonEditorRef.current?.setValue(
         this.nodeToJson(this.props.bookNode)
       );
+    }
+
+    if (
+      this.editorRef.current &&
+      this.state.editorState !== prevState.editorState &&
+      this.state.editorState === ChallengeStatus.READY &&
+      this.vertAllotmentRefSize.current?.length === 3
+    ) {
+      this.vertAllotmentRefSize.current.pop(); // remove the auto-resize flag
+      setTimeout(() => {
+        this.vertAllotmentRef.current?.resize(
+          this.vertAllotmentRefSize.current || [700, 300]
+        );
+      }, 2000);
     }
   }
 
@@ -403,6 +420,13 @@ class ChallengeEditor
   };
 
   changeSizeAtRuntime = () => {
+    this.vertAllotmentRefSize.current?.push(-1); // -1 means the pane has been auto-resized
+    if (
+      this.vertAllotmentRefSize.current &&
+      this.vertAllotmentRefSize.current[0] < 300
+    ) {
+      return;
+    }
     this.vertAllotmentRef.current?.resize([300, 700]);
   };
 
