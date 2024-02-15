@@ -29,6 +29,7 @@ type PyEditorProps = {
   debugContext: DebugContext;
   height?: string | undefined;
   onToggleFullScreen: () => void;
+  onFocus: () => void;
 };
 
 type PyEditorHandle = {
@@ -154,6 +155,10 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
           let lineNum = event.target.position.lineNumber;
           toggleBreakpoint(lineNum);
         }
+      });
+
+      editor.onDidFocusEditorWidget(() => {
+        props.onFocus();
       });
 
       editor.addAction({

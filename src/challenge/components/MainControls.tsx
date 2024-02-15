@@ -72,7 +72,6 @@ const MainControlsStack = (props: MainControlsProps) => {
             color="primary"
             disabled={!props.canDebug}
             onClick={() => {
-              props.onRunning();
               challengeContext?.actions["test"]();
             }}
           >
@@ -120,7 +119,6 @@ const MainControlsGrid = (props: MainControlsProps) => {
                 color="primary"
                 disabled={!props.canDebug}
                 onClick={() => {
-                  props.onRunning();
                   challengeContext?.actions["test"]();
                 }}
               >

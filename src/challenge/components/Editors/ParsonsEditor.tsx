@@ -218,6 +218,7 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
             starterCode={getHeaderFooterCode(props.starterCode)}
             onToggleFullScreen={() => {}}
             debugContext={{ lineno: 0, locals: new Map(), globals: new Map() }}
+            onFocus={() => {}}
           />
         </>
       );

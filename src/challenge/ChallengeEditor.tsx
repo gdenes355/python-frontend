@@ -420,14 +420,30 @@ class ChallengeEditor
   };
 
   changeSizeAtRuntime = () => {
-    this.vertAllotmentRefSize.current?.push(-1); // -1 means the pane has been auto-resized
+    if (this.vertAllotmentRefSize.current?.length !== 3) {
+      this.vertAllotmentRefSize.current?.push(-1); // -1 means the pane has been auto-resized
+    }
     if (
-      this.vertAllotmentRefSize.current &&
-      this.vertAllotmentRefSize.current[0] < 300
+      (this.vertAllotmentRefSize.current &&
+        this.vertAllotmentRefSize.current[0] < 300) ||
+      this.parsonsEditorRef.current
     ) {
       return;
     }
     this.vertAllotmentRef.current?.resize([300, 700]);
+  };
+
+  changeSizeOnEditorFocus = () => {
+    if (
+      this.editorRef.current &&
+      this.state.editorState === ChallengeStatus.READY &&
+      this.vertAllotmentRefSize.current?.length === 3
+    ) {
+      this.vertAllotmentRefSize.current.pop(); // remove the auto-resize flag
+      this.vertAllotmentRef.current?.resize(
+        this.vertAllotmentRefSize.current || [700, 300]
+      );
+    }
   };
 
   getDisplayFiles = () => {
@@ -597,6 +613,7 @@ class ChallengeEditor
                           return { editorFullScreen: !state.editorFullScreen };
                         });
                       }}
+                      onFocus={this.changeSizeOnEditorFocus}
                     />
                   </Allotment.Pane>
                   <Allotment.Pane
