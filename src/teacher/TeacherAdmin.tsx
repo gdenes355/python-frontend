@@ -315,15 +315,10 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     setDialogState("");
     if (!activeGroup || !usernames) return;
 
-    // check no more than 60 students being added at a time
     const studentsToAdd = usernames
       .split("\n")
       .map((u) => u.trim())
       .filter((u) => u !== "" && !activeGroup.students.includes(u));
-    if (studentsToAdd.length > 60) {
-      studentsToAdd.length = 60;
-      console.log("Truncating students to 60");
-    }
     fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
       method: "post",
       cache: "no-cache",
