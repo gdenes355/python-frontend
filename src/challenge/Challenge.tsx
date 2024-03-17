@@ -70,7 +70,6 @@ class Challenge
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
-  fileReader = new FileReader();
   canvasPromiseResolve?: (value: any) => void;
 
   currentConsoleText: string = "";
@@ -114,8 +113,8 @@ class Challenge
     testsPassing: undefined,
     helpOpen: false,
     guideMinimised: false,
-    typ: ChallengeTypes.TYP_PY,
-    origTyp: ChallengeTypes.TYP_PY,
+    typ: ChallengeTypes.py,
+    origTyp: ChallengeTypes.py,
     usesFixedInput: false,
     showBookUpload: false,
     additionalFilesLoaded: {},
@@ -136,7 +135,7 @@ class Challenge
     this.chContext.actions["restart-worker"]({ force: true });
 
     const challengeTyp =
-      (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+      (this.props.typ as ChallengeTypes) || ChallengeTypes.py;
 
     this.setState({
       typ: challengeTyp,
@@ -180,7 +179,7 @@ class Challenge
       this.chContext.actions["fetch-code"]();
 
       const challengeTyp =
-        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.py;
 
       this.setState({
         typ: challengeTyp,
@@ -199,7 +198,7 @@ class Challenge
     }
     if (prevProps.typ !== this.props.typ) {
       const challengeTyp =
-        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.py;
 
       // this is a live typ change so we don't change the origTyp
       this.setState({
@@ -396,7 +395,7 @@ class Challenge
                         ref={this.outputsRef}
                         visiblePanes={[
                           "console",
-                          ...(this.state.typ === ChallengeTypes.TYP_CANVAS
+                          ...(this.state.typ === ChallengeTypes.canvas
                             ? ["canvas" as PaneType]
                             : []),
                           ...(this.state.usesFixedInput

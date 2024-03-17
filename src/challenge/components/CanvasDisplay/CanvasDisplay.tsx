@@ -13,10 +13,7 @@ type CanvasDisplayHandle = {
   runCommand: (commands: any[]) => void;
 };
 
-type CanvasDisplayProps = {
-  onKeyDown?: React.KeyboardEventHandler;
-  onKeyUp?: React.KeyboardEventHandler;
-};
+type CanvasDisplayProps = {};
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
@@ -25,12 +22,10 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const turtleUsed = useRef<boolean>(false);
     const turtleRetained = useRef<boolean>(false);
 
-    const challenge = useContext(ChallengeContext);
-
     // used after run to hide turtle if it was not retained by turtle.done()
     const turtleClearup = () => {
       if (turtleUsed.current && !turtleRetained.current) {
-        challenge?.actions["hide-turtle"]();
+        challengeContext?.actions["hide-turtle"]();
       }
       turtleUsed.current = false;
       turtleRetained.current = false;

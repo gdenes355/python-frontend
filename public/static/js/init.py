@@ -724,8 +724,13 @@ def pyrun(code):
 
 
 def update_breakpoints(breakpoints):
+    if breakpoints == None:
+        return
     global active_breakpoints
-    active_breakpoints = set([breakpoint_map.get(b, b) for b in breakpoints])
+    try:
+        active_breakpoints = set([breakpoint_map.get(b, b) for b in breakpoints])
+    except:
+        active_breakpoints = set()
 
 
 def post_message(data):
@@ -750,8 +755,7 @@ def debug_input(prompt=""):
     resp = json.loads(synchronise('/@input@/req.js'))
     if (js.workerInterrupted()):
         raise KeyboardInterrupt()
-    if (resp.get("breakpoints")):
-        update_breakpoints(resp["breakpoints"])
+    update_breakpoints(resp.get("breakpoints"))
     return resp.get("data")
 
 
@@ -815,8 +819,7 @@ def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
         post_message({"cmd": "breakpt", "lineno": lineno,
                      "globals": globals, "locals": locals})
         resp = json.loads(synchronise('/@debug@/break.js'))
-        if (resp.get("breakpoints")):
-            update_breakpoints(resp["breakpoints"])
+        update_breakpoints(resp.get("breakpoints"))
         if (resp.get("step")):
             step_into = True
     return True

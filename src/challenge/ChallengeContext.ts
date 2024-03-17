@@ -1,7 +1,7 @@
 import React, { createContext } from "react";
 import ChallengeStatus from "../models/ChallengeStatus";
 import { TestCases, TestResults } from "../models/Tests";
-import DebugContext from "../models/DebugContext";
+import DebugContext from "../coderunner/DebugContext";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { keyToVMCode } from "../utils/keyTools";
 import IChallenge, { IChallengeState } from "./IChallenge";
@@ -9,6 +9,16 @@ import BookNodeModel from "../models/BookNodeModel";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import { absolutisePath } from "../utils/pathTools";
+import { PyEditorHandle } from "./components/Editors/PyEditor";
+import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
+import { CodeRunnerRef } from "../coderunner/useCodeRunner";
+import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
+import { FixedInputFieldHandle } from "./components/FixedInputField";
+import { DebugFinishedData } from "../coderunner/CodeRunner";
+import {
+  AdditionalFiles,
+  AdditionalFilesContents,
+} from "../models/AdditionalFiles";
 
 type WorkerResponse = {
   cmd: string;
@@ -35,10 +45,6 @@ type InputData = {
   input: string | null;
 };
 
-type DebugFinishedData = {
-  reason: number;
-};
-
 type TestFinishedData = {
   results: TestResults;
   bookNode: BookNodeModel;
@@ -54,7 +60,11 @@ type SaveCodeData = {
   code: string | null;
 };
 
-class ChallengeContextClass {
+interface IChallengeContext {
+  actions: any;
+}
+
+class ChallengeContextClass implements IChallengeContext {
   constructor(challenge: IChallenge) {
     this.challenge = challenge;
   }
@@ -80,13 +90,13 @@ class ChallengeContextClass {
     draw: (data: DrawData) => {
       const commands = JSON.parse(data.msg) as any[];
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.origTyp === ChallengeTypes.TYP_PY) {
+        if (this.challenge.state.origTyp === ChallengeTypes.py) {
           if (commands.length === 1 && commands[0]?.action === "reset") {
             //ignore single initial reset if we are meant to be a standard
             // Python challenge
             return;
           }
-          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+          this.challenge.setState({ typ: ChallengeTypes.canvas });
         }
         this.challenge.outputsRef?.current?.focusPane("canvas");
         this.challenge.canvasDisplayRef?.current?.runCommand(commands);
@@ -94,16 +104,16 @@ class ChallengeContextClass {
     },
     audio: (data: AudioData) => {
       if (this.challenge.state.editorState !== ChallengeStatus.READY) {
-        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
-          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+        if (this.challenge.state.typ !== ChallengeTypes.canvas) {
+          this.challenge.setState({ typ: ChallengeTypes.canvas });
         }
         this.challenge.canvasDisplayRef?.current?.runAudioCommand(data.msg);
       }
     },
     awaitCanvas: () => {
       return new Promise((resolve) => {
-        if (this.challenge.state.typ !== ChallengeTypes.TYP_CANVAS) {
-          this.challenge.setState({ typ: ChallengeTypes.TYP_CANVAS });
+        if (this.challenge.state.typ !== ChallengeTypes.canvas) {
+          this.challenge.setState({ typ: ChallengeTypes.canvas });
         }
         if (this.challenge.canvasDisplayRef.current) {
           resolve(true);
@@ -137,8 +147,8 @@ class ChallengeContextClass {
       }
     },
     "hide-turtle": () => {
-      if (this.challenge.state.typ === ChallengeTypes.TYP_CANVAS) {
-        this.challenge.setState({ typ: ChallengeTypes.TYP_PY });
+      if (this.challenge.state.typ === ChallengeTypes.canvas) {
+        this.challenge.setState({ typ: ChallengeTypes.py });
       }
     },
     "draw-turtle-example": () => {
@@ -350,14 +360,14 @@ class ChallengeContextClass {
       this.actions["print-console"](msg);
     },
     "get-code": () => {
-      if (this.challenge.state.origTyp === ChallengeTypes.TYP_PARSONS) {
+      if (this.challenge.state.origTyp === ChallengeTypes.parsons) {
         return this.challenge.parsonsEditorRef.current?.getValue();
       } else {
         return this.challenge.editorRef.current?.getValue();
       }
     },
     debug: (mode: "debug" | "run" = "debug") => {
-      if (this.challenge.state.origTyp === ChallengeTypes.TYP_PARSONS) {
+      if (this.challenge.state.origTyp === ChallengeTypes.parsons) {
         let code = this.challenge.parsonsEditorRef.current?.getValue();
         if (code) {
           this.actions["debugpy"](code, [], mode);
@@ -551,9 +561,6 @@ class ChallengeContextClass {
       }
     },
     "reset-json": () => {},
-    /*this.challenge.jsonEditorRef.current?.setValue(
-        this.challenge.JSON_DEFAULT
-      ),*/
     breakpt: (data: DebugContext) => {
       this.challenge.setState({
         debugContext: {
@@ -699,7 +706,145 @@ class ChallengeContextClass {
   };
 }
 
-const ChallengeContext = createContext<ChallengeContextClass | null>(null);
+class ChallengeContextClass2 implements IChallengeContext {
+  public actions = {
+    debug: (mode: "debug" | "run" = "debug") => {
+      if (this.typ === ChallengeTypes.parsons) {
+        let code = this.parsonsEditorRef?.getValue();
+        if (code) {
+          this.codeRunnerRef?.debug(code, mode);
+        }
+      } else {
+        const code = this.pyEditorRef?.getValue();
+        let bkpts = this.pyEditorRef?.getBreakpoints() || [];
+        this.canvasRef?.turtleReset();
+        if (code || code === "") {
+          this.actions["save-code"]({ code });
+          this.codeRunnerRef
+            ?.debug(
+              code,
+              mode,
+              { breakpoints: bkpts },
+              this.bookNode?.additionalFiles || [],
+              this.additionalFilesLoaded,
+              this.fixedInputFieldRef?.getValue() || undefined
+            )
+            .then((result) => {
+              if (this.bookNode?.isExample) {
+                this.onReportResult([{ outcome: true }], code, this.bookNode);
+              }
+            });
+        }
+      }
+    },
+    test: () => {
+      if (!this.bookNode) return;
+      if (this.typ === "parsons") {
+        const newResults = this.parsonsEditorRef?.runTests() || [];
+        const code = this.parsonsEditorRef?.getValue() || "";
+        const bookNode = this.bookNode;
+        this.onReportResult(newResults, code, bookNode);
+      } else {
+        const code = this.pyEditorRef?.getValue();
+        const tests = this.bookNode.tests || [];
+        if (code && this.bookNode.isAssessment) {
+          this.onReportResult([{ outcome: true }], code, this.bookNode);
+          this.actions["save-code"]({ code });
+        } else if (code && tests) {
+          this.codeRunnerRef
+            ?.test(
+              code,
+              tests,
+              this.bookNode?.additionalFiles || [],
+              this.additionalFilesLoaded,
+              this.bookNode
+            )
+            .then((results) => {
+              this.onReportResult(
+                results.results,
+                results.code,
+                results.bookNode
+              );
+            });
+        }
+      }
+    },
+    "input-entered": ({ input }: { input: string | null }) => {
+      let inputStr = input == null ? "" : input;
+      this.codeRunnerRef?.input(inputStr);
+    },
+    kill: () => {
+      this.codeRunnerRef?.kill();
+    },
+    step: () => {
+      this.codeRunnerRef?.step();
+    },
+    continue: () => {
+      this.codeRunnerRef?.continue();
+    },
+    "breakpoints-updated": () => {},
+    "reset-code": () => {
+      if (this.typ === "parsons") {
+        this.parsonsEditorRef?.reset();
+        return;
+      }
+      if ((this.starterCode === "" || this.starterCode) && this.pyEditorRef) {
+        this.pyEditorRef.setValue(this.starterCode);
+      }
+    },
+    "save-code": ({ code }: { code: string }) => {
+      if ((code || code === "") && this.uid) {
+        localStorage.setItem("code-" + encodeURIComponent(this.uid), code);
+      }
+    },
+    "download-code": () => {
+      this.pyEditorRef?.download();
+    },
+    "handle-file-read": (e: ProgressEvent<FileReader>) => {
+      if (this.fileReader?.result) {
+        this.pyEditorRef?.setValue(this.fileReader.result.toString());
+        this.fileReader = null;
+      }
+    },
+    "handle-code-upload": (file: File) => {
+      this.fileReader = new FileReader();
+      this.fileReader.onloadend = this.actions["handle-file-read"];
+      this.fileReader.readAsText(file);
+    },
+    "canvas-keydown": (data: React.KeyboardEvent) => {
+      this.codeRunnerRef?.keyDown(data);
+    },
+    "canvas-keyup": (data: React.KeyboardEvent) => {
+      this.codeRunnerRef?.keyUp(data);
+    },
+  };
+
+  // reference to key components
+  public pyEditorRef: PyEditorHandle | null = null;
+  public parsonsEditorRef: ParsonsEditorHandle | null = null;
+  public codeRunnerRef: CodeRunnerRef | null = null;
+  public canvasRef: CanvasDisplayHandle | null = null;
+  public fixedInputFieldRef: FixedInputFieldHandle | null = null;
+
+  // callbacks
+  public onReportResult: (
+    results: TestResults,
+    code: string,
+    bookNode: BookNodeModel
+  ) => void = () => {};
+
+  // properties of the challenge
+  public typ: ChallengeTypes = ChallengeTypes.py;
+  public starterCode: string | undefined = undefined;
+  public uid: string = "";
+  public bookNode: BookNodeModel | null = null;
+  public additionalFilesLoaded: AdditionalFilesContents = {};
+
+  // private state
+  private fileReader: FileReader | null = null;
+}
+
+const ChallengeContext = createContext<IChallengeContext | null>(null);
 
 export default ChallengeContext;
-export { ChallengeContextClass };
+export { ChallengeContextClass, ChallengeContextClass2 };

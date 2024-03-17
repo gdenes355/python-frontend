@@ -13,7 +13,7 @@ import {
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 
-import DebugContext from "../models/DebugContext";
+import DebugContext from "../coderunner/DebugContext";
 import ChallengeContext from "../challenge/ChallengeContext";
 
 type DebugPaneProps = {

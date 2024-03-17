@@ -78,7 +78,6 @@ class ChallengeEditor
     React.createRef<CanvasDisplayHandle | null>();
   fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
   outputsRef = React.createRef<OutputsHandle>();
-  fileReader = new FileReader();
 
   currentConsoleText: string = "";
   currentFixedUserInput: string[] = [];
@@ -124,8 +123,8 @@ class ChallengeEditor
     testsPassing: undefined,
     helpOpen: false,
     guideMinimised: false,
-    typ: ChallengeTypes.TYP_PY,
-    origTyp: ChallengeTypes.TYP_PY,
+    typ: ChallengeTypes.py,
+    origTyp: ChallengeTypes.py,
     usesFixedInput: false,
     isEditingGuide: false,
     dialogInfoText: undefined,
@@ -176,7 +175,7 @@ class ChallengeEditor
       this.chContext.actions["fetch-code"](); // from local storage
 
       const challengeTyp =
-        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+        (this.props.typ as ChallengeTypes) || ChallengeTypes.py;
 
       this.setState({
         typ: challengeTyp,
@@ -563,7 +562,7 @@ class ChallengeEditor
                     )}
                     maxSize={550}
                     minSize={
-                      this.state.typ === ChallengeTypes.TYP_CANVAS ? 450 : 150
+                      this.state.typ === ChallengeTypes.canvas ? 450 : 150
                     }
                   >
                     <Outputs
@@ -571,7 +570,7 @@ class ChallengeEditor
                       visiblePanes={[
                         "console",
                         "json",
-                        ...(this.state.typ === ChallengeTypes.TYP_CANVAS
+                        ...(this.state.typ === ChallengeTypes.canvas
                           ? ["canvas" as PaneType]
                           : []),
                         ...(this.state.usesFixedInput

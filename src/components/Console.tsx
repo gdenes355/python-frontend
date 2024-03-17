@@ -92,6 +92,10 @@ const Console = (props: ConsoleProps) => {
     containerEl.current = el;
   };
 
+  if (props.isInputEnabled) {
+    inputFieldEl.current?.focus();
+  }
+
   return (
     <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }}>
       <div

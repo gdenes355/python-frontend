@@ -7,6 +7,7 @@ const ChallengeConsole = (props: {
   inputEnabled: boolean;
 }) => {
   const challengeContext = useContext(ChallengeContext);
+
   return (
     <Console
       content={props.content}

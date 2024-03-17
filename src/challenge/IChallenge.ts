@@ -3,16 +3,13 @@ import { DebouncedFunc } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import ChallengeTypes from "../models/ChallengeTypes";
 import { TestCases, TestResults } from "../models/Tests";
-import {
-  AdditionalFiles,
-  AdditionalFilesContents,
-} from "../models/AdditionalFiles";
+import { AdditionalFilesContents } from "../models/AdditionalFiles";
 import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { FixedInputFieldHandle } from "./components/FixedInputField";
 import { OutputsHandle } from "./components/Outputs";
-import DebugContext from "../models/DebugContext";
+import DebugContext from "../coderunner/DebugContext";
 import IBookFetcher from "../book/utils/IBookFetcher";
 import { SessionContextType } from "../auth/SessionContext";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
@@ -26,7 +23,7 @@ type IChallengeProps = {
   guidePath: string;
   codePath: string;
   fetcher: IBookFetcher;
-  typ?: "py" | "parsons" | "canvas";
+  typ?: ChallengeTypes;
   authContext: SessionContextType;
   progressStorage: ProgressStorage;
   bookNode: BookNodeModel;

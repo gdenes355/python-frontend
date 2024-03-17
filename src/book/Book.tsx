@@ -28,6 +28,8 @@ import UnauthorisedError from "../auth/UnauthorisedException";
 import SessionContext from "../auth/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
+import Challenge2 from "../challenge/Challenge2";
+import ChallengeTypes from "../models/ChallengeTypes";
 
 type BookProps = {
   zipFile?: File;
@@ -316,11 +318,10 @@ const Book = (props: BookProps) => {
           return (
             <React.Fragment>
               <ErrorBounday>
-                <Challenge
+                <Challenge2
                   fetcher={bookFetcher}
                   guidePath={paths.guidePath}
                   codePath={paths.pyPath}
-                  tests={tests && tests.length > 0 ? tests : null}
                   bookNode={activeNode}
                   title={rootNode.name}
                   openBookDrawer={openDrawer}
@@ -328,9 +329,9 @@ const Book = (props: BookProps) => {
                   onRequestNextChallenge={requestNextChallenge}
                   uid={bookPath + bookChallengeId}
                   progressStorage={progressStorage}
-                  isExample={activeNode.isExample}
-                  isAssessment={activeNode.isAssessment}
-                  typ={activeNode.typ}
+                  typ={
+                    activeNode.typ ? ChallengeTypes[activeNode.typ] : undefined
+                  }
                   onBookUploaded={props.onBookUploaded}
                   authContext={authContext}
                   canReloadBook={editState === "localpreview"}
@@ -391,7 +392,7 @@ const Book = (props: BookProps) => {
               uid={bookPath + bookChallengeId}
               progressStorage={progressStorage}
               isExample={activeNode.isExample}
-              typ={activeNode.typ}
+              typ={activeNode.typ ? ChallengeTypes[activeNode.typ] : undefined}
               onBookModified={requestBookReload}
               authContext={authContext}
             />

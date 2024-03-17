@@ -9,7 +9,7 @@ import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
 import { findParent } from "../../models/BookNodeModel";
-import { CodeRunnerRef } from "../../coderunner/CodeRunner";
+import { CodeRunnerRef } from "../../coderunner/useCodeRunner";
 
 type BookEditorDrawerProps = {
   open: boolean;
