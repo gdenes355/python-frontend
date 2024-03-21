@@ -323,6 +323,7 @@ const Book = (props: BookProps) => {
                   codePath={paths.pyPath}
                   bookNode={activeNode}
                   openBookDrawer={openDrawer}
+                  title={rootNode.name}
                   onRequestPreviousChallenge={requestPreviousChallenge}
                   onRequestNextChallenge={requestNextChallenge}
                   uid={bookPath + bookChallengeId}

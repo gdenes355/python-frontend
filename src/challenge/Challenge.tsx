@@ -40,6 +40,7 @@ type ChallengeProps = {
   fetcher: IBookFetcher;
   progressStorage: ProgressStorage;
   bookNode: BookNodeModel;
+  title?: string;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
@@ -129,16 +130,21 @@ const Challenge = (props: ChallengeProps) => {
     },
   });
 
-  const { guideMd, savedCode, starterCode, additionalFilesLoaded } =
-    useChallengeLoader({
-      fetcher: props.fetcher,
-      guidePath: props.guidePath,
-      codePath: props.codePath,
-      additionalFiles: props.bookNode.additionalFiles || [],
-      typ: nodeTyp,
-      uid: props.uid,
-      store: null,
-    });
+  const {
+    guideMd,
+    savedCode,
+    starterCode,
+    additionalFilesLoaded,
+    forceReload,
+  } = useChallengeLoader({
+    fetcher: props.fetcher,
+    guidePath: props.guidePath,
+    codePath: props.codePath,
+    additionalFiles: props.bookNode.additionalFiles || [],
+    typ: nodeTyp,
+    uid: props.uid,
+    store: null,
+  });
 
   const onReportResult = useCallback(
     (results: TestResults, code: string, bookNode: BookNodeModel) => {
@@ -248,6 +254,7 @@ const Challenge = (props: ChallengeProps) => {
           onReportResult([{ outcome: true }], code, bookNode);
           actions["save-code"]({ code });
         } else if (code && tests) {
+          actions["save-code"]({ code });
           codeRunner
             ?.test(
               code,
@@ -310,6 +317,10 @@ const Challenge = (props: ChallengeProps) => {
     "canvas-keyup": (data: React.KeyboardEvent) => {
       codeRunner?.keyUp(data);
     },
+    reload: () => {
+      forceReload();
+      props.onBookReloadRequested();
+    },
   };
 
   return (
@@ -343,12 +354,11 @@ const Challenge = (props: ChallengeProps) => {
           >
             <Header
               canReloadBook={props.canReloadBook || false}
-              title={props.bookNode.name || ""}
+              title={props.title || props.bookNode?.name || ""}
               bookNode={props.bookNode}
               usesFixedInput={usesFixedInput}
               onSetUsesFixedInput={setUsesFixedInput}
               onSetShowBookUpload={setShowBookUpload}
-              onBookReloadRequested={props.onBookReloadRequested}
               codeRunner={codeRunner}
             />
             <Allotment className="h-100" defaultSizes={[650, 350]}>

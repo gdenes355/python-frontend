@@ -14,6 +14,7 @@ import {
   CodeRunnerRef,
   CodeRunnerState,
 } from "../../../coderunner/useCodeRunner";
+import ChallengeContext from "../../ChallengeContext";
 
 type HeaderProps = {
   title?: string;
@@ -23,12 +24,12 @@ type HeaderProps = {
 
   onSetUsesFixedInput: (usesFixedInput: boolean) => void;
   onSetShowBookUpload: (showBookUpload: boolean) => void;
-  onBookReloadRequested: () => void;
   codeRunner: CodeRunnerRef;
 };
 
 const Header = (props: HeaderProps) => {
   const authContext = useContext(SessionContext);
+  const challengeContext = useContext(ChallengeContext);
   return (
     <HeaderBar
       title={`${props.title ? props.title + " \u203A " : ""}  ${
@@ -51,14 +52,7 @@ const Header = (props: HeaderProps) => {
     >
       {props.canReloadBook ? (
         <Grid item>
-          <IconButton
-            onClick={() => {
-              // TODO:
-              // fetch guide
-              //this.chContext.actions["fetch-code"](true);
-              props.onBookReloadRequested();
-            }}
-          >
+          <IconButton onClick={() => challengeContext?.actions["reload"]()}>
             <CachedIcon />
           </IconButton>
         </Grid>

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import IBookFetcher from "../../book/utils/IBookFetcher";
 
 import ChallengeTypes from "../../models/ChallengeTypes";
@@ -30,8 +30,14 @@ const useChallengeLoader = (props: HookProps) => {
     useState<AdditionalFilesContents>({});
 
   const authContext = useContext(SessionContext);
-
   const additionalFilesLoadedRef = useRef<AdditionalFilesContents>({});
+
+  const [reloadCtr, setReloadCtr] = useState<number>(0);
+  const forceReload = useCallback(() => {
+    forceReloadReplacesCode.current = true;
+    setReloadCtr((ctr) => ctr + 1);
+  }, []);
+  const forceReloadReplacesCode = useRef<boolean>(false);
 
   // GUIDE
   const fetchGuide = async (
@@ -50,7 +56,7 @@ const useChallengeLoader = (props: HookProps) => {
     fetchGuide(props.guidePath, authContext, props.fetcher).then((guide) => {
       setGuideMd(guide);
     });
-  }, [props.guidePath, props.fetcher, authContext]);
+  }, [props.guidePath, props.fetcher, authContext, reloadCtr]);
 
   // CODE
   const loadSavedCode = (uid: string, typ?: ChallengeTypes) => {
@@ -63,7 +69,8 @@ const useChallengeLoader = (props: HookProps) => {
   const fetchCode = async (
     codePath: string,
     authContext: SessionContextType,
-    fetcher: IBookFetcher
+    fetcher: IBookFetcher,
+    replaceSavedCode: boolean
   ) => {
     let resp = await fetcher.fetch(codePath, authContext);
     if (!resp.ok) {
@@ -71,6 +78,9 @@ const useChallengeLoader = (props: HookProps) => {
     }
     let text = await resp.text();
     setStarterCode(text);
+    if (replaceSavedCode) {
+      setSavedCode(text);
+    }
   };
 
   useEffect(() => {
@@ -78,8 +88,14 @@ const useChallengeLoader = (props: HookProps) => {
   }, [props.uid, props.typ]);
 
   useEffect(() => {
-    fetchCode(props.codePath, authContext, props.fetcher);
-  }, [props.codePath, authContext, props.fetcher]);
+    fetchCode(
+      props.codePath,
+      authContext,
+      props.fetcher,
+      forceReloadReplacesCode.current
+    );
+    forceReloadReplacesCode.current = false;
+  }, [props.codePath, authContext, props.fetcher, reloadCtr]);
 
   // additional files
   const fetchAdditionalFiles = async (
@@ -127,6 +143,7 @@ const useChallengeLoader = (props: HookProps) => {
     savedCode,
     starterCode,
     additionalFilesLoaded,
+    forceReload,
   };
 };
 

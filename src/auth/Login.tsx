@@ -32,11 +32,9 @@ type MsalLoginProps = {
 const MsalLogin = (props: MsalLoginProps) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
+  const [userHasInteracted, setUserHasInteracted] = useState<boolean>(false);
   const authContext = useContext(SessionContext);
   const { info } = props;
-  const [userHasInteracted, setUserHasInteracted] = useState<boolean>(
-    info.resultsEndpoint.startsWith("https://perse.pythonsponge.com")
-  );
 
   /// acquire access token from MS
   useEffect(() => {
