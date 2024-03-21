@@ -15,6 +15,7 @@ import { TestResults } from "../../../models/Tests";
 import "./ParsonsEditor.css";
 import PyEditor from "./PyEditor";
 import ParsonsEditorThemeSplitWrapper from "./ParsonsEditorThemeSplitWrapper";
+import { emptyDebugContext } from "../../../coderunner/DebugContext";
 
 const loadJS = (url: string) =>
   new Promise<void>((r) => {
@@ -217,7 +218,7 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
             isOnBreakPoint={false}
             starterCode={getHeaderFooterCode(props.starterCode)}
             onToggleFullScreen={() => {}}
-            debugContext={{ lineno: 0, locals: new Map(), globals: new Map() }}
+            debugContext={emptyDebugContext}
           />
         </>
       );

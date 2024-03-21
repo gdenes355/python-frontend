@@ -52,6 +52,7 @@ type CodeRunnerRef = {
     additionalFilesLoaded?: AdditionalFilesContents,
     fixedUserInput?: string
   ) => Promise<DebugFinishedData>;
+  refreshDebugContext: (dbgSetup: DebugSetup) => void;
   kill: () => void;
   keyDown: (data: React.KeyboardEvent) => void;
   keyUp: (data: React.KeyboardEvent) => void;
@@ -191,6 +192,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     keyDown: pythonCodeRunner.keyDown,
     keyUp: pythonCodeRunner.keyUp,
     step: pythonCodeRunner.step,
+    refreshDebugContext: pythonCodeRunner.refreshDebugContext,
     continue: pythonCodeRunner.continue,
     input: pythonCodeRunner.input,
     consoleText: consoleText,

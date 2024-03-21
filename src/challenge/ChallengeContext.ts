@@ -9,16 +9,8 @@ import BookNodeModel from "../models/BookNodeModel";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import { absolutisePath } from "../utils/pathTools";
-import { PyEditorHandle } from "./components/Editors/PyEditor";
-import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
-import { CodeRunnerRef } from "../coderunner/useCodeRunner";
-import { CanvasDisplayHandle } from "./components/CanvasDisplay/CanvasDisplay";
-import { FixedInputFieldHandle } from "./components/FixedInputField";
+
 import { DebugFinishedData } from "../coderunner/CodeRunner";
-import {
-  AdditionalFiles,
-  AdditionalFilesContents,
-} from "../models/AdditionalFiles";
 
 type WorkerResponse = {
   cmd: string;
@@ -706,145 +698,7 @@ class ChallengeContextClass implements IChallengeContext {
   };
 }
 
-class ChallengeContextClass2 implements IChallengeContext {
-  public actions = {
-    debug: (mode: "debug" | "run" = "debug") => {
-      if (this.typ === ChallengeTypes.parsons) {
-        let code = this.parsonsEditorRef?.getValue();
-        if (code) {
-          this.codeRunnerRef?.debug(code, mode);
-        }
-      } else {
-        const code = this.pyEditorRef?.getValue();
-        let bkpts = this.pyEditorRef?.getBreakpoints() || [];
-        this.canvasRef?.turtleReset();
-        if (code || code === "") {
-          this.actions["save-code"]({ code });
-          this.codeRunnerRef
-            ?.debug(
-              code,
-              mode,
-              { breakpoints: bkpts },
-              this.bookNode?.additionalFiles || [],
-              this.additionalFilesLoaded,
-              this.fixedInputFieldRef?.getValue() || undefined
-            )
-            .then((result) => {
-              if (this.bookNode?.isExample) {
-                this.onReportResult([{ outcome: true }], code, this.bookNode);
-              }
-            });
-        }
-      }
-    },
-    test: () => {
-      if (!this.bookNode) return;
-      if (this.typ === "parsons") {
-        const newResults = this.parsonsEditorRef?.runTests() || [];
-        const code = this.parsonsEditorRef?.getValue() || "";
-        const bookNode = this.bookNode;
-        this.onReportResult(newResults, code, bookNode);
-      } else {
-        const code = this.pyEditorRef?.getValue();
-        const tests = this.bookNode.tests || [];
-        if (code && this.bookNode.isAssessment) {
-          this.onReportResult([{ outcome: true }], code, this.bookNode);
-          this.actions["save-code"]({ code });
-        } else if (code && tests) {
-          this.codeRunnerRef
-            ?.test(
-              code,
-              tests,
-              this.bookNode?.additionalFiles || [],
-              this.additionalFilesLoaded,
-              this.bookNode
-            )
-            .then((results) => {
-              this.onReportResult(
-                results.results,
-                results.code,
-                results.bookNode
-              );
-            });
-        }
-      }
-    },
-    "input-entered": ({ input }: { input: string | null }) => {
-      let inputStr = input == null ? "" : input;
-      this.codeRunnerRef?.input(inputStr);
-    },
-    kill: () => {
-      this.codeRunnerRef?.kill();
-    },
-    step: () => {
-      this.codeRunnerRef?.step();
-    },
-    continue: () => {
-      this.codeRunnerRef?.continue();
-    },
-    "breakpoints-updated": () => {},
-    "reset-code": () => {
-      if (this.typ === "parsons") {
-        this.parsonsEditorRef?.reset();
-        return;
-      }
-      if ((this.starterCode === "" || this.starterCode) && this.pyEditorRef) {
-        this.pyEditorRef.setValue(this.starterCode);
-      }
-    },
-    "save-code": ({ code }: { code: string }) => {
-      if ((code || code === "") && this.uid) {
-        localStorage.setItem("code-" + encodeURIComponent(this.uid), code);
-      }
-    },
-    "download-code": () => {
-      this.pyEditorRef?.download();
-    },
-    "handle-file-read": (e: ProgressEvent<FileReader>) => {
-      if (this.fileReader?.result) {
-        this.pyEditorRef?.setValue(this.fileReader.result.toString());
-        this.fileReader = null;
-      }
-    },
-    "handle-code-upload": (file: File) => {
-      this.fileReader = new FileReader();
-      this.fileReader.onloadend = this.actions["handle-file-read"];
-      this.fileReader.readAsText(file);
-    },
-    "canvas-keydown": (data: React.KeyboardEvent) => {
-      this.codeRunnerRef?.keyDown(data);
-    },
-    "canvas-keyup": (data: React.KeyboardEvent) => {
-      this.codeRunnerRef?.keyUp(data);
-    },
-  };
-
-  // reference to key components
-  public pyEditorRef: PyEditorHandle | null = null;
-  public parsonsEditorRef: ParsonsEditorHandle | null = null;
-  public codeRunnerRef: CodeRunnerRef | null = null;
-  public canvasRef: CanvasDisplayHandle | null = null;
-  public fixedInputFieldRef: FixedInputFieldHandle | null = null;
-
-  // callbacks
-  public onReportResult: (
-    results: TestResults,
-    code: string,
-    bookNode: BookNodeModel
-  ) => void = () => {};
-
-  // properties of the challenge
-  public typ: ChallengeTypes = ChallengeTypes.py;
-  public starterCode: string | undefined = undefined;
-  public uid: string = "";
-  public bookNode: BookNodeModel | null = null;
-  public additionalFilesLoaded: AdditionalFilesContents = {};
-
-  // private state
-  private fileReader: FileReader | null = null;
-}
-
 const ChallengeContext = createContext<IChallengeContext | null>(null);
 
 export default ChallengeContext;
-export { ChallengeContextClass, ChallengeContextClass2 };
+export { ChallengeContextClass };

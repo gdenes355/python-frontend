@@ -1,10 +1,10 @@
 import React, { useRef, useImperativeHandle } from "react";
 import { Box } from "@mui/material";
 
-import TabbedView, { TabbedViewHandle } from "../../components/TabbedView";
+import TabbedView, { TabbedViewHandle } from "../../../components/TabbedView";
 
-import PaneType from "../../models/PaneType";
-import { AdditionalFiles } from "../../models/AdditionalFiles";
+import PaneType from "../../../models/PaneType";
+import { AdditionalFiles } from "../../../models/AdditionalFiles";
 
 type OutputsHandle = {
   focusPane: (pane: PaneType) => void;

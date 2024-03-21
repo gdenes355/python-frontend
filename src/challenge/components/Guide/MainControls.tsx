@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
 import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
 import { DevicesFoldRounded } from "@mui/icons-material";
-import TestResultsIndicator from "../../components/TestResultIndicator";
-import { TestResults } from "../../models/Tests";
-import RunSplitButton from "./RunSplitButton";
-import ChallengeContext from "../ChallengeContext";
+import TestResultsIndicator from "../../../components/TestResultIndicator";
+import { TestResults } from "../../../models/Tests";
+import RunSplitButton from "../RunSplitButton";
+import ChallengeContext from "../../ChallengeContext";
 
 type MainControlsProps = {
   canDebug: boolean;

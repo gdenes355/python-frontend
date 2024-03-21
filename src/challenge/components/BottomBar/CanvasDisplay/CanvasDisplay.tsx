@@ -3,7 +3,7 @@ import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, setVirtualMode } from "./TurtleController";
 
-import ChallengeContext from "../../ChallengeContext";
+import ChallengeContext from "../../../ChallengeContext";
 
 type CanvasDisplayHandle = {
   turtleReset: (virtual?: boolean) => void;

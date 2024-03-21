@@ -35,6 +35,7 @@ interface ICodeRunner {
   input: (input: string, dbgSetup: DebugSetup) => void;
   continue: (dbgSetup: DebugSetup) => void;
   step: (dbgSetup: DebugSetup) => void;
+  refreshDebugContext: (dbgSetup: DebugSetup) => void; // ask the worker to re-report watches and vars
   debug: (
     code: string,
     mode: "debug" | "run",
@@ -197,6 +198,7 @@ class PythonCodeRunner implements ICodeRunner {
       initCode: additionalCode,
       breakpoints:
         dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
+      watches: dbgSetup?.watches === undefined ? null : dbgSetup?.watches,
     });
     this.state =
       mode === "debug"
@@ -228,6 +230,7 @@ class PythonCodeRunner implements ICodeRunner {
       data: input,
       breakpoints:
         dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
+      watches: dbgSetup?.watches,
     });
     this.onPrint.fire(input + "\n");
     this.state = CodeRunnerState.RUNNING;
@@ -235,22 +238,39 @@ class PythonCodeRunner implements ICodeRunner {
   };
 
   public continue = (dbgSetup?: DebugSetup) => {
+    if (this.state !== CodeRunnerState.ON_BREAKPOINT) return;
     navigator.serviceWorker.controller?.postMessage({
       cmd: "ps-debug-continue",
       breakpoints:
         dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
       step: false,
+      watches: dbgSetup?.watches,
     });
     this.state = CodeRunnerState.RUNNING_WITH_DEBUGGER;
     this.onStateChanged.fire(this.state);
   };
 
   public step = (dbgSetup?: DebugSetup) => {
+    if (this.state !== CodeRunnerState.ON_BREAKPOINT) return;
     navigator.serviceWorker.controller?.postMessage({
       cmd: "ps-debug-continue",
       breakpoints:
         dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
       step: true,
+      watches: dbgSetup?.watches,
+    });
+    this.state = CodeRunnerState.RUNNING_WITH_DEBUGGER;
+    this.onStateChanged.fire(this.state);
+  };
+
+  public refreshDebugContext = (dbgSetup: DebugSetup) => {
+    if (this.state !== CodeRunnerState.ON_BREAKPOINT) return;
+    navigator.serviceWorker.controller?.postMessage({
+      cmd: "ps-debug-continue",
+      breakpoints:
+        dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
+      watches: dbgSetup?.watches,
+      stay: true, // ask worker to stay on the same line
     });
     this.state = CodeRunnerState.RUNNING_WITH_DEBUGGER;
     this.onStateChanged.fire(this.state);

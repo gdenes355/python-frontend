@@ -1,14 +1,14 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import IBookFetcher from "../book/utils/IBookFetcher";
+import IBookFetcher from "../../book/utils/IBookFetcher";
 
-import ChallengeTypes from "../models/ChallengeTypes";
-import SessionContext, { SessionContextType } from "../auth/SessionContext";
+import ChallengeTypes from "../../models/ChallengeTypes";
+import SessionContext, { SessionContextType } from "../../auth/SessionContext";
 import {
   AdditionalFiles,
   AdditionalFilesContents,
-} from "../models/AdditionalFiles";
-import { absolutisePath } from "../utils/pathTools";
-import EditableBookStore from "../book/utils/EditableBookStore";
+} from "../../models/AdditionalFiles";
+import { absolutisePath } from "../../utils/pathTools";
+import EditableBookStore from "../../book/utils/EditableBookStore";
 
 type HookProps = {
   guidePath: string;
@@ -21,10 +21,9 @@ type HookProps = {
 };
 
 const useChallengeLoader = (props: HookProps) => {
-  const [guideMd, setGuideMd] = useState<string>("");
-  const [turtleExampleRendered, setTurtleExampleRendered] = useState<
-    string | undefined
-  >(undefined);
+  const [guideMd, setGuideMd] = useState<string>(
+    "*Loading the guide... Please wait*"
+  );
   const [starterCode, setStarterCode] = useState<string | undefined>(undefined);
   const [savedCode, setSavedCode] = useState<string | undefined>(undefined);
   const [additionalFilesLoaded, setAdditionalFilesLoaded] =
@@ -48,7 +47,6 @@ const useChallengeLoader = (props: HookProps) => {
   };
 
   useEffect(() => {
-    setTurtleExampleRendered(undefined);
     fetchGuide(props.guidePath, authContext, props.fetcher).then((guide) => {
       setGuideMd(guide);
     });

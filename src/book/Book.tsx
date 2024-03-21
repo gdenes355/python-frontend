@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import Challenge from "../challenge/Challenge";
 import ChallengeEditor from "../challenge/ChallengeEditor";
 import BookCover from "./BookCover";
 import BookDrawer from "./components/BookDrawer";
@@ -28,7 +27,7 @@ import UnauthorisedError from "../auth/UnauthorisedException";
 import SessionContext from "../auth/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
-import Challenge2 from "../challenge/Challenge2";
+import Challenge from "../challenge/Challenge";
 import ChallengeTypes from "../models/ChallengeTypes";
 
 type BookProps = {
@@ -318,22 +317,17 @@ const Book = (props: BookProps) => {
           return (
             <React.Fragment>
               <ErrorBounday>
-                <Challenge2
+                <Challenge
                   fetcher={bookFetcher}
                   guidePath={paths.guidePath}
                   codePath={paths.pyPath}
                   bookNode={activeNode}
-                  title={rootNode.name}
                   openBookDrawer={openDrawer}
                   onRequestPreviousChallenge={requestPreviousChallenge}
                   onRequestNextChallenge={requestNextChallenge}
                   uid={bookPath + bookChallengeId}
                   progressStorage={progressStorage}
-                  typ={
-                    activeNode.typ ? ChallengeTypes[activeNode.typ] : undefined
-                  }
                   onBookUploaded={props.onBookUploaded}
-                  authContext={authContext}
                   canReloadBook={editState === "localpreview"}
                   onBookReloadRequested={() => requestBookReload()}
                 />

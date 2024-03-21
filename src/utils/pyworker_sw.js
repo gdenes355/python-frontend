@@ -30,7 +30,7 @@ onmessage = function (e) {
       if (e.data.initCode) {
         self.pyodide.globals.get("pyexec")(e.data.initCode, [], []);
       }
-      self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints);
+      self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints, e.data.watches);
     } catch (err) {
       if (err.message.includes("KeyboardInterrupt")) {
         reason = "interrupt";

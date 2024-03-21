@@ -2,19 +2,19 @@ import React, { MutableRefObject } from "react";
 import { saveAs } from "file-saver";
 import { Box, Card, CardContent, TextField, Paper } from "@mui/material";
 
-import DebugPane from "../components/DebugPane";
+import DebugPane from "./components/Debug/DebugPane";
 import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
 import JsonEditor, { JsonEditorHandle } from "./components/Editors/JsonEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
-import ChallengeConsole from "./components/ChallengeConsole";
+import ChallengeConsole from "./components/BottomBar/ChallengeConsole";
 import CanvasDisplay, {
   CanvasDisplayHandle,
-} from "./components/CanvasDisplay/CanvasDisplay";
+} from "./components/BottomBar/CanvasDisplay/CanvasDisplay";
 import FixedInputField, {
   FixedInputFieldHandle,
-} from "./components/FixedInputField";
+} from "./components/BottomBar/FixedInputField";
 import Guide from "../components/Guide";
-import MainControls from "./components/MainControls";
+import MainControls from "./components/Guide/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
 import { Allotment } from "allotment";
 import HeaderBar from "../components/HeaderBar";
@@ -23,7 +23,7 @@ import { throttle } from "lodash";
 import ChallengeStatus from "../models/ChallengeStatus";
 import BookNodeModel from "../models/BookNodeModel";
 import Help from "./components/Help";
-import Outputs, { OutputsHandle } from "./components/Outputs";
+import Outputs, { OutputsHandle } from "./components/BottomBar/Outputs";
 
 import ChallengeTypes from "../models/ChallengeTypes";
 
@@ -34,8 +34,8 @@ import IChallenge, { IChallengeProps, IChallengeState } from "./IChallenge";
 import EditableBookStore from "../book/utils/EditableBookStore";
 
 import BookZipper from "../book/utils/BookZipper";
-import HeaderButtonsEditor from "./components/HeaderButtonsEditor";
-import HeaderMenuEditor from "./components/HeaderMenuEditor";
+import HeaderButtonsEditor from "./components/Header/HeaderButtonsEditor";
+import HeaderMenuEditor from "./components/Header/HeaderMenuEditor";
 import InfoDialog from "../components/dialogs/InfoDialog";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import { SessionContextType } from "../auth/SessionContext";
@@ -43,6 +43,7 @@ import PaneType from "../models/PaneType";
 import AdditionalFileView, {
   AdditionalFileViewRef,
 } from "./components/Editors/AdditionalFileView";
+import { emptyDebugContext } from "../coderunner/DebugContext";
 
 type ChallengeEditorState = IChallengeState & {
   savedCode: string | null;
@@ -116,7 +117,7 @@ class ChallengeEditor
     savedCode: null,
     consoleText: "Press debug to get started...",
     guideMd: "*Loading the guide... Please wait*",
-    debugContext: { lineno: 0, locals: new Map(), globals: new Map() },
+    debugContext: emptyDebugContext,
     editorState: ChallengeStatus.LOADING,
     editorFullScreen: false,
     testResults: [],

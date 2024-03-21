@@ -367,6 +367,7 @@ debug_audio = DebugAudio()
 test_output = TestOutput()
 
 active_breakpoints = set()  # set of line numbers that have active breakpoints
+watches = []  # list of expressions to watch
 breakpoint_map = {}  # map all lines (including empty) to a breakpointable line
 step_into = False  # step into the next instruction
 # keep track of the last seen line number, so we don't double break on a line
@@ -628,7 +629,7 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
             return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
 
 
-def pydebug(code, breakpoints):
+def pydebug(code, breakpoints, watches=[]):
     global active_breakpoints
     global step_into
     global breakpoint_map
@@ -700,6 +701,7 @@ def pydebug(code, breakpoints):
             nextbrk = lineno
         breakpoint_map[lineno] = nextbrk
     update_breakpoints(breakpoints)
+    update_watches(watches)
     exec(compile(parsed_stmts, filename="YourPythonCode.py", mode="exec"), global_vars)
 
 
@@ -732,6 +734,10 @@ def update_breakpoints(breakpoints):
     except:
         active_breakpoints = set()
 
+def update_watches(new_watches):
+    global watches
+    watches = list(new_watches) if new_watches else []
+
 
 def post_message(data):
     js.workerPostMessage(js.Object.fromEntries(to_js(data)))
@@ -756,6 +762,7 @@ def debug_input(prompt=""):
     if (js.workerInterrupted()):
         raise KeyboardInterrupt()
     update_breakpoints(resp.get("breakpoints"))
+    update_watches(resp.get("watches"))
     return resp.get("data")
 
 
@@ -798,28 +805,44 @@ def run_turtle_cmd(msg):
 def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
     global step_into
     global last_seen_lineno
+    global watches
     if is_secondary and last_seen_lineno == lineno:
         return True
     last_seen_lineno = lineno
     if step_into or lineno in active_breakpoints:
         step_into = False
         # remove wrapper and breakpt method
-        stack = traceback.extract_stack()[1:-1]
+        #stack = traceback.extract_stack()[1:-1]
         VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__",
                           "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
                           "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time", "last_seen_lineno"]
-        globals = {k: repr(
-            aglobals[k]) for k in aglobals if k not in VARS_TO_REMOVE and not callable(aglobals[k])}
-        if alocals != aglobals:
-            locals = {k: repr(
-                alocals[k]) for k in alocals if k not in VARS_TO_REMOVE and not callable(alocals[k])}
-        else:
-            locals = {}
+        stay = True
+        while stay:
+            globals = {k: repr(
+                aglobals[k]) for k in aglobals if k not in VARS_TO_REMOVE and not callable(aglobals[k])}
+            if alocals != aglobals:
+                locals = {k: repr(
+                    alocals[k]) for k in alocals if k not in VARS_TO_REMOVE and not callable(alocals[k])}
+            else:
+                locals = {}
 
-        post_message({"cmd": "breakpt", "lineno": lineno,
-                     "globals": globals, "locals": locals})
-        resp = json.loads(synchronise('/@debug@/break.js'))
-        update_breakpoints(resp.get("breakpoints"))
-        if (resp.get("step")):
-            step_into = True
+            watch_resp = {}
+            for watch in watches:
+                try:
+                    watch_resp[watch] = eval(watch, aglobals, alocals)
+                except:
+                    watch_resp[watch] = "error evaluating expression"
+                    
+            post_message({"cmd": "breakpt", "lineno": lineno,
+                        "globals": globals, "locals": locals,
+                        "watches": watch_resp})
+            resp = json.loads(synchronise('/@debug@/break.js'))
+            update_breakpoints(resp.get("breakpoints"))
+            update_watches(resp.get("watches"))
+            if resp.get("step"):
+                step_into = True
+            if not resp.get("stay", False):
+                stay = False
+                
+                
     return True
