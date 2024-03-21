@@ -348,6 +348,8 @@ class DebugContext:
 class DebugOutput:
     def write(self, text):
         post_message({"cmd": "print", "msg": text})
+    def flush(self):
+        pass
 
 
 class TestOutput:
@@ -359,6 +361,9 @@ class TestOutput:
 
     def write(self, text):
         self.buffer += text
+
+    def flush(self):
+        pass
 
 
 debug_output = DebugOutput()
