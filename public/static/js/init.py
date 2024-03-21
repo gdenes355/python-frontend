@@ -370,6 +370,7 @@ active_breakpoints = set()  # set of line numbers that have active breakpoints
 watches = []  # list of expressions to watch
 breakpoint_map = {}  # map all lines (including empty) to a breakpointable line
 step_into = False  # step into the next instruction
+in_watch = False  # in a watch expression; if so, ignore breakpoints
 # keep track of the last seen line number, so we don't double break on a line
 last_seen_lineno = -1
 test_inputs = []
@@ -806,10 +807,11 @@ def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
     global step_into
     global last_seen_lineno
     global watches
+    global in_watch
     if is_secondary and last_seen_lineno == lineno:
         return True
     last_seen_lineno = lineno
-    if step_into or lineno in active_breakpoints:
+    if not in_watch and (step_into or lineno in active_breakpoints):
         step_into = False
         # remove wrapper and breakpt method
         #stack = traceback.extract_stack()[1:-1]
@@ -829,9 +831,12 @@ def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
             watch_resp = {}
             for watch in watches:
                 try:
+                    in_watch = True
                     watch_resp[watch] = eval(watch, aglobals, alocals)
                 except:
                     watch_resp[watch] = "error evaluating expression"
+                finally:
+                    in_watch = False
                     
             post_message({"cmd": "breakpt", "lineno": lineno,
                         "globals": globals, "locals": locals,
