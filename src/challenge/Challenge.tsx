@@ -79,7 +79,7 @@ const Challenge = (props: ChallengeProps) => {
     string | undefined
   >(undefined);
 
-  const watches = useRef<string[]>(["colour", "foo"]);
+  const watches = useRef<string[]>([]);
 
   /// references to sub-components
   const pyEditorRef = useRef<PyEditorHandle | null>(null);
