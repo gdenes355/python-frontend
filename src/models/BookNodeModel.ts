@@ -25,6 +25,21 @@ type BookNodeModel = {
   bookMainUrl?: string;
 };
 
+// simplified view of the node
+// no ID, just the fields that make sense to edit manually
+// no children either!
+const nodeToJsonSimple = (node: BookNodeModel) => {
+  let proxy = {
+    name: node.name,
+    isExample: node.isExample,
+    isAssessment: node.isAssessment,
+    typ: node.typ,
+    tests: node.tests,
+    additionalFiles: node.additionalFiles,
+  };
+  return JSON.stringify(proxy, null, 2);
+};
+
 const getSinglePage: (root: BookNodeModel) => BookNodeModel | null = (root) => {
   let node = root;
   while (true) {
@@ -298,4 +313,5 @@ export {
   moveBookNodeAfter,
   getSinglePage,
   extractFileNames,
+  nodeToJsonSimple,
 };

@@ -3,7 +3,7 @@ import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
 import { DevicesFoldRounded } from "@mui/icons-material";
 import TestResultsIndicator from "../../../components/TestResultIndicator";
 import { TestResults } from "../../../models/Tests";
-import RunSplitButton from "../RunSplitButton";
+import RunSplitButton from "../../../components/RunSplitButton";
 import ChallengeContext from "../../ChallengeContext";
 
 type MainControlsProps = {

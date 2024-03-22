@@ -35,6 +35,7 @@ const useChallengeLoader = (props: HookProps) => {
   const [reloadCtr, setReloadCtr] = useState<number>(0);
   const forceReload = useCallback(() => {
     forceReloadReplacesCode.current = true;
+    additionalFilesLoadedRef.current = {}; // flush additional files cache
     setReloadCtr((ctr) => ctr + 1);
   }, []);
   const forceReloadReplacesCode = useRef<boolean>(false);
@@ -136,7 +137,13 @@ const useChallengeLoader = (props: HookProps) => {
       props.fetcher,
       props.store
     );
-  }, [props.additionalFiles, authContext, props.fetcher, props.store]);
+  }, [
+    props.additionalFiles,
+    authContext,
+    props.fetcher,
+    props.store,
+    reloadCtr,
+  ]);
 
   return {
     guideMd,

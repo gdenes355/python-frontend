@@ -12,7 +12,7 @@ import VsThemeContext from "../themes/VsThemeContext";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import TurtlePreview from "./TurtlePreview";
+import TurtlePreview from "../challenge/components/Guide/TurtlePreview";
 
 type GuideProps = {
   md: string;

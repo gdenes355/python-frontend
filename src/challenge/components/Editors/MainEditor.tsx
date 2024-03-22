@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import ChallengeTypes from "../../../models/ChallengeTypes";
 import ParsonsEditor, { ParsonsEditorHandle } from "./ParsonsEditor";
 import {
@@ -7,6 +7,7 @@ import {
 } from "../../../coderunner/useCodeRunner";
 import PyEditor, { PyEditorHandle } from "./PyEditor";
 import { emptyDebugContext } from "../../../coderunner/DebugContext";
+import ChallengeContext from "../../ChallengeContext";
 
 type MainEditorProps = {
   typ: ChallengeTypes;
@@ -19,7 +20,9 @@ type MainEditorProps = {
 };
 
 const MainEditor = (props: MainEditorProps) => {
-  if (props.typ === "parsons") {
+  const challengeContext = useContext(ChallengeContext);
+
+  if (props.typ === "parsons" && !challengeContext?.isEditing) {
     return (
       <ParsonsEditor
         ref={props.parsonsEditorRef}

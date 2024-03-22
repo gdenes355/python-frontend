@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, useContext } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
-import ChallengeEditor from "../challenge/ChallengeEditor";
 import BookCover from "./BookCover";
 import BookDrawer from "./components/BookDrawer";
 import BookReport from "./BookReport";
@@ -15,7 +14,6 @@ import BookNodeModel, {
   nextBookNode,
   prevBookNode,
 } from "../models/BookNodeModel";
-import { TestCases } from "../models/Tests";
 
 import ErrorBounday from "../components/ErrorBoundary";
 import EditableBookStore, {
@@ -28,7 +26,6 @@ import SessionContext from "../auth/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
 import Challenge from "../challenge/Challenge";
-import ChallengeTypes from "../models/ChallengeTypes";
 
 type BookProps = {
   zipFile?: File;
@@ -51,7 +48,7 @@ const Book = (props: BookProps) => {
     pyPath: null,
   });
   const [activeNode, setActiveNode] = useState<BookNodeModel | null>(null);
-  const [tests, setTests] = useState<TestCases | null>(null);
+
   const [drawerOpen, setDrawerOpen] = React.useState(false);
 
   const [editState, setEditState] = useState<EditState>(undefined);
@@ -233,7 +230,6 @@ const Book = (props: BookProps) => {
               )
             : null,
         });
-        setTests(node.tests);
       }
     } else {
       setPaths({ guidePath: null, pyPath: null });
@@ -373,12 +369,12 @@ const Book = (props: BookProps) => {
       } else {
         return (
           <ErrorBounday>
-            <ChallengeEditor
-              bookStore={editableBookStore}
+            <Challenge
+              isEditing={true}
+              store={editableBookStore}
               fetcher={bookFetcher}
               guidePath={paths.guidePath}
               codePath={paths.pyPath!}
-              tests={tests && tests.length > 0 ? tests : null}
               bookNode={activeNode}
               title={rootNode.name}
               openBookDrawer={openDrawer}
@@ -386,11 +382,9 @@ const Book = (props: BookProps) => {
               onRequestNextChallenge={requestNextChallenge}
               uid={bookPath + bookChallengeId}
               progressStorage={progressStorage}
-              isExample={activeNode.isExample}
-              typ={activeNode.typ ? ChallengeTypes[activeNode.typ] : undefined}
-              onBookModified={requestBookReload}
-              authContext={authContext}
+              onBookReloadRequested={() => requestBookReload()}
             />
+
             <BookEditorDrawer
               bookRoot={rootNode}
               bookNode={activeNode}

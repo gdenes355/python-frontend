@@ -13,7 +13,7 @@ const ChallengeConsole = (props: {
       content={props.content}
       isInputEnabled={props.inputEnabled}
       onInput={(input) => {
-        challengeContext?.actions["input-entered"]({ input });
+        challengeContext?.actions["input-entered"](input);
       }}
       onInterrupt={() => challengeContext?.actions["kill"]()}
     />

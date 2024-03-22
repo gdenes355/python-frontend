@@ -9,22 +9,22 @@ import { TestResults } from "../models/Tests";
 import ChallengeTypes from "../models/ChallengeTypes";
 import IBookFetcher from "../book/utils/IBookFetcher";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
-import BookNodeModel from "../models/BookNodeModel";
+import BookNodeModel, { nodeToJsonSimple } from "../models/BookNodeModel";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 
 import useCodeRunner, { CodeRunnerState } from "../coderunner/useCodeRunner";
-import Guide from "../components/Guide";
 import BookUploadModal from "../book/components/BookUploadModal";
 import { Card, CardContent, Paper } from "@mui/material";
 import { Box } from "@mui/system";
 
 import { Allotment } from "allotment";
+import "allotment/dist/style.css";
 
 import BookControlFabs from "../book/components/BookControlFabs";
 import DebugPane from "./components/Debug/DebugPane2";
 import MainControls from "./components/Guide/MainControls";
-import ChallengeContext from "./ChallengeContext";
+import ChallengeContext, { Actions, wrapActions } from "./ChallengeContext";
 import useChallengeLoader from "./hooks/useChallengeLoader";
 import "./Challenge.css";
 import Header from "./components/Header/Header";
@@ -32,6 +32,12 @@ import MainEditor from "./components/Editors/MainEditor";
 import ChallengeOutputs, {
   ChallengeOutputsHandle,
 } from "./components/BottomBar/ChallengeOutputs";
+import EditableBookStore from "../book/utils/EditableBookStore";
+import ChallengeGuide, {
+  ChallengeGuideRef,
+} from "./components/Guide/ChallengeGuide";
+import saveNode from "../book/utils/BookSaver";
+import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 
 type ChallengeProps = {
   uid: string;
@@ -44,9 +50,12 @@ type ChallengeProps = {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookUploaded: (file: File, edit: boolean) => void;
+  onBookUploaded?: (file: File, edit: boolean) => void;
   canReloadBook?: boolean;
   onBookReloadRequested: () => void;
+
+  isEditing?: boolean;
+  store?: EditableBookStore;
 };
 
 const Challenge = (props: ChallengeProps) => {
@@ -80,6 +89,13 @@ const Challenge = (props: ChallengeProps) => {
     string | undefined
   >(undefined);
 
+  // states related to editing only
+  const [hasEdited, setHasEdited] = useState<boolean>(false);
+  const [isEditingGuide, setIsEditingGuide] = useState<boolean>(false);
+  const [saveDialogProps, setSaveDialogProps] = useState<
+    SaveDialogProps | undefined
+  >(undefined);
+
   const watches = useRef<string[]>([]);
 
   /// references to sub-components
@@ -87,6 +103,7 @@ const Challenge = (props: ChallengeProps) => {
   const parsonsEditorRef = useRef<ParsonsEditorHandle | null>(null);
   const outputsRef = useRef<ChallengeOutputsHandle | null>(null);
   const fileReader = useRef<FileReader | null>(null);
+  const guideRef = useRef<ChallengeGuideRef | null>(null);
 
   /// hooks
   const codeRunner = useCodeRunner({
@@ -143,7 +160,7 @@ const Challenge = (props: ChallengeProps) => {
     additionalFiles: props.bookNode.additionalFiles || [],
     typ: nodeTyp,
     uid: props.uid,
-    store: null,
+    store: props.store || null,
   });
 
   const onReportResult = useCallback(
@@ -178,6 +195,7 @@ const Challenge = (props: ChallengeProps) => {
       codeRunner.clear?.();
     }
     setTurtleExampleRendered(undefined);
+    setHasEdited(false);
 
     // eslint-disable-next-line
   }, [props.uid, props.bookNode]);
@@ -209,123 +227,181 @@ const Challenge = (props: ChallengeProps) => {
   }, []);
 
   // accepting actions from child nodes
-  const actions = {
-    debug: (mode: "debug" | "run" = "debug") => {
-      if (nodeTyp === ChallengeTypes.parsons) {
-        let code = parsonsEditorRef.current?.getValue();
-        if (code) {
-          codeRunner.debug(code, mode);
+  // actions interface; cached, so the
+  // challenge context can be passed down without frequent re-renders
+  // this is OK, as actions are just callbacks, no state transferred
+  const actions = useMemo(() => {
+    return {
+      debug: (mode: "debug" | "run" = "debug") => {
+        if (nodeTyp === ChallengeTypes.parsons) {
+          let code = parsonsEditorRef.current?.getValue();
+          if (code) {
+            codeRunner.debug(code, mode);
+          }
+        } else {
+          const code = pyEditorRef.current?.getValue();
+          outputsRef.current?.getCanvas()?.turtleReset();
+          const bookNode = props.bookNode;
+          if (code || code === "") {
+            actions["save-code"](code);
+            codeRunner
+              .debug(
+                code,
+                mode,
+                makeDebugSetup(),
+                props.bookNode?.additionalFiles || [],
+                additionalFilesLoaded,
+                usesFixedInput
+                  ? outputsRef.current?.getFixedInputs()
+                  : undefined
+              )
+              .then((result) => {
+                if (props.bookNode?.isExample) {
+                  onReportResult([{ outcome: true }], code, bookNode);
+                }
+              });
+          }
         }
-      } else {
-        const code = pyEditorRef.current?.getValue();
-        outputsRef.current?.getCanvas()?.turtleReset();
-        const bookNode = props.bookNode;
-        if (code || code === "") {
-          actions["save-code"]({ code });
-          codeRunner
-            .debug(
-              code,
-              mode,
-              makeDebugSetup(),
-              props.bookNode?.additionalFiles || [],
-              additionalFilesLoaded,
-              usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined
-            )
-            .then((result) => {
-              if (props.bookNode?.isExample) {
-                onReportResult([{ outcome: true }], code, bookNode);
-              }
-            });
+      },
+      test: () => {
+        if (!props.bookNode) return;
+        if (nodeTyp === "parsons") {
+          const newResults = parsonsEditorRef.current?.runTests() || [];
+          const code = parsonsEditorRef.current?.getValue() || "";
+          const bookNode = props.bookNode;
+          onReportResult(newResults, code, bookNode);
+        } else {
+          const code = pyEditorRef.current?.getValue();
+          const tests = props.bookNode.tests || [];
+          const bookNode = props.bookNode;
+          if (code && props.bookNode.isAssessment) {
+            onReportResult([{ outcome: true }], code, bookNode);
+            actions["save-code"](code);
+          } else if (code && tests) {
+            actions["save-code"](code);
+            codeRunner
+              ?.test(
+                code,
+                tests,
+                props.bookNode?.additionalFiles || [],
+                additionalFilesLoaded,
+                props.bookNode
+              )
+              .then((results) => {
+                onReportResult(results.results, results.code, results.bookNode);
+              });
+          }
         }
-      }
-    },
-    test: () => {
-      if (!props.bookNode) return;
-      if (nodeTyp === "parsons") {
-        const newResults = parsonsEditorRef.current?.runTests() || [];
-        const code = parsonsEditorRef.current?.getValue() || "";
-        const bookNode = props.bookNode;
-        onReportResult(newResults, code, bookNode);
-      } else {
-        const code = pyEditorRef.current?.getValue();
-        const tests = props.bookNode.tests || [];
-        const bookNode = props.bookNode;
-        if (code && props.bookNode.isAssessment) {
-          onReportResult([{ outcome: true }], code, bookNode);
-          actions["save-code"]({ code });
-        } else if (code && tests) {
-          actions["save-code"]({ code });
-          codeRunner
-            ?.test(
-              code,
-              tests,
-              props.bookNode?.additionalFiles || [],
-              additionalFilesLoaded,
-              props.bookNode
-            )
-            .then((results) => {
-              onReportResult(results.results, results.code, results.bookNode);
-            });
+      },
+      "input-entered": (input: string | null) => {
+        let inputStr = input == null ? "" : input;
+        codeRunner?.input(inputStr, makeDebugSetup());
+      },
+      kill: () => codeRunner?.kill(),
+      step: () => codeRunner?.step(makeDebugSetup()),
+      continue: () => codeRunner?.continue(makeDebugSetup()),
+      "breakpoints-updated": () => {},
+      "reset-code": () => {
+        if (nodeTyp === "parsons") {
+          parsonsEditorRef.current?.reset();
+          return;
         }
-      }
-    },
-    "input-entered": ({ input }: { input: string | null }) => {
-      let inputStr = input == null ? "" : input;
-      codeRunner?.input(inputStr, makeDebugSetup());
-    },
-    kill: () => {
-      codeRunner?.kill();
-    },
-    step: () => {
-      codeRunner?.step(makeDebugSetup());
-    },
-    continue: () => {
-      codeRunner?.continue(makeDebugSetup());
-    },
-    "breakpoints-updated": () => {},
-    "reset-code": () => {
-      if (nodeTyp === "parsons") {
-        parsonsEditorRef.current?.reset();
+        if ((starterCode === "" || starterCode) && pyEditorRef.current) {
+          pyEditorRef.current.setValue(starterCode);
+        }
+      },
+      "save-code": (code: string) => {
+        if ((code || code === "") && props.uid) {
+          localStorage.setItem("code-" + encodeURIComponent(props.uid), code);
+        }
+      },
+      "download-code": () => pyEditorRef.current?.download(),
+      "handle-file-read": (e: ProgressEvent<FileReader>) => {
+        if (fileReader.current?.result) {
+          pyEditorRef.current?.setValue(fileReader.current.result.toString());
+          fileReader.current = null;
+        }
+      },
+      "handle-code-upload": (file: File) => {
+        fileReader.current = new FileReader();
+        fileReader.current.onloadend = actions["handle-file-read"];
+        fileReader.current.readAsText(file);
+      },
+      "canvas-keydown": (data: React.KeyboardEvent) =>
+        codeRunner?.keyDown(data),
+      "canvas-keyup": (data: React.KeyboardEvent) => codeRunner?.keyUp(data),
+      "hide-turtle": () => console.log("TODO: hide turtle"),
+      "draw-turtle-example": () => console.log("TODO: draw turtle example"),
+      reload: () => {
+        forceReload();
+        props.onBookReloadRequested();
+      },
+      "has-made-edit": () => setHasEdited(true),
+      "save-book": () => {
+        const changed = saveNode(
+          props.bookNode,
+          props.store,
+          pyEditorRef.current?.getValue(),
+          guideRef.current?.getValue(),
+          outputsRef.current?.getJsonEditor()?.getValue(),
+          additionalFilesLoaded,
+          outputsRef.current?.getVisibleFileContents()
+        );
+        forceReload();
+        setHasEdited(false);
+        if (changed) {
+          props.onBookReloadRequested();
+        }
+      },
+    };
+  }, [
+    additionalFilesLoaded,
+    forceReload,
+    makeDebugSetup,
+    nodeTyp,
+    props,
+    codeRunner,
+    onReportResult,
+    starterCode,
+    usesFixedInput,
+  ]);
+  const actionsRef = useRef<Actions>(actions);
+  const context = useMemo(() => {
+    return {
+      actions: wrapActions(actionsRef),
+      isEditing: props.isEditing || false,
+    };
+  }, [actionsRef, props.isEditing]);
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
+
+  const callWithSaveCheck = useCallback(
+    (action: (() => void) | undefined) => {
+      if (!action) return;
+      if (!hasEdited || !props.isEditing) {
+        action();
         return;
       }
-      if ((starterCode === "" || starterCode) && pyEditorRef.current) {
-        pyEditorRef.current.setValue(starterCode);
-      }
+      setSaveDialogProps({
+        open: true,
+        onSave: () => {
+          context.actions["save-book"]();
+          action();
+          setSaveDialogProps(undefined);
+        },
+        onClose: () => {
+          action();
+          setSaveDialogProps(undefined);
+        },
+      });
     },
-    "save-code": ({ code }: { code: string }) => {
-      if ((code || code === "") && props.uid) {
-        localStorage.setItem("code-" + encodeURIComponent(props.uid), code);
-      }
-    },
-    "download-code": () => {
-      pyEditorRef.current?.download();
-    },
-    "handle-file-read": (e: ProgressEvent<FileReader>) => {
-      if (fileReader.current?.result) {
-        pyEditorRef.current?.setValue(fileReader.current.result.toString());
-        fileReader.current = null;
-      }
-    },
-    "handle-code-upload": (file: File) => {
-      fileReader.current = new FileReader();
-      fileReader.current.onloadend = actions["handle-file-read"];
-      fileReader.current.readAsText(file);
-    },
-    "canvas-keydown": (data: React.KeyboardEvent) => {
-      codeRunner?.keyDown(data);
-    },
-    "canvas-keyup": (data: React.KeyboardEvent) => {
-      codeRunner?.keyUp(data);
-    },
-    reload: () => {
-      forceReload();
-      props.onBookReloadRequested();
-    },
-  };
+    [hasEdited, props.isEditing, context]
+  );
 
   return (
     <>
-      {showBookUpload ? (
+      {showBookUpload && props.onBookUploaded ? (
         <BookUploadModal
           visible={true}
           onClose={() => setShowBookUpload(false)}
@@ -333,7 +409,7 @@ const Challenge = (props: ChallengeProps) => {
         />
       ) : null}
 
-      <ChallengeContext.Provider value={{ actions }}>
+      <ChallengeContext.Provider value={context}>
         <Paper
           sx={{
             width: "100%",
@@ -358,8 +434,17 @@ const Challenge = (props: ChallengeProps) => {
               bookNode={props.bookNode}
               usesFixedInput={usesFixedInput}
               onSetUsesFixedInput={setUsesFixedInput}
-              onSetShowBookUpload={setShowBookUpload}
+              onSetShowBookUpload={
+                props.onBookUploaded ? setShowBookUpload : undefined
+              }
               codeRunner={codeRunner}
+              hasEdited={hasEdited}
+              isEditingGuide={isEditingGuide}
+              onEditingGuideChange={(editing) => {
+                setIsEditingGuide(editing);
+                setHasEdited((x) => x || editing);
+              }}
+              bookFetcher={props.fetcher}
             />
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
@@ -390,6 +475,11 @@ const Challenge = (props: ChallengeProps) => {
                       usesFixedInput={usesFixedInput}
                       additionalFiles={props.bookNode.additionalFiles || []}
                       additionalFilesLoaded={additionalFilesLoaded}
+                      nodeAsJson={
+                        props.isEditing
+                          ? nodeToJsonSimple(props.bookNode)
+                          : undefined
+                      }
                     />
                   </Allotment.Pane>
                 </Allotment>
@@ -426,18 +516,27 @@ const Challenge = (props: ChallengeProps) => {
                       </CardContent>
                     </Card>
                     {guideMinimised ? null : (
-                      <Guide
+                      <ChallengeGuide
+                        ref={guideRef}
                         challengeId={props.bookNode.id}
-                        md={guideMd || ""}
+                        initialMd={guideMd || ""}
                         turtleExampleImage={turtleExampleRendered}
+                        isEditing={isEditingGuide}
                       />
                     )}
                     <BookControlFabs
-                      onNavigateToPrevPage={props.onRequestPreviousChallenge}
-                      onNavigateToNextPage={props.onRequestNextChallenge}
+                      onNavigateToPrevPage={() =>
+                        callWithSaveCheck(props.onRequestPreviousChallenge)
+                      }
+                      onNavigateToNextPage={() =>
+                        callWithSaveCheck(props.onRequestNextChallenge)
+                      }
                       onOpenMenu={() => {
                         props.openBookDrawer?.(true);
                       }}
+                      onSave={
+                        props.isEditing ? actions["save-book"] : undefined
+                      }
                     />
                   </Box>
                   <Allotment.Pane
@@ -491,6 +590,13 @@ const Challenge = (props: ChallengeProps) => {
             )}
           </Box>
         </Paper>
+        <SaveDialog
+          open={saveDialogProps ? true : false}
+          onSave={saveDialogProps?.onSave || (() => {})}
+          onClose={saveDialogProps?.onClose || (() => {})}
+          message="You might have unsaved changes on this page. Would you like to save first?"
+          cancelText="Don't save"
+        ></SaveDialog>
       </ChallengeContext.Provider>
     </>
   );
