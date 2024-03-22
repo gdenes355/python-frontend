@@ -22,7 +22,7 @@ import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
 import BookControlFabs from "../book/components/BookControlFabs";
-import DebugPane from "./components/Debug/DebugPane2";
+import DebugPane from "./components/Debug/DebugPane";
 import MainControls from "./components/Guide/MainControls";
 import ChallengeContext, { Actions, wrapActions } from "./ChallengeContext";
 import useChallengeLoader from "./hooks/useChallengeLoader";
