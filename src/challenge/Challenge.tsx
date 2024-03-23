@@ -145,6 +145,11 @@ const Challenge = (props: ChallengeProps) => {
       }
       return undefined;
     },
+    onAudio: (msg) => {
+      if (codeRunner.state !== CodeRunnerState.READY) {
+        outputsRef.current?.getAudioPlayer()?.runAudioCommand(msg);
+      }
+    },
   });
 
   const {
@@ -625,7 +630,7 @@ const Challenge = (props: ChallengeProps) => {
           onClose={saveDialogProps?.onClose || (() => {})}
           message="You might have unsaved changes on this page. Would you like to save first?"
           cancelText="Don't save"
-        ></SaveDialog>
+        />
       </ChallengeContext.Provider>
     </>
   );

@@ -9,7 +9,6 @@ type CanvasDisplayHandle = {
   turtleReset: (virtual?: boolean) => void;
   runTurtleCommand: (id: number, msg: string) => Promise<string | void>;
   runTurtleClearup: () => void;
-  runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
 
@@ -54,25 +53,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       );
     };
 
-    const runAudioCommand = (msg: string) => {
-      const audio: HTMLAudioElement = document.getElementById(
-        "audio"
-      ) as HTMLAudioElement;
-
-      const audioSource: HTMLSourceElement = document.getElementById(
-        "audioSource"
-      ) as HTMLSourceElement;
-
-      const audioObj = JSON.parse(msg);
-
-      if (audioObj.action === "load") {
-        audioSource.src = audioObj.source;
-        audio.load();
-      } else if (audioObj.action === "play") {
-        audio.play();
-      }
-    };
-
     const runCommand = (commands: any[]) => {
       const canvas: HTMLCanvasElement = document.getElementById(
         "canvasDisplay"
@@ -89,7 +69,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       runCommand,
       runTurtleCommand,
       runTurtleClearup: turtleClearup,
-      runAudioCommand,
       turtleReset,
     }));
 
@@ -105,10 +84,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           tabIndex={1}
           style={{ outline: "none" }}
         />
-        <audio style={{ display: "none" }} id="audio" crossOrigin="anonymous">
-          <source id="audioSource" src=""></source>
-          Your browser does not support the audio element.
-        </audio>
       </div>
     );
   }

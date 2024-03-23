@@ -533,6 +533,10 @@ class PythonCodeRunner implements ICodeRunner {
         interruptBuffer: newInterruptBuffer,
         keyDownBuffer: newKeyDownBuffer,
       });
+    } else {
+      console.log(
+        "Not cross origin isolated, so interrupt will be slow and keydowns will be ignored"
+      );
     }
     msg = msg || "";
     this.interruptBuffer = newInterruptBuffer;
