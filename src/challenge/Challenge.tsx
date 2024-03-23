@@ -237,7 +237,7 @@ const Challenge = (props: ChallengeProps) => {
   const actions = useMemo(() => {
     return {
       debug: (mode: "debug" | "run" = "debug") => {
-        if (nodeTyp === ChallengeTypes.parsons) {
+        if (nodeTyp === ChallengeTypes.parsons && !props.isEditing) {
           let code = parsonsEditorRef.current?.getValue();
           if (code) {
             codeRunner.debug(
@@ -276,7 +276,7 @@ const Challenge = (props: ChallengeProps) => {
       },
       test: () => {
         if (!props.bookNode) return;
-        if (nodeTyp === "parsons") {
+        if (nodeTyp === "parsons" && !props.isEditing) {
           const newResults = parsonsEditorRef.current?.runTests() || [];
           const code = parsonsEditorRef.current?.getValue() || "";
           const bookNode = props.bookNode;
@@ -540,7 +540,7 @@ const Challenge = (props: ChallengeProps) => {
                             setGuideMinimised((x) => !x)
                           }
                           canDebug={codeRunner.state === CodeRunnerState.READY}
-                          canRunOnly={nodeTyp === "parsons" ? true : false}
+                          canRunOnly={nodeTyp === "parsons" && !props.isEditing}
                           canSubmit={canSubmit}
                           testResults={testResults}
                           canKill={codeRunner.state === CodeRunnerState.RUNNING}
@@ -611,7 +611,7 @@ const Challenge = (props: ChallengeProps) => {
                       guideMinimised={guideMinimised}
                       onGuideDisplayToggle={() => setGuideMinimised((x) => !x)}
                       canDebug={codeRunner.state === CodeRunnerState.READY}
-                      canRunOnly={nodeTyp === "parsons" ? true : false}
+                      canRunOnly={nodeTyp === "parsons" && !props.isEditing}
                       canSubmit={canSubmit}
                       testResults={testResults}
                       canKill={codeRunner.state === CodeRunnerState.RUNNING}
