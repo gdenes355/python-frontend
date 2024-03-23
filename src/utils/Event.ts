@@ -28,10 +28,14 @@ class AsyncEvent<T, R = void> {
     this.listeners.delete(id);
   }
 
+  // when firing this async event, return the first sensible result from any of the handlers
   async fire(data: T) {
-    await Promise.all(
+    let res = await Promise.all(
       Array.from(this.listeners.values()).map((callback) => callback(data))
     );
+    res = res.filter((r) => !!r);
+    if (!res.length) return;
+    return res[0];
   }
 
   private listeners: Map<number, (data: T) => Promise<R>> = new Map();

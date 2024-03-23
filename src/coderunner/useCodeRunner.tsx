@@ -29,7 +29,6 @@ type CodeRunnerProps = {
   onTurtle?: (id: number, msg: string) => Promise<string | undefined>;
   onDraw?: (cmds: any[]) => Promise<void>;
   onAudio?: (msg: string) => void;
-  onHideTurtle?: () => void;
 };
 
 type CodeRunnerRef = {
@@ -52,6 +51,10 @@ type CodeRunnerRef = {
     additionalFilesLoaded?: AdditionalFilesContents,
     fixedUserInput?: string
   ) => Promise<DebugFinishedData>;
+  drawTurtleExample: (
+    additionalFilesLoaded: AdditionalFilesContents,
+    bookNode: BookNodeModel
+  ) => Promise<string>;
   refreshDebugContext: (dbgSetup: DebugSetup) => void;
   kill: () => void;
   keyDown: (data: React.KeyboardEvent) => void;
@@ -97,7 +100,6 @@ const useCodeRunner = (props: CodeRunnerProps) => {
   const onDraw = useRef(props.onDraw);
   const onAudio = useRef(props.onAudio);
   const onCls = useRef(props.onCls);
-  const onHideTurtle = useRef(props.onHideTurtle);
   useEffect(() => {
     onPrint.current = props.onPrint;
   }, [props.onPrint]);
@@ -119,9 +121,6 @@ const useCodeRunner = (props: CodeRunnerProps) => {
   useEffect(() => {
     onCls.current = props.onCls;
   }, [props.onCls]);
-  useEffect(() => {
-    onHideTurtle.current = props.onHideTurtle;
-  }, [props.onHideTurtle]);
 
   useEffect(() => {
     if (!pythonCodeRunner) {
@@ -155,9 +154,6 @@ const useCodeRunner = (props: CodeRunnerProps) => {
       throttledPrint.current();
       onCls.current?.();
     });
-    let onHideTurtleId = pythonCodeRunner.onHideTurtle.register(() =>
-      onHideTurtle.current?.()
-    );
 
     return () => {
       if (pythonCodeRunner) {
@@ -169,7 +165,6 @@ const useCodeRunner = (props: CodeRunnerProps) => {
         pythonCodeRunner.onDraw.unregister(onDrawId);
         pythonCodeRunner.onAudio.unregister(onAudioId);
         pythonCodeRunner.onCls.unregister(onClsId);
-        pythonCodeRunner.onHideTurtle.unregister(onHideTurtleId);
       }
     };
   }, []);
@@ -197,6 +192,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     input: pythonCodeRunner.input,
     consoleText: consoleText,
     debugContext: pythonCodeRunner.debugContext,
+    drawTurtleExample: pythonCodeRunner.drawTurtleExample,
     addConsoleText: addConsoleText,
     clear: clear,
   };

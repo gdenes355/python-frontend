@@ -130,7 +130,8 @@ const Challenge = (props: ChallengeProps) => {
         await outputsRef.current.awaitCanvas();
       }
     },
-    turtleReset: outputsRef.current?.getCanvas()?.turtleReset,
+    turtleReset: (virtual: boolean) =>
+      outputsRef.current?.getCanvas()?.turtleReset(virtual),
     onTurtle: async (id, msg) => {
       if (codeRunner.state !== CodeRunnerState.READY) {
         if (origType === ChallengeTypes.py) {
@@ -240,7 +241,6 @@ const Challenge = (props: ChallengeProps) => {
           }
         } else {
           const code = pyEditorRef.current?.getValue();
-          outputsRef.current?.getCanvas()?.turtleReset();
           const bookNode = props.bookNode;
           if (code || code === "") {
             actions["save-code"](code);
@@ -259,6 +259,7 @@ const Challenge = (props: ChallengeProps) => {
                 if (props.bookNode?.isExample) {
                   onReportResult([{ outcome: true }], code, bookNode);
                 }
+                outputsRef.current?.getCanvas()?.runTurtleClearup();
               });
           }
         }
@@ -330,8 +331,26 @@ const Challenge = (props: ChallengeProps) => {
       "canvas-keydown": (data: React.KeyboardEvent) =>
         codeRunner?.keyDown(data),
       "canvas-keyup": (data: React.KeyboardEvent) => codeRunner?.keyUp(data),
-      "hide-turtle": () => console.log("TODO: hide turtle"),
-      "draw-turtle-example": () => console.log("TODO: draw turtle example"),
+      "hide-turtle": () => {
+        if (typ === ChallengeTypes.canvas) {
+          setTyp(ChallengeTypes.py);
+        }
+      },
+      "draw-turtle-example": () => {
+        codeRunner
+          .drawTurtleExample(additionalFilesLoaded, props.bookNode)
+          .then((id: string) => {
+            outputsRef.current?.focusPane("console");
+            if (props.bookNode.id !== id) return; // ignore old
+            outputsRef.current
+              ?.getCanvas()
+              ?.runTurtleCommand(-1, '{"action": "dump"}')
+              .then((turtleResult) => {
+                setTurtleExampleRendered(turtleResult || undefined);
+              });
+          })
+          .catch(() => setTurtleExampleRendered(undefined));
+      },
       reload: () => {
         forceReload();
         props.onBookReloadRequested();
@@ -364,6 +383,7 @@ const Challenge = (props: ChallengeProps) => {
     onReportResult,
     starterCode,
     usesFixedInput,
+    typ,
   ]);
   const actionsRef = useRef<Actions>(actions);
   const context = useMemo(() => {

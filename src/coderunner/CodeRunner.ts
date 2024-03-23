@@ -15,6 +15,7 @@ interface ICodeRunner {
   state: CodeRunnerState;
   debugContext?: DebugContext;
 
+  // events to subscribe to
   onStateChanged: Event<CodeRunnerState>;
   onDraw: Event<any[], Promise<void>>;
   onTurtleReset: Event<boolean>;
@@ -24,18 +25,8 @@ interface ICodeRunner {
   onPrint: Event<string>;
   onCls: Event<void>;
   onAwaitCanvas: AsyncEvent<void>;
-  onHideTurtle: Event<void>;
-  test: (
-    code: string,
-    tests: TestCases,
-    additionalFiles: AdditionalFile[] | undefined,
-    additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel
-  ) => Promise<TestFinishedData>;
-  input: (input: string, dbgSetup: DebugSetup) => void;
-  continue: (dbgSetup: DebugSetup) => void;
-  step: (dbgSetup: DebugSetup) => void;
-  refreshDebugContext: (dbgSetup: DebugSetup) => void; // ask the worker to re-report watches and vars
+
+  // lauch the code in debug mode
   debug: (
     code: string,
     mode: "debug" | "run",
@@ -44,6 +35,32 @@ interface ICodeRunner {
     additionalFilesLoaded?: AdditionalFilesContents,
     fixedUserInput?: string
   ) => Promise<DebugFinishedData>;
+
+  // run test suite
+  test: (
+    code: string,
+    tests: TestCases,
+    additionalFiles: AdditionalFile[] | undefined,
+    additionalFilesLoaded: AdditionalFilesContents,
+    bookNode: BookNodeModel
+  ) => Promise<TestFinishedData>;
+
+  // draw the first turtle example.
+  // Finished turtle drawing will be on the canvas that onTurtle draws to
+  drawTurtleExample: (
+    additionalFilesLoaded: AdditionalFilesContents,
+    bookNode: BookNodeModel
+  ) => Promise<string>;
+
+  // send user input to the running code. Valid if state is AWAITING_INPUT
+  input: (input: string, dbgSetup: DebugSetup) => void;
+
+  // debug controls. Valid if state is ON_BREAKPOINT
+  continue: (dbgSetup: DebugSetup) => void;
+  step: (dbgSetup: DebugSetup) => void;
+  refreshDebugContext: (dbgSetup: DebugSetup) => void; // ask the worker to re-report watches and vars
+
+  // send keyboard events to the running code
   keyDown: (data: React.KeyboardEvent) => void;
   keyUp: (data: React.KeyboardEvent) => void;
 }
@@ -93,7 +110,6 @@ class PythonCodeRunner implements ICodeRunner {
   public onPrint = new Event<string>();
   public onCls = new Event<void>();
   public onAwaitCanvas = new AsyncEvent<void>();
-  public onHideTurtle = new Event<void>();
 
   // local fields to interact with Pyodide
   private worker: Worker | null = null;
@@ -108,6 +124,9 @@ class PythonCodeRunner implements ICodeRunner {
   // debug session
   private debugPromiseResRej: PromiseResRej<DebugFinishedData> | null = null; // active debug promise
   private currentFixedUserInput: string[] | undefined = undefined;
+
+  // turtle example session
+  private turtleExamplePromiseResRej: PromiseResRej<string> | null = null; // active turtle example promise
 
   constructor() {
     this.state = CodeRunnerState.LOADING;
@@ -161,6 +180,20 @@ class PythonCodeRunner implements ICodeRunner {
     });
   };
 
+  public drawTurtleExample = (
+    additionalFilesLoaded: AdditionalFilesContents,
+    bookNode: BookNodeModel
+  ) => {
+    if (this.turtleExamplePromiseResRej) {
+      this.turtleExamplePromiseResRej.rej("Turtle drawing cancelled");
+    }
+
+    return new Promise<string>((res, rej) => {
+      this.turtleExamplePromiseResRej = { res, rej };
+      this.runTurtleExample(additionalFilesLoaded, bookNode);
+    });
+  };
+
   private runDebug = (
     code: string,
     mode: "debug" | "run",
@@ -170,6 +203,7 @@ class PythonCodeRunner implements ICodeRunner {
     fixedUserInput?: string
   ) => {
     if (!code || !this.worker || this.state !== CodeRunnerState.READY) {
+      this.debugPromiseResRej?.rej("cannot run debug");
       console.log("debug", "not ready", code, this.worker, this.state);
       return;
     }
@@ -192,6 +226,7 @@ class PythonCodeRunner implements ICodeRunner {
     navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
     this.currentFixedUserInput = fixedUserInput?.split("\n");
     this.debugContext = undefined;
+    this.onTurtleReset.fire(false);
     this.worker?.postMessage({
       cmd: mode,
       code: code,
@@ -321,9 +356,6 @@ class PythonCodeRunner implements ICodeRunner {
       this.onStateChanged.fire(this.state);
       this.debugPromiseResRej?.res({ reason });
     },
-    "hide-turtle": () => {
-      this.onHideTurtle.fire();
-    },
     input: () => {
       if (this.currentFixedUserInput) {
         const input = this.currentFixedUserInput.shift();
@@ -336,6 +368,12 @@ class PythonCodeRunner implements ICodeRunner {
     breakpt: (data: DebugContext) => {
       this.state = CodeRunnerState.ON_BREAKPOINT;
       this.debugContext = data;
+      this.onStateChanged.fire(this.state);
+    },
+    "draw-turtle-example-finished": (data: { bookNode: BookNodeModel }) => {
+      this.forceStopping = false;
+      this.turtleExamplePromiseResRej?.res(data.bookNode.id);
+      this.state = CodeRunnerState.READY;
       this.onStateChanged.fire(this.state);
     },
   };
@@ -353,6 +391,7 @@ class PythonCodeRunner implements ICodeRunner {
       !this.worker ||
       this.state !== CodeRunnerState.READY
     ) {
+      this.testPromiseResRej?.rej("cannot run tests");
       return;
     }
     if (this.interruptBuffer) {
@@ -409,6 +448,57 @@ class PythonCodeRunner implements ICodeRunner {
     this.state = CodeRunnerState.RUNNING;
     this.onStateChanged.fire(this.state);
     this.onCls.fire();
+  };
+
+  private runTurtleExample = (
+    additionalFilesLoaded: AdditionalFilesContents,
+    bookNode: BookNodeModel
+  ) => {
+    const tests = bookNode.tests || [];
+    if (!tests || !this.worker || this.state !== CodeRunnerState.READY) {
+      this.turtleExamplePromiseResRej?.rej("cannot run turtle example");
+      return;
+    }
+    if (this.interruptBuffer) {
+      this.interruptBuffer[0] = 0;
+    }
+
+    let code = "";
+    let inputs: string | (number | string)[] = "";
+    // find the first turtle test
+    loop: for (let test of tests || []) {
+      if (!(test.out instanceof Array)) {
+        continue;
+      }
+      for (let out of test.out) {
+        if (out.typ === "t" && out.filename) {
+          code = additionalFilesLoaded[out.filename];
+          if (!code) {
+            this.turtleExamplePromiseResRej?.rej("cannot run turtle example");
+            return; // file not yet loaded!
+          }
+          inputs = test.in instanceof Array ? test.in : [test.in];
+          break loop;
+        }
+      }
+    }
+
+    if (!code) {
+      this.turtleExamplePromiseResRej?.rej("cannot run turtle example");
+      return; // no turtle test found
+    }
+
+    this.onAwaitCanvas.fire().then(() => {
+      this.onTurtleReset.fire(true);
+      this.worker?.postMessage({
+        cmd: "draw-turtle-example",
+        code: code,
+        inputs: inputs,
+        bookNode: bookNode,
+      });
+    });
+    this.state = CodeRunnerState.RUNNING;
+    this.onStateChanged.fire(this.state);
   };
 
   private restartWorker = (force?: boolean, msg?: string) => {
