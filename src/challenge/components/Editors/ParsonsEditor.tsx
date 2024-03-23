@@ -4,6 +4,7 @@ import React, {
   useImperativeHandle,
   useRef,
   useContext,
+  useMemo,
 } from "react";
 import type ParsonsWidget from "jsparsons";
 
@@ -14,7 +15,6 @@ import { TestResults } from "../../../models/Tests";
 
 import "./ParsonsEditor.css";
 import PyEditor from "./PyEditor";
-import ParsonsEditorThemeSplitWrapper from "./ParsonsEditorThemeSplitWrapper";
 import { emptyDebugContext } from "../../../coderunner/DebugContext";
 
 const loadJS = (url: string) =>
@@ -56,75 +56,48 @@ type ParsonsEditorProps = {
   starterCode: string;
 };
 
+const CODE_PLACEHOLDER =
+  "##############################\n# ==> YOUR CODE WILL BE INSERTED HERE\n##############################\n";
+
 const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
   (props, ref) => {
     const [parsons, setParsons] = useState<ParsonsWidget | null>(null);
     const jsLoaded = useRef("unloaded");
 
-    const CODE_PLACEHOLDER =
-      "##############################\n# ==> YOUR CODE WILL BE INSERTED HERE\n##############################\n";
-
     const themeContext = useContext(VsThemeContext);
 
-    const runTests = () => {
-      let errors = parsons?.getFeedback() || "initialising";
-      if (errors.length === 0) {
-        return [{ outcome: true }];
-      } else {
-        return [{ outcome: false, err: errors }];
-      }
-    };
-
-    const reset = () => {
-      parsons?.shuffleLines();
-    };
-
-    const getHeaderFooterCode = (starterCode: string) => {
-      let codeTemplate = "";
+    // state / memorised values
+    const code = useMemo(() => {
+      let hasBody = false;
       let inbody = false;
-      let lines = starterCode.split("\n");
+      let codeTemplate = "";
+      let bodyCode = "";
 
-      for (let line of lines) {
+      for (let line of props.starterCode.split("\n")) {
         if (line.toLowerCase().replace(" ", "").startsWith("#start")) {
           inbody = true;
+          hasBody = true;
           codeTemplate += CODE_PLACEHOLDER;
         } else if (line.toLowerCase().replace(" ", "").startsWith("#end")) {
           inbody = false;
         } else if (!inbody) {
           codeTemplate += line + "\n";
-        }
-      }
-      return codeTemplate;
-    };
-
-    const hasHeaderFooterCode = (starterCode: string) => {
-      let starterCodeAdjusted = starterCode.replace(/ /g, "").toLowerCase();
-      return starterCodeAdjusted.includes("#start");
-    };
-
-    const getValue = () => {
-      let result = "";
-      if (parsons) {
-        let lines = parsons.normalizeIndents(
-          parsons.getModifiedCode("#ul-" + parsons.options.sortableId)
-        );
-
-        for (let line of lines) {
-          result += "  ".repeat(line.indent) + line.code + "\n";
+        } else if (inbody) {
+          bodyCode += line + "\n";
         }
       }
 
-      if (!hasHeaderFooterCode(props.starterCode)) {
-        return result;
-      } else {
-        return getHeaderFooterCode(props.starterCode).replace(
-          CODE_PLACEHOLDER,
-          result
-        );
+      if (!hasBody) {
+        return {
+          parsonsCode: props.starterCode,
+          headerFooterCode: undefined,
+        };
       }
-    };
-
-    useImperativeHandle(ref, () => ({ getValue, runTests, reset }));
+      return {
+        parsonsCode: bodyCode,
+        headerFooterCode: codeTemplate,
+      };
+    }, [props.starterCode]);
 
     useEffect(() => {
       if (jsLoaded.current !== "unloaded") {
@@ -152,41 +125,59 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
         });
         setParsons(newParsons);
       })();
-    });
+    }, []);
 
     useEffect(() => {
       if (jsLoaded.current !== "loaded" || !parsons) {
         return;
       }
 
-      const getParsonsCode = (starterCode: string) => {
-        if (!hasHeaderFooterCode(starterCode)) {
-          return starterCode;
-        }
+      parsons.init(code.parsonsCode);
+      parsons.shuffleLines();
+    }, [parsons, code]);
 
-        let codeParsons = "";
-        let inbody = false;
-        let lines = starterCode.split("\n");
+    // actions (through ref)
+    const runTests = () => {
+      let errors = parsons?.getFeedback() || "initialising";
+      if (errors.length === 0) {
+        return [{ outcome: true }];
+      } else {
+        return [{ outcome: false, err: errors }];
+      }
+    };
+
+    const reset = () => {
+      parsons?.shuffleLines();
+    };
+
+    const getValue = () => {
+      let result = "";
+      if (parsons) {
+        let lines = parsons.normalizeIndents(
+          parsons.getModifiedCode("#ul-" + parsons.options.sortableId)
+        );
 
         for (let line of lines) {
-          if (line.toLowerCase().replace(" ", "").startsWith("#start")) {
-            inbody = true;
-          } else if (line.toLowerCase().replace(" ", "").startsWith("#end")) {
-            inbody = false;
-          } else if (inbody) {
-            codeParsons += line + "\n";
-          }
+          result += "  ".repeat(line.indent) + line.code + "\n";
         }
-        return codeParsons;
-      };
+      }
 
-      parsons.init(getParsonsCode(props.starterCode));
-      parsons.shuffleLines();
-    }, [parsons, props.starterCode]);
+      if (code.headerFooterCode) {
+        return code.headerFooterCode.replace(CODE_PLACEHOLDER, result);
+      } else {
+        return result;
+      }
+    };
 
-    if (!hasHeaderFooterCode(props.starterCode)) {
-      return (
-        <ParsonsEditorThemeWrapper>
+    useImperativeHandle(ref, () => ({ getValue, runTests, reset }));
+
+    return (
+      <>
+        <ParsonsEditorThemeWrapper
+          style={{
+            height: !code.headerFooterCode ? "100%" : "60%",
+          }}
+        >
           <div
             id="sortableTrash"
             className={"sortable-code " + themeContext.theme}
@@ -196,33 +187,20 @@ const ParsonsEditor = React.forwardRef<ParsonsEditorHandle, ParsonsEditorProps>(
             className={"sortable-code " + themeContext.theme}
           ></div>
         </ParsonsEditorThemeWrapper>
-      );
-    } else {
-      return (
-        <>
-          <ParsonsEditorThemeSplitWrapper>
-            <div
-              id="sortableTrash"
-              className={"sortable-code " + themeContext.theme}
-            ></div>
-            <div
-              id="sortable"
-              className={"sortable-code " + themeContext.theme}
-            ></div>
-          </ParsonsEditorThemeSplitWrapper>
+        {!!code.headerFooterCode && (
           <PyEditor
             canRun={false}
             canEdit={false}
             height="40%"
             canPlaceBreakpoint={false}
             isOnBreakPoint={false}
-            starterCode={getHeaderFooterCode(props.starterCode)}
+            starterCode={code.headerFooterCode}
             onToggleFullScreen={() => {}}
             debugContext={emptyDebugContext}
           />
-        </>
-      );
-    }
+        )}
+      </>
+    );
   }
 );
 
