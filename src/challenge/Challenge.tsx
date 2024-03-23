@@ -31,7 +31,7 @@ import Header from "./components/Header/Header";
 import MainEditor from "./components/Editors/MainEditor";
 import ChallengeOutputs, {
   ChallengeOutputsHandle,
-} from "./components/BottomBar/ChallengeOutputs";
+} from "./components/Outputs/Outputs";
 import EditableBookStore from "../book/utils/EditableBookStore";
 import ChallengeGuide, {
   ChallengeGuideRef,
@@ -239,7 +239,6 @@ const Challenge = (props: ChallengeProps) => {
       debug: (mode: "debug" | "run" = "debug") => {
         if (nodeTyp === ChallengeTypes.parsons) {
           let code = parsonsEditorRef.current?.getValue();
-          console.log("debug", code);
           if (code) {
             codeRunner.debug(
               code,

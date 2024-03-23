@@ -1,5 +1,4 @@
 import React, { useContext, useImperativeHandle, useMemo, useRef } from "react";
-import Outputs, { OutputsHandle } from "./Outputs";
 import PaneType from "../../../models/PaneType";
 import ChallengeTypes from "../../../models/ChallengeTypes";
 import ChallengeConsole from "./ChallengeConsole";
@@ -24,6 +23,8 @@ import { TestCases } from "../../../models/Tests";
 import AudioPlayer, {
   AudioPlayerHandle,
 } from "../../../components/AudioPlayer";
+import { Box } from "@mui/material";
+import TabbedView, { TabbedViewHandle } from "../../../components/TabbedView";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -54,8 +55,8 @@ const ChallengeOutputs = React.forwardRef<
 >((props, ref) => {
   const challengeContext = useContext(ChallengeContext);
 
-  // reference to generic underlying outputs component
-  const outputsRef = useRef<OutputsHandle>(null);
+  // tabbed view controller
+  const tabbedViewRef = useRef<TabbedViewHandle>(null);
 
   // canvas
   const canvasPromiseResolve = useRef<((value: any) => void) | null>(null);
@@ -80,7 +81,7 @@ const ChallengeOutputs = React.forwardRef<
 
   useImperativeHandle(ref, () => ({
     focusPane: (pane: PaneType) => {
-      outputsRef.current?.focusPane(pane);
+      tabbedViewRef.current?.requestPane(pane);
     },
     awaitCanvas: () => {
       return new Promise<void>((resolve) => {
@@ -109,21 +110,6 @@ const ChallengeOutputs = React.forwardRef<
     getAudioPlayer: () => audioPlayerRef.current,
   }));
 
-  const displayFiles = useMemo(() => {
-    const files = (props.additionalFiles || []).map((file) => file.filename);
-
-    props.tests?.forEach((test) => {
-      if (test.out instanceof Array) {
-        test.out.forEach((out) => {
-          if (out.filename && !files.includes(out.filename)) {
-            files.push(out.filename);
-          }
-        });
-      }
-    });
-    return files;
-  }, [props.tests, props.additionalFiles]);
-
   const displayFilesProperties = useMemo(() => {
     const filesProperties = props.additionalFiles || [];
     const files = (props.additionalFiles || []).map((file) => file.filename);
@@ -145,65 +131,98 @@ const ChallengeOutputs = React.forwardRef<
     return filesProperties;
   }, [props.tests, props.additionalFiles]);
 
+  let panes = [
+    {
+      label: "Console",
+      content: (
+        <ChallengeConsole
+          content={props.codeRunner.consoleText}
+          inputEnabled={
+            props.codeRunner.state === CodeRunnerState.AWAITING_INPUT
+          }
+        />
+      ),
+      show: true,
+      name: "console",
+    },
+  ];
+
+  panes.push({
+    label: "Fixed input",
+    content: <FixedInputField ref={fixedInputFieldRef} />,
+    show: props.usesFixedInput,
+    name: "fixed-input",
+  });
+
+  panes.push({
+    label: "Canvas",
+    content: (
+      <CanvasDisplay
+        ref={(c) => {
+          canvasDisplayRef.current = c;
+          if (canvasDisplayRef.current) canvasMountedCallback();
+        }}
+      />
+    ),
+    show: props.typ === ChallengeTypes.canvas,
+    name: "canvas",
+  });
+
+  if (challengeContext?.isEditing) {
+    panes.push({
+      label: "Edit challenge",
+      content: (
+        <JsonEditor
+          ref={jsonEditorRef}
+          starterCode={props.nodeAsJson || ""}
+          onToggleFullScreen={() => {}}
+          onChange={() => {
+            challengeContext?.actions["has-made-edit"]();
+          }}
+        />
+      ),
+      show: challengeContext?.isEditing,
+      name: "json",
+    });
+  }
+
+  if (displayFilesProperties) {
+    displayFilesProperties.forEach((file, index) => {
+      panes.push({
+        label: file.filename,
+        content: (
+          <AdditionalFileView
+            key={index}
+            defaultValue={props.additionalFilesLoaded[file.filename]}
+            readonly={!challengeContext?.isEditing}
+            onChange={() => challengeContext?.actions["has-made-edit"]()}
+            ref={(r) => {
+              if (r) {
+                fileEditorRefs.current?.set(file.filename, r);
+              } else {
+                fileEditorRefs.current?.delete(file.filename);
+              }
+            }}
+          />
+        ),
+        show: file.visible || challengeContext?.isEditing || false,
+        name: file.filename,
+      });
+    });
+  }
+
   return (
     <>
-      <Outputs
-        ref={outputsRef}
-        visiblePanes={[
-          "console",
-          ...(props.typ === ChallengeTypes.canvas
-            ? ["canvas" as PaneType]
-            : []),
-          ...(props.usesFixedInput ? ["fixed-input" as PaneType] : []),
-          ...(challengeContext?.isEditing ? ["json" as PaneType] : []),
-        ]}
-        console={
-          <ChallengeConsole
-            content={props.codeRunner.consoleText}
-            inputEnabled={
-              props.codeRunner.state === CodeRunnerState.AWAITING_INPUT
-            }
-          />
-        }
-        fixedInput={<FixedInputField ref={fixedInputFieldRef} />}
-        canvas={
-          <CanvasDisplay
-            ref={(c) => {
-              canvasDisplayRef.current = c;
-              if (canvasDisplayRef.current) canvasMountedCallback();
-            }}
-          />
-        }
-        json={
-          <JsonEditor
-            ref={jsonEditorRef}
-            starterCode={props.nodeAsJson || ""}
-            onToggleFullScreen={() => {}}
-            onChange={() => {
-              challengeContext?.actions["has-made-edit"]();
-            }}
-          />
-        }
-        files={
-          displayFiles.map((file, index) => (
-            <AdditionalFileView
-              key={index}
-              defaultValue={props.additionalFilesLoaded[file]}
-              readonly={!challengeContext?.isEditing}
-              onChange={() => challengeContext?.actions["has-made-edit"]()}
-              ref={(r) => {
-                if (r) {
-                  fileEditorRefs.current?.set(file, r);
-                } else {
-                  fileEditorRefs.current?.delete(file);
-                }
-              }}
-            />
-          )) || []
-        }
-        fileProperties={displayFilesProperties}
-        fileShowAll={challengeContext?.isEditing || false}
-      />
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          bgcolor: "background.default",
+          overflow: "hidden",
+        }}
+      >
+        <TabbedView ref={tabbedViewRef} panes={panes} />
+      </Box>
       <AudioPlayer ref={(r) => (audioPlayerRef.current = r)} />
     </>
   );

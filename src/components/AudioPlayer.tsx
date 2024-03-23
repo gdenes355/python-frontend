@@ -1,4 +1,4 @@
-import React, { useCallback, useImperativeHandle } from "react";
+import React, { useCallback, useImperativeHandle, useRef } from "react";
 
 type AudioPlayerProps = {};
 
@@ -8,22 +8,17 @@ type AudioPlayerHandle = {
 
 const AudioPlayer = React.forwardRef<AudioPlayerHandle, AudioPlayerProps>(
   (props, ref) => {
+    const audioRef = useRef<HTMLAudioElement>(null);
+    const audioSourceRef = useRef<HTMLSourceElement>(null);
+
     const runAudioCommand = useCallback((msg: string) => {
-      const audio: HTMLAudioElement = document.getElementById(
-        "audio"
-      ) as HTMLAudioElement;
-
-      const audioSource: HTMLSourceElement = document.getElementById(
-        "audioSource"
-      ) as HTMLSourceElement;
-
       const audioObj = JSON.parse(msg);
 
-      if (audioObj.action === "load") {
-        audioSource.src = audioObj.source;
-        audio.load();
+      if (audioObj.action === "load" && audioSourceRef.current) {
+        audioSourceRef.current.src = audioObj.source;
+        audioRef.current?.load();
       } else if (audioObj.action === "play") {
-        audio.play();
+        audioRef.current?.play();
       }
     }, []);
 
@@ -32,8 +27,13 @@ const AudioPlayer = React.forwardRef<AudioPlayerHandle, AudioPlayerProps>(
     }));
 
     return (
-      <audio style={{ display: "none" }} id="audio" crossOrigin="anonymous">
-        <source id="audioSource" src=""></source>
+      <audio
+        style={{ display: "none" }}
+        id="audio"
+        crossOrigin="anonymous"
+        ref={audioRef}
+      >
+        <source id="audioSource" src="" ref={audioSourceRef}></source>
         Your browser does not support the audio element.
       </audio>
     );
