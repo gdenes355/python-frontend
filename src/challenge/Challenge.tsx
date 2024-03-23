@@ -82,7 +82,6 @@ const Challenge = (props: ChallengeProps) => {
   const [testResults, setTestResults] = useState<TestResults>([]);
   const [guideMinimised, setGuideMinimised] = useState<boolean>(false);
   const [typ, setTyp] = useState<ChallengeTypes>(ChallengeTypes.py);
-  const [origType, setOrigType] = useState<ChallengeTypes>(ChallengeTypes.py);
   const [usesFixedInput, setUsesFixedInput] = useState<boolean>(false);
   const [showBookUpload, setShowBookUpload] = useState<boolean>(false);
   const [turtleExampleRendered, setTurtleExampleRendered] = useState<
@@ -109,7 +108,7 @@ const Challenge = (props: ChallengeProps) => {
   const codeRunner = useCodeRunner({
     onDraw: async (commands) => {
       if (codeRunner.state !== CodeRunnerState.READY) {
-        if (origType === ChallengeTypes.py) {
+        if (typ !== ChallengeTypes.canvas) {
           if (commands.length === 1 && commands[0]?.action === "reset") {
             //ignore single initial reset if we are meant to be a standard
             // Python challenge
@@ -134,7 +133,7 @@ const Challenge = (props: ChallengeProps) => {
       outputsRef.current?.getCanvas()?.turtleReset(virtual),
     onTurtle: async (id, msg) => {
       if (codeRunner.state !== CodeRunnerState.READY) {
-        if (origType === ChallengeTypes.py) {
+        if (typ !== ChallengeTypes.canvas) {
           setTyp(ChallengeTypes.canvas);
         }
         outputsRef.current?.focusPane("canvas");
@@ -184,7 +183,6 @@ const Challenge = (props: ChallengeProps) => {
 
   // node tells us that typ has changed
   useEffect(() => {
-    setOrigType(nodeTyp);
     setTyp(nodeTyp);
   }, [nodeTyp]);
 
@@ -236,8 +234,16 @@ const Challenge = (props: ChallengeProps) => {
       debug: (mode: "debug" | "run" = "debug") => {
         if (nodeTyp === ChallengeTypes.parsons) {
           let code = parsonsEditorRef.current?.getValue();
+          console.log("debug", code);
           if (code) {
-            codeRunner.debug(code, mode);
+            codeRunner.debug(
+              code,
+              mode,
+              { breakpoints: [], watches: [] },
+              props.bookNode?.additionalFiles || [],
+              additionalFilesLoaded,
+              usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined
+            );
           }
         } else {
           const code = pyEditorRef.current?.getValue();
@@ -333,7 +339,10 @@ const Challenge = (props: ChallengeProps) => {
       "canvas-keyup": (data: React.KeyboardEvent) => codeRunner?.keyUp(data),
       "hide-turtle": () => {
         if (typ === ChallengeTypes.canvas) {
-          setTyp(ChallengeTypes.py);
+          setTyp(nodeTyp);
+          codeRunner.addConsoleText(
+            "Hiding turtle. Did you forget to call turtle.done()?"
+          );
         }
       },
       "draw-turtle-example": () => {
@@ -527,7 +536,7 @@ const Challenge = (props: ChallengeProps) => {
                             setGuideMinimised((x) => !x)
                           }
                           canDebug={codeRunner.state === CodeRunnerState.READY}
-                          canRunOnly={origType === "parsons" ? true : false}
+                          canRunOnly={nodeTyp === "parsons" ? true : false}
                           canSubmit={canSubmit}
                           testResults={testResults}
                           canKill={codeRunner.state === CodeRunnerState.RUNNING}
@@ -598,7 +607,7 @@ const Challenge = (props: ChallengeProps) => {
                       guideMinimised={guideMinimised}
                       onGuideDisplayToggle={() => setGuideMinimised((x) => !x)}
                       canDebug={codeRunner.state === CodeRunnerState.READY}
-                      canRunOnly={origType === "parsons" ? true : false}
+                      canRunOnly={nodeTyp === "parsons" ? true : false}
                       canSubmit={canSubmit}
                       testResults={testResults}
                       canKill={codeRunner.state === CodeRunnerState.RUNNING}

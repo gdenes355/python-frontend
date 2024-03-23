@@ -10,7 +10,11 @@ class Event<T, R = void> {
   }
 
   fire(data: T) {
-    this.listeners.forEach((callback) => callback(data));
+    let res: (R | undefined)[] = [];
+    this.listeners.forEach((callback) => res.push(callback(data)));
+    res = res.filter((r) => !!r);
+    if (!res.length) return;
+    return res[0];
   }
 
   private listeners: Map<number, (data: T) => R> = new Map();
