@@ -9,7 +9,7 @@ import { TestResults } from "../models/Tests";
 import ChallengeTypes from "../models/ChallengeTypes";
 import IBookFetcher from "../book/utils/IBookFetcher";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
-import BookNodeModel, { nodeToJsonSimple } from "../models/BookNodeModel";
+import BookNodeModel from "../models/BookNodeModel";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 
@@ -375,7 +375,7 @@ const Challenge = (props: ChallengeProps) => {
           props.store,
           pyEditorRef.current?.getValue(),
           guideRef.current?.getValue(),
-          outputsRef.current?.getJsonEditor()?.getValue(),
+          outputsRef.current?.getBookNodeEditor()?.getValue(),
           additionalFilesLoaded,
           outputsRef.current?.getVisibleFileContents()
         );
@@ -508,11 +508,7 @@ const Challenge = (props: ChallengeProps) => {
                       usesFixedInput={usesFixedInput}
                       additionalFiles={props.bookNode.additionalFiles || []}
                       additionalFilesLoaded={additionalFilesLoaded}
-                      nodeAsJson={
-                        props.isEditing
-                          ? nodeToJsonSimple(props.bookNode)
-                          : undefined
-                      }
+                      bookNode={props.bookNode}
                     />
                   </Allotment.Pane>
                 </Allotment>

@@ -17,7 +17,9 @@ import {
 import AdditionalFileView, {
   AdditionalFileViewRef,
 } from "../Editors/AdditionalFileView";
-import JsonEditor, { JsonEditorHandle } from "../Editors/JsonEditor";
+import BookNodeEditor, {
+  BookNodeEditorHandle,
+} from "../Editors/BookNodeEditor";
 import ChallengeContext from "../../ChallengeContext";
 import { TestCases } from "../../../models/Tests";
 import AudioPlayer, {
@@ -25,6 +27,7 @@ import AudioPlayer, {
 } from "../../../components/AudioPlayer";
 import { Box } from "@mui/material";
 import TabbedView, { TabbedViewHandle } from "../../../components/TabbedView";
+import BookNodeModel from "../../../models/BookNodeModel";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -36,7 +39,7 @@ type ChallengeOutputsProps = {
   codeRunner: CodeRunnerRef;
 
   // for editing book
-  nodeAsJson?: string;
+  bookNode: BookNodeModel;
 };
 
 type ChallengeOutputsHandle = {
@@ -44,7 +47,7 @@ type ChallengeOutputsHandle = {
   awaitCanvas: () => Promise<void>;
   getFixedInputs: () => string | undefined;
   getCanvas: () => CanvasDisplayHandle | null;
-  getJsonEditor: () => JsonEditorHandle | null;
+  getBookNodeEditor: () => BookNodeEditorHandle | null;
   getVisibleFileContents: () => Map<string, string>;
   getAudioPlayer: () => AudioPlayerHandle | null;
 };
@@ -76,7 +79,7 @@ const ChallengeOutputs = React.forwardRef<
   const fixedInputFieldRef = useRef<FixedInputFieldHandle | null>(null);
 
   // editors (if editing book)
-  const jsonEditorRef = useRef<JsonEditorHandle | null>(null);
+  const bookNodeEditorRef = useRef<BookNodeEditorHandle | null>(null);
   const fileEditorRefs = useRef<Map<string, AdditionalFileViewRef>>(new Map());
 
   useImperativeHandle(ref, () => ({
@@ -99,7 +102,7 @@ const ChallengeOutputs = React.forwardRef<
       return fixedInputFieldRef.current?.getValue();
     },
     getCanvas: () => canvasDisplayRef.current,
-    getJsonEditor: () => jsonEditorRef.current,
+    getBookNodeEditor: () => bookNodeEditorRef.current,
     getVisibleFileContents: () => {
       const map = new Map<string, string>();
       fileEditorRefs.current.forEach((editor, key) => {
@@ -172,13 +175,13 @@ const ChallengeOutputs = React.forwardRef<
     panes.push({
       label: "Edit challenge",
       content: (
-        <JsonEditor
-          ref={jsonEditorRef}
-          starterCode={props.nodeAsJson || ""}
+        <BookNodeEditor
+          ref={bookNodeEditorRef}
           onToggleFullScreen={() => {}}
           onChange={() => {
             challengeContext?.actions["has-made-edit"]();
           }}
+          bookNode={props.bookNode}
         />
       ),
       show: challengeContext?.isEditing,

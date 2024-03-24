@@ -10,7 +10,7 @@ const saveNode = (
   store?: IEditableBookStore,
   code?: string,
   guideMd?: string,
-  json?: string,
+  newBookNode?: BookNodeModel,
   currentAdditionalFiles?: AdditionalFilesContents,
   displayedAdditionalFiles?: Map<string, string>
 ) => {
@@ -40,32 +40,34 @@ const saveNode = (
     }
   });
 
-  // update the book from json
+  // update the book
+  if (!newBookNode) {
+    return false;
+  }
   let changed = false;
-  let editedNode = JSON.parse(json || "") as BookNodeModel;
-  if (editedNode.name && editedNode.name !== bookNode.name) {
+  if (newBookNode.name && newBookNode.name !== bookNode.name) {
     changed = true;
-    bookNode.name = editedNode.name;
+    bookNode.name = newBookNode.name;
   }
-  if (editedNode.isExample !== bookNode.isExample) {
+  if (newBookNode.isExample !== bookNode.isExample) {
     changed = true;
-    bookNode.isExample = editedNode.isExample;
+    bookNode.isExample = newBookNode.isExample;
   }
-  if (editedNode.isAssessment !== bookNode.isAssessment) {
+  if (newBookNode.isAssessment !== bookNode.isAssessment) {
     changed = true;
-    bookNode.isAssessment = editedNode.isAssessment;
+    bookNode.isAssessment = newBookNode.isAssessment;
   }
-  if (editedNode.typ !== bookNode.typ) {
+  if (newBookNode.typ !== bookNode.typ) {
     changed = true;
-    bookNode.typ = editedNode.typ;
+    bookNode.typ = newBookNode.typ;
   }
-  if (editedNode.tests !== bookNode.tests) {
+  if (newBookNode.tests !== bookNode.tests) {
     changed = true;
-    bookNode.tests = editedNode.tests;
+    bookNode.tests = newBookNode.tests;
   }
-  if (editedNode.additionalFiles !== bookNode.additionalFiles) {
+  if (newBookNode.additionalFiles !== bookNode.additionalFiles) {
     changed = true;
-    bookNode.additionalFiles = editedNode.additionalFiles;
+    bookNode.additionalFiles = newBookNode.additionalFiles;
   }
   if (changed) {
     store.store.saveBook();
