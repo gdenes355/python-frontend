@@ -9,7 +9,7 @@ import Editor, { loader, OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import "./PyEditor.css";
 
-import DebugContext from "../../../models/DebugContext";
+import DebugContext from "../../../coderunner/DebugContext";
 
 import ChallengeContext from "../../ChallengeContext";
 import VsThemeContext from "../../../themes/VsThemeContext";

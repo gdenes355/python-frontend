@@ -62,6 +62,9 @@
         },
         "bookMainUrl": {
           "$ref": "#/$defs/bookMainUrl"
+        },
+        "sol": {
+          "$ref": "#/$defs/solution"
         }
       },
       "required": ["name", "id"],
@@ -137,6 +140,23 @@
         },
         "additionalProperties": false
       }
+    },
+    "solution": {
+      "description": "challenge solution",
+      "type": "object",
+      "properties": {
+        "file": {
+          "description": "Path to solution file",
+           "type": "string"
+        },
+        "showSolution": {
+          "description": "should the solution be visible to the student?",
+          "type:": "boolean"
+        }
+          
+      },
+      "required": ["file"],
+      "additionalProperties": false
     },
     "additionalFiles": {
       "description": "optional list of files",

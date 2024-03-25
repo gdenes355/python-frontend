@@ -8,7 +8,7 @@ import React, {
 import BookEditorDrawer from "../book/components/BookEditorDrawer";
 import VSCodeBookStore from "./VSCodeBookStore";
 import BookNodeModel from "../models/BookNodeModel";
-import useCodeRunner from "../coderunner/CodeRunner";
+import useCodeRunner from "../coderunner/useCodeRunner";
 import { EditorTestResults } from "../book/components/BookEditorContents";
 
 const BookEditorFrame = () => {
@@ -100,7 +100,7 @@ const BookEditorFrame = () => {
       try {
         let code = await readFile?.(sol);
         if (code) {
-          let resData = await codeRunner?.test(
+          let resData = await codeRunner.test(
             code,
             tests,
             additionalFiles,

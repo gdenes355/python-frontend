@@ -4,11 +4,11 @@ For instance, the following will expose the contents of `test1.txt` and `test2.t
 ```
 "additionalFiles": [
     {
-        "filename": "test1.txt",
+        "filename": "additionalFile1.txt",
         "visible": true
     },
     {
-        "filename": "test2.txt",
+        "filename": "additionalFile2.txt",
         "visible": false
     }
 ]

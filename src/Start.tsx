@@ -53,23 +53,23 @@ const StartPage = () => {
           <a href="/?coop=1">/</a>
         </p>
         <h3>For content creators</h3>
+        To clone a book for editing, you can just append <code>
+          clone=true
+        </code>{" "}
+        in the query path. E.g.:
+        <a href="/?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
+          ?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
+        </a>
+        .
         <p>
-          To clone a book for editing, you can just append{" "}
-          <code>clone=true</code> in the query path. E.g.:
-          <a href="/?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
-            ?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
+          Or you can upload the zip file as well to the landing page{" "}
+          <a href="/?teacher=true&coop=1">/?teacher=true&coop=1</a>
+        </p>
+        <p>
+          You can also just use a simple template to get started&nbsp;
+          <a href="/?bk=/booktemplates/singlepage/book.json&edit=clone">
+            /?bk=/booktemplates/singlepage/book.json&edit=clone
           </a>
-          .
-          <p>
-            Or you can upload the zip file as well to the landing page{" "}
-            <a href="/?teacher=true&coop=1">/?teacher=true&coop=1</a>
-          </p>
-          <p>
-            You can also just use a simple template to get started&nbsp;
-            <a href="/?bk=/booktemplates/singlepage/book.json&edit=clone">
-              /?bk=/booktemplates/singlepage/book.json&edit=clone
-            </a>
-          </p>
         </p>
       </div>
     </Container>

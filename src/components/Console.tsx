@@ -33,7 +33,7 @@ const transformText = (text: string) => {
 
 const Console = (props: ConsoleProps) => {
   const containerEl = useRef<HTMLDivElement | null>(null);
-  const inputFieldEl = useRef<HTMLInputElement>(null);
+  const inputFieldEl = useRef<HTMLSpanElement | null>(null);
   const vsThemeContext = useContext(VsThemeContext);
 
   const [fontSize, setFontSize] = useState<number>(15);
@@ -77,13 +77,6 @@ const Console = (props: ConsoleProps) => {
     }
   };
 
-  useEffect(() => {
-    if (props.isInputEnabled && inputFieldEl.current) {
-      inputFieldEl.current.textContent = "";
-      inputFieldEl.current?.focus();
-    }
-  }, [props.isInputEnabled]);
-
   const setRef = (el: HTMLDivElement) => {
     if (containerEl.current) {
       containerEl.current.removeEventListener("wheel", onWheel);
@@ -91,6 +84,10 @@ const Console = (props: ConsoleProps) => {
     if (el) el.addEventListener("wheel", onWheel, { passive: false });
     containerEl.current = el;
   };
+
+  if (props.isInputEnabled) {
+    inputFieldEl.current?.focus();
+  }
 
   return (
     <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }}>
@@ -101,15 +98,25 @@ const Console = (props: ConsoleProps) => {
         style={{ fontSize: fontSize + "px" }}
       >
         <span className="printed-span">{transformText(props.content)}</span>
-        <span
-          className={!props.isInputEnabled ? "input-span hidden" : "input-span"}
-          ref={inputFieldEl}
-          role="textbox"
-          title="console textbox"
-          onKeyPress={onKeyPressed}
-          onKeyDown={onKeyDown}
-          contentEditable
-        ></span>
+        {props.isInputEnabled && (
+          <span
+            className={!props.isInputEnabled ? "input-span" : "input-span"}
+            ref={(r) => {
+              inputFieldEl.current = r;
+              if (inputFieldEl.current) {
+                inputFieldEl.current.textContent = "";
+                setTimeout(() => {
+                  inputFieldEl.current?.focus();
+                }, 100);
+              }
+            }}
+            role="textbox"
+            title="console textbox"
+            onKeyPress={onKeyPressed}
+            onKeyDown={onKeyDown}
+            contentEditable
+          />
+        )}
       </div>
     </Box>
   );

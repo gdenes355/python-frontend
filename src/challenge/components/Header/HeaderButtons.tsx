@@ -1,8 +1,8 @@
 import React, { useContext } from "react";
 import { Grid, IconButton, Button } from "@mui/material";
 import { FileDownload } from "@mui/icons-material";
-import FileUploadControl from "../../components/FileUploadControl";
-import ChallengeContext from "../ChallengeContext";
+import FileUploadControl from "../../../components/FileUploadControl";
+import ChallengeContext from "../../ChallengeContext";
 
 type HeaderButtonsProps = {
   canReset?: boolean;

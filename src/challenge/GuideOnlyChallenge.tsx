@@ -53,7 +53,18 @@ const GuideOnlyChallenge = (props: GuideOnlyChallengeProps) => {
       justifyContent="center"
     >
       <HeaderBar title={props.title} />
-      <Guide md={error ? "Failed to load guide" : md || "Loading..."} />
+      <Box
+        sx={{
+          flex: 1,
+          overflow: "auto",
+          width: "auto",
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        <Guide md={error ? "Failed to load guide" : md || "Loading..."} />
+      </Box>
+
       <BookControlFabs
         onNavigateToNextPage={props.onRequestNextChallenge}
         onNavigateToPrevPage={props.onRequestPreviousChallenge}

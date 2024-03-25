@@ -1,0 +1,13 @@
+enum CodeRunnerState {
+  UNINITIALISED = 0,
+  LOADING,
+  INITIALISING,
+  RESTARTING_WORKER,
+  READY,
+  AWAITING_INPUT,
+  ON_BREAKPOINT,
+  RUNNING,
+  RUNNING_WITH_DEBUGGER,
+}
+
+export default CodeRunnerState;

@@ -3,7 +3,7 @@ import { styled } from "@mui/material/styles";
 // adapted from the original parsons.css, but respecting themes
 const ParsonsEditorThemeWrapper = styled("div")(
   ({ theme }) => `
-  height: 100%;
+  
   overflow-y: auto;
   & .sortable-code { 
     width: 47% !important; 

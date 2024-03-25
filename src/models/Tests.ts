@@ -1,3 +1,24 @@
+type AdvancedOutRequirementType =
+  | "+"
+  | "-"
+  | "c+"
+  | "c-"
+  | "f+"
+  | "f-"
+  | "s+"
+  | "s-"
+  | "t";
+
+type AdvancedOutRequirementIgnore =
+  | ""
+  | "w"
+  | "c"
+  | "p"
+  | "wc"
+  | "wp"
+  | "cp"
+  | "wcp";
+
 type AdvancedOutRequirement = {
   /** pattern to check for */
   pattern: string;
@@ -10,7 +31,7 @@ type AdvancedOutRequirement = {
    * t: turtle
    * default is +, contains
    */
-  typ?: "+" | "-" | "c+" | "c-" | "f+" | "f-" | "s+" | "s-" | "t";
+  typ?: AdvancedOutRequirementType;
 
   /**
    * w: whitespace insensitive
@@ -23,7 +44,7 @@ type AdvancedOutRequirement = {
    * "": exact match
    * default is "", exact match
    */
-  ignore?: "" | "w" | "c" | "p" | "wc" | "wp" | "cp" | "wcp";
+  ignore?: AdvancedOutRequirementIgnore;
 
   /**
    * if count is specified, the pattern must appear count times. default is *-1, don't care*
@@ -70,4 +91,13 @@ type AllTestResults = {
   failed: Set<string>;
 };
 
-export { TestCase, TestCases, TestResult, TestResults, AllTestResults };
+export {
+  TestCase,
+  TestCases,
+  TestResult,
+  TestResults,
+  AllTestResults,
+  AdvancedOutRequirement,
+  AdvancedOutRequirementType,
+  AdvancedOutRequirementIgnore,
+};

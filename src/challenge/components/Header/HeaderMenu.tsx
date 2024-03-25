@@ -29,6 +29,7 @@ const HeaderMenu = (props: HeaderMenuProps) => {
           label="Use fixed inputs"
         />
       </MenuItem>
+
       {props.onBookUpload ? (
         <MenuItem onClick={() => props.onBookUpload && props.onBookUpload()}>
           <ListItemIcon>
