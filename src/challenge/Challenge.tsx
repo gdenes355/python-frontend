@@ -134,6 +134,9 @@ const Challenge = (props: ChallengeProps) => {
     onTurtle: async (id, msg) => {
       if (codeRunner.state !== CodeRunnerState.READY) {
         if (typ !== ChallengeTypes.canvas) {
+          if (msg === '{"action": "stop"}') {
+            return;
+          }
           setTyp(ChallengeTypes.canvas);
         }
         outputsRef.current?.focusPane("canvas");
@@ -498,7 +501,7 @@ const Challenge = (props: ChallengeProps) => {
                   </Allotment.Pane>
                   <Allotment.Pane
                     visible={getVisibilityWithHack(!editorFullScreen)}
-                    maxSize={550}
+                    maxSize={750}
                     minSize={150}
                   >
                     <ChallengeOutputs

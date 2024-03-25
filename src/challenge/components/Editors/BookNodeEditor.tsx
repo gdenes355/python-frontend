@@ -1,15 +1,5 @@
-import React, {
-  useImperativeHandle,
-  useRef,
-  useEffect,
-  useContext,
-  useState,
-  useMemo,
-} from "react";
-import Editor, { OnMount, Monaco } from "@monaco-editor/react";
-import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
+import React, { useImperativeHandle, useRef, useEffect, useState } from "react";
 
-import VsThemeContext from "../../../themes/VsThemeContext";
 import {
   Box,
   Card,
@@ -36,6 +26,7 @@ import InputDialog from "../../../components/dialogs/InputDialog";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import DeleteIcon from "@mui/icons-material/Delete";
+import TestEditor, { TestEditorHandle } from "./TestEditor/TestEditor";
 
 type BookNodeEditorProps = {
   onChange?: () => void;
@@ -64,12 +55,10 @@ const BookNodeEditor = React.forwardRef<
   );
   const [additionalFiles, setAdditionalFiles] = useState<AdditionalFile[]>([]);
 
-  const jsonCode = useMemo(() => {
-    return JSON.stringify({ tests: props.bookNode.tests }, null, 2);
-  }, [props.bookNode]);
-
   // visual state
   const [addFileDialogOpen, setAddFileDialogOpen] = useState<boolean>(false);
+
+  const testEditor = useRef<TestEditorHandle>(null);
 
   useEffect(() => {
     setName(props.bookNode.name);
@@ -79,48 +68,32 @@ const BookNodeEditor = React.forwardRef<
     setAdditionalFiles(props.bookNode.additionalFiles || []);
   }, [props.bookNode]);
 
-  const themeContext = useContext(VsThemeContext);
   const propsRef = useRef<BookNodeEditorProps | null>(null);
   useEffect(() => {
     propsRef.current = props;
   }, [props]);
 
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
-  const monacoRef = useRef<Monaco | null>(null);
-
   const getValue = () => {
-    const json = editorRef?.current?.getValue() || "";
-    let node = JSON.parse(json) as BookNodeModel;
-    node.name = name;
-    node.typ = typ;
-    node.isExample = isExample && typ !== "parsons";
-    node.isAssessment = isAssessment && typ !== "parsons";
-    node.additionalFiles = additionalFiles;
-    return node;
+    return {
+      id: props.bookNode.id,
+      name,
+      typ,
+      isExample: isExample && typ !== "parsons",
+      isAssessment: isAssessment && typ !== "parsons",
+      additionalFiles,
+      tests: testEditor.current
+        ? testEditor.current.getValue()
+        : props.bookNode.tests,
+    };
   };
 
   useImperativeHandle(ref, () => ({
     getValue,
   }));
 
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
-    editorRef.current = editor;
-    monacoRef.current = monaco;
-    editor.addAction({
-      id: "togglefullscreen",
-      label: "Toggle Full Screen Editor",
-      keybindings: [monaco.KeyCode.F11],
-      contextMenuGroupId: "navigation",
-      contextMenuOrder: 1.5,
-      run: () => {
-        props.onToggleFullScreen();
-      },
-    });
-  };
-
   return (
     <>
-      <Card sx={{ height: "100%" }}>
+      <Card sx={{ height: "100%", overflowY: "auto" }}>
         <CardContent sx={{ height: "100%" }}>
           <Stack direction="column" spacing={3} sx={{ height: "100%" }}>
             <Stack direction="row" spacing={3}>
@@ -232,33 +205,16 @@ const BookNodeEditor = React.forwardRef<
                   ))}
                   <ListItem>
                     <ListItemButton onClick={() => setAddFileDialogOpen(true)}>
-                      <ListItemText>Add</ListItemText>
+                      <ListItemText>+</ListItemText>
                     </ListItemButton>
                   </ListItem>
                 </List>
               </Box>
               <div style={{ flexGrow: 2, height: "100%" }}>
-                <Editor
-                  className={"theme-" + themeContext.theme}
-                  height="100%"
-                  defaultLanguage="json"
-                  value={jsonCode}
-                  onMount={handleEditorDidMount}
-                  theme={themeContext.theme}
-                  onChange={(e) => {
-                    if (jsonCode !== e) {
-                      props.onChange?.();
-                    }
-                  }}
-                  options={{
-                    scrollBeyondLastLine: false,
-                    tabSize: 2,
-                    detectIndentation: false,
-                    glyphMargin: true,
-                    wordWrap: "on",
-                    lineNumbersMinChars: 4,
-                    padding: { top: 10 },
-                  }}
+                <TestEditor
+                  ref={testEditor}
+                  tests={props.bookNode.tests}
+                  onChange={props.onChange}
                 />
               </div>
             </Stack>
