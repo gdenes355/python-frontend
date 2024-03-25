@@ -837,7 +837,7 @@ def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
             for watch in watches:
                 try:
                     in_watch = True
-                    watch_resp[watch] = eval(watch, aglobals, alocals)
+                    watch_resp[watch] = repr(eval(watch, aglobals, alocals))
                 except:
                     watch_resp[watch] = "error evaluating expression"
                 finally:

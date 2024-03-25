@@ -155,8 +155,6 @@ const DebugPane = (props: DebugPaneProps) => {
 
   const inputRef = useRef<HTMLInputElement>();
 
-  console.log(props.codeRunner.debugContext)
-
   return (
     <Stack sx={{ height: "100%" }}>
       <Paper sx={{ width: "100%", pl: 1, pb: 1 }}>
@@ -242,7 +240,7 @@ const DebugPane = (props: DebugPaneProps) => {
                     <VariableRow
                       key={`watch-${key}`}
                       name={key}
-                      value={debugContext.watches.get(key) + ""}
+                      value={debugContext.watches.get(key)}
                       removable={true}
                       OnRemove={() => props.OnWatchRemove(key)}
                     />
