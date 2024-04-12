@@ -29,7 +29,8 @@ import { Box } from "@mui/material";
 import TabbedView, { TabbedViewHandle } from "../../../components/TabbedView";
 import BookNodeModel from "../../../models/BookNodeModel";
 import BookJsonEditor from "../Editors/BookJSONEditor";
-import IBookFetcher from "../../../book/utils/IBookFetcher";
+
+import EditableBookStore from "../../../book/utils/EditableBookStore";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -42,7 +43,7 @@ type ChallengeOutputsProps = {
 
   // for editing book
   bookNode: BookNodeModel;
-  bookFetcher: IBookFetcher;
+  bookStore?: EditableBookStore;
 };
 
 type ChallengeOutputsHandle = {
@@ -195,7 +196,7 @@ const ChallengeOutputs = React.forwardRef<
       content: (
         <BookJsonEditor
           ref={() => {}}
-          bookFetcher={props.bookFetcher}
+          bookStore={props.bookStore}
           onChange={() => {
             challengeContext?.actions["has-made-edit"]();
           }}

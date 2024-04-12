@@ -10,15 +10,16 @@ import Editor, { OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
 import VsThemeContext from "../../../themes/VsThemeContext";
-import IBookFetcher, { clearBook } from "../../../book/utils/IBookFetcher";
+import { clearBook } from "../../../book/utils/IBookFetcher";
 import BookNodeModel from "../../../models/BookNodeModel";
 import { Box, Button } from "@mui/material";
 import ChallengeContext from "../../ChallengeContext";
+import EditableBookStore from "../../../book/utils/EditableBookStore";
 
 type BookJsonEditorProps = {
-  bookFetcher: IBookFetcher;
   onChange?: () => void;
   bookNode: BookNodeModel;
+  bookStore?: EditableBookStore;
 };
 
 type BookJsonEditorHandle = {
@@ -87,15 +88,17 @@ const BookJsonEditor = React.forwardRef<
   }));
 
   useEffect(() => {
-    if (props.bookFetcher) {
-      props.bookFetcher.fetchBook().then((res) => {
-        const book = clearBook(JSON.parse(JSON.stringify(res.book)));
+    if (props.bookStore) {
+      const book = clearBook(
+        JSON.parse(JSON.stringify(props.bookStore.getBook()))
+      );
+      if (book) {
         setValue(JSON.stringify(book, null, 2));
-      });
+      }
     }
     setCanBeSaved(false);
     setHasValidationError(false);
-  }, [props.bookFetcher, props.bookNode, setValue]);
+  }, [props.bookStore, props.bookNode, setValue]);
 
   const onValidate = () => {
     const markers = monacoRef.current?.editor.getModelMarkers({});

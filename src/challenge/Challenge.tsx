@@ -169,6 +169,7 @@ const Challenge = (props: ChallengeProps) => {
     typ: nodeTyp,
     uid: props.uid,
     store: props.store || null,
+    isEditing: props.isEditing,
   });
 
   const onReportResult = useCallback(
@@ -518,7 +519,7 @@ const Challenge = (props: ChallengeProps) => {
                       additionalFiles={props.bookNode.additionalFiles || []}
                       additionalFilesLoaded={additionalFilesLoaded}
                       bookNode={props.bookNode}
-                      bookFetcher={props.fetcher}
+                      bookStore={props.store}
                     />
                   </Allotment.Pane>
                 </Allotment>

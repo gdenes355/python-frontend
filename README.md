@@ -234,7 +234,7 @@ E.g.
       {"typ":"-", "pattern":"Hello 3"},
       {"typ":"+", "pattern":"Hello \\d", "count":2, "ignore":"w"},
       {"pattern": "sum.*9", "ignore": "wc"},
-      {"typ": "c+", "pattern": "int\\(input\\(", "count": "2", "ignore": "w"}
+      {"typ": "c+", "pattern": "int\\(input\\(", "count": 2, "ignore": "w"}
       {"typ": "f+", "filename":"numbers.txt", "pattern":"Hello \\d", "count":2, "ignore":"w"}
     ]
   }

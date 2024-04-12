@@ -18,6 +18,8 @@ type HookProps = {
   uid: string;
   fetcher: IBookFetcher;
   store: EditableBookStore | null;
+
+  isEditing?: boolean;
 };
 
 const useChallengeLoader = (props: HookProps) => {
@@ -85,8 +87,10 @@ const useChallengeLoader = (props: HookProps) => {
   };
 
   useEffect(() => {
-    setSavedCode(loadSavedCode(props.uid, props.typ));
-  }, [props.uid, props.typ]);
+    setSavedCode(
+      props.isEditing ? undefined : loadSavedCode(props.uid, props.typ)
+    );
+  }, [props.uid, props.typ, props.isEditing]);
 
   useEffect(() => {
     fetchCode(

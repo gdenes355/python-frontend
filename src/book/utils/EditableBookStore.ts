@@ -150,6 +150,8 @@ class EditableBookStore implements IEditableBookStore {
     },
   };
 
+  public getBook = () => this.book;
+
   private book: BookNodeModel;
 }
 
