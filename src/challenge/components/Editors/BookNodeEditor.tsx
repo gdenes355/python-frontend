@@ -200,7 +200,17 @@ const BookNodeEditor = React.forwardRef<
                         )}
                       </IconButton>
 
-                      <ListItemText primary={file.filename} />
+                      {props.bookNode?.additionalFiles?.filter(
+                        (f) => f.filename === file.filename
+                      ).length === 0 ? (
+                        <Tooltip title="You must first save the book to edit this file.">
+                          <ListItemText
+                            primary={`${file.filename} (draft, unsaved)`}
+                          />
+                        </Tooltip>
+                      ) : (
+                        <ListItemText primary={file.filename} />
+                      )}
                     </ListItem>
                   ))}
                   <ListItem>
