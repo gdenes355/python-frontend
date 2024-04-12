@@ -372,7 +372,7 @@ const Challenge = (props: ChallengeProps) => {
         props.onBookReloadRequested();
       },
       "has-made-edit": () => setHasEdited(true),
-      "save-book": () => {
+      "save-node": () => {
         const changed = saveNode(
           props.bookNode,
           props.store,
@@ -387,6 +387,12 @@ const Challenge = (props: ChallengeProps) => {
         if (changed) {
           props.onBookReloadRequested();
         }
+      },
+      "save-book": (book: string) => {
+        props.store?.store.saveBook(book);
+        forceReload();
+        setHasEdited(false);
+        props.onBookReloadRequested();
       },
     };
   }, [
@@ -422,7 +428,7 @@ const Challenge = (props: ChallengeProps) => {
       setSaveDialogProps({
         open: true,
         onSave: () => {
-          context.actions["save-book"]();
+          context.actions["save-node"]();
           action();
           setSaveDialogProps(undefined);
         },
@@ -512,6 +518,7 @@ const Challenge = (props: ChallengeProps) => {
                       additionalFiles={props.bookNode.additionalFiles || []}
                       additionalFilesLoaded={additionalFilesLoaded}
                       bookNode={props.bookNode}
+                      bookFetcher={props.fetcher}
                     />
                   </Allotment.Pane>
                 </Allotment>
@@ -567,7 +574,7 @@ const Challenge = (props: ChallengeProps) => {
                         props.openBookDrawer?.(true);
                       }}
                       onSave={
-                        props.isEditing ? actions["save-book"] : undefined
+                        props.isEditing ? actions["save-node"] : undefined
                       }
                     />
                   </Box>

@@ -28,6 +28,8 @@ import AudioPlayer, {
 import { Box } from "@mui/material";
 import TabbedView, { TabbedViewHandle } from "../../../components/TabbedView";
 import BookNodeModel from "../../../models/BookNodeModel";
+import BookJsonEditor from "../Editors/BookJSONEditor";
+import IBookFetcher from "../../../book/utils/IBookFetcher";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -40,6 +42,7 @@ type ChallengeOutputsProps = {
 
   // for editing book
   bookNode: BookNodeModel;
+  bookFetcher: IBookFetcher;
 };
 
 type ChallengeOutputsHandle = {
@@ -186,6 +189,21 @@ const ChallengeOutputs = React.forwardRef<
       ),
       show: challengeContext?.isEditing,
       name: "json",
+    });
+    panes.push({
+      label: "book.json",
+      content: (
+        <BookJsonEditor
+          ref={() => {}}
+          bookFetcher={props.bookFetcher}
+          onChange={() => {
+            challengeContext?.actions["has-made-edit"]();
+          }}
+          bookNode={props.bookNode}
+        />
+      ),
+      show: challengeContext?.isEditing,
+      name: "book.json",
     });
   }
 

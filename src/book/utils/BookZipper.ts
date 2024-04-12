@@ -1,7 +1,7 @@
 import BookNodeModel from "../../models/BookNodeModel";
 import JSZip from "jszip";
 import { absolutisePath } from "../../utils/pathTools";
-import IBookFetcher from "./IBookFetcher";
+import IBookFetcher, { clearBook } from "./IBookFetcher";
 import { SessionContextType } from "../../auth/SessionContext";
 
 class BookZipper {
@@ -10,7 +10,10 @@ class BookZipper {
   }
 
   public async zipBook(book: BookNodeModel, authContext?: SessionContextType) {
-    this.zip.file("book.json", JSON.stringify(book));
+    this.zip.file(
+      "book.json",
+      JSON.stringify(clearBook(JSON.parse(JSON.stringify(book))))
+    );
     await this.addNode(book, authContext);
     return this.zip;
   }
