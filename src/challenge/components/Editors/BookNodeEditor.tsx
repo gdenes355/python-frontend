@@ -211,6 +211,7 @@ const BookNodeEditor = React.forwardRef<
                 </List>
               </Box>
               <div style={{ flexGrow: 2, height: "100%" }}>
+                <h4 style={{ margin: 0 }}>Test cases</h4>
                 <TestEditor
                   ref={testEditor}
                   tests={props.bookNode.tests}
