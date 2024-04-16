@@ -35,7 +35,6 @@ const saveNode = (
   );
   updatedFiles.forEach((text, file) => {
     if (text) {
-      console.log(file.filename, text);
       store.store.save(text, file.filename);
     }
   });

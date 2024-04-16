@@ -200,7 +200,8 @@ const BookNodeEditor = React.forwardRef<
                         )}
                       </IconButton>
 
-                      {props.bookNode?.additionalFiles?.filter(
+                      {!props.bookNode?.additionalFiles ||
+                      props.bookNode?.additionalFiles?.filter(
                         (f) => f.filename === file.filename
                       ).length === 0 ? (
                         <Tooltip title="You must first save the book to edit this file.">

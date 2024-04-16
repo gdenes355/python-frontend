@@ -90,7 +90,7 @@ const AdvancedOutItemEditor = React.forwardRef<
     <TableRow>
       <VeryDenseTableCell>
         <TextField
-          value={pattern}
+          value={pattern || ""}
           onChange={(e) => {
             setPattern(e.target.value);
             props.onChange?.();
@@ -103,7 +103,7 @@ const AdvancedOutItemEditor = React.forwardRef<
         />
         {typ[0] === "f" || typ[0] === "t" ? (
           <TextField
-            value={fileName}
+            value={fileName || ""}
             placeholder="File name"
             onChange={(e) => {
               setFileName(e.target.value);
@@ -117,7 +117,7 @@ const AdvancedOutItemEditor = React.forwardRef<
           />
         ) : typ[0] === "s" ? (
           <TextField
-            value={statement}
+            value={statement || ""}
             placeholder="code statement"
             onChange={(e) => {
               setStatement(e.target.value);
