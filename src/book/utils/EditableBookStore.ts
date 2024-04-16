@@ -142,9 +142,15 @@ class EditableBookStore implements IEditableBookStore {
         absolutisePath(url, this.fetcher.getBookPathAbsolute()),
         text
       ),
-    saveBook: () =>
-      localStorage.setItem("edit://edit/book.json", JSON.stringify(this.book)),
+    saveBook: (newBook?: string) => {
+      if (newBook) {
+        this.book = JSON.parse(newBook) as BookNodeModel;
+      }
+      localStorage.setItem("edit://edit/book.json", JSON.stringify(this.book));
+    },
   };
+
+  public getBook = () => this.book;
 
   private book: BookNodeModel;
 }

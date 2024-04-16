@@ -1,5 +1,5 @@
-import React, { useContext, useState } from "react";
-import { Button, Grid, Stack } from "@mui/material";
+import React, { useContext, useRef, useState } from "react";
+import { Button, Grid, Stack, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
   Table,
@@ -12,14 +12,20 @@ import {
 } from "@mui/material";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import ClearIcon from "@mui/icons-material/Clear";
 
-import DebugContext from "../models/DebugContext";
-import ChallengeContext from "../challenge/ChallengeContext";
+import { emptyDebugContext } from "../../../coderunner/DebugContext";
+import ChallengeContext from "../../ChallengeContext";
+import {
+  CodeRunnerRef,
+  CodeRunnerState,
+} from "../../../coderunner/useCodeRunner";
 
 type DebugPaneProps = {
-  debugContext: DebugContext;
-  canContinue: boolean;
-  canKill: boolean;
+  codeRunner: CodeRunnerRef;
+
+  OnWatchAdd: (name: string) => void;
+  OnWatchRemove: (name: string) => void;
 };
 
 const StyledTable = styled("div")(
@@ -39,7 +45,12 @@ const StyledTable = styled("div")(
       padding-left: 3em;
       font-family: monospace;
       vertical-align: top;
-
+    }
+    & input {
+      padding-top: 1px;
+      padding-bottom: 1px;
+      font-family: monospace;
+      vertical-align: top;
     }
     & .hh {
       background-color: transparent !important;
@@ -76,12 +87,17 @@ const StyledTable = styled("div")(
     & .col-value {
       width 100%;
     }
-
-
 `
 );
 
-const VariableRow = (props: { name: string; value?: string }) => {
+type VariableRowProps = {
+  name: string;
+  value?: string;
+  removable?: boolean;
+  OnRemove?: () => void;
+};
+
+const VariableRow = (props: VariableRowProps) => {
   const short = (props.value?.length || 0) < 50;
   const [expanded, setExpanded] = useState<boolean>(false);
 
@@ -108,14 +124,37 @@ const VariableRow = (props: { name: string; value?: string }) => {
         ) : (
           <span className="val-collapsed">{props.value}</span>
         )}
+        {props.removable ? (
+          <IconButton
+            aria-label="remove watch"
+            size="small"
+            onClick={props.OnRemove}
+            style={{ float: "right" }}
+          >
+            <ClearIcon />
+          </IconButton>
+        ) : undefined}
       </TableCell>
     </TableRow>
   );
 };
 
 const DebugPane = (props: DebugPaneProps) => {
+  const { codeRunner } = props;
   const challengeContext = useContext(ChallengeContext);
-  const hasLocals = props.debugContext.locals.size > 0;
+
+  const debugContext = codeRunner.debugContext || emptyDebugContext;
+  const hasLocals = debugContext.locals.size > 0;
+
+  const canKill =
+    codeRunner.state === CodeRunnerState.RUNNING_WITH_DEBUGGER ||
+    codeRunner.state === CodeRunnerState.ON_BREAKPOINT ||
+    codeRunner.state === CodeRunnerState.AWAITING_INPUT;
+
+  const canContinue = codeRunner.state === CodeRunnerState.ON_BREAKPOINT;
+
+  const inputRef = useRef<HTMLInputElement>();
+
   return (
     <Stack sx={{ height: "100%" }}>
       <Paper sx={{ width: "100%", pl: 1, pb: 1 }}>
@@ -124,7 +163,7 @@ const DebugPane = (props: DebugPaneProps) => {
             <Button
               variant="contained"
               color="success"
-              disabled={!props.canContinue}
+              disabled={!canContinue}
               onClick={() => challengeContext?.actions["continue"]()}
             >
               Continue
@@ -134,7 +173,7 @@ const DebugPane = (props: DebugPaneProps) => {
             <Button
               variant="contained"
               color="primary"
-              disabled={!props.canContinue}
+              disabled={!canContinue}
               onClick={() => challengeContext?.actions["step"]()}
             >
               Step into
@@ -144,7 +183,7 @@ const DebugPane = (props: DebugPaneProps) => {
             <Button
               variant="contained"
               color="error"
-              disabled={!props.canKill}
+              disabled={!canKill}
               onClick={() => challengeContext?.actions["kill"]()}
             >
               Stop
@@ -153,7 +192,7 @@ const DebugPane = (props: DebugPaneProps) => {
         </Grid>
       </Paper>
       <Paper sx={{ width: "100%", overflow: "hidden", height: "100%" }}>
-        {props.canContinue ? (
+        {canContinue ? (
           <StyledTable>
             <TableContainer sx={{ height: "100%", overflowY: "scroll" }}>
               <Table
@@ -171,15 +210,13 @@ const DebugPane = (props: DebugPaneProps) => {
                         </TableCell>
                         <TableCell className="col-value" />
                       </TableRow>
-                      {Array.from(props.debugContext.locals.keys()).map(
-                        (key) => (
-                          <VariableRow
-                            key={`local-${key}`}
-                            name={key}
-                            value={props.debugContext.locals.get(key)}
-                          />
-                        )
-                      )}
+                      {Array.from(debugContext.locals.keys()).map((key) => (
+                        <VariableRow
+                          key={`local-${key}`}
+                          name={key}
+                          value={debugContext.locals.get(key)}
+                        />
+                      ))}
                     </>
                   ) : undefined}
                   <TableRow key="global">
@@ -188,13 +225,47 @@ const DebugPane = (props: DebugPaneProps) => {
                     </TableCell>
                     <TableCell className="col-value" />
                   </TableRow>
-                  {Array.from(props.debugContext.globals.keys()).map((key) => (
+                  {Array.from(debugContext.globals.keys()).map((key) => (
                     <VariableRow
                       key={`local-${key}`}
                       name={key}
-                      value={props.debugContext.globals.get(key)}
+                      value={debugContext.globals.get(key)}
                     />
                   ))}
+                  <TableRow key="watches">
+                    <TableCell className="hh col-name">WATCHES</TableCell>
+                    <TableCell className="col-value" />
+                  </TableRow>
+                  {Array.from(debugContext.watches.keys()).map((key) => (
+                    <VariableRow
+                      key={`watch-${key}`}
+                      name={key}
+                      value={debugContext.watches.get(key)}
+                      removable={true}
+                      OnRemove={() => props.OnWatchRemove(key)}
+                    />
+                  ))}
+
+                  <TableRow>
+                    <TableCell colSpan={2}>
+                      <TextField
+                        hiddenLabel
+                        variant="standard"
+                        size="small"
+                        inputRef={inputRef}
+                        onKeyDown={(e) => {
+                          const value = inputRef.current?.value?.trim();
+
+                          if (e.key === "Enter" && value) {
+                            props.OnWatchAdd(value);
+                            if (inputRef.current) {
+                              inputRef.current.value = "";
+                            }
+                          }
+                        }}
+                      />
+                    </TableCell>
+                  </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>

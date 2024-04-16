@@ -9,7 +9,10 @@ import { IEditableBookStore } from "../utils/EditableBookStore";
 import { v4 as uuidv4 } from "uuid";
 
 import { findParent } from "../../models/BookNodeModel";
-import { CodeRunnerRef } from "../../coderunner/CodeRunner";
+import {
+  CodeRunnerRef,
+  CodeRunnerStateDisplay,
+} from "../../coderunner/useCodeRunner";
 
 type BookEditorDrawerProps = {
   open: boolean;
@@ -85,7 +88,10 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
       >
         {props.codeRunner ? (
           <>
-            <Box>Code runner: {props.codeRunner?.state}</Box>
+            <Box>
+              Code runner:{" "}
+              <CodeRunnerStateDisplay state={props.codeRunner?.state} />
+            </Box>
             <Button onClick={props.onRunTests}>Rerun tests</Button>
             <Divider />
           </>
