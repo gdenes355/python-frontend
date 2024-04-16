@@ -1,523 +1,645 @@
-import React, { MutableRefObject } from "react";
-import { throttle } from "lodash";
-import { Box, Card, CardContent, Grid, IconButton, Paper } from "@mui/material";
-import CachedIcon from "@mui/icons-material/Cached";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { TestResults } from "../models/Tests";
+import ChallengeTypes from "../models/ChallengeTypes";
+import IBookFetcher from "../book/utils/IBookFetcher";
+import { ProgressStorage } from "../book/utils/ProgressStorage";
+import BookNodeModel from "../models/BookNodeModel";
+import { PyEditorHandle } from "./components/Editors/PyEditor";
+import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
+
+import useCodeRunner, { CodeRunnerState } from "../coderunner/useCodeRunner";
+import BookUploadModal from "../book/components/BookUploadModal";
+import { Card, CardContent, Paper } from "@mui/material";
+import { Box } from "@mui/system";
 
 import { Allotment } from "allotment";
 import "allotment/dist/style.css";
 
-import IChallenge, { IChallengeState, IChallengeProps } from "./IChallenge";
-import ChallengeTypes from "../models/ChallengeTypes";
-import ChallengeContext, { ChallengeContextClass } from "./ChallengeContext";
-
-import DebugPane from "../components/DebugPane";
-import PyEditor, { PyEditorHandle } from "./components/Editors/PyEditor";
-import ParsonsEditor, {
-  ParsonsEditorHandle,
-} from "./components/Editors/ParsonsEditor";
-import ChallengeConsole from "./components/ChallengeConsole";
-import CanvasDisplay, {
-  CanvasDisplayHandle,
-} from "./components/CanvasDisplay/CanvasDisplay";
-import FixedInputField, {
-  FixedInputFieldHandle,
-} from "./components/FixedInputField";
-import Guide from "../components/Guide";
-import MainControls from "./components/MainControls";
 import BookControlFabs from "../book/components/BookControlFabs";
-import HeaderBar from "../components/HeaderBar";
-import ChallengeStatus from "../models/ChallengeStatus";
-import { TestCases } from "../models/Tests";
-import Help from "./components/Help";
-import Outputs, { OutputsHandle } from "./components/Outputs";
-import BookUploadModal from "../book/components/BookUploadModal";
-import HeaderButtons from "./components/HeaderButtons";
-
+import DebugPane from "./components/Debug/DebugPane";
+import MainControls from "./components/Guide/MainControls";
+import ChallengeContext, { Actions, wrapActions } from "./ChallengeContext";
+import useChallengeLoader from "./hooks/useChallengeLoader";
 import "./Challenge.css";
-import HeaderMenu from "./components/HeaderMenu";
-import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
-import PaneType from "../models/PaneType";
-import AdditionalFileView from "./components/Editors/AdditionalFileView";
+import Header from "./components/Header/Header";
+import MainEditor from "./components/Editors/MainEditor";
+import ChallengeOutputs, {
+  ChallengeOutputsHandle,
+} from "./components/Outputs/Outputs";
+import EditableBookStore from "../book/utils/EditableBookStore";
+import ChallengeGuide, {
+  ChallengeGuideRef,
+} from "./components/Guide/ChallengeGuide";
+import saveNode from "../book/utils/BookSaver";
+import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 
-type ChallengeState = IChallengeState & {
-  savedCode: string | null;
-  editorFullScreen: boolean;
-  testsPassing: boolean | undefined;
-
-  helpOpen: boolean;
-  guideMinimised: boolean;
-  showBookUpload: boolean;
-};
-
-type ChallengeProps = IChallengeProps & {
+type ChallengeProps = {
+  uid: string;
+  guidePath: string;
+  codePath: string;
+  fetcher: IBookFetcher;
+  progressStorage: ProgressStorage;
+  bookNode: BookNodeModel;
   title?: string;
-  tests?: TestCases | null;
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookUploaded: (file: File, edit: boolean) => void;
+  onBookUploaded?: (file: File, edit: boolean) => void;
   canReloadBook?: boolean;
   onBookReloadRequested: () => void;
+
+  isEditing?: boolean;
+  store?: EditableBookStore;
 };
 
-class Challenge
-  extends React.Component<ChallengeProps, ChallengeState>
-  implements IChallenge
-{
-  editorRef = React.createRef<PyEditorHandle>();
-  parsonsEditorRef = React.createRef<ParsonsEditorHandle>();
-  canvasDisplayRef: MutableRefObject<CanvasDisplayHandle | null> =
-    React.createRef<CanvasDisplayHandle | null>();
-  fixedInputFieldRef = React.createRef<FixedInputFieldHandle>();
-  outputsRef = React.createRef<OutputsHandle>();
-  fileReader = new FileReader();
-  canvasPromiseResolve?: (value: any) => void;
-
-  currentConsoleText: string = "";
-  currentFixedUserInput: string[] = [];
-
-  chContext: ChallengeContextClass = new ChallengeContextClass(this);
-
-  // non-UI (non-React) internal state
-  breakpointsChanged: boolean = false;
-  worker: Worker | null = null;
-  interruptBuffer: Uint8Array | null = null;
-  keyDownBuffer: Uint8Array | null = null;
-  workerFullyInitialised: boolean = false;
-
-  forceStopping: boolean = false;
-
-  printCallback = throttle(
-    () => this.setState({ consoleText: this.currentConsoleText }),
-    100
+const Challenge = (props: ChallengeProps) => {
+  const nodeTyp: ChallengeTypes = useMemo(
+    () =>
+      props.bookNode.typ
+        ? ChallengeTypes[props.bookNode.typ]
+        : ChallengeTypes.py,
+    [props.bookNode.typ]
   );
 
-  canvasMountedCallback = () => {
-    if (this.canvasPromiseResolve) {
-      const local = this.canvasPromiseResolve;
-      this.canvasPromiseResolve = undefined;
-      if (local) {
-        local(true);
-      }
-    }
-  };
+  const canSubmit = useMemo(
+    () =>
+      (!props.bookNode.isExample &&
+        ((!!props.bookNode.tests && props.bookNode.tests.length > 0) ||
+          nodeTyp === "parsons")) ||
+      !!props.bookNode.isAssessment,
+    [props.bookNode, nodeTyp]
+  );
 
-  state: ChallengeState = {
-    starterCode: null,
-    savedCode: null,
-    consoleText: "Press debug to get started...",
-    guideMd: "*Loading the guide... Please wait*",
-    debugContext: { lineno: 0, locals: new Map(), globals: new Map() },
-    editorState: ChallengeStatus.LOADING,
-    editorFullScreen: false,
-    testResults: [],
-    testsPassing: undefined,
-    helpOpen: false,
-    guideMinimised: false,
-    typ: ChallengeTypes.TYP_PY,
-    origTyp: ChallengeTypes.TYP_PY,
-    usesFixedInput: false,
-    showBookUpload: false,
-    additionalFilesLoaded: {},
-    turtleExampleRendered: undefined,
-  };
+  /// state
 
-  constructor(props: ChallengeProps) {
-    super(props);
-    this.getVisibilityWithHack.bind(this);
-  }
+  const [editorFullScreen, setEditorFullScreen] = useState<boolean>(false);
+  const [testResults, setTestResults] = useState<TestResults>([]);
+  const [guideMinimised, setGuideMinimised] = useState<boolean>(false);
+  const [typ, setTyp] = useState<ChallengeTypes>(ChallengeTypes.py);
+  const [usesFixedInput, setUsesFixedInput] = useState<boolean>(false);
+  const [showBookUpload, setShowBookUpload] = useState<boolean>(false);
+  const [turtleExampleRendered, setTurtleExampleRendered] = useState<
+    string | undefined
+  >(undefined);
 
-  componentDidMount() {
-    console.log("crossOriginIsolated", window.crossOriginIsolated);
-    this.chContext.actions["load-saved-code"]();
-    this.chContext.actions["fetch-code"]();
-    this.chContext.actions["fetch-guide"]();
+  // states related to editing only
+  const [hasEdited, setHasEdited] = useState<boolean>(false);
+  const [isEditingGuide, setIsEditingGuide] = useState<boolean>(false);
+  const [saveDialogProps, setSaveDialogProps] = useState<
+    SaveDialogProps | undefined
+  >(undefined);
 
-    this.chContext.actions["restart-worker"]({ force: true });
+  const watches = useRef<string[]>([]);
 
-    const challengeTyp =
-      (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
+  /// references to sub-components
+  const pyEditorRef = useRef<PyEditorHandle | null>(null);
+  const parsonsEditorRef = useRef<ParsonsEditorHandle | null>(null);
+  const outputsRef = useRef<ChallengeOutputsHandle | null>(null);
+  const fileReader = useRef<FileReader | null>(null);
+  const guideRef = useRef<ChallengeGuideRef | null>(null);
 
-    this.setState({
-      typ: challengeTyp,
-      origTyp: challengeTyp,
-    });
-  }
-
-  componentDidUpdate(prevProps: ChallengeProps, prevState: ChallengeState) {
-    if (prevProps.guidePath !== this.props.guidePath) {
-      this.chContext.actions["fetch-guide"]();
-    }
-
-    const files = (this.props.bookNode.additionalFiles || []).map(
-      (file) => file.filename
-    );
-
-    this.props.bookNode.tests?.forEach((test) => {
-      if (test.out instanceof Array) {
-        test.out.forEach((out) => {
-          if (out.filename && out.typ?.[0] !== "f") {
-            files.push(out.filename);
+  /// hooks
+  const codeRunner = useCodeRunner({
+    onDraw: async (commands) => {
+      if (codeRunner.state !== CodeRunnerState.READY) {
+        if (typ !== ChallengeTypes.canvas) {
+          if (commands.length === 1 && commands[0]?.action === "reset") {
+            //ignore single initial reset if we are meant to be a standard
+            // Python challenge
+            return;
           }
-        });
+          setTyp(ChallengeTypes.canvas);
+        }
+        outputsRef.current?.focusPane("canvas");
+        await outputsRef.current?.awaitCanvas();
+        outputsRef.current?.getCanvas()?.runCommand(commands);
       }
-    });
-
-    files.forEach((file) => {
-      if (!(file in this.state.additionalFilesLoaded)) {
-        this.chContext.actions["fetch-file"](file).then((text) =>
-          this.setState({
-            additionalFilesLoaded: {
-              ...this.state.additionalFilesLoaded,
-              [file]: text,
-            },
-          })
-        );
+    },
+    awaitCanvas: async () => {
+      if (typ !== ChallengeTypes.canvas) {
+        setTyp(ChallengeTypes.canvas);
       }
-    });
+      if (outputsRef.current) {
+        await outputsRef.current.awaitCanvas();
+      }
+    },
+    turtleReset: (virtual: boolean) =>
+      outputsRef.current?.getCanvas()?.turtleReset(virtual),
+    onTurtle: async (id, msg) => {
+      if (codeRunner.state !== CodeRunnerState.READY) {
+        if (typ !== ChallengeTypes.canvas) {
+          if (msg === '{"action": "stop"}') {
+            return;
+          }
+          setTyp(ChallengeTypes.canvas);
+        }
+        outputsRef.current?.focusPane("canvas");
+        await outputsRef.current?.awaitCanvas();
+        let res = await outputsRef.current
+          ?.getCanvas()
+          ?.runTurtleCommand(id, msg);
+        return res || undefined;
+      }
+      return undefined;
+    },
+    onAudio: (msg) => {
+      if (codeRunner.state !== CodeRunnerState.READY) {
+        outputsRef.current?.getAudioPlayer()?.runAudioCommand(msg);
+      }
+    },
+  });
 
-    if (prevProps.codePath !== this.props.codePath) {
-      this.chContext.actions["fetch-code"]();
+  const {
+    guideMd,
+    savedCode,
+    starterCode,
+    additionalFilesLoaded,
+    forceReload,
+  } = useChallengeLoader({
+    fetcher: props.fetcher,
+    guidePath: props.guidePath,
+    codePath: props.codePath,
+    additionalFiles: props.bookNode.additionalFiles || [],
+    typ: nodeTyp,
+    uid: props.uid,
+    store: props.store || null,
+    isEditing: props.isEditing,
+  });
 
-      const challengeTyp =
-        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
-
-      this.setState({
-        typ: challengeTyp,
-        origTyp: challengeTyp,
-      });
-
-      this.chContext.actions["restart-worker"]({});
-      this.chContext.actions["load-saved-code"]();
-      let testRes = this.props.bookNode
-        ? this.props.progressStorage.getResult(this.props.bookNode)
-        : undefined;
-      this.setState({
-        testResults: testRes === undefined ? [] : [{ outcome: testRes }],
-        testsPassing: testRes,
-      });
-    }
-    if (prevProps.typ !== this.props.typ) {
-      const challengeTyp =
-        (this.props.typ as ChallengeTypes) || ChallengeTypes.TYP_PY;
-
-      // this is a live typ change so we don't change the origTyp
-      this.setState({
-        typ: challengeTyp,
-      });
-    }
-    if (
-      this.editorRef.current &&
-      this.state.editorState !== prevState.editorState &&
-      (prevState.editorState === ChallengeStatus.ON_BREAKPOINT ||
-        this.state.editorState === ChallengeStatus.ON_BREAKPOINT)
-    ) {
-      this.editorRef.current.updateEditorDecorations();
-    }
-
-    if (this.state.testResults !== prevState.testResults) {
-      let newTestResult =
-        this.state.testResults.length === 0
+  const onReportResult = useCallback(
+    (results: TestResults, code: string, bookNode: BookNodeModel) => {
+      setTestResults(results);
+      let newTestOutcome =
+        results.length === 0
           ? undefined
-          : this.state.testResults.filter((x) => x.outcome !== true).length ===
-            0;
-      this.setState({ testsPassing: newTestResult });
-    }
-  }
+          : results.filter((x) => x.outcome !== true).length === 0;
 
-  getVisibilityWithHack = (visible: boolean) => {
+      props.progressStorage?.setResult(bookNode, newTestOutcome, code);
+    },
+    [props.progressStorage]
+  );
+
+  const getVisibilityWithHack = (visible: boolean) => {
     // allotment seems to dislike visibility=true during load time
-    return this.state.editorState === ChallengeStatus.LOADING
-      ? undefined
-      : visible;
+    return codeRunner.state === CodeRunnerState.LOADING ? undefined : visible;
   };
 
-  renderEditor() {
-    if (this.props.typ === "parsons") {
-      return (
-        <ParsonsEditor
-          ref={this.parsonsEditorRef}
-          starterCode={this.state.savedCode || this.state.starterCode || ""}
+  // node tells us that typ has changed
+  useEffect(() => {
+    setTyp(nodeTyp);
+  }, [nodeTyp]);
+
+  // when the book node changes
+  useEffect(() => {
+    // stop runner
+    if (codeRunner.state > CodeRunnerState.READY) {
+      codeRunner.kill?.();
+      codeRunner.clear?.();
+    }
+    setTurtleExampleRendered(undefined);
+    setHasEdited(false);
+
+    // eslint-disable-next-line
+  }, [props.uid, props.bookNode]);
+
+  // results changed
+  useEffect(() => {
+    let testRes = props.bookNode
+      ? props.progressStorage.getResult(props.bookNode)
+      : undefined;
+    setTestResults(testRes === undefined ? [] : [{ outcome: testRes }]);
+  }, [props.bookNode, props.progressStorage]);
+
+  // run state
+  useEffect(() => {
+    pyEditorRef.current?.updateEditorDecorations();
+    if (
+      codeRunner.state === CodeRunnerState.AWAITING_INPUT ||
+      CodeRunnerState.READY
+    ) {
+      outputsRef.current?.focusPane("console");
+    }
+  }, [codeRunner.state]);
+
+  const makeDebugSetup = useCallback(() => {
+    return {
+      breakpoints: pyEditorRef.current?.getBreakpoints() || [],
+      watches: watches.current,
+    };
+  }, []);
+
+  // accepting actions from child nodes
+  // actions interface; cached, so the
+  // challenge context can be passed down without frequent re-renders
+  // this is OK, as actions are just callbacks, no state transferred
+  const actions = useMemo(() => {
+    return {
+      debug: (mode: "debug" | "run" = "debug") => {
+        if (nodeTyp === ChallengeTypes.parsons && !props.isEditing) {
+          let code = parsonsEditorRef.current?.getValue();
+          if (code) {
+            codeRunner.debug(
+              code,
+              mode,
+              { breakpoints: [], watches: [] },
+              props.bookNode?.additionalFiles || [],
+              additionalFilesLoaded,
+              usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined
+            );
+          }
+        } else {
+          const code = pyEditorRef.current?.getValue();
+          const bookNode = props.bookNode;
+          if (code || code === "") {
+            actions["save-code"](code);
+            codeRunner
+              .debug(
+                code,
+                mode,
+                makeDebugSetup(),
+                props.bookNode?.additionalFiles || [],
+                additionalFilesLoaded,
+                usesFixedInput
+                  ? outputsRef.current?.getFixedInputs()
+                  : undefined
+              )
+              .then((result) => {
+                if (props.bookNode?.isExample) {
+                  onReportResult([{ outcome: true }], code, bookNode);
+                }
+                outputsRef.current?.getCanvas()?.runTurtleClearup();
+              });
+          }
+        }
+      },
+      test: () => {
+        if (!props.bookNode) return;
+        if (nodeTyp === "parsons" && !props.isEditing) {
+          const newResults = parsonsEditorRef.current?.runTests() || [];
+          const code = parsonsEditorRef.current?.getValue() || "";
+          const bookNode = props.bookNode;
+          onReportResult(newResults, code, bookNode);
+        } else {
+          const code = pyEditorRef.current?.getValue();
+          const tests = props.bookNode.tests || [];
+          const bookNode = props.bookNode;
+          if (code && props.bookNode.isAssessment) {
+            onReportResult([{ outcome: true }], code, bookNode);
+            actions["save-code"](code);
+          } else if (code && tests) {
+            actions["save-code"](code);
+            codeRunner
+              ?.test(
+                code,
+                tests,
+                props.bookNode?.additionalFiles || [],
+                additionalFilesLoaded,
+                props.bookNode
+              )
+              .then((results) => {
+                onReportResult(results.results, results.code, results.bookNode);
+              });
+          }
+        }
+      },
+      "input-entered": (input: string | null) => {
+        let inputStr = input == null ? "" : input;
+        codeRunner?.input(inputStr, makeDebugSetup());
+      },
+      kill: () => codeRunner?.kill(),
+      step: () => codeRunner?.step(makeDebugSetup()),
+      continue: () => codeRunner?.continue(makeDebugSetup()),
+      "breakpoints-updated": () => {},
+      "reset-code": () => {
+        if (nodeTyp === "parsons") {
+          parsonsEditorRef.current?.reset();
+          return;
+        }
+        if ((starterCode === "" || starterCode) && pyEditorRef.current) {
+          pyEditorRef.current.setValue(starterCode);
+        }
+      },
+      "save-code": (code: string) => {
+        if ((code || code === "") && props.uid) {
+          localStorage.setItem("code-" + encodeURIComponent(props.uid), code);
+        }
+      },
+      "download-code": () => pyEditorRef.current?.download(),
+      "handle-file-read": (e: ProgressEvent<FileReader>) => {
+        if (fileReader.current?.result) {
+          pyEditorRef.current?.setValue(fileReader.current.result.toString());
+          fileReader.current = null;
+        }
+      },
+      "handle-code-upload": (file: File) => {
+        fileReader.current = new FileReader();
+        fileReader.current.onloadend = actions["handle-file-read"];
+        fileReader.current.readAsText(file);
+      },
+      "canvas-keydown": (data: React.KeyboardEvent) =>
+        codeRunner?.keyDown(data),
+      "canvas-keyup": (data: React.KeyboardEvent) => codeRunner?.keyUp(data),
+      "hide-turtle": () => {
+        if (typ === ChallengeTypes.canvas) {
+          setTyp(nodeTyp);
+          codeRunner.addConsoleText(
+            "Hiding turtle. Did you forget to call turtle.done()?"
+          );
+        }
+      },
+      "draw-turtle-example": () => {
+        codeRunner
+          .drawTurtleExample(additionalFilesLoaded, props.bookNode)
+          .then((id: string) => {
+            outputsRef.current?.focusPane("console");
+            if (props.bookNode.id !== id) return; // ignore old
+            outputsRef.current
+              ?.getCanvas()
+              ?.runTurtleCommand(-1, '{"action": "dump"}')
+              .then((turtleResult) => {
+                setTurtleExampleRendered(turtleResult || undefined);
+              });
+          })
+          .catch(() => setTurtleExampleRendered(undefined));
+      },
+      reload: () => {
+        forceReload();
+        props.onBookReloadRequested();
+      },
+      "has-made-edit": () => setHasEdited(true),
+      "save-node": () => {
+        const changed = saveNode(
+          props.bookNode,
+          props.store,
+          pyEditorRef.current?.getValue(),
+          guideRef.current?.getValue(),
+          outputsRef.current?.getBookNodeEditor()?.getValue(),
+          additionalFilesLoaded,
+          outputsRef.current?.getVisibleFileContents()
+        );
+        forceReload();
+        setHasEdited(false);
+        if (changed) {
+          props.onBookReloadRequested();
+        }
+      },
+      "save-book": (book: string) => {
+        props.store?.store.saveBook(book);
+        forceReload();
+        setHasEdited(false);
+        props.onBookReloadRequested();
+      },
+    };
+  }, [
+    additionalFilesLoaded,
+    forceReload,
+    makeDebugSetup,
+    nodeTyp,
+    props,
+    codeRunner,
+    onReportResult,
+    starterCode,
+    usesFixedInput,
+    typ,
+  ]);
+  const actionsRef = useRef<Actions>(actions);
+  const context = useMemo(() => {
+    return {
+      actions: wrapActions(actionsRef),
+      isEditing: props.isEditing || false,
+    };
+  }, [actionsRef, props.isEditing]);
+  useEffect(() => {
+    actionsRef.current = actions;
+  }, [actions]);
+
+  const callWithSaveCheck = useCallback(
+    (action: (() => void) | undefined) => {
+      if (!action) return;
+      if (!hasEdited || !props.isEditing) {
+        action();
+        return;
+      }
+      setSaveDialogProps({
+        open: true,
+        onSave: () => {
+          context.actions["save-node"]();
+          action();
+          setSaveDialogProps(undefined);
+        },
+        onClose: () => {
+          action();
+          setSaveDialogProps(undefined);
+        },
+      });
+    },
+    [hasEdited, props.isEditing, context]
+  );
+
+  return (
+    <>
+      {showBookUpload && props.onBookUploaded ? (
+        <BookUploadModal
+          visible={true}
+          onClose={() => setShowBookUpload(false)}
+          onBookUploaded={props.onBookUploaded}
         />
-      );
-    }
+      ) : null}
 
-    return (
-      <PyEditor
-        ref={this.editorRef}
-        canRun={this.state.editorState === ChallengeStatus.READY}
-        canPlaceBreakpoint={
-          this.state.editorState === ChallengeStatus.READY ||
-          this.state.editorState === ChallengeStatus.AWAITING_INPUT ||
-          this.state.editorState === ChallengeStatus.ON_BREAKPOINT
-        }
-        isOnBreakPoint={
-          this.state.editorState === ChallengeStatus.ON_BREAKPOINT
-        }
-        debugContext={this.state.debugContext}
-        starterCode={this.state.savedCode || this.state.starterCode || ""}
-        onToggleFullScreen={() => {
-          this.setState((state) => {
-            return { editorFullScreen: !state.editorFullScreen };
-          });
-        }}
-      />
-    );
-  }
-
-  renderMainControls = () => {
-    if (this.state.helpOpen && !this.state.guideMinimised) {
-      return;
-    }
-    return (
-      <Card sx={{ overflow: "visible" }}>
-        <CardContent>
-          <MainControls
-            guideMinimised={this.state.guideMinimised}
-            onGuideDisplayToggle={() =>
-              this.setState((prevState) => {
-                return { guideMinimised: !prevState.guideMinimised };
-              })
-            }
-            canDebug={this.state.editorState === ChallengeStatus.READY}
-            canRunOnly={this.state.origTyp === "parsons" ? true : false}
-            canSubmit={
-              (!this.props.isExample &&
-                (this.props.tests !== null || this.props.typ === "parsons")) ||
-              !!this.props.isAssessment
-            }
-            testResults={this.state.testResults}
-            canKill={this.state.editorState === ChallengeStatus.RUNNING}
-            isAssessment={!!this.props.isAssessment}
-          />
-        </CardContent>
-      </Card>
-    );
-  };
-
-  renderGuide = () => {
-    if (this.state.guideMinimised) {
-      return;
-    }
-    if (this.state.helpOpen) {
-      return <Help onClose={() => this.setState({ helpOpen: false })} />;
-    }
-    return (
-      <Guide
-        challengeId={this.props.bookNode.id}
-        md={this.state.guideMd}
-        turtleExampleImage={this.state.turtleExampleRendered}
-      />
-    );
-  };
-
-  render() {
-    return (
-      <>
-        {this.state.showBookUpload ? (
-          <BookUploadModal
-            visible={true}
-            onClose={() => this.setState({ showBookUpload: false })}
-            onBookUploaded={this.props.onBookUploaded}
-          />
-        ) : null}
-        <ChallengeContext.Provider value={this.chContext}>
-          <Paper
+      <ChallengeContext.Provider value={context}>
+        <Paper
+          sx={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            overflow: "hidden",
+            flexDirection: "row",
+          }}
+        >
+          <Box
             sx={{
               width: "100%",
               height: "100%",
               display: "flex",
               overflow: "hidden",
-              flexDirection: "row",
+              flexDirection: "column",
             }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                overflow: "hidden",
-                flexDirection: "column",
+            <Header
+              canReloadBook={props.canReloadBook || false}
+              title={props.title || props.bookNode?.name || ""}
+              bookNode={props.bookNode}
+              usesFixedInput={usesFixedInput}
+              onSetUsesFixedInput={setUsesFixedInput}
+              onSetShowBookUpload={
+                props.onBookUploaded ? setShowBookUpload : undefined
+              }
+              codeRunner={codeRunner}
+              hasEdited={hasEdited}
+              isEditingGuide={isEditingGuide}
+              onEditingGuideChange={(editing) => {
+                setIsEditingGuide(editing);
+                setHasEdited((x) => x || editing);
               }}
-            >
-              <HeaderBar
-                title={`${
-                  this.props.title ? this.props.title + " \u203A " : ""
-                }  ${this.props.bookNode?.name}`}
-                onHelpOpen={(open) => this.setState({ helpOpen: open })}
-                menuItems={
-                  <HeaderMenu
-                    onUsingFixedInputChange={(fixedInput) =>
-                      this.setState({ usesFixedInput: fixedInput })
-                    }
-                    usingFixedInput={this.state.usesFixedInput}
-                    onBookUpload={() => {
-                      this.setState({ showBookUpload: true });
-                    }}
-                  />
-                }
+              bookFetcher={props.fetcher}
+            />
+            <Allotment className="h-100" defaultSizes={[650, 350]}>
+              <Allotment.Pane>
+                <Allotment vertical defaultSizes={[650, 350]}>
+                  <Allotment.Pane>
+                    <MainEditor
+                      parsonsEditorRef={parsonsEditorRef}
+                      typ={nodeTyp}
+                      savedCode={savedCode}
+                      starterCode={starterCode}
+                      pyEditorRef={pyEditorRef}
+                      onToggleFullScreen={() => {
+                        console.log("toggle full screen", editorFullScreen);
+                        setEditorFullScreen((x) => !x);
+                      }}
+                      codeRunner={codeRunner}
+                    />
+                  </Allotment.Pane>
+                  <Allotment.Pane
+                    visible={getVisibilityWithHack(!editorFullScreen)}
+                    maxSize={750}
+                    minSize={150}
+                  >
+                    <ChallengeOutputs
+                      ref={outputsRef}
+                      typ={typ}
+                      codeRunner={codeRunner}
+                      usesFixedInput={usesFixedInput}
+                      additionalFiles={props.bookNode.additionalFiles || []}
+                      additionalFilesLoaded={additionalFilesLoaded}
+                      bookNode={props.bookNode}
+                      bookStore={props.store}
+                    />
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+              <Allotment.Pane
+                visible={getVisibilityWithHack(
+                  !editorFullScreen && !guideMinimised
+                )}
               >
-                {this.props.canReloadBook ? (
-                  <Grid item>
-                    <IconButton
-                      onClick={() => {
-                        this.chContext.actions["fetch-code"](true);
-                        this.chContext.actions["fetch-guide"]();
-                        this.props.onBookReloadRequested();
-                      }}
-                    >
-                      <CachedIcon />
-                    </IconButton>
-                  </Grid>
-                ) : undefined}
-                {this.props.authContext.token ? (
-                  <Grid item>
-                    <SessionWsStateIndicator />
-                  </Grid>
-                ) : undefined}
-
-                <HeaderButtons
-                  canReset={this.state.editorState === ChallengeStatus.READY}
-                />
-              </HeaderBar>
-
-              <Allotment className="h-100" defaultSizes={[650, 350]}>
-                <Allotment.Pane>
-                  <Allotment vertical defaultSizes={[650, 350]}>
-                    <Allotment.Pane>{this.renderEditor()}</Allotment.Pane>
-                    <Allotment.Pane
-                      visible={this.getVisibilityWithHack(
-                        !this.state.editorFullScreen
-                      )}
-                      maxSize={550}
-                      minSize={150}
-                    >
-                      <Outputs
-                        ref={this.outputsRef}
-                        visiblePanes={[
-                          "console",
-                          ...(this.state.typ === ChallengeTypes.TYP_CANVAS
-                            ? ["canvas" as PaneType]
-                            : []),
-                          ...(this.state.usesFixedInput
-                            ? ["fixed-input" as PaneType]
-                            : []),
-                        ]}
-                        console={
-                          <ChallengeConsole
-                            content={this.state.consoleText}
-                            inputEnabled={
-                              this.state.editorState ===
-                              ChallengeStatus.AWAITING_INPUT
-                            }
-                          />
-                        }
-                        fixedInput={
-                          <FixedInputField ref={this.fixedInputFieldRef} />
-                        }
-                        canvas={
-                          <CanvasDisplay
-                            ref={(c) => {
-                              this.canvasDisplayRef.current = c;
-                              if (this.canvasDisplayRef.current)
-                                this.canvasMountedCallback();
-                            }}
-                          />
-                        }
-                        files={
-                          this.props.bookNode.additionalFiles?.map(
-                            (file, index) => (
-                              <AdditionalFileView
-                                key={index}
-                                defaultValue={
-                                  this.state.additionalFilesLoaded[
-                                    file.filename
-                                  ]
-                                }
-                                readonly={true}
-                              />
-                            )
-                          ) || []
-                        }
-                        fileProperties={
-                          this.props.bookNode.additionalFiles || []
-                        }
-                        fileShowAll={false}
+                <Allotment vertical className="challenge__right-pane">
+                  <Box
+                    sx={{
+                      paddingLeft: 2,
+                      paddingRight: 2,
+                      display: "flex",
+                      flexDirection: "column",
+                      height: "100%",
+                    }}
+                  >
+                    <Card sx={{ overflow: "visible" }}>
+                      <CardContent>
+                        <MainControls
+                          guideMinimised={guideMinimised}
+                          onGuideDisplayToggle={() =>
+                            setGuideMinimised((x) => !x)
+                          }
+                          canDebug={codeRunner.state === CodeRunnerState.READY}
+                          canRunOnly={nodeTyp === "parsons" && !props.isEditing}
+                          canSubmit={canSubmit}
+                          testResults={testResults}
+                          canKill={codeRunner.state === CodeRunnerState.RUNNING}
+                          isAssessment={!!props.bookNode.isAssessment}
+                        />
+                      </CardContent>
+                    </Card>
+                    {guideMinimised ? null : (
+                      <ChallengeGuide
+                        ref={guideRef}
+                        challengeId={props.bookNode.id}
+                        initialMd={guideMd || ""}
+                        turtleExampleImage={turtleExampleRendered}
+                        isEditing={isEditingGuide}
                       />
-                    </Allotment.Pane>
-                  </Allotment>
-                </Allotment.Pane>
-                <Allotment.Pane
-                  visible={this.getVisibilityWithHack(
-                    !this.state.editorFullScreen && !this.state.guideMinimised
-                  )}
-                >
-                  <Allotment vertical className="challenge__right-pane">
-                    <Box
-                      sx={{
-                        paddingLeft: 2,
-                        paddingRight: 2,
-                        display: "flex",
-                        flexDirection: "column",
-                        height: "100%",
-                      }}
-                    >
-                      {this.renderMainControls()}
-                      {this.renderGuide()}
-                      <BookControlFabs
-                        onNavigateToPrevPage={
-                          this.props.onRequestPreviousChallenge
-                        }
-                        onNavigateToNextPage={this.props.onRequestNextChallenge}
-                        onOpenMenu={() => {
-                          this.props.openBookDrawer?.(true);
-                        }}
-                      />
-                    </Box>
-                    <Allotment.Pane
-                      maxSize={350}
-                      minSize={150}
-                      snap={true}
-                      visible={
-                        this.state.editorState ===
-                          ChallengeStatus.RUNNING_WITH_DEBUGGER ||
-                        this.state.editorState ===
-                          ChallengeStatus.ON_BREAKPOINT ||
-                        this.state.editorState ===
-                          ChallengeStatus.AWAITING_INPUT
+                    )}
+                    <BookControlFabs
+                      onNavigateToPrevPage={() =>
+                        callWithSaveCheck(props.onRequestPreviousChallenge)
                       }
-                      className="debug-pane"
-                    >
-                      <DebugPane
-                        canContinue={
-                          this.state.editorState ===
-                          ChallengeStatus.ON_BREAKPOINT
-                        }
-                        canKill={
-                          this.state.editorState ===
-                            ChallengeStatus.RUNNING_WITH_DEBUGGER ||
-                          this.state.editorState ===
-                            ChallengeStatus.ON_BREAKPOINT ||
-                          this.state.editorState ===
-                            ChallengeStatus.AWAITING_INPUT
-                        }
-                        debugContext={this.state.debugContext}
-                      />
-                    </Allotment.Pane>
-                  </Allotment>
-                </Allotment.Pane>
-              </Allotment>
-            </Box>
-            <Box>
-              {!this.state.guideMinimised ? undefined : (
-                <div>{this.renderMainControls()}</div>
-              )}
-            </Box>
-          </Paper>
-        </ChallengeContext.Provider>
-      </>
-    );
-  }
-}
+                      onNavigateToNextPage={() =>
+                        callWithSaveCheck(props.onRequestNextChallenge)
+                      }
+                      onOpenMenu={() => {
+                        props.openBookDrawer?.(true);
+                      }}
+                      onSave={
+                        props.isEditing ? actions["save-node"] : undefined
+                      }
+                    />
+                  </Box>
+                  <Allotment.Pane
+                    maxSize={350}
+                    minSize={150}
+                    snap={true}
+                    visible={
+                      codeRunner.state ===
+                        CodeRunnerState.RUNNING_WITH_DEBUGGER ||
+                      codeRunner.state === CodeRunnerState.ON_BREAKPOINT ||
+                      codeRunner.state === CodeRunnerState.AWAITING_INPUT
+                    }
+                    className="debug-pane"
+                  >
+                    <DebugPane
+                      codeRunner={codeRunner}
+                      OnWatchAdd={(n) => {
+                        watches.current?.push(n);
+                        codeRunner.refreshDebugContext(makeDebugSetup());
+                      }}
+                      OnWatchRemove={(n) => {
+                        watches.current = watches.current.filter(
+                          (x) => x !== n
+                        );
+                        codeRunner.refreshDebugContext(makeDebugSetup());
+                      }}
+                    />
+                  </Allotment.Pane>
+                </Allotment>
+              </Allotment.Pane>
+            </Allotment>
+          </Box>
+          <Box>
+            {!guideMinimised ? undefined : (
+              <div>
+                <Card sx={{ overflow: "visible" }}>
+                  <CardContent>
+                    <MainControls
+                      guideMinimised={guideMinimised}
+                      onGuideDisplayToggle={() => setGuideMinimised((x) => !x)}
+                      canDebug={codeRunner.state === CodeRunnerState.READY}
+                      canRunOnly={nodeTyp === "parsons" && !props.isEditing}
+                      canSubmit={canSubmit}
+                      testResults={testResults}
+                      canKill={codeRunner.state === CodeRunnerState.RUNNING}
+                      isAssessment={!!props.bookNode.isAssessment}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </Box>
+        </Paper>
+        <SaveDialog
+          open={saveDialogProps ? true : false}
+          onSave={saveDialogProps?.onSave || (() => {})}
+          onClose={saveDialogProps?.onClose || (() => {})}
+          message="You might have unsaved changes on this page. Would you like to save first?"
+          cancelText="Don't save"
+        />
+      </ChallengeContext.Provider>
+    </>
+  );
+};
 
 export default Challenge;

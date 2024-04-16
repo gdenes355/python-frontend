@@ -1354,7 +1354,8 @@
 
 
     ParsonsWidget.prototype.codeLineToHTML = function(codeline) {
-        return '<li id="' + codeline.id + '" class="prettyprint lang-py">' + codeline.code + '<\/li>';
+        const escaped = codeline.code.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        return '<li id="' + codeline.id + '" class="prettyprint lang-py">' + escaped + '<\/li>';
     };
 
     ParsonsWidget.prototype.codeLinesToHTML = function(codelineIDs, destinationID) {

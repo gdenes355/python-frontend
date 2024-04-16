@@ -3,20 +3,16 @@ import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
 import { processTurtleCommand, setVirtualMode } from "./TurtleController";
 
-import ChallengeContext from "../../ChallengeContext";
+import ChallengeContext from "../../../ChallengeContext";
 
 type CanvasDisplayHandle = {
   turtleReset: (virtual?: boolean) => void;
   runTurtleCommand: (id: number, msg: string) => Promise<string | void>;
   runTurtleClearup: () => void;
-  runAudioCommand: (msg: string) => void;
   runCommand: (commands: any[]) => void;
 };
 
-type CanvasDisplayProps = {
-  onKeyDown?: React.KeyboardEventHandler;
-  onKeyUp?: React.KeyboardEventHandler;
-};
+type CanvasDisplayProps = {};
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
   (props, ref) => {
@@ -25,12 +21,10 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
     const turtleUsed = useRef<boolean>(false);
     const turtleRetained = useRef<boolean>(false);
 
-    const challenge = useContext(ChallengeContext);
-
     // used after run to hide turtle if it was not retained by turtle.done()
     const turtleClearup = () => {
       if (turtleUsed.current && !turtleRetained.current) {
-        challenge?.actions["hide-turtle"]();
+        challengeContext?.actions["hide-turtle"]();
       }
       turtleUsed.current = false;
       turtleRetained.current = false;
@@ -59,25 +53,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       );
     };
 
-    const runAudioCommand = (msg: string) => {
-      const audio: HTMLAudioElement = document.getElementById(
-        "audio"
-      ) as HTMLAudioElement;
-
-      const audioSource: HTMLSourceElement = document.getElementById(
-        "audioSource"
-      ) as HTMLSourceElement;
-
-      const audioObj = JSON.parse(msg);
-
-      if (audioObj.action === "load") {
-        audioSource.src = audioObj.source;
-        audio.load();
-      } else if (audioObj.action === "play") {
-        audio.play();
-      }
-    };
-
     const runCommand = (commands: any[]) => {
       const canvas: HTMLCanvasElement = document.getElementById(
         "canvasDisplay"
@@ -94,7 +69,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       runCommand,
       runTurtleCommand,
       runTurtleClearup: turtleClearup,
-      runAudioCommand,
       turtleReset,
     }));
 
@@ -110,10 +84,6 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           tabIndex={1}
           style={{ outline: "none" }}
         />
-        <audio style={{ display: "none" }} id="audio" crossOrigin="anonymous">
-          <source id="audioSource" src=""></source>
-          Your browser does not support the audio element.
-        </audio>
       </div>
     );
   }
