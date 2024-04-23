@@ -87,6 +87,9 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
                   );
                 }
               },
+              a({ href, children, ...props }) {
+                return <a target="_blank" rel="noreferrer" href={href} {...props}>{children}</a>;
+              },
             }}
             remarkPlugins={[remarkMath]}
             rehypePlugins={[rehypeKatex]}
