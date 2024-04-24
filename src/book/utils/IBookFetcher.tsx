@@ -14,5 +14,18 @@ interface IBookFetcher {
   fetchBook: (authContext?: SessionContextType) => Promise<IBookFetchResult>;
 }
 
+const clearBook = (b: BookNodeModel) => {
+  if (b.bookMainUrl) {
+    b.bookMainUrl = undefined;
+  }
+  if (b.bookLink) {
+    b.bookLink = undefined;
+  }
+  if (b.children) {
+    b.children = b.children.map(clearBook);
+  }
+  return b;
+};
+
 export default IBookFetcher;
-export { IBookFetchResult };
+export { IBookFetchResult, clearBook };

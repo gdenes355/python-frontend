@@ -19,6 +19,10 @@
   color: black;
 }
 
+.hidden {
+  display: none;
+}
+
 .console .printed-span {
   margin-left: 1px;
   width: calc(100% - 20px);

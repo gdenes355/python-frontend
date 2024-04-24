@@ -47,7 +47,7 @@ const InputDialog = (props: InputDialogProps) => {
               <TextField {...params} label="Book" variant="standard" />
             )}
             onChange={(e, n) => setValue(n || "")}
-            value={value || null}
+            value={value || ""}
             renderOption={(lprops, option) => (
               <li {...lprops}>
                 {props.renderOption ? props.renderOption(option) : option}
@@ -60,7 +60,7 @@ const InputDialog = (props: InputDialogProps) => {
             margin="dense"
             id="formField"
             label={props.inputLabel}
-            value={value}
+            value={value || ""}
             fullWidth
             variant="standard"
             autoComplete="off"

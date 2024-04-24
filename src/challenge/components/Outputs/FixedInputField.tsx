@@ -21,7 +21,7 @@ const FixedInputField = React.forwardRef<
 
   return (
     <Box
-      sx={{ paddingLeft: 1, paddingRight: 1, height: "100%", ovrflow: "auto" }}
+      sx={{ paddingLeft: 1, paddingRight: 1, height: "100%", overflow: "auto" }}
     >
       <TextField
         placeholder="add fixed inputs here..."

@@ -8,7 +8,7 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
-import ChallengeContext from "../ChallengeContext";
+import ChallengeContext from "../challenge/ChallengeContext";
 import Box from "@mui/material/Box";
 
 type RunSplitButtonProps = {

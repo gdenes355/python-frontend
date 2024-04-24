@@ -1,5 +1,5 @@
 import React, { useCallback, useContext, useEffect } from "react";
-import ChallengeContext from "../challenge/ChallengeContext";
+import ChallengeContext from "../../ChallengeContext";
 import { Skeleton } from "@mui/material";
 
 type TurtlePreviewProps = {

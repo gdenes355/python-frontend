@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import ReactMarkdown from "react-markdown";
-import { Box } from "@mui/material";
+import Markdown from "react-markdown";
+import { Box, Table, TableContainer, TableHead, TableRow } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
@@ -12,7 +12,8 @@ import VsThemeContext from "../themes/VsThemeContext";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import TurtlePreview from "./TurtlePreview";
+import TurtlePreview from "../challenge/components/Guide/TurtlePreview";
+import remarkGfm from "remark-gfm";
 
 type GuideProps = {
   md: string;
@@ -52,23 +53,20 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
     return (
       <StyledGuide>
         <Box>
-          <ReactMarkdown
+          <Markdown
             components={{
-              code({ node, inline, className, children, ...props }) {
+              code({ className, children }) {
                 const match = /language-(\w+)/.exec(className || "");
-                return !inline && match ? (
+                return match ? (
                   <SyntaxHighlighter
                     children={String(children).replace(/\n$/, "")}
                     customStyle={{ fontSize: "1.05em" }}
                     language={match[1]}
                     PreTag="div"
-                    {...props}
                     style={themeContext.theme === "vs-dark" ? vscDarkPlus : vs}
                   />
                 ) : (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
+                  <code className={className}>{children}</code>
                 );
               },
               img({ node, className, src, alt, children, ...props }) {
@@ -90,12 +88,32 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
               a({ href, children, ...props }) {
                 return <a target="_blank" rel="noreferrer" href={href} {...props}>{children}</a>;
               },
+              table({ children }) {
+                return (
+                  <TableContainer>
+                    <Table size="small">{children}</Table>
+                  </TableContainer>
+                );
+              },
+              thead({ children }) {
+                return <TableHead>{children}</TableHead>;
+              },
+              tr({ children }) {
+                return <TableRow hover>{children}</TableRow>;
+              },
+              td({ node, children, style, ...props }) {
+                return (
+                  <td style={{ border: "1px solid", ...style }} {...props}>
+                    {children}
+                  </td>
+                );
+              },
             }}
-            remarkPlugins={[remarkMath]}
+            remarkPlugins={[remarkMath, remarkGfm]}
             rehypePlugins={[rehypeKatex]}
           >
             {localMd}
-          </ReactMarkdown>
+          </Markdown>
         </Box>
       </StyledGuide>
     );
