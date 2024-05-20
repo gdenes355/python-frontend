@@ -37,7 +37,7 @@ const TeacherContainer = (props: TeacherContainerProps) => {
             >
               <Tab label="Results" value="index" />
               <Tab label="Classes" value="classes" />
-              <Tab label="Local preview" value="local" />
+              <Tab label="Local preview" value="admin" />
               <Tab label="Tools" value="tools" />
             </Tabs>
           }
