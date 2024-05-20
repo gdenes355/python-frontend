@@ -25,6 +25,7 @@ type HeaderBarProps = {
   children?: React.ReactNode;
   menuItems?: React.ReactNode;
   onHelpOpen?: (open: boolean) => void;
+  leftAlignedChilden?: React.ReactNode;
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
@@ -57,11 +58,8 @@ const HeaderBar = (props: HeaderBarProps) => {
         >
           <span>{props.title || ""}</span>
         </Grid>
-        <Grid
-          item
-          sx={{ flexGrow: 1, justifyContent: "center", display: "flex" }}
-        >
-          <div></div>
+        <Grid item sx={{ flexGrow: 1, display: "flex" }}>
+          <div>{props.leftAlignedChilden || null}</div>
         </Grid>
 
         {props.children}

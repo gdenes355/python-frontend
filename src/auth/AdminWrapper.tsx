@@ -1,9 +1,21 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import SessionContext from "./SessionContext";
+import { Outlet } from "react-router-dom";
 
 type AdminWrapperProps = {
   urlBase: string;
   children?: React.ReactNode;
+};
+
+type OutletContextType = {
+  request: (req: string, withCache?: boolean) => Promise<any>;
+  urlBase: string;
 };
 
 const AdminWrapper = (props: AdminWrapperProps) => {
@@ -45,15 +57,50 @@ const AdminWrapper = (props: AdminWrapperProps) => {
       });
   }, [sessionContext, authorised, props.urlBase]);
 
+  const requestRef = useRef<Map<string, any>>(new Map());
+  const request = useCallback(
+    (req: string, withCache: boolean = true) =>
+      new Promise<any>((res, rej) => {
+        if (withCache) {
+          let cached = requestRef.current.get(req);
+          if (cached) {
+            res(cached);
+          }
+        }
+        let headers = new Headers();
+        headers.append("Authorization", `Bearer ${sessionContext.token}`);
+        fetch(`${props.urlBase}/${req}`, { headers })
+          .then((resp: Response) => {
+            if (resp.status !== 200) {
+              throw new Error(
+                `Failed to fetch ${req} with status ${resp.status}`
+              );
+            }
+            return resp.json();
+          })
+          .then((data) => {
+            if (withCache) requestRef.current.set(req, data.data);
+            res(data.data);
+          })
+          .catch((e) => rej(`Failed to fetch ${req}`));
+      }),
+    [sessionContext.token, props.urlBase]
+  );
+
   if (error) {
     return <p>Error: {error}</p>;
   }
 
   if (authorised) {
-    return <React.Fragment>{props.children}</React.Fragment>;
+    return (
+      <React.Fragment>
+        <Outlet context={{ request, urlBase: props.urlBase }} />
+      </React.Fragment>
+    );
   }
 
   return <p>Logging in...</p>;
 };
 
 export default AdminWrapper;
+export { OutletContextType };

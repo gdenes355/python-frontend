@@ -19,9 +19,11 @@ import SessionWrapper from "./auth/SessionWrapper";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
 import FolderPicker from "./components/FolderPicker";
 import AdminWrapper from "./auth/AdminWrapper";
-import TeacherAdmin from "./teacher/TeacherAdmin";
 import BookEditorFrame from "./vscode-frame/BookEditorFrame";
 import StudentDashboard from "./studentDashboard/StudentDashboard";
+import ThisYear from "./teacher/ThisYear";
+import AllClasses from "./teacher/AllClasses";
+import Tools from "./teacher/Tools";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -91,7 +93,7 @@ export default function App() {
     Cookies.set("theme", theme);
   };
 
-  const serverUrl = window.location.origin;
+  const serverUrl = "http://localhost:5001"; //window.location.origin;
 
   return (
     <VsThemeContext.Provider
@@ -111,12 +113,13 @@ export default function App() {
                   />
                   <Route
                     path="teacher"
-                    element={
-                      <AdminWrapper urlBase={serverUrl}>
-                        <TeacherAdmin baseUrl={serverUrl} />
-                      </AdminWrapper>
-                    }
-                  />
+                    element={<AdminWrapper urlBase={serverUrl} />}
+                  >
+                    <Route path="classes" element={<AllClasses />} />
+                    <Route path="local" element={<AppContainer />} />
+                    <Route path="tools" element={<Tools />} />
+                    <Route index path="*" element={<ThisYear />} />
+                  </Route>
                   <Route
                     path="book-editor-frame"
                     element={<BookEditorFrame />}
