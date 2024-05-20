@@ -29,10 +29,10 @@ const TeacherContainer = (props: TeacherContainerProps) => {
         <HeaderBar
           leftAlignedChilden={
             <Tabs
-              value={activeTab}
+              value={activeTab === "teacher" ? "index" : activeTab}
               onChange={(event, newValue) => {
                 if (newValue === "index") navigate("/teacher");
-                navigate(`/teacher/${newValue}`);
+                else navigate(`/teacher/${newValue}`);
               }}
             >
               <Tab label="Results" value="index" />
