@@ -31,7 +31,6 @@ import ErrorIcon from "@mui/icons-material/Error";
 import SessionContext from "../auth/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
 import InputDialog from "../components/dialogs/InputDialog";
-import HeaderBar from "../components/HeaderBar";
 import BookNodeModel from "../models/BookNodeModel";
 import {
   ClassModel,
@@ -44,12 +43,10 @@ import AddIcon from "@mui/icons-material/Add";
 import AddGroupDialog from "./components/AddGroupDialog";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 import { sanitisePastedEmails, zipResults } from "./utils";
-
-type TeacherAdminProps = {
-  baseUrl: string;
-};
+import TeacherContainer from "./TeacherContainer";
+import { useOutletContext } from "react-router-dom";
+import { OutletContextType } from "../auth/AdminWrapper";
 
 type GroupBook = {
   bookTitle: string;
@@ -61,7 +58,7 @@ type DownloadState = "idle" | "downloading" | "done" | "error";
 const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
 const checkedIcon = <CheckBoxIcon fontSize="small" />;
 
-const TeacherAdmin = (props: TeacherAdminProps) => {
+const ThisYear = () => {
   const sessionContext = useContext(SessionContext);
   const textfieldUsernamesRef = useRef<HTMLTextAreaElement>(null);
 
@@ -100,33 +97,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
 
   const resultsTableRef = useRef<ResultsTableRef>(null);
 
-  const requestRef = useRef<Map<string, any>>(new Map());
-  const request = useCallback(
-    (req: string) =>
-      new Promise<any>((res, rej) => {
-        let cached = requestRef.current.get(req);
-        if (cached) {
-          res(cached);
-        }
-        let headers = new Headers();
-        headers.append("Authorization", `Bearer ${sessionContext.token}`);
-        fetch(`${props.baseUrl}/${req}`, { headers })
-          .then((resp: Response) => {
-            if (resp.status !== 200) {
-              throw new Error(
-                `Failed to fetch ${req} with status ${resp.status}`
-              );
-            }
-            return resp.json();
-          })
-          .then((data) => {
-            requestRef.current.set(req, data.data);
-            res(data.data);
-          })
-          .catch((e) => rej(`Failed to fetch ${req}`));
-      }),
-    [sessionContext.token, props.baseUrl]
-  );
+  const oc: OutletContextType = useOutletContext();
 
   const onWsMessage = useCallback(
     (msg: any) => {
@@ -165,7 +136,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   }, [sessionContext, onWsMessage]);
 
   useEffect(() => {
-    request("api/admin/classes").then((data) => {
+    oc.request("api/admin/classes?active=true").then((data) => {
       data = data.filter((cls: ClassModel) => !!cls.active); // remove inactive classes
       setGroups(data);
       const prevActGroup = localStorage.getItem("teacher-activeGroup");
@@ -173,8 +144,8 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
         setActiveGroup(data.find((g: ClassModel) => g.name === prevActGroup));
       }
     });
-    request("api/admin/books").then((data) => setBookTitles(data));
-  }, [request]);
+    oc.request("api/admin/books").then((data) => setBookTitles(data));
+  }, [oc]);
 
   useEffect(() => {
     activeBookTitle.current = activeBook?.bookTitle;
@@ -219,14 +190,14 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     setBook(undefined);
 
     setBookFetcher(new BookFetcher(activeBook.bookTitle));
-    request(
+    oc.request(
       `api/admin/classes/${activeGroup.name}/books/${encodeURIComponent(
         activeBook.bookTitle
       )}/results`
     )
       .then((r) => setResults(r))
       .catch((e) => setError(e.reason));
-  }, [activeBook, request, activeGroup, updateCtr]);
+  }, [activeBook, oc, activeGroup, updateCtr]);
 
   useEffect(() => {
     if (!bookFetcher) {
@@ -268,7 +239,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
     setDialogState("");
     if (!activeGroup || !bookTitle) return;
     if (activeGroup.books?.includes(bookTitle)) return;
-    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/books`, {
+    fetch(`${oc.urlBase}/api/admin/classes/${activeGroup.name}/books`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -294,7 +265,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       }
     }
 
-    fetch(`${props.baseUrl}/api/admin/classes`, {
+    fetch(`${oc.urlBase}/api/admin/classes`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -319,7 +290,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
       .split("\n")
       .map((u) => u.trim())
       .filter((u) => u !== "" && !activeGroup.students.includes(u));
-    fetch(`${props.baseUrl}/api/admin/classes/${activeGroup.name}/students`, {
+    fetch(`${oc.urlBase}/api/admin/classes/${activeGroup.name}/students`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -338,7 +309,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const onDeleteStudent = (student: string) => {
     if (!activeGroup || !student) return;
     fetch(
-      `${props.baseUrl}/api/admin/classes/${activeGroup.name}/students/${student}`,
+      `${oc.urlBase}/api/admin/classes/${activeGroup.name}/students/${student}`,
       {
         method: "delete",
         cache: "no-cache",
@@ -360,7 +331,7 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   const onUpdateBookEnabled = (book: GroupBook, enabled: boolean) => {
     if (!activeGroup) return;
     const group = activeGroup;
-    fetch(`${props.baseUrl}/api/admin/classes/${group.name}/books`, {
+    fetch(`${oc.urlBase}/api/admin/classes/${group.name}/books`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -421,275 +392,258 @@ const TeacherAdmin = (props: TeacherAdminProps) => {
   };
 
   return (
-    <div className="h-100">
-      <Box
-        sx={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          overflow: "hidden",
-          flexDirection: "column",
-          paddingLeft: "10px",
-        }}
+    <TeacherContainer
+      headerChildren={
+        <Grid item key="reset-view">
+          <Button
+            style={{ height: "100%" }}
+            onClick={() => {
+              allotmentRef.current?.reset();
+              onResultsSet([]);
+            }}
+          >
+            Reset view
+          </Button>
+          <IconButton
+            aria-label="download results"
+            size="small"
+            onClick={() => onDownloadResults()}
+            style={{ height: "100%", borderRadius: "0px" }}
+            disabled={downloadState !== "idle" || !book || !results.length}
+            color="primary"
+          >
+            {downloadState === "downloading" ? (
+              <CircularProgress size={24} />
+            ) : downloadState === "done" ? (
+              <DoneIcon />
+            ) : downloadState === "error" ? (
+              <ErrorIcon />
+            ) : downloadState === "idle" ? (
+              <DownloadIcon />
+            ) : undefined}
+          </IconButton>
+        </Grid>
+      }
+    >
+      <Dialog
+        open={dialogState === "addStudent"}
+        onClose={() => setDialogState("")}
+        title="Add students"
       >
-        <HeaderBar title="Teacher view">
-          <React.Fragment>
-            <Grid item key="ws-indicator">
-              <SessionWsStateIndicator />
-            </Grid>
-            <Grid item key="reset-view">
-              <Button
-                style={{ height: "100%" }}
-                onClick={() => {
-                  allotmentRef.current?.reset();
-                  onResultsSet([]);
-                }}
-              >
-                Reset view
-              </Button>
-              <IconButton
-                aria-label="download results"
-                size="small"
-                onClick={() => onDownloadResults()}
-                style={{ height: "100%", borderRadius: "0px" }}
-                disabled={downloadState !== "idle" || !book || !results.length}
-                color="primary"
-              >
-                {downloadState === "downloading" ? (
-                  <CircularProgress size={24} />
-                ) : downloadState === "done" ? (
-                  <DoneIcon />
-                ) : downloadState === "error" ? (
-                  <ErrorIcon />
-                ) : downloadState === "idle" ? (
-                  <DownloadIcon />
-                ) : undefined}
-              </IconButton>
-            </Grid>
-          </React.Fragment>
-        </HeaderBar>
-        <Dialog
-          open={dialogState === "addStudent"}
-          onClose={() => setDialogState("")}
-          title="Add students"
-        >
-          <DialogTitle>Add Students</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              Enter students below, one per line, with or without the @ email
-              suffix. You can also paste a list of students from Outlook.
-            </DialogContentText>
-            <TextField
-              autoFocus
-              margin="dense"
-              id="usernames"
-              label="Student usernames"
-              fullWidth
-              variant="standard"
-              multiline
-              inputRef={textfieldUsernamesRef}
-              inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
-              onPaste={(e) => {
-                if (
-                  e.clipboardData.getData("Text") &&
-                  textfieldUsernamesRef.current
-                ) {
-                  let txt = sanitisePastedEmails(
-                    e.clipboardData.getData("Text")
-                  );
-                  let textarea = textfieldUsernamesRef.current;
-                  let start_position = textarea.selectionStart;
-                  let end_position = textarea.selectionEnd;
-                  textarea.value = `${textarea.value.substring(
-                    0,
-                    start_position
-                  )}${txt}${textarea.value.substring(
-                    end_position,
-                    textarea.value.length
-                  )}`;
-                  e.preventDefault();
-                }
-              }}
-            />
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDialogState("")}>Cancel</Button>
-            <Button
-              onClick={() =>
-                onAddStudents(textfieldUsernamesRef?.current?.value || "")
+        <DialogTitle>Add Students</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Enter students below, one per line, with or without the @ email
+            suffix. You can also paste a list of students from Outlook.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="usernames"
+            label="Student usernames"
+            fullWidth
+            variant="standard"
+            multiline
+            inputRef={textfieldUsernamesRef}
+            inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
+            onPaste={(e) => {
+              if (
+                e.clipboardData.getData("Text") &&
+                textfieldUsernamesRef.current
+              ) {
+                let txt = sanitisePastedEmails(e.clipboardData.getData("Text"));
+                let textarea = textfieldUsernamesRef.current;
+                let start_position = textarea.selectionStart;
+                let end_position = textarea.selectionEnd;
+                textarea.value = `${textarea.value.substring(
+                  0,
+                  start_position
+                )}${txt}${textarea.value.substring(
+                  end_position,
+                  textarea.value.length
+                )}`;
+                e.preventDefault();
               }
-            >
-              Confirm
-            </Button>
-          </DialogActions>
-        </Dialog>
-        <InputDialog
-          type="combo"
-          options={bookTitles}
-          disabledOptions={booksInGroup.map((b) => b.bookTitle)}
-          title="Add book"
-          inputLabel="Book"
-          onInputEntered={onAddBook}
-          okButtonLabel="Add"
-          open={dialogState === "addBook"}
-          onClose={() => setDialogState("")}
-          renderOption={(option) => option.replace(/^books\//, "")}
-          fullWidth
-        />
-        <AddGroupDialog
-          groups={groups}
-          onInputEntered={onAddGroup}
-          open={dialogState === "addGroup"}
-          onClose={() => setDialogState("")}
-        />
-        <Allotment defaultSizes={[650, 350]} minSize={3} ref={allotmentRef}>
-          <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
-            {groups.length ? (
-              <Stack spacing={2}>
-                <Grid direction="row" container>
-                  <Grid
-                    item
-                    sx={{
-                      flexGrow: 1,
-                    }}
-                  >
-                    <Autocomplete
-                      size="small"
-                      value={activeGroup || null}
-                      onChange={(e, n) => setActiveGroup(n || undefined)}
-                      inputValue={groupInputValue}
-                      onInputChange={(e, newValue) =>
-                        setGroupInputValue(newValue)
-                      }
-                      options={groups}
-                      getOptionLabel={(option) => (option ? option.name : "")}
-                      renderInput={(params) => (
-                        <TextField {...params} label="Group" />
-                      )}
-                    />
-                  </Grid>
-                  <Grid item>
-                    <IconButton onClick={() => setDialogState("addGroup")}>
-                      <AddIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-
-                <Grid direction="row" container>
-                  <Grid
-                    item
-                    sx={{
-                      flexGrow: 1,
-                    }}
-                  >
-                    <Autocomplete
-                      size="small"
-                      value={activeBook || null}
-                      onChange={(e, n) => setActiveBook(n || undefined)}
-                      options={booksInGroup.sort((a, b) =>
-                        a.enabled !== b.enabled
-                          ? a.enabled
-                            ? -1
-                            : 1
-                          : a.bookTitle.localeCompare(b.bookTitle)
-                      )}
-                      groupBy={(option) =>
-                        option.enabled ? "Enabled" : "Disabled"
-                      }
-                      getOptionLabel={(option) =>
-                        option
-                          ? option.bookTitle
-                              .replace(/^books\//, "")
-                              .replace(/\//g, "  /  ")
-                          : ""
-                      }
-                      renderInput={(params) => (
-                        <>
-                          <TextField {...params} label="Book" />
-                        </>
-                      )}
-                      renderOption={(props, option) => (
-                        <li {...props}>
-                          <Box sx={{ flex: 1 }}>
-                            {option.bookTitle
-                              .replace(/^books\//, "")
-                              .replace(/\//g, " / ")}
-                          </Box>
-                          <Checkbox
-                            icon={icon}
-                            checkedIcon={checkedIcon}
-                            style={{ marginRight: 8 }}
-                            checked={option.enabled}
-                            onClick={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              onUpdateBookEnabled(option, e.target.checked);
-                            }}
-                          />
-                        </li>
-                      )}
-                      disabled={!activeGroup}
-                    />
-                  </Grid>
-                  <Grid item>
-                    <IconButton
-                      disabled={!activeGroup}
-                      onClick={() => setDialogState("addBook")}
-                    >
-                      <AddIcon />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              </Stack>
-            ) : (
-              <CircularProgress />
-            )}
-
-            {error ? (
-              <Alert severity="error">{error}</Alert>
-            ) : (
-              <React.Fragment>
-                <h2>{book?.name}&nbsp;</h2>
-                {activeBook ? (
-                  <a
-                    href={`${window.location.origin}?bk=${activeBook.bookTitle}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {window.location.origin}?bk={activeBook.bookTitle}
-                  </a>
-                ) : undefined}
-                <ResultsTable
-                  ref={resultsTableRef}
-                  book={book}
-                  bookTitle={activeBook?.bookTitle}
-                  group={activeGroup}
-                  updateCtr={updateCtr}
-                  results={results}
-                  onResultSelected={onResultSet}
-                  onResultAdd={onResultAdd}
-                  onResultsSelected={onResultsSet}
-                  onDeleteStudent={onDeleteStudent}
-                />
-                {activeGroup ? (
-                  <IconButton
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDialogState("")}>Cancel</Button>
+          <Button
+            onClick={() =>
+              onAddStudents(textfieldUsernamesRef?.current?.value || "")
+            }
+          >
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <InputDialog
+        type="combo"
+        options={bookTitles}
+        disabledOptions={booksInGroup.map((b) => b.bookTitle)}
+        title="Add book"
+        inputLabel="Book"
+        onInputEntered={onAddBook}
+        okButtonLabel="Add"
+        open={dialogState === "addBook"}
+        onClose={() => setDialogState("")}
+        renderOption={(option) => option.replace(/^books\//, "")}
+        fullWidth
+      />
+      <AddGroupDialog
+        groups={groups}
+        onInputEntered={onAddGroup}
+        open={dialogState === "addGroup"}
+        onClose={() => setDialogState("")}
+      />
+      <Allotment defaultSizes={[650, 350]} minSize={3} ref={allotmentRef}>
+        <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
+          {groups.length ? (
+            <Stack spacing={2}>
+              <Grid direction="row" container>
+                <Grid
+                  item
+                  sx={{
+                    flexGrow: 1,
+                  }}
+                >
+                  <Autocomplete
                     size="small"
-                    onClick={() => setDialogState("addStudent")}
+                    value={activeGroup || null}
+                    onChange={(e, n) => setActiveGroup(n || undefined)}
+                    inputValue={groupInputValue}
+                    onInputChange={(e, newValue) =>
+                      setGroupInputValue(newValue)
+                    }
+                    options={groups}
+                    getOptionLabel={(option) => (option ? option.name : "")}
+                    renderInput={(params) => (
+                      <TextField {...params} label="Group" />
+                    )}
+                  />
+                </Grid>
+                <Grid item>
+                  <IconButton onClick={() => setDialogState("addGroup")}>
+                    <AddIcon />
+                  </IconButton>
+                </Grid>
+              </Grid>
+
+              <Grid direction="row" container>
+                <Grid
+                  item
+                  sx={{
+                    flexGrow: 1,
+                  }}
+                >
+                  <Autocomplete
+                    size="small"
+                    value={activeBook || null}
+                    onChange={(e, n) => setActiveBook(n || undefined)}
+                    options={booksInGroup.sort((a, b) =>
+                      a.enabled !== b.enabled
+                        ? a.enabled
+                          ? -1
+                          : 1
+                        : a.bookTitle.localeCompare(b.bookTitle)
+                    )}
+                    groupBy={(option) =>
+                      option.enabled ? "Enabled" : "Disabled"
+                    }
+                    getOptionLabel={(option) =>
+                      option
+                        ? option.bookTitle
+                            .replace(/^books\//, "")
+                            .replace(/\//g, "  /  ")
+                        : ""
+                    }
+                    renderInput={(params) => (
+                      <>
+                        <TextField {...params} label="Book" />
+                      </>
+                    )}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        <Box sx={{ flex: 1 }}>
+                          {option.bookTitle
+                            .replace(/^books\//, "")
+                            .replace(/\//g, " / ")}
+                        </Box>
+                        <Checkbox
+                          icon={icon}
+                          checkedIcon={checkedIcon}
+                          style={{ marginRight: 8 }}
+                          checked={option.enabled}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => {
+                            onUpdateBookEnabled(option, e.target.checked);
+                          }}
+                        />
+                      </li>
+                    )}
+                    disabled={!activeGroup}
+                  />
+                </Grid>
+                <Grid item>
+                  <IconButton
+                    disabled={!activeGroup}
+                    onClick={() => setDialogState("addBook")}
                   >
                     <AddIcon />
-                    Add students
                   </IconButton>
-                ) : undefined}
-              </React.Fragment>
-            )}
-          </Container>
+                </Grid>
+              </Grid>
+            </Stack>
+          ) : (
+            <CircularProgress />
+          )}
 
-          <Box sx={{ overflow: "auto", height: "100%" }}>
-            <ResultCodePane results={[...stagedResults.values()]} />
-          </Box>
-        </Allotment>
-      </Box>
-    </div>
+          {error ? (
+            <Alert severity="error">{error}</Alert>
+          ) : (
+            <React.Fragment>
+              <h2>{book?.name}&nbsp;</h2>
+              {activeBook ? (
+                <a
+                  href={`${window.location.origin}?bk=${activeBook.bookTitle}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {window.location.origin}?bk={activeBook.bookTitle}
+                </a>
+              ) : undefined}
+              <ResultsTable
+                ref={resultsTableRef}
+                book={book}
+                bookTitle={activeBook?.bookTitle}
+                group={activeGroup}
+                updateCtr={updateCtr}
+                results={results}
+                onResultSelected={onResultSet}
+                onResultAdd={onResultAdd}
+                onResultsSelected={onResultsSet}
+                onDeleteStudent={onDeleteStudent}
+              />
+              {activeGroup ? (
+                <IconButton
+                  size="small"
+                  onClick={() => setDialogState("addStudent")}
+                >
+                  <AddIcon />
+                  Add students
+                </IconButton>
+              ) : undefined}
+            </React.Fragment>
+          )}
+        </Container>
+
+        <Box sx={{ overflow: "auto", height: "100%" }}>
+          <ResultCodePane results={[...stagedResults.values()]} />
+        </Box>
+      </Allotment>
+    </TeacherContainer>
   );
 };
 
-export default TeacherAdmin;
+export default ThisYear;

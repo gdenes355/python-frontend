@@ -2,6 +2,7 @@ type ClassModel = {
   name: string;
   active?: boolean;
   books?: Array<string>;
+  join_code?: string;
   disabled_books?: Array<string>;
   students: Array<string>;
 };
