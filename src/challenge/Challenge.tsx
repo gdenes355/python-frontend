@@ -184,7 +184,12 @@ const Challenge = (props: ChallengeProps) => {
           ? undefined
           : results.filter((x) => x.outcome !== true).length === 0;
 
-      props.progressStorage?.setResult(bookNode, newTestOutcome, code);
+      props.progressStorage?.setResult(
+        bookNode,
+        newTestOutcome,
+        code,
+        bookNode.isLong
+      );
     },
     [props.progressStorage]
   );

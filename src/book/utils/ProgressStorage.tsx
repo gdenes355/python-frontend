@@ -70,7 +70,8 @@ type ProgressStorage = {
   setResult: (
     challenge: BookNodeModel,
     outcome?: boolean,
-    code?: string
+    code?: string,
+    isLongCodeAllowed?: boolean
   ) => void;
   getResult: (challenge: BookNodeModel) => boolean | undefined;
   updateResults: (
@@ -104,12 +105,21 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   };
 
   const persistInServer = throttle(
-    (challenge: BookNodeModel, outcome?: boolean, code?: string) => {
+    (
+      challenge: BookNodeModel,
+      outcome?: boolean,
+      code?: string,
+      isLongCodeAllowed?: boolean
+    ) => {
       if (!sessionContext.isLoggedIn()) return;
 
       code = code?.trimEnd();
       // if code is too long, trim it
-      if (code && code.length > CODE_REPORT_LIMIT) {
+      if (
+        isLongCodeAllowed !== true &&
+        code &&
+        code.length > CODE_REPORT_LIMIT
+      ) {
         code = code.substring(0, CODE_REPORT_LIMIT);
         notificationContext.addMessage.current(
           `Code too long to store on server, we will only keep the first ${CODE_REPORT_LIMIT} characters. Click download to save the rest.`,
@@ -124,6 +134,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           id: challenge.id,
           outcome,
           code,
+          is_long: isLongCodeAllowed,
         });
         return;
       }
@@ -142,6 +153,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
             id: challenge.id,
             outcome,
             code,
+            is_long: isLongCodeAllowed,
           }),
         }).then((response) => {
           if (response.status === 401) {
@@ -170,7 +182,8 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   const setResult = (
     challenge: BookNodeModel,
     outcome?: boolean,
-    code?: string
+    code?: string,
+    isLongCodeAllowed?: boolean
   ) => {
     if (outcome === null || outcome === undefined) {
       //ignore
@@ -178,7 +191,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
     persistInMemory(challenge, outcome);
     saveTestStateLocal(challenge, outcome); // persist in local storage
-    persistInServer(challenge, outcome, code); // push to server
+    persistInServer(challenge, outcome, code, isLongCodeAllowed); // push to server
   };
 
   const getResult = (challenge: BookNodeModel) => {

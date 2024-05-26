@@ -95,6 +95,7 @@ Even if you just author a single challenge, you will want to create a book for i
 * py: the relative path to the `.py` file. Could be also an absolute path to a web address.
 * guide: the relative path to the `.md` file which contains the guide text in [Markdown](https://www.markdownguide.org/basic-syntax/)
 * isExample: `true`/`false`. If this is an example, the student receives a green tick upon running the code at least once to completion. defaults to `false`
+* isLong: `true`/`false`. If this is a *long* code challenge, the editor will expect the code file to be over 4000 characters long. Such code might be saved differently. Currently only used when saving student progress to a server. Avoid setting this flag on many challenges in a book. defaults to `false`
 * tpy: `py`: Python code challenge, `parsons`: Py code is turned into a Parsons challenge, `canvas`: Python code challenge with a canvas. defaults to `py`
 * tests: Test cases (see examples further down).
 * children: if this is a section node, then all the challenges in this section. Sections can be nested.
