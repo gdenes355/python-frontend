@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import Markdown from "react-markdown";
+import Markdown, { defaultUrlTransform } from "react-markdown";
 import { Box, Table, TableContainer, TableHead, TableRow } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -54,6 +54,12 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
       <StyledGuide>
         <Box>
           <Markdown
+            urlTransform={(url) => {
+              if (url.startsWith("data:image/")) {
+                return url;
+              }
+              return defaultUrlTransform(url);
+            }}
             components={{
               code({ className, children }) {
                 const match = /language-(\w+)/.exec(className || "");
@@ -86,7 +92,11 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
                 }
               },
               a({ href, children, ...props }) {
-                return <a target="_blank" rel="noreferrer" href={href} {...props}>{children}</a>;
+                return (
+                  <a target="_blank" rel="noreferrer" href={href} {...props}>
+                    {children}
+                  </a>
+                );
               },
               table({ children }) {
                 return (
