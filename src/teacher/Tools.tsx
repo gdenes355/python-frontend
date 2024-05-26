@@ -7,11 +7,13 @@ import { OutletContextType } from "../auth/AdminWrapper";
 import { Button, Divider, Link, Paper, Tooltip } from "@mui/material";
 import { Stack } from "@mui/system";
 import DeleteDialog from "../components/dialogs/DeleteDialog";
+import NotificationsContext from "../components/NotificationsContext";
 
 const Tools = () => {
   const oc: OutletContextType = useOutletContext();
 
   const sessionContext = useContext(SessionContext);
+  const notificationContext = useContext(NotificationsContext);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
@@ -35,13 +37,27 @@ const Tools = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${sessionContext.token}`,
       },
-    }).then((resp) => {
-      if (resp.status === 200) {
-        resp.json().then((r) => {
-          setCacheSize(r?.["data"]?.["cache-size"]);
-        });
-      }
-    });
+    })
+      .then((resp) => {
+        if (resp.status === 200) {
+          resp.json().then((r) => {
+            setCacheSize(r?.["data"]?.["cache-size"]);
+          });
+          notificationContext.addMessage.current("Cache refreshed", "success");
+        } else {
+          notificationContext.addMessage.current(
+            "Failed to refresh cache",
+            "error"
+          );
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        notificationContext.addMessage.current(
+          "Failed to refresh cache",
+          "error"
+        );
+      });
   };
 
   const deleteNamesFromServer = () => {
@@ -52,13 +68,27 @@ const Tools = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${sessionContext.token}`,
       },
-    }).then((resp) => {
-      if (resp.status === 200) {
-        resp.json().then((r) => {
-          setCacheSize(r?.["data"]?.["cache-size"]);
-        });
-      }
-    });
+    })
+      .then((resp) => {
+        if (resp.status === 200) {
+          resp.json().then((r) => {
+            setCacheSize(r?.["data"]?.["cache-size"]);
+          });
+          notificationContext.addMessage.current("Names deleted", "success");
+        } else {
+          notificationContext.addMessage.current(
+            "Failed to delete names",
+            "error"
+          );
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        notificationContext.addMessage.current(
+          "Failed to delete names",
+          "error"
+        );
+      });
   };
 
   return (

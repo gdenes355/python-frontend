@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -38,6 +39,7 @@ import ChallengeGuide, {
 } from "./components/Guide/ChallengeGuide";
 import saveNode from "../book/utils/BookSaver";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
+import NotificationsContext from "../components/NotificationsContext";
 
 type ChallengeProps = {
   uid: string;
@@ -103,6 +105,8 @@ const Challenge = (props: ChallengeProps) => {
   const outputsRef = useRef<ChallengeOutputsHandle | null>(null);
   const fileReader = useRef<FileReader | null>(null);
   const guideRef = useRef<ChallengeGuideRef | null>(null);
+
+  const notificationContext = useContext(NotificationsContext);
 
   /// hooks
   const codeRunner = useCodeRunner({
@@ -180,7 +184,12 @@ const Challenge = (props: ChallengeProps) => {
           ? undefined
           : results.filter((x) => x.outcome !== true).length === 0;
 
-      props.progressStorage?.setResult(bookNode, newTestOutcome, code);
+      props.progressStorage?.setResult(
+        bookNode,
+        newTestOutcome,
+        code,
+        bookNode.isLong
+      );
     },
     [props.progressStorage]
   );
@@ -324,6 +333,7 @@ const Challenge = (props: ChallengeProps) => {
         if ((starterCode === "" || starterCode) && pyEditorRef.current) {
           pyEditorRef.current.setValue(starterCode);
         }
+        notificationContext.addMessage.current("Code reset", "info");
       },
       "save-code": (code: string) => {
         if ((code || code === "") && props.uid) {
@@ -407,6 +417,7 @@ const Challenge = (props: ChallengeProps) => {
     starterCode,
     usesFixedInput,
     typ,
+    notificationContext.addMessage,
   ]);
   const actionsRef = useRef<Actions>(actions);
   const context = useMemo(() => {

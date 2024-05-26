@@ -32,12 +32,13 @@ const TeacherContainer = (props: TeacherContainerProps) => {
               value={activeTab === "teacher" ? "index" : activeTab}
               onChange={(event, newValue) => {
                 if (newValue === "index") navigate("/teacher");
+                else if (newValue === "local") navigate("/upload");
                 else navigate(`/teacher/${newValue}`);
               }}
             >
               <Tab label="Results" value="index" />
               <Tab label="Classes" value="classes" />
-              <Tab label="Local preview" value="admin" />
+              <Tab label="Local preview" value="local" />
               <Tab label="Tools" value="tools" />
             </Tabs>
           }

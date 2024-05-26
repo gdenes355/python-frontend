@@ -17,6 +17,7 @@ type BookNodeModel = {
   bookLink?: string;
   isExample?: boolean;
   isAssessment?: boolean;
+  isLong?: boolean;
   typ?: "py" | "parsons" | "canvas";
   sol?: Solution;
 

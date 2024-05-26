@@ -24,6 +24,7 @@ import StudentDashboard from "./studentDashboard/StudentDashboard";
 import ThisYear from "./teacher/ThisYear";
 import AllClasses from "./teacher/AllClasses";
 import Tools from "./teacher/Tools";
+import { NotificationsWrapper } from "./components/NotificationsContext";
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -101,7 +102,7 @@ export default function App() {
     >
       <ThemeProvider theme={vsTheme === "vs-dark" ? darkTheme : pageTheme}>
         <CssBaseline>
-          <>
+          <NotificationsWrapper>
             <BrowserRouter>
               <Routes>
                 <Route element={<SessionWrapper />}>
@@ -116,7 +117,6 @@ export default function App() {
                     element={<AdminWrapper urlBase={serverUrl} />}
                   >
                     <Route path="classes" element={<AllClasses />} />
-                    <Route path="local" element={<AppContainer />} />
                     <Route path="tools" element={<Tools />} />
                     <Route index path="*" element={<ThisYear />} />
                   </Route>
@@ -128,7 +128,7 @@ export default function App() {
                 </Route>
               </Routes>
             </BrowserRouter>
-          </>
+          </NotificationsWrapper>
         </CssBaseline>
       </ThemeProvider>
     </VsThemeContext.Provider>

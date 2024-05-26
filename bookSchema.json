@@ -48,6 +48,9 @@
         "isExample": {
           "$ref": "#/$defs/isExample"
         },
+        "isLong": {
+          "$ref": "#/$defs/isLong"
+        },
         "isAssessment": {
           "$ref": "#/$defs/isAssessment"
         },
@@ -103,7 +106,11 @@
     "isAssessment": {
       "description": "is this for an assessment? Students can submit but will get no test feedback - setting inherited by all children",
       "type": "boolean"
-    },    
+    },  
+    "isLong": {
+      "description": "is this a challenge with over 4000 characters of code? Avoid having many of these set in a single book",
+      "type": "boolean"
+    },
     "tests": {
       "description": "optional list of tests",
       "type": "array",

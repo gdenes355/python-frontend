@@ -7,6 +7,7 @@ import {
   ChallengeResultComplexModel,
   ResultsModel,
 } from "../../teacher/Models";
+import NotificationsContext from "../../components/NotificationsContext";
 
 const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
@@ -69,7 +70,8 @@ type ProgressStorage = {
   setResult: (
     challenge: BookNodeModel,
     outcome?: boolean,
-    code?: string
+    code?: string,
+    isLongCodeAllowed?: boolean
   ) => void;
   getResult: (challenge: BookNodeModel) => boolean | undefined;
   updateResults: (
@@ -82,7 +84,9 @@ type ProgressStorage = {
 const useProgressStorage: (bookPath: string) => ProgressStorage = (
   bookPath
 ) => {
+  const CODE_REPORT_LIMIT = 4000;
   const sessionContext = useContext(SessionContext);
+  const notificationContext = useContext(NotificationsContext);
 
   const [allTestResults, setAllTestResults] = useState<AllTestResults>({
     passed: new Set(),
@@ -101,13 +105,26 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   };
 
   const persistInServer = throttle(
-    (challenge: BookNodeModel, outcome?: boolean, code?: string) => {
+    (
+      challenge: BookNodeModel,
+      outcome?: boolean,
+      code?: string,
+      isLongCodeAllowed?: boolean
+    ) => {
       if (!sessionContext.isLoggedIn()) return;
 
       code = code?.trimEnd();
-      // if code is too long, trim it to 4000 characters
-      if (code && code.length > 4000) {
-        code = code.substring(0, 4000);
+      // if code is too long, trim it
+      if (
+        isLongCodeAllowed !== true &&
+        code &&
+        code.length > CODE_REPORT_LIMIT
+      ) {
+        code = code.substring(0, CODE_REPORT_LIMIT);
+        notificationContext.addMessage.current(
+          `Code too long to store on server, we will only keep the first ${CODE_REPORT_LIMIT} characters. Click download to save the rest.`,
+          "error"
+        );
       }
 
       // check for ws
@@ -117,6 +134,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           id: challenge.id,
           outcome,
           code,
+          is_long: isLongCodeAllowed,
         });
         return;
       }
@@ -135,6 +153,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
             id: challenge.id,
             outcome,
             code,
+            is_long: isLongCodeAllowed,
           }),
         }).then((response) => {
           if (response.status === 401) {
@@ -163,7 +182,8 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   const setResult = (
     challenge: BookNodeModel,
     outcome?: boolean,
-    code?: string
+    code?: string,
+    isLongCodeAllowed?: boolean
   ) => {
     if (outcome === null || outcome === undefined) {
       //ignore
@@ -171,7 +191,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
     persistInMemory(challenge, outcome);
     saveTestStateLocal(challenge, outcome); // persist in local storage
-    persistInServer(challenge, outcome, code); // push to server
+    persistInServer(challenge, outcome, code, isLongCodeAllowed); // push to server
   };
 
   const getResult = (challenge: BookNodeModel) => {
@@ -297,7 +317,13 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
   };
 
-  return { setResult, getResult, allTestResults, updateResults, fetchResults };
+  return {
+    setResult,
+    getResult,
+    allTestResults,
+    updateResults,
+    fetchResults,
+  };
 };
 
 export {
