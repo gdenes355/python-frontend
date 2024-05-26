@@ -9,10 +9,12 @@ import SessionContext from "../auth/SessionContext";
 import ClassDeletePopupMenu, {
   ClassDeletePopupMenuHandle,
 } from "./components/ClassDeletePopupMenu";
+import NotificationsContext from "../components/NotificationsContext";
 
 const AllClasses = () => {
   const oc: OutletContextType = useOutletContext();
   const sessionContext = useContext(SessionContext);
+  const notificationContext = useContext(NotificationsContext);
 
   const [classes, setClasses] = React.useState<ClassModel[]>([]);
 
@@ -31,17 +33,33 @@ const AllClasses = () => {
         Authorization: `Bearer ${sessionContext.token}`,
       },
       body: JSON.stringify({ active }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        for (let c of classes) {
-          if (c.name === className) {
-            c.active = active;
-            setClasses([...classes]);
-            break;
+    })
+      .then((resp) => {
+        if (resp.status === 200) {
+          for (let c of classes) {
+            if (c.name === className) {
+              c.active = active;
+              setClasses([...classes]);
+              notificationContext.addMessage.current(
+                "Class updated",
+                "success"
+              );
+              break;
+            }
           }
         }
-      }
-    });
+        notificationContext.addMessage.current(
+          "Failed to update class",
+          "error"
+        );
+      })
+      .catch((e) => {
+        console.log(e);
+        notificationContext.addMessage.current(
+          "Failed to update class",
+          "error"
+        );
+      });
   };
 
   const deleteClass = (className: string) => {
@@ -52,11 +70,25 @@ const AllClasses = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${sessionContext.token}`,
       },
-    }).then((resp) => {
-      if (resp.status === 200) {
-        setClasses(classes.filter((c) => c.name !== className));
-      }
-    });
+    })
+      .then((resp) => {
+        if (resp.status === 200) {
+          setClasses(classes.filter((c) => c.name !== className));
+          notificationContext.addMessage.current("Class deleted", "success");
+        } else {
+          notificationContext.addMessage.current(
+            "Failed to delete class",
+            "error"
+          );
+        }
+      })
+      .catch((e) => {
+        console.log(e);
+        notificationContext.addMessage.current(
+          "Failed to delete class",
+          "error"
+        );
+      });
   };
 
   const columns: GridColDef[] = [

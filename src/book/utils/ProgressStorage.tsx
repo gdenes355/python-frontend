@@ -7,6 +7,7 @@ import {
   ChallengeResultComplexModel,
   ResultsModel,
 } from "../../teacher/Models";
+import NotificationsContext from "../../components/NotificationsContext";
 
 const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
@@ -82,7 +83,9 @@ type ProgressStorage = {
 const useProgressStorage: (bookPath: string) => ProgressStorage = (
   bookPath
 ) => {
+  const CODE_REPORT_LIMIT = 4000;
   const sessionContext = useContext(SessionContext);
+  const notificationContext = useContext(NotificationsContext);
 
   const [allTestResults, setAllTestResults] = useState<AllTestResults>({
     passed: new Set(),
@@ -105,9 +108,13 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
       if (!sessionContext.isLoggedIn()) return;
 
       code = code?.trimEnd();
-      // if code is too long, trim it to 4000 characters
-      if (code && code.length > 4000) {
-        code = code.substring(0, 4000);
+      // if code is too long, trim it
+      if (code && code.length > CODE_REPORT_LIMIT) {
+        code = code.substring(0, CODE_REPORT_LIMIT);
+        notificationContext.addMessage.current(
+          `Code too long to store on server, we will only keep the first ${CODE_REPORT_LIMIT} characters. Click download to save the rest.`,
+          "error"
+        );
       }
 
       // check for ws
@@ -297,7 +304,13 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     }
   };
 
-  return { setResult, getResult, allTestResults, updateResults, fetchResults };
+  return {
+    setResult,
+    getResult,
+    allTestResults,
+    updateResults,
+    fetchResults,
+  };
 };
 
 export {

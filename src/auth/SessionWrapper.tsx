@@ -1,5 +1,6 @@
 import React, {
   useCallback,
+  useContext,
   useEffect,
   useMemo,
   useRef,
@@ -10,6 +11,7 @@ import Login from "./Login";
 import LoginInfo from "./LoginInfo";
 import { absolutisePath } from "../utils/pathTools";
 import { useLocation, Outlet } from "react-router-dom";
+import NotificationsContext from "../components/NotificationsContext";
 
 type SessionWrapperProps = {};
 
@@ -19,6 +21,8 @@ var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 const SessionWrapper = (props: SessionWrapperProps) => {
   const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
+
+  const notificationsContext = useContext(NotificationsContext);
 
   const [token, setToken] = useState<string>(
     localStorage.getItem("jwt-token") || ""
@@ -97,6 +101,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
     setToken(newToken);
+    notificationsContext.addMessage.current("Logged in", "success");
   };
 
   const onWsMessage = useMemo(
@@ -145,8 +150,12 @@ const SessionWrapper = (props: SessionWrapperProps) => {
       if (ws.current === event.target) {
         setWsOpen(false);
       }
+      notificationsContext.addMessage.current(
+        "Websocket closed. Your progress is still saved.",
+        "warning"
+      );
     },
-    []
+    [notificationsContext.addMessage]
   );
   const ws = useRef<WebSocket | undefined>(undefined);
   const [wsOpen, setWsOpen] = useState<boolean>(false);
