@@ -83,7 +83,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
   if (!pythonCodeRunner) {
     pythonCodeRunner = new PythonCodeRunner();
   }
-  const [state, setState] = useState(CodeRunnerState.LOADING);
+  const [state, setState] = useState(pythonCodeRunner.state);
   const [consoleText, setConsoleText] = useState("");
   const consoleTextUnthrottled = useRef("");
   const throttledPrint = useRef(
