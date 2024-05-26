@@ -117,7 +117,6 @@ export default function App() {
                     element={<AdminWrapper urlBase={serverUrl} />}
                   >
                     <Route path="classes" element={<AllClasses />} />
-                    <Route path="local" element={<AppContainer />} />
                     <Route path="tools" element={<Tools />} />
                     <Route index path="*" element={<ThisYear />} />
                   </Route>
