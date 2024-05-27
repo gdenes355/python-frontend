@@ -47,11 +47,12 @@ const AllClasses = () => {
               break;
             }
           }
+        } else {
+          notificationContext.addMessage.current(
+            "Failed to update class",
+            "error"
+          );
         }
-        notificationContext.addMessage.current(
-          "Failed to update class",
-          "error"
-        );
       })
       .catch((e) => {
         console.log(e);
