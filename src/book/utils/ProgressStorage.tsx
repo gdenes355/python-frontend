@@ -1,7 +1,7 @@
 import { useContext, useEffect, useState } from "react";
 import SessionContext from "../../auth/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
-import { AllTestResults } from "../../models/Tests";
+import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { throttle } from "lodash";
 import {
   ChallengeResultComplexModel,
@@ -19,7 +19,11 @@ const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
   let cachedPass = cacheP ? JSON.parse(cacheP) : [];
   let cachedFail = cacheF ? JSON.parse(cacheF) : [];
 
-  return { passed: new Set(cachedPass), failed: new Set(cachedFail) };
+  return {
+    passed: new Set(cachedPass),
+    failed: new Set(cachedFail),
+    comments: new Map(),
+  };
 };
 
 const saveTestStateLocal: (
@@ -88,10 +92,9 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   const sessionContext = useContext(SessionContext);
   const notificationContext = useContext(NotificationsContext);
 
-  const [allTestResults, setAllTestResults] = useState<AllTestResults>({
-    passed: new Set(),
-    failed: new Set(),
-  });
+  const [allTestResults, setAllTestResults] = useState<AllTestResults>(
+    emptyTestResults()
+  );
 
   const persistInMemory = (challenge: BookNodeModel, outcome: boolean) => {
     if (outcome === true) {
@@ -176,7 +179,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   );
 
   useEffect(() => {
-    setAllTestResults({ passed: new Set(), failed: new Set() });
+    setAllTestResults(emptyTestResults());
   }, [bookPath]);
 
   const setResult = (
@@ -215,7 +218,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
         (x) => !allTestResults.passed.has(x)
       )
     );
-    setAllTestResults({ passed, failed });
+    setAllTestResults({ passed, failed, comments: newResults.comments });
   };
 
   const mergeResults = (
@@ -223,11 +226,13 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     newResults: ResultsModel,
     currentRes: AllTestResults,
     newPasses: Set<string>,
-    newCode: Map<string, string>
+    newCode: Map<string, string>,
+    comments: Map<string, string>
   ) => {
     currentRes = {
       passed: new Set(currentRes.passed),
       failed: new Set(currentRes.failed),
+      comments: new Map(),
     }; // make a copy
     // let's be optimistic and take all new passes
     let res = (newResults as any)[node.id] as ChallengeResultComplexModel;
@@ -238,11 +243,46 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
         newCode.set(node.id, res["correct-code"]);
       }
     }
+    if (res && res.comment) {
+      comments.set(node.id, res.comment);
+    }
     if (node.children) {
       for (let child of node.children) {
-        mergeResults(child, newResults, currentRes, newPasses, newCode);
+        mergeResults(
+          child,
+          newResults,
+          currentRes,
+          newPasses,
+          newCode,
+          comments
+        );
       }
     }
+  };
+
+  const processResultsFromServer = (
+    root: BookNodeModel,
+    data: ResultsModel,
+    currentRes: AllTestResults
+  ) => {
+    let newPasses = new Set<string>();
+    let newCode = new Map<string, string>();
+    let comments = new Map<string, string>();
+    mergeResults(root, data, currentRes, newPasses, newCode, comments);
+    for (let [id, code] of newCode) {
+      localStorage.setItem("code-" + encodeURIComponent(bookPath + id), code);
+    }
+    for (let [id, comment] of comments) {
+      localStorage.setItem(
+        "comment-" + encodeURIComponent(bookPath + id),
+        comment
+      );
+    }
+    updateResults(currentRes, {
+      passed: newPasses,
+      failed: new Set(),
+      comments,
+    });
   };
 
   const fetchResults = (root: BookNodeModel, currentRes: AllTestResults) => {
@@ -254,23 +294,10 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
             cmd: "get-results",
           },
           (msg: any) => {
-            // merge results!
-            if (msg.res === "succ" && msg.data) {
-              let newPasses = new Set<string>();
-              let newCode = new Map<string, string>();
-              mergeResults(root, msg.data, currentRes, newPasses, newCode);
-              for (let [id, code] of newCode) {
-                localStorage.setItem("code-" + encodeURIComponent(id), code);
-              }
-              updateResults(currentRes, {
-                passed: newPasses,
-                failed: new Set(),
-              });
-            }
+            processResultsFromServer(root, msg.data, currentRes);
           }
         );
       } else if (sessionContext.resultsEndpoint) {
-        // TODO: fall back to REST if available
         fetch(
           sessionContext.resultsEndpoint +
             `?book=${encodeURIComponent(bookPath)}`,
@@ -297,19 +324,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
             });
           } else if (response.status === 200) {
             response.json().then((data) => {
-              let newPasses = new Set<string>();
-              let newCode = new Map<string, string>();
-              mergeResults(root, data.data, currentRes, newPasses, newCode);
-              for (let [id, code] of newCode) {
-                localStorage.setItem(
-                  "code-" + encodeURIComponent(bookPath + id),
-                  code
-                );
-              }
-              updateResults(currentRes, {
-                passed: newPasses,
-                failed: new Set(),
-              });
+              processResultsFromServer(root, data.data, currentRes);
             });
           }
         });

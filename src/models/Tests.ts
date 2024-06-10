@@ -89,7 +89,14 @@ type TestResults = Array<TestResult>;
 type AllTestResults = {
   passed: Set<string>;
   failed: Set<string>;
+  comments: Map<string, string>;
 };
+
+const emptyTestResults = (): AllTestResults => ({
+  passed: new Set(),
+  failed: new Set(),
+  comments: new Map(),
+});
 
 export {
   TestCase,
@@ -100,4 +107,5 @@ export {
   AdvancedOutRequirement,
   AdvancedOutRequirementType,
   AdvancedOutRequirementIgnore,
+  emptyTestResults,
 };

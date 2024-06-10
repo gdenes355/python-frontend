@@ -6,12 +6,13 @@ import React, {
 } from "react";
 import ChallengeContext from "../../ChallengeContext";
 import Guide from "../../../components/Guide";
-import { TextField } from "@mui/material";
+import { Paper, TextField } from "@mui/material";
 
 type ChallengeGuideProps = {
   initialMd: string;
   challengeId?: string;
   turtleExampleImage?: string;
+  comment?: string;
 
   isEditing?: boolean;
 };
@@ -48,11 +49,34 @@ const ChallengeGuide = React.forwardRef<ChallengeGuideRef, ChallengeGuideProps>(
       );
     }
     return (
-      <Guide
-        challengeId={props.challengeId}
-        md={md}
-        turtleExampleImage={props.turtleExampleImage}
-      />
+      <>
+        <Guide
+          challengeId={props.challengeId}
+          md={md}
+          turtleExampleImage={props.turtleExampleImage}
+        />
+        {props.comment ? (
+          <Paper
+            sx={{
+              marginBottom: 10,
+              padding: 1,
+              border: 1,
+              borderColor: "error.main",
+            }}
+            elevation={8}
+          >
+            <h3 style={{ marginTop: 0 }}>Feedback</h3>
+            <p>
+              {props.comment.split("\n").map((line, idx) => (
+                <span key={idx}>
+                  {line}
+                  <br />
+                </span>
+              ))}
+            </p>
+          </Paper>
+        ) : null}
+      </>
     );
   }
 );

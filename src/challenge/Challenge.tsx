@@ -82,6 +82,7 @@ const Challenge = (props: ChallengeProps) => {
 
   const [editorFullScreen, setEditorFullScreen] = useState<boolean>(false);
   const [testResults, setTestResults] = useState<TestResults>([]);
+  const [comment, setComment] = useState<string | undefined>(undefined);
   const [guideMinimised, setGuideMinimised] = useState<boolean>(false);
   const [typ, setTyp] = useState<ChallengeTypes>(ChallengeTypes.py);
   const [usesFixedInput, setUsesFixedInput] = useState<boolean>(false);
@@ -223,6 +224,11 @@ const Challenge = (props: ChallengeProps) => {
       ? props.progressStorage.getResult(props.bookNode)
       : undefined;
     setTestResults(testRes === undefined ? [] : [{ outcome: testRes }]);
+    let comment = props.bookNode
+      ? props.progressStorage.allTestResults.comments.get(props.bookNode.id)
+      : undefined;
+    setComment(comment);
+    // TODO: consider re-loading the code file if a result is present and not change has been made so far
   }, [props.bookNode, props.progressStorage]);
 
   // run state
@@ -573,6 +579,7 @@ const Challenge = (props: ChallengeProps) => {
                         initialMd={guideMd || ""}
                         turtleExampleImage={turtleExampleRendered}
                         isEditing={isEditingGuide}
+                        comment={comment}
                       />
                     )}
                     <BookControlFabs
