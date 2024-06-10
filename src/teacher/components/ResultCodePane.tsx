@@ -100,7 +100,12 @@ const CommentBox = (props: CommentBoxProps) => {
   }
   return (
     <Box>
-      {props.savedComment}
+      {(props.savedComment || "").split("\n").map((line, idx) => (
+        <span key={idx}>
+          {line}
+          <br />
+        </span>
+      ))}
       <IconButton
         sx={{ float: "right" }}
         onClick={() => setEditing(true)}

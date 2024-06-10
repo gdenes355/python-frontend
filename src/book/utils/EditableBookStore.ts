@@ -3,7 +3,7 @@ import BookFetcher from "./BookFetcher";
 import { v4 as uuidv4 } from "uuid";
 import { absolutisePath } from "../../utils/pathTools";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
-import { AllTestResults } from "../../models/Tests";
+import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { SessionContextType } from "../../auth/SessionContext";
 
 async function addNode(
@@ -124,7 +124,7 @@ class EditableBookStore implements IEditableBookStore {
       return "edit://edit/book.json";
     },
     fetchBook: () => {
-      let allResults: AllTestResults = { passed: new Set(), failed: new Set() };
+      let allResults: AllTestResults = emptyTestResults();
       this.book = JSON.parse(JSON.stringify(this.book));
       return new Promise<IBookFetchResult>((r) =>
         r({

@@ -5,7 +5,7 @@ import {
 } from "../../utils/pathTools";
 import JSZip from "jszip";
 import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
-import { AllTestResults } from "../../models/Tests";
+import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { loadTestStateLocal } from "./ProgressStorage";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
@@ -117,7 +117,7 @@ class BookFetcher implements IBookFetcher {
     authContext?: SessionContextType
   ): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
-      let allRes: AllTestResults = { passed: new Set(), failed: new Set() };
+      let allRes: AllTestResults = emptyTestResults();
       this.fetch(this.bookPathAbsolute, authContext)
         .then((response) =>
           response

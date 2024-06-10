@@ -1,6 +1,6 @@
 import IBookFetcher, { IBookFetchResult } from "../book/utils/IBookFetcher";
 import { absolutisePath } from "../utils/pathTools";
-import { AllTestResults } from "../models/Tests";
+import { AllTestResults, emptyTestResults } from "../models/Tests";
 import BookNodeModel, { getSinglePage } from "../models/BookNodeModel";
 import { IEditableBookStore } from "../book/utils/EditableBookStore";
 
@@ -22,7 +22,7 @@ class VSCodeBookStore implements IEditableBookStore {
     },
 
     fetchBook: () => {
-      let allResults: AllTestResults = { passed: new Set(), failed: new Set() };
+      let allResults: AllTestResults = emptyTestResults();
       if (this.book && !this.error) {
         let book = this.book;
         return new Promise<IBookFetchResult>((r) =>
