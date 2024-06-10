@@ -639,7 +639,10 @@ const ThisYear = () => {
         </Container>
 
         <Box sx={{ overflow: "auto", height: "100%" }}>
-          <ResultCodePane results={[...stagedResults.values()]} />
+          <ResultCodePane
+            results={[...stagedResults.values()]}
+            book={activeBookTitle.current || ""}
+          />
         </Box>
       </Allotment>
     </TeacherContainer>

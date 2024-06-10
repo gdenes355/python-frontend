@@ -121,7 +121,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
         code.length > CODE_REPORT_LIMIT
       ) {
         code = code.substring(0, CODE_REPORT_LIMIT);
-        notificationContext.addMessage.current(
+        notificationContext.addMessage(
           `Code too long to store on server, we will only keep the first ${CODE_REPORT_LIMIT} characters. Click download to save the rest.`,
           "error"
         );

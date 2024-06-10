@@ -43,20 +43,14 @@ const Tools = () => {
           resp.json().then((r) => {
             setCacheSize(r?.["data"]?.["cache-size"]);
           });
-          notificationContext.addMessage.current("Cache refreshed", "success");
+          notificationContext.addMessage("Cache refreshed", "success");
         } else {
-          notificationContext.addMessage.current(
-            "Failed to refresh cache",
-            "error"
-          );
+          notificationContext.addMessage("Failed to refresh cache", "error");
         }
       })
       .catch((e) => {
         console.log(e);
-        notificationContext.addMessage.current(
-          "Failed to refresh cache",
-          "error"
-        );
+        notificationContext.addMessage("Failed to refresh cache", "error");
       });
   };
 
@@ -74,20 +68,14 @@ const Tools = () => {
           resp.json().then((r) => {
             setCacheSize(r?.["data"]?.["cache-size"]);
           });
-          notificationContext.addMessage.current("Names deleted", "success");
+          notificationContext.addMessage("Names deleted", "success");
         } else {
-          notificationContext.addMessage.current(
-            "Failed to delete names",
-            "error"
-          );
+          notificationContext.addMessage("Failed to delete names", "error");
         }
       })
       .catch((e) => {
         console.log(e);
-        notificationContext.addMessage.current(
-          "Failed to delete names",
-          "error"
-        );
+        notificationContext.addMessage("Failed to delete names", "error");
       });
   };
 

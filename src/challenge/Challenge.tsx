@@ -333,7 +333,7 @@ const Challenge = (props: ChallengeProps) => {
         if ((starterCode === "" || starterCode) && pyEditorRef.current) {
           pyEditorRef.current.setValue(starterCode);
         }
-        notificationContext.addMessage.current("Code reset", "info");
+        notificationContext.addMessage("Code reset", "info");
       },
       "save-code": (code: string) => {
         if ((code || code === "") && props.uid) {
@@ -417,7 +417,7 @@ const Challenge = (props: ChallengeProps) => {
     starterCode,
     usesFixedInput,
     typ,
-    notificationContext.addMessage,
+    notificationContext,
   ]);
   const actionsRef = useRef<Actions>(actions);
   const context = useMemo(() => {

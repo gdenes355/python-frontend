@@ -101,7 +101,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
     setToken(newToken);
-    notificationsContext.addMessage.current("Logged in", "success");
+    notificationsContext.addMessage("Logged in", "success");
   };
 
   const onWsMessage = useMemo(
@@ -150,12 +150,12 @@ const SessionWrapper = (props: SessionWrapperProps) => {
       if (ws.current === event.target) {
         setWsOpen(false);
       }
-      notificationsContext.addMessage.current(
+      notificationsContext.addMessage(
         "Websocket closed. Your progress is still saved.",
         "warning"
       );
     },
-    [notificationsContext.addMessage]
+    [notificationsContext]
   );
   const ws = useRef<WebSocket | undefined>(undefined);
   const [wsOpen, setWsOpen] = useState<boolean>(false);

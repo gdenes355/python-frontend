@@ -40,26 +40,17 @@ const AllClasses = () => {
             if (c.name === className) {
               c.active = active;
               setClasses([...classes]);
-              notificationContext.addMessage.current(
-                "Class updated",
-                "success"
-              );
+              notificationContext.addMessage("Class updated", "success");
               break;
             }
           }
         } else {
-          notificationContext.addMessage.current(
-            "Failed to update class",
-            "error"
-          );
+          notificationContext.addMessage("Failed to update class", "error");
         }
       })
       .catch((e) => {
         console.log(e);
-        notificationContext.addMessage.current(
-          "Failed to update class",
-          "error"
-        );
+        notificationContext.addMessage("Failed to update class", "error");
       });
   };
 
@@ -75,20 +66,14 @@ const AllClasses = () => {
       .then((resp) => {
         if (resp.status === 200) {
           setClasses(classes.filter((c) => c.name !== className));
-          notificationContext.addMessage.current("Class deleted", "success");
+          notificationContext.addMessage("Class deleted", "success");
         } else {
-          notificationContext.addMessage.current(
-            "Failed to delete class",
-            "error"
-          );
+          notificationContext.addMessage("Failed to delete class", "error");
         }
       })
       .catch((e) => {
         console.log(e);
-        notificationContext.addMessage.current(
-          "Failed to delete class",
-          "error"
-        );
+        notificationContext.addMessage("Failed to delete class", "error");
       });
   };
 
