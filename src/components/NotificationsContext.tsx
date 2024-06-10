@@ -1,4 +1,4 @@
-import React, { MutableRefObject, useEffect, useRef } from "react";
+import React, { useEffect, useImperativeHandle, useRef } from "react";
 import { Alert, AlertColor, Snackbar, Stack } from "@mui/material";
 import { createContext, useCallback, useState } from "react";
 
@@ -8,13 +8,11 @@ type NotificationType = {
 };
 
 export type NotificationsContextType = {
-  addMessage: MutableRefObject<(message: string, severity: AlertColor) => void>;
+  addMessage: (message: string, severity: AlertColor) => void;
 };
 
 const defContext: NotificationsContextType = {
-  addMessage: {
-    current: () => {},
-  },
+  addMessage: () => {},
 };
 
 const NotificationsContext = createContext(defContext);
@@ -41,43 +39,53 @@ const Notification = (props: NotificationProps) => {
   );
 };
 
-const NotificationsWrapper = (props: NotificationsWrapperProps) => {
+type NotificationBarRef = {
+  addMessage: (message: string, severity: AlertColor) => void;
+};
+
+const NotificationBar = React.forwardRef<NotificationBarRef>((props, ref) => {
   const [messages, setMessages] = useState<NotificationType[]>([]);
-  const _addMessage = useCallback(
-    (message: string, severity: AlertColor) => {
-      setMessages([...messages, { message, severity }]);
-    },
-    [messages]
-  );
-
-  const addMessage = useRef(_addMessage);
-
+  const messagesRef = useRef(messages);
   useEffect(() => {
-    addMessage.current = _addMessage;
-  }, [_addMessage]);
+    messagesRef.current = messages;
+  }, [messages]);
+
+  const addMessage = useCallback((message: string, severity: AlertColor) => {
+    setMessages([...messagesRef.current, { message, severity }]);
+  }, []);
+
+  useImperativeHandle(ref, () => ({
+    addMessage,
+  }));
 
   return (
-    <NotificationsContext.Provider
-      value={{
-        addMessage,
-      }}
-    >
+    <Stack spacing={2} sx={{ width: "100%" }}>
+      {messages.map((message, i) => {
+        return (
+          <Notification
+            key={i}
+            {...message}
+            onClosed={() => {
+              const newMessages = [...messages];
+              newMessages.splice(i, 1);
+              setMessages(newMessages);
+            }}
+          />
+        );
+      })}
+    </Stack>
+  );
+});
+
+const NotificationsWrapper = (props: NotificationsWrapperProps) => {
+  const notificationBarRef = useRef<NotificationBarRef>(null);
+  const addMessage = useCallback((message: string, severity: AlertColor) => {
+    notificationBarRef.current?.addMessage(message, severity);
+  }, []);
+  return (
+    <NotificationsContext.Provider value={{ addMessage }}>
+      <NotificationBar ref={notificationBarRef} />
       {props.children}
-      <Stack spacing={2} sx={{ width: "100%" }}>
-        {messages.map((message, i) => {
-          return (
-            <Notification
-              key={i}
-              {...message}
-              onClosed={() => {
-                const newMessages = [...messages];
-                newMessages.splice(i, 1);
-                setMessages(newMessages);
-              }}
-            />
-          );
-        })}
-      </Stack>
     </NotificationsContext.Provider>
   );
 };
