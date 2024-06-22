@@ -376,6 +376,9 @@ class PythonCodeRunner implements ICodeRunner {
       this.state = CodeRunnerState.READY;
       this.onStateChanged.fire(this.state);
     },
+    cls: () => {
+      this.onCls.fire();
+    },
   };
 
   private runTest = (
@@ -517,8 +520,15 @@ class PythonCodeRunner implements ICodeRunner {
     this.worker.addEventListener(
       "message",
       (msg: MessageEvent<WorkerResponse>) => {
-        // @ts-ignore  dynamic dispatch from worker
-        this.actions[msg.data.cmd](msg.data);
+        try {
+          // @ts-ignore  dynamic dispatch from worker
+          this.actions[msg.data.cmd](msg.data);
+        } catch (e) {
+          console.error(
+            `Error in code runner worker response for msg cmd "${msg.data.cmd}"`,
+            e
+          );
+        }
       }
     );
     let newInterruptBuffer: Uint8Array | null = null;
