@@ -14,6 +14,7 @@ import {
   IconButton,
   Stack,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { saveAs } from "file-saver";
 import { Container } from "@mui/system";
@@ -28,6 +29,10 @@ import React, {
 import DownloadIcon from "@mui/icons-material/Download";
 import DoneIcon from "@mui/icons-material/Done";
 import ErrorIcon from "@mui/icons-material/Error";
+import AddIcon from "@mui/icons-material/Add";
+import CheckBoxIcon from "@mui/icons-material/CheckBox";
+import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
+import ExcelDownloadIcon from "../icons/ExcelDownloadIcon";
 import SessionContext from "../auth/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
 import InputDialog from "../components/dialogs/InputDialog";
@@ -39,10 +44,7 @@ import {
 } from "./Models";
 import ResultCodePane from "./components/ResultCodePane";
 import ResultsTable, { ResultsTableRef } from "./components/ResultsTable";
-import AddIcon from "@mui/icons-material/Add";
 import AddGroupDialog from "./components/AddGroupDialog";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import { sanitisePastedEmails, zipResults } from "./utils";
 import TeacherContainer from "./TeacherContainer";
 import { useOutletContext } from "react-router-dom";
@@ -87,7 +89,10 @@ const ThisYear = () => {
 
   const [results, setResults] = useState<Array<ResultsModel>>([]);
 
-  const [downloadState, setDownloadState] = useState<DownloadState>("idle");
+  const [zipDownloadState, setZipDownloadState] =
+    useState<DownloadState>("idle");
+  const [excelDownloadState, setExcelDownloadState] =
+    useState<DownloadState>("idle");
 
   const [stagedResults, setStagedResults] = useState<
     Map<string, ChallengeResultComplexModel>
@@ -366,27 +371,65 @@ const ThisYear = () => {
     });
   };
 
-  const onDownloadResults = () => {
+  const onDownloadResultsZip = () => {
     if (!results.length || !book) {
-      setDownloadState("error");
+      setZipDownloadState("error");
       setTimeout(() => {
-        setDownloadState("idle");
+        setZipDownloadState("idle");
       }, 3000);
       return;
     }
-    setDownloadState("downloading");
+    setZipDownloadState("downloading");
     zipResults(results, book)
       .then((blob) => saveAs(blob, `results-${book.name}.zip`))
       .then(() => {
-        setDownloadState("done");
+        setZipDownloadState("done");
       })
       .catch((e: any) => {
-        setDownloadState("error");
+        setZipDownloadState("error");
         console.log(e);
       })
       .then(() => {
         setTimeout(() => {
-          setDownloadState("idle");
+          setZipDownloadState("idle");
+        }, 3000);
+      });
+  };
+
+  const onDownloadResultsXslx = () => {
+    if (!activeGroup) {
+      setExcelDownloadState("error");
+      setTimeout(() => {
+        setExcelDownloadState("idle");
+      }, 3000);
+      return;
+    }
+    setExcelDownloadState("downloading");
+    fetch(
+      `${oc.urlBase}/api/admin/classes/${activeGroup.name}/results/export`,
+      {
+        headers: {
+          Authorization: `Bearer ${sessionContext.token}`,
+        },
+      }
+    )
+      .then((resp) => {
+        if (resp.status !== 200) {
+          throw new Error("Failed to download results");
+        }
+        return resp.blob();
+      })
+      .then((blob) => saveAs(blob, `results-${activeGroup.name}.xlsx`))
+      .then(() => {
+        setExcelDownloadState("done");
+      })
+      .catch((e: any) => {
+        setExcelDownloadState("error");
+        console.log(e);
+      })
+      .then(() => {
+        setTimeout(() => {
+          setExcelDownloadState("idle");
         }, 3000);
       });
   };
@@ -404,24 +447,52 @@ const ThisYear = () => {
           >
             Reset view
           </Button>
-          <IconButton
-            aria-label="download results"
-            size="small"
-            onClick={() => onDownloadResults()}
-            style={{ height: "100%", borderRadius: "0px" }}
-            disabled={downloadState !== "idle" || !book || !results.length}
-            color="primary"
-          >
-            {downloadState === "downloading" ? (
-              <CircularProgress size={24} />
-            ) : downloadState === "done" ? (
-              <DoneIcon />
-            ) : downloadState === "error" ? (
-              <ErrorIcon />
-            ) : downloadState === "idle" ? (
-              <DownloadIcon />
-            ) : undefined}
-          </IconButton>
+          <Tooltip title="Download book codes as a zip file" placement="bottom">
+            <span>
+              <IconButton
+                aria-label="download results"
+                size="small"
+                onClick={() => onDownloadResultsZip()}
+                style={{ height: "100%", borderRadius: "0px" }}
+                disabled={
+                  zipDownloadState !== "idle" || !book || !results.length
+                }
+                color="primary"
+              >
+                {zipDownloadState === "downloading" ? (
+                  <CircularProgress size={24} />
+                ) : zipDownloadState === "done" ? (
+                  <DoneIcon />
+                ) : zipDownloadState === "error" ? (
+                  <ErrorIcon />
+                ) : zipDownloadState === "idle" ? (
+                  <DownloadIcon />
+                ) : undefined}
+              </IconButton>
+            </span>
+          </Tooltip>
+          <Tooltip title="Export class results for the whole year as xlsx">
+            <span>
+              <IconButton
+                aria-label="download all results as excel sheet"
+                size="small"
+                onClick={() => onDownloadResultsXslx()}
+                style={{ height: "100%", borderRadius: "0px" }}
+                color="primary"
+                disabled={excelDownloadState !== "idle" || !activeGroup}
+              >
+                {excelDownloadState === "downloading" ? (
+                  <CircularProgress size={24} />
+                ) : excelDownloadState === "done" ? (
+                  <DoneIcon />
+                ) : excelDownloadState === "error" ? (
+                  <ErrorIcon />
+                ) : excelDownloadState === "idle" ? (
+                  <ExcelDownloadIcon />
+                ) : undefined}
+              </IconButton>
+            </span>
+          </Tooltip>
         </Grid>
       }
     >
