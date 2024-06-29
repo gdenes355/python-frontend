@@ -1,6 +1,6 @@
 {
   "name": "python-sponge",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "proxy": "http://localhost:5000/",
   "description": "Client-side framework for learning Python and authoring Python challenges",
