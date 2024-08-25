@@ -18,6 +18,7 @@ type Actions = {
   "hide-turtle": () => void;
   reload: () => void;
   "has-made-edit": () => void;
+  "has-changed-session-files": () => void;
   "save-node": () => void;
   "save-book": (book: string) => void;
   "draw-turtle-example": () => void;
@@ -50,6 +51,7 @@ const wrapActions = (r: React.MutableRefObject<any>) => {
       r.current["canvas-keyup"](data),
     reload: () => r.current.reload(),
     "has-made-edit": () => r.current["has-made-edit"](),
+    "has-changed-session-files": () => r.current["has-changed-session-files"](),
     "save-node": () => r.current["save-node"](),
     "save-book": (book: string) => r.current["save-book"](book),
     "hide-turtle": () => r.current["hide-turtle"](),

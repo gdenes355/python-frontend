@@ -31,6 +31,7 @@ import BookNodeModel from "../../../models/BookNodeModel";
 import BookJsonEditor from "../Editors/BookJSONEditor";
 
 import EditableBookStore from "../../../book/utils/EditableBookStore";
+import BookFilesEditor from "../Editors/BookFilesEditor";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -175,7 +176,23 @@ const ChallengeOutputs = React.forwardRef<
     name: "canvas",
   });
 
-  if (challengeContext?.isEditing) {
+  if (!challengeContext?.isEditing) {
+    panes.push({
+      label: "Session Files",
+      content: (
+        <BookFilesEditor
+          ref={bookNodeEditorRef}
+          onToggleFullScreen={() => {}}
+          onChange={() => {
+            challengeContext?.actions["has-changed-session-files"]();
+          }}
+          bookNode={props.bookNode}
+        />
+      ),
+      show: true,
+      name: "session_files",
+    });
+  } else {
     panes.push({
       label: "Edit challenge",
       content: (

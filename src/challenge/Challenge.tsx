@@ -389,6 +389,9 @@ const Challenge = (props: ChallengeProps) => {
         props.onBookReloadRequested();
       },
       "has-made-edit": () => setHasEdited(true),
+      "has-changed-session-files": () => {
+        console.log("session files changed");
+      },
       "save-node": () => {
         const changed = saveNode(
           props.bookNode,
