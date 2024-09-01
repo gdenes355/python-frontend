@@ -9,6 +9,7 @@ import Event, { AsyncEvent } from "../utils/Event";
 import { keyToVMCode } from "../utils/keyTools";
 import CodeRunnerState from "./CodeRunnerState";
 import DebugSetup from "./DebugSetup";
+import { SessionFile } from "../models/SessionFile";
 
 interface ICodeRunner {
   // publis state
@@ -140,7 +141,8 @@ class PythonCodeRunner implements ICodeRunner {
     dbgSetup?: DebugSetup,
     additionalFiles?: AdditionalFile[] | undefined,
     additionalFilesLoaded?: AdditionalFilesContents,
-    fixedUserInput?: string
+    fixedUserInput?: string,
+    sessionFiles: SessionFile[] = []
   ) => {
     if (this.debugPromiseResRej) {
       this.debugPromiseResRej.rej("Debug cancelled");
@@ -153,7 +155,8 @@ class PythonCodeRunner implements ICodeRunner {
         dbgSetup,
         additionalFiles,
         additionalFilesLoaded,
-        fixedUserInput
+        fixedUserInput,
+        sessionFiles
       );
     });
   };
@@ -163,7 +166,8 @@ class PythonCodeRunner implements ICodeRunner {
     tests: TestCases,
     additionalFiles: AdditionalFile[] | undefined,
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel
+    bookNode: BookNodeModel,
+    sessionFiles: SessionFile[] = []
   ) => {
     if (this.testPromiseResRej) {
       this.testPromiseResRej.rej("Test cancelled");
@@ -175,14 +179,16 @@ class PythonCodeRunner implements ICodeRunner {
         tests,
         additionalFiles,
         additionalFilesLoaded,
-        bookNode
+        bookNode,
+        sessionFiles
       );
     });
   };
 
   public drawTurtleExample = (
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel
+    bookNode: BookNodeModel,
+    sessionFiles: SessionFile[] = []
   ) => {
     if (this.turtleExamplePromiseResRej) {
       this.turtleExamplePromiseResRej.rej("Turtle drawing cancelled");
@@ -190,8 +196,42 @@ class PythonCodeRunner implements ICodeRunner {
 
     return new Promise<string>((res, rej) => {
       this.turtleExamplePromiseResRej = { res, rej };
-      this.runTurtleExample(additionalFilesLoaded, bookNode);
+      this.runTurtleExample(additionalFilesLoaded, bookNode, sessionFiles);
     });
+  };
+
+  private additionalCodeForFiles = (
+    additionalFiles?: AdditionalFile[] | undefined,
+    additionalFilesLoaded?: AdditionalFilesContents,
+    sessionFiles: SessionFile[] = []
+  ) => {
+    let code = additionalFilesLoaded
+      ? additionalFiles
+          ?.map((file) =>
+            this.fileWriteTXT(
+              file.filename,
+              additionalFilesLoaded[file.filename]
+            )
+          )
+          .join("\n")
+      : "";
+    if (sessionFiles.length > 0) {
+      code += "import os\n";
+      code += "os.makedirs('session', exist_ok=True)\n";
+      code += sessionFiles
+        .map((file) => {
+          return this.fileWriteTXT(
+            `session/${file.filename}`,
+            file.data as string
+          );
+        })
+        .join("\n");
+    }
+    return code;
+  };
+
+  private fileWriteTXT = (filename: string, content: string) => {
+    return `with open("${filename}", "w") as f:f.write(r"""${content} """)\n`;
   };
 
   private runDebug = (
@@ -200,7 +240,8 @@ class PythonCodeRunner implements ICodeRunner {
     dbgSetup?: DebugSetup,
     additionalFiles?: AdditionalFile[] | undefined,
     additionalFilesLoaded?: AdditionalFilesContents,
-    fixedUserInput?: string
+    fixedUserInput?: string,
+    sessionFiles: SessionFile[] = []
   ) => {
     if (!code || !this.worker || this.state !== CodeRunnerState.READY) {
       this.debugPromiseResRej?.rej("cannot run debug");
@@ -211,18 +252,12 @@ class PythonCodeRunner implements ICodeRunner {
       this.interruptBuffer[0] = 0;
     }
 
-    let additionalCode = additionalFilesLoaded
-      ? additionalFiles
-          ?.map(
-            (file) =>
-              `with open("${
-                file.filename
-              }", "w") as f:f.write("""${additionalFilesLoaded[file.filename]
-                .replace(/"/g, '\\"')
-                .replace(/\\/g, "\\\\")}""")\n`
-          )
-          .join("\n")
-      : "";
+    let additionalCode = this.additionalCodeForFiles(
+      additionalFiles,
+      additionalFilesLoaded,
+      sessionFiles
+    );
+
     navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
     this.currentFixedUserInput = fixedUserInput?.split("\n");
     this.debugContext = undefined;
@@ -386,7 +421,8 @@ class PythonCodeRunner implements ICodeRunner {
     tests: TestCases,
     additionalFiles: AdditionalFile[] | undefined,
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel
+    bookNode: BookNodeModel,
+    sessionFiles: SessionFile[] = []
   ) => {
     if (
       !code ||
@@ -400,16 +436,11 @@ class PythonCodeRunner implements ICodeRunner {
     if (this.interruptBuffer) {
       this.interruptBuffer[0] = 0;
     }
-    let additionalCode = additionalFiles
-      ?.map(
-        (file) =>
-          `with open("${
-            file.filename
-          }", "w") as f:f.write("""${additionalFilesLoaded[file.filename]
-            .replace(/"/g, '\\"')
-            .replace(/\\/g, "\\\\")}""")\n`
-      )
-      .join("\n");
+    let additionalCode = this.additionalCodeForFiles(
+      additionalFiles,
+      additionalFilesLoaded,
+      sessionFiles
+    );
     const testsClone = structuredClone(tests);
     let hasTurtleTest = false;
 
@@ -455,7 +486,8 @@ class PythonCodeRunner implements ICodeRunner {
 
   private runTurtleExample = (
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel
+    bookNode: BookNodeModel,
+    sessionFiles: SessionFile[] = []
   ) => {
     const tests = bookNode.tests || [];
     if (!tests || !this.worker || this.state !== CodeRunnerState.READY) {

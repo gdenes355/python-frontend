@@ -154,6 +154,10 @@
                 {
                     "filename": "additionalFile2.txt",
                     "visible": false
+                },
+                {
+                    "filename": "additional_py.py",
+                    "visible": true
                 }
             ]
         },

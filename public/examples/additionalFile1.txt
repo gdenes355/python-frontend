@@ -1,1 +1,3 @@
 This is additionalFile1.txt
+The file can contain multiple lines
+Its contents are considered raw data, which can contain special characters such as "", or \n
