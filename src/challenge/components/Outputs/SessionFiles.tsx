@@ -47,7 +47,7 @@ type FileUploadControlProps = {
 const FileUploadControl = (props: FileUploadControlProps) => {
   const { getRootProps, getInputProps, isFocused, isDragActive } = useDropzone({
     // accept: {
-    //   "application/zip": [".zip"]
+    //   should we restrict this?
     // },
     maxFiles: 1,
     onDropAccepted: (files) => {
