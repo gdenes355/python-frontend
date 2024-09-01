@@ -1,0 +1,3 @@
+# Session files
+
+If you set `isSessionFilesAllowed` to `true` on a challenge, students have the ability to upload files from their local computer which are automatically mapped to `session/` in the Python debugger's local file system. Such files behave somewhat similarly to additional files (with the notable exceptions that their content is controlled by the user). Session files are suitable for things such as large csv files or images that the students are allowed to pick themselves.

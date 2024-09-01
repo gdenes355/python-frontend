@@ -20,6 +20,7 @@ type BookNodeModel = {
   isLong?: boolean;
   typ?: "py" | "parsons" | "canvas";
   sol?: Solution;
+  isSessionFilesAllowed?: boolean;
 
   // cached
   // what is the main URL of this book (md, py and bookLinks are relative to this)

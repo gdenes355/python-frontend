@@ -540,6 +540,9 @@ const Challenge = (props: ChallengeProps) => {
                       additionalFilesLoaded={additionalFilesLoaded}
                       bookNode={props.bookNode}
                       bookStore={props.store}
+                      isSessionFilesAllowed={
+                        props.bookNode.isSessionFilesAllowed
+                      }
                     />
                   </Allotment.Pane>
                 </Allotment>

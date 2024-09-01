@@ -50,11 +50,11 @@ const saveNode = (
   }
   if (newBookNode.isExample !== bookNode.isExample) {
     changed = true;
-    bookNode.isExample = newBookNode.isExample;
+    bookNode.isExample = newBookNode.isExample ? true : undefined;
   }
   if (newBookNode.isAssessment !== bookNode.isAssessment) {
     changed = true;
-    bookNode.isAssessment = newBookNode.isAssessment;
+    bookNode.isAssessment = newBookNode.isAssessment ? true : undefined;
   }
   if (newBookNode.typ !== bookNode.typ) {
     changed = true;
@@ -67,6 +67,12 @@ const saveNode = (
   if (newBookNode.additionalFiles !== bookNode.additionalFiles) {
     changed = true;
     bookNode.additionalFiles = newBookNode.additionalFiles;
+  }
+  if (newBookNode.isSessionFilesAllowed !== bookNode.isSessionFilesAllowed) {
+    changed = true;
+    bookNode.isSessionFilesAllowed = newBookNode.isSessionFilesAllowed
+      ? true
+      : undefined;
   }
   if (changed) {
     store.store.saveBook();

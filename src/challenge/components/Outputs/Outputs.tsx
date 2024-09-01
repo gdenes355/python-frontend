@@ -39,6 +39,7 @@ type ChallengeOutputsProps = {
   additionalFilesLoaded: AdditionalFilesContents;
   tests?: TestCases;
   usesFixedInput: boolean;
+  isSessionFilesAllowed?: boolean;
 
   codeRunner: CodeRunnerRef;
 
@@ -176,23 +177,7 @@ const ChallengeOutputs = React.forwardRef<
     name: "canvas",
   });
 
-  if (!challengeContext?.isEditing) {
-    panes.push({
-      label: "Session Files",
-      content: (
-        <BookFilesEditor
-          ref={bookNodeEditorRef}
-          onToggleFullScreen={() => {}}
-          onChange={() => {
-            challengeContext?.actions["has-changed-session-files"]();
-          }}
-          bookNode={props.bookNode}
-        />
-      ),
-      show: true,
-      name: "session_files",
-    });
-  } else {
+  if (challengeContext?.isEditing) {
     panes.push({
       label: "Edit challenge",
       content: (
@@ -222,6 +207,22 @@ const ChallengeOutputs = React.forwardRef<
       ),
       show: challengeContext?.isEditing,
       name: "book.json",
+    });
+  } else if (props.isSessionFilesAllowed) {
+    panes.push({
+      label: "Session Files",
+      content: (
+        <BookFilesEditor
+          ref={bookNodeEditorRef}
+          onToggleFullScreen={() => {}}
+          onChange={() => {
+            challengeContext?.actions["has-changed-session-files"]();
+          }}
+          bookNode={props.bookNode}
+        />
+      ),
+      show: true,
+      name: "session_files",
     });
   }
 
