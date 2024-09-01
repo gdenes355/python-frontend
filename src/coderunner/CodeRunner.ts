@@ -219,19 +219,26 @@ class PythonCodeRunner implements ICodeRunner {
       code += "import os\n";
       code += "os.makedirs('session', exist_ok=True)\n";
       code += sessionFiles
-        .map((file) => {
-          return this.fileWriteTXT(
-            `session/${file.filename}`,
-            file.data as string
-          );
-        })
+        .map((file) =>
+          file.isText
+            ? this.fileWriteTXT(`session/${file.filename}`, file.data as string)
+            : this.fileWriteBin(
+                `session/${file.filename}`,
+                file.data as ArrayBuffer
+              )
+        )
         .join("\n");
     }
+    console.log(code);
     return code;
   };
 
   private fileWriteTXT = (filename: string, content: string) => {
     return `with open("${filename}", "w") as f:f.write(r"""${content} """)\n`;
+  };
+
+  private fileWriteBin = (filename: string, content: ArrayBuffer) => {
+    return `with open("${filename}", "wb") as f:f.write(bytearray([${content}]))\n`;
   };
 
   private runDebug = (
