@@ -35,7 +35,12 @@ const SessionFileView = React.forwardRef<
   }
 
   // ???
-  return <p>Unknown file format</p>;
+  return (
+    <p>
+      Unknown file format with {(props.file.data as ArrayBuffer).byteLength}{" "}
+      bytes
+    </p>
+  );
 });
 
 export default SessionFileView;

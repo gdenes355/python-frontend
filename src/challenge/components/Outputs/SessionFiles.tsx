@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 
 import {
   Box,
@@ -10,13 +10,15 @@ import {
   ListItemButton,
   ListItemText,
   Tooltip,
+  useTheme,
 } from "@mui/material";
 
 import InputDialog from "../../../components/dialogs/InputDialog";
 
-import DeleteIcon from "@mui/icons-material/Delete";
-import FileUploadControl from "../../../components/FileUploadControl";
 import { SessionFile } from "../../../models/SessionFile";
+import { useDropzone } from "react-dropzone";
+
+import DeleteIcon from "@mui/icons-material/Delete";
 
 type SessionFilesProps = {
   sessionFiles: SessionFile[];
@@ -25,6 +27,73 @@ type SessionFilesProps = {
 };
 
 type SessionFilesHandle = {};
+
+const baseStyle = {
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+  padding: "20px",
+  borderWidth: 2,
+  borderRadius: 2,
+  borderStyle: "dashed",
+  outline: "none",
+  transition: "border .24s ease-in-out",
+};
+
+type FileUploadControlProps = {
+  onUpload: (file: File) => void;
+};
+
+const FileUploadControl = (props: FileUploadControlProps) => {
+  const { getRootProps, getInputProps, isFocused, isDragActive } = useDropzone({
+    // accept: {
+    //   "application/zip": [".zip"]
+    // },
+    maxFiles: 1,
+    onDropAccepted: (files) => {
+      if (files && files.length === 1) {
+        propsRef.current?.onUpload(files[0]);
+      }
+    },
+  });
+
+  const propsRef = useRef<FileUploadControlProps | null>(null);
+  useEffect(() => {
+    propsRef.current = props;
+  }, [props]);
+
+  const theme = useTheme();
+
+  const focusedStyle = useMemo(() => {
+    return {
+      borderColor: theme.palette.primary.main,
+    };
+  }, [theme]);
+
+  const style = useMemo(
+    () => ({
+      ...baseStyle,
+      borderColor: theme.palette.secondary.main,
+      ...(isFocused ? focusedStyle : {}),
+      color: theme.palette.text.secondary,
+      backgroundColor: theme.palette.background.paper,
+    }),
+    [isFocused, focusedStyle, theme]
+  );
+
+  return (
+    <Box sx={{ maxWidth: 345, m: 1 }}>
+      <Box {...getRootProps({ style })}>
+        <input {...getInputProps()} />
+        {isDragActive ? (
+          <p>Drop the file here ...</p>
+        ) : (
+          <p>Drag &#38; drop or click to upload as a session file</p>
+        )}
+      </Box>
+    </Box>
+  );
+};
 
 const SessionFiles = React.forwardRef<SessionFilesHandle, SessionFilesProps>(
   (props, ref) => {
@@ -66,13 +135,30 @@ const SessionFiles = React.forwardRef<SessionFilesHandle, SessionFilesProps>(
                 ))}
                 <ListItem>
                   <ListItemButton onClick={() => setAddFileDialogOpen(true)}>
-                    <ListItemText>+ (add new...)</ListItemText>
+                    <ListItemText>+ new text file</ListItemText>
                   </ListItemButton>
                 </ListItem>
               </List>
               <FileUploadControl
-                onUpload={() => {
-                  console.log("uploading new session file");
+                onUpload={(file) => {
+                  if (file.type.startsWith("text/")) {
+                    // simple text file
+                    file.text().then((data) => {
+                      props.onAddSessionFile({
+                        filename: file.name,
+                        isText: true,
+                        data: data,
+                      });
+                    });
+                  } else {
+                    file.arrayBuffer().then((data) => {
+                      props.onAddSessionFile({
+                        filename: file.name,
+                        isText: false,
+                        data: new Uint8Array(data),
+                      });
+                    });
+                  }
                 }}
               />
             </Box>
