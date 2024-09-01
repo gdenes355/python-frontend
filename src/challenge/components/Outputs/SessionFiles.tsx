@@ -41,6 +41,7 @@ const SessionFiles = React.forwardRef<SessionFilesHandle, SessionFilesProps>(
         <Card sx={{ height: "100%", overflowY: "auto" }}>
           <CardContent sx={{ height: "100%" }}>
             <Box sx={{ width: "300px", flexGrow: 1 }}>
+              <span style={{ fontFamily: "monospace" }}>session/</span>
               <List
                 sx={{
                   width: "100%",
@@ -69,7 +70,6 @@ const SessionFiles = React.forwardRef<SessionFilesHandle, SessionFilesProps>(
                   </ListItemButton>
                 </ListItem>
               </List>
-
               <FileUploadControl
                 onUpload={() => {
                   console.log("uploading new session file");
