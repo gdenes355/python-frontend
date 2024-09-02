@@ -40,6 +40,7 @@ import ChallengeGuide, {
 import saveNode from "../book/utils/BookSaver";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import NotificationsContext from "../components/NotificationsContext";
+import { SessionFile } from "../models/SessionFile";
 
 type ChallengeProps = {
   uid: string;
@@ -108,6 +109,9 @@ const Challenge = (props: ChallengeProps) => {
   const guideRef = useRef<ChallengeGuideRef | null>(null);
 
   const notificationContext = useContext(NotificationsContext);
+
+  // state related to session files
+  const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
 
   /// hooks
   const codeRunner = useCodeRunner({
@@ -265,7 +269,8 @@ const Challenge = (props: ChallengeProps) => {
               { breakpoints: [], watches: [] },
               props.bookNode?.additionalFiles || [],
               additionalFilesLoaded,
-              usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined
+              usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined,
+              sessionFiles
             );
           }
         } else {
@@ -282,7 +287,8 @@ const Challenge = (props: ChallengeProps) => {
                 additionalFilesLoaded,
                 usesFixedInput
                   ? outputsRef.current?.getFixedInputs()
-                  : undefined
+                  : undefined,
+                sessionFiles
               )
               .then((result) => {
                 if (props.bookNode?.isExample) {
@@ -315,7 +321,8 @@ const Challenge = (props: ChallengeProps) => {
                 tests,
                 props.bookNode?.additionalFiles || [],
                 additionalFilesLoaded,
-                props.bookNode
+                props.bookNode,
+                sessionFiles
               )
               .then((results) => {
                 onReportResult(results.results, results.code, results.bookNode);
@@ -389,6 +396,9 @@ const Challenge = (props: ChallengeProps) => {
         props.onBookReloadRequested();
       },
       "has-made-edit": () => setHasEdited(true),
+      "has-changed-session-files": () => {
+        setSessionFiles([...sessionFiles]); // trigger UI update
+      },
       "save-node": () => {
         const changed = saveNode(
           props.bookNode,
@@ -423,6 +433,7 @@ const Challenge = (props: ChallengeProps) => {
     starterCode,
     usesFixedInput,
     typ,
+    sessionFiles,
     notificationContext,
   ]);
   const actionsRef = useRef<Actions>(actions);
@@ -537,6 +548,10 @@ const Challenge = (props: ChallengeProps) => {
                       additionalFilesLoaded={additionalFilesLoaded}
                       bookNode={props.bookNode}
                       bookStore={props.store}
+                      isSessionFilesAllowed={
+                        props.bookNode.isSessionFilesAllowed
+                      }
+                      sessionFiles={sessionFiles}
                     />
                   </Allotment.Pane>
                 </Allotment>

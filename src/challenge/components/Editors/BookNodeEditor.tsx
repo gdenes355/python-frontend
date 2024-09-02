@@ -53,6 +53,9 @@ const BookNodeEditor = React.forwardRef<
   const [isAssessment, setIsAssessment] = useState<boolean>(
     props.bookNode.isAssessment || false
   );
+  const [isSessionFilesAllowed, setisSessionFilesAllowed] = useState<boolean>(
+    props.bookNode.isSessionFilesAllowed || false
+  );
   const [additionalFiles, setAdditionalFiles] = useState<AdditionalFile[]>([]);
 
   // visual state
@@ -65,6 +68,7 @@ const BookNodeEditor = React.forwardRef<
     setTyp(props.bookNode.typ || "py");
     setIsExample(props.bookNode.isExample || false);
     setIsAssessment(props.bookNode.isAssessment || false);
+    setisSessionFilesAllowed(props.bookNode.isSessionFilesAllowed || false);
     setAdditionalFiles(props.bookNode.additionalFiles || []);
   }, [props.bookNode]);
 
@@ -80,6 +84,7 @@ const BookNodeEditor = React.forwardRef<
       typ,
       isExample: isExample && typ !== "parsons",
       isAssessment: isAssessment && typ !== "parsons",
+      isSessionFilesAllowed,
       additionalFiles,
       tests: testEditor.current
         ? testEditor.current.getValue()
@@ -150,6 +155,20 @@ const BookNodeEditor = React.forwardRef<
                   />
                 }
                 label="Assessment"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    style={{ padding: 0 }}
+                    checked={isSessionFilesAllowed}
+                    value={isSessionFilesAllowed}
+                    onChange={(e) => {
+                      setisSessionFilesAllowed(e.target.checked);
+                      props.onChange?.();
+                    }}
+                  />
+                }
+                label="Allow session files"
               />
             </Stack>
             <Stack

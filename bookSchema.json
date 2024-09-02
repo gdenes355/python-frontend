@@ -54,6 +54,9 @@
         "isAssessment": {
           "$ref": "#/$defs/isAssessment"
         },
+        "isSessionFilesAllowed": {
+          "$ref": "#/$defs/isSessionFilesAllowed"
+        },
         "tests": {
           "$ref": "#/$defs/tests"
         },
@@ -105,8 +108,14 @@
     },
     "isAssessment": {
       "description": "is this for an assessment? Students can submit but will get no test feedback - setting inherited by all children",
-      "type": "boolean"
+      "type": "boolean",
+      "default": false
     },  
+    "isSessionFilesAllowed": {
+      "description": "are session files allowed for this challenge?",
+      "type": "boolean",
+      "default": false
+    },
     "isLong": {
       "description": "is this a challenge with over 4000 characters of code? Avoid having many of these set in a single book",
       "type": "boolean"
