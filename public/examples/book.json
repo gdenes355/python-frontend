@@ -154,8 +154,19 @@
                 {
                     "filename": "additionalFile2.txt",
                     "visible": false
+                },
+                {
+                    "filename": "additional_py.py",
+                    "visible": true
                 }
             ]
+        },
+        {
+            "id": "2c2fd4b1-8f77-45d8-a082-bb8b9a3852fb",
+            "name": "Session files",
+            "guide": "session_files.md",
+            "py": "session_files.py",
+            "isSessionFilesAllowed": true
         },
         {
             "id": "361421e2-d9cc-4c80-ad79-f1dc8b36ca48",

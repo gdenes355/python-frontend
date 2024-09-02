@@ -31,6 +31,9 @@ import BookNodeModel from "../../../models/BookNodeModel";
 import BookJsonEditor from "../Editors/BookJSONEditor";
 
 import EditableBookStore from "../../../book/utils/EditableBookStore";
+import SessionFiles from "./SessionFiles";
+import { SessionFile } from "../../../models/SessionFile";
+import SessionFileView from "../Editors/SessionFileView";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -38,6 +41,8 @@ type ChallengeOutputsProps = {
   additionalFilesLoaded: AdditionalFilesContents;
   tests?: TestCases;
   usesFixedInput: boolean;
+  isSessionFilesAllowed?: boolean;
+  sessionFiles: SessionFile[];
 
   codeRunner: CodeRunnerRef;
 
@@ -206,6 +211,40 @@ const ChallengeOutputs = React.forwardRef<
       show: challengeContext?.isEditing,
       name: "book.json",
     });
+  } else if (props.isSessionFilesAllowed) {
+    panes.push({
+      label: "Session Files",
+      content: (
+        <SessionFiles
+          onAddSessionFile={(file) => {
+            props.sessionFiles.push(file);
+            challengeContext?.actions["has-changed-session-files"]();
+          }}
+          sessionFiles={props.sessionFiles}
+          onRemoveSessionFile={(fileName) => {
+            const index = props.sessionFiles.findIndex(
+              (file) => file.filename === fileName
+            );
+            if (index >= 0) {
+              props.sessionFiles.splice(index, 1);
+              challengeContext?.actions["has-changed-session-files"]();
+            }
+          }}
+        />
+      ),
+      show: true,
+      name: "session_files",
+    });
+    for (const file of props.sessionFiles) {
+      panes.push({
+        label: "session/" + file.filename,
+        content: (
+          <SessionFileView key={"session/" + file.filename} file={file} />
+        ),
+        show: true,
+        name: file.filename,
+      });
+    }
   }
 
   if (displayFilesProperties) {
