@@ -376,8 +376,9 @@ watches = []  # list of expressions to watch
 breakpoint_map = {}  # map all lines (including empty) to a breakpointable line
 step_into = False  # step into the next instruction
 in_watch = False  # in a watch expression; if so, ignore breakpoints
-# keep track of the last seen line number, so we don't double break on a line
+# we want to avoid breaking on the same line twice, unless on the same breakpoint (repeated hit)
 last_seen_lineno = -1
+last_seen_breakpoint_id = None
 test_inputs = []
 
 # setup turtle library
@@ -640,10 +641,12 @@ def pydebug(code, breakpoints, watches=[]):
     global step_into
     global breakpoint_map
     global last_seen_lineno
+    global last_seen_breakpoint_id
     global_vars = {'hit_breakpoint': hit_breakpoint, 'traceback': traceback,
                    'input': debug_input, 'time.sleep': debug_sleep}
     step_into = False
     last_seen_lineno = -1
+    last_seen_breakpoint_id = None
     sys.stdout = debug_output
     sys.stderr = debug_output
     sys.stdctx = debug_context
@@ -659,7 +662,7 @@ def pydebug(code, breakpoints, watches=[]):
         "import turtle", "import turtle;turtle.mode('standard')")
 
     parsed_stmts = ast.parse(code)
-    parsed_break = ast.parse("hit_breakpoint(99, locals(), globals(), False)")
+    parsed_break = ast.parse("hit_breakpoint(99, locals(), globals(), False, None)")
     breakpoint_map = {}
 
     injected_breakpoints = set()
@@ -671,6 +674,8 @@ def pydebug(code, breakpoints, watches=[]):
     last_line = 0
     CHILDREN_TO_EXPLORE = ['body', 'orelse',  'finalbody']
 
+    breakpoint_id = 1
+
     # walk the AST and inject breakpoint commands on each line
     while workqueue:
         node, parentl = workqueue.popleft()
@@ -679,6 +684,8 @@ def pydebug(code, breakpoints, watches=[]):
         break_cmd = copy.deepcopy(parsed_break.body[0])
         break_cmd.value.lineno, break_cmd.value.end_lineno, break_cmd.value.args[0] = node.lineno, node.lineno, ast.Constant(
             node.lineno, lineno=0, col_offset=0)
+        break_cmd.value.args[4] = ast.Constant(breakpoint_id, lineno=0, col_offset=0)
+        breakpoint_id += 1
         idx = parentl.index(node)
         parentl.insert(idx, break_cmd)
         injected_breakpoints.add(node.lineno)
@@ -695,6 +702,8 @@ def pydebug(code, breakpoints, watches=[]):
                                      for i in range(len(handler.body))])
         if hasattr(node, 'test'):
             # instrument test with break
+            break_cmd = copy.deepcopy(break_cmd)
+            break_cmd.value.args[4] = ast.Constant(breakpoint_id, lineno=0, col_offset=0)
             break_cmd.value.args[3] = ast.Constant(
                 True, lineno=0, col_offset=0)
             node.test = ast.BoolOp(
@@ -808,21 +817,23 @@ def run_turtle_cmd(msg):
     return synchronise('/@turtle@/req.js')
 
 
-def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False):
+def hit_breakpoint(lineno, alocals, aglobals, is_secondary=False, node_id=None):
     global step_into
     global last_seen_lineno
+    global last_seen_breakpoint_id
     global watches
     global in_watch
-    if is_secondary and last_seen_lineno == lineno:
+    if is_secondary and last_seen_lineno == lineno and last_seen_breakpoint_id != node_id:
         return True
     last_seen_lineno = lineno
+    last_seen_breakpoint_id = node_id
     if not in_watch and (step_into or lineno in active_breakpoints):
         step_into = False
         # remove wrapper and breakpt method
         #stack = traceback.extract_stack()[1:-1]
         VARS_TO_REMOVE = ["__name__", "__main__", "__package__", "__annotations__", "__doc__",
                           "__loader__", "__spec__", "__builtins__", "sys", "js", "ast", "MyOutput", "my_output",
-                          "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time", "last_seen_lineno"]
+                          "pydebug", "input", "hit_breakpoint", "VARS_TO_REMOVE", "traceback", "sleep", "os", "time", "last_seen_lineno", "last_seen_breakpoint_id"]
         stay = True
         while stay:
             globals = {k: repr(
