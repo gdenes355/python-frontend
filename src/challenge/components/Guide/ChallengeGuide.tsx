@@ -6,7 +6,7 @@ import React, {
 } from "react";
 import ChallengeContext from "../../ChallengeContext";
 import Guide from "../../../components/Guide";
-import { Paper, TextField } from "@mui/material";
+import { Fade, Paper, Skeleton, TextField, Typography } from "@mui/material";
 
 type ChallengeGuideProps = {
   initialMd: string;
@@ -15,6 +15,7 @@ type ChallengeGuideProps = {
   comment?: string;
 
   isEditing?: boolean;
+  isLoading?: boolean;
 };
 
 type ChallengeGuideRef = {
@@ -46,6 +47,20 @@ const ChallengeGuide = React.forwardRef<ChallengeGuideRef, ChallengeGuideProps>(
           InputProps={{ disableUnderline: true }}
           sx={{ width: "100%", height: "100%", overflowY: "auto" }}
         />
+      );
+    }
+    if (props.isLoading) {
+      return (
+        <Fade in={props.isLoading} timeout={500}>
+          <div>
+            <Typography variant="h3">
+              <Skeleton />
+            </Typography>
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+          </div>
+        </Fade>
       );
     }
     return (
