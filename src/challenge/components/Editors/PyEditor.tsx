@@ -13,7 +13,7 @@ import DebugContext from "../../../coderunner/DebugContext";
 
 import ChallengeContext from "../../ChallengeContext";
 import VsThemeContext from "../../../themes/VsThemeContext";
-import { Backdrop, CircularProgress, makeStyles } from "@mui/material";
+import { Backdrop, CircularProgress } from "@mui/material";
 
 const STANDALONE_BUILD = false;
 if (STANDALONE_BUILD) {
