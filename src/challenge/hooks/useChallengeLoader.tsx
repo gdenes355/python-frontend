@@ -26,13 +26,28 @@ const useChallengeLoader = (props: HookProps) => {
   const [guideMd, setGuideMd] = useState<string>(
     "*Loading the guide... Please wait*"
   );
+  const [isLoadingGuide, setIsLoadingGuide] = useState<boolean>(true);
   const [starterCode, setStarterCode] = useState<string | undefined>(undefined);
   const [savedCode, setSavedCode] = useState<string | undefined>(undefined);
+  const [isLoadingCode, setIsLoadingCode] = useState<boolean>(true);
   const [additionalFilesLoaded, setAdditionalFilesLoaded] =
     useState<AdditionalFilesContents>({});
 
   const authContext = useContext(SessionContext);
+  const authContextRef = useRef<SessionContextType>(authContext);
   const additionalFilesLoadedRef = useRef<AdditionalFilesContents>({});
+
+  const codePathRef = useRef<string>(props.codePath);
+  const guidePathRef = useRef<string>(props.guidePath);
+
+  useEffect(() => {
+    authContextRef.current = authContext;
+  }, [authContext]);
+
+  useEffect(() => {
+    codePathRef.current = props.codePath;
+    guidePathRef.current = props.guidePath;
+  }, [props.codePath, props.guidePath]);
 
   const [reloadCtr, setReloadCtr] = useState<number>(0);
   const forceReload = useCallback(() => {
@@ -50,16 +65,23 @@ const useChallengeLoader = (props: HookProps) => {
   ) => {
     let resp = await fetcher.fetch(path, authContext);
     if (resp.ok) {
-      return resp.text();
+      return { guide: await resp.text(), guidePath: path };
     }
-    return "Failed to load guide";
+    return { guide: "Failed to load guide", guidePath: path };
   };
 
   useEffect(() => {
-    fetchGuide(props.guidePath, authContext, props.fetcher).then((guide) => {
-      setGuideMd(guide);
-    });
-  }, [props.guidePath, props.fetcher, authContext, reloadCtr]);
+    setIsLoadingGuide(true);
+    setGuideMd("Loading");
+    fetchGuide(props.guidePath, authContextRef.current, props.fetcher).then(
+      ({ guide, guidePath }) => {
+        if (guidePath === guidePathRef.current) {
+          setGuideMd(guide);
+          setIsLoadingGuide(false);
+        }
+      }
+    );
+  }, [props.guidePath, props.fetcher, reloadCtr]);
 
   // CODE
   const loadSavedCode = (uid: string, typ?: ChallengeTypes) => {
@@ -72,18 +94,14 @@ const useChallengeLoader = (props: HookProps) => {
   const fetchCode = async (
     codePath: string,
     authContext: SessionContextType,
-    fetcher: IBookFetcher,
-    replaceSavedCode: boolean
+    fetcher: IBookFetcher
   ) => {
     let resp = await fetcher.fetch(codePath, authContext);
     if (!resp.ok) {
       throw Error("Failed to load Python code");
     }
     let text = await resp.text();
-    setStarterCode(text);
-    if (replaceSavedCode) {
-      setSavedCode(text);
-    }
+    return { code: text, codePath };
   };
 
   useEffect(() => {
@@ -93,14 +111,20 @@ const useChallengeLoader = (props: HookProps) => {
   }, [props.uid, props.typ, props.isEditing]);
 
   useEffect(() => {
-    fetchCode(
-      props.codePath,
-      authContext,
-      props.fetcher,
-      forceReloadReplacesCode.current
+    setIsLoadingCode(true);
+    fetchCode(props.codePath, authContextRef.current, props.fetcher).then(
+      ({ code, codePath }) => {
+        if (codePath === codePathRef.current) {
+          setIsLoadingCode(false);
+          setStarterCode(code);
+          if (forceReloadReplacesCode.current) {
+            setSavedCode(code);
+          }
+        }
+        forceReloadReplacesCode.current = false;
+      }
     );
-    forceReloadReplacesCode.current = false;
-  }, [props.codePath, authContext, props.fetcher, reloadCtr]);
+  }, [props.codePath, props.fetcher, reloadCtr]);
 
   // additional files
   const fetchAdditionalFiles = async (
@@ -155,6 +179,8 @@ const useChallengeLoader = (props: HookProps) => {
     starterCode,
     additionalFilesLoaded,
     forceReload,
+    isLoadingGuide,
+    isLoadingCode,
   };
 };
 

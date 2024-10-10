@@ -13,6 +13,7 @@ import DebugContext from "../../../coderunner/DebugContext";
 
 import ChallengeContext from "../../ChallengeContext";
 import VsThemeContext from "../../../themes/VsThemeContext";
+import { Backdrop, CircularProgress, makeStyles } from "@mui/material";
 
 const STANDALONE_BUILD = false;
 if (STANDALONE_BUILD) {
@@ -29,6 +30,7 @@ type PyEditorProps = {
   debugContext: DebugContext;
   height?: string | undefined;
   onToggleFullScreen: () => void;
+  isLoading?: boolean;
 };
 
 type PyEditorHandle = {
@@ -370,6 +372,13 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
           }}
           onChange={handleEditorChange}
         />
+        <Backdrop
+          open={!!props.isLoading}
+          className="py-loader-backdrop"
+          transitionDuration={500}
+        >
+          <CircularProgress color="inherit" />
+        </Backdrop>
         <a
           className="hidden"
           download="code.py"
