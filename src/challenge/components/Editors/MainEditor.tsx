@@ -17,6 +17,7 @@ type MainEditorProps = {
   pyEditorRef: React.RefObject<PyEditorHandle>;
   codeRunner: CodeRunnerRef;
   onToggleFullScreen: () => void;
+  isLoading?: boolean;
 };
 
 const MainEditor = (props: MainEditorProps) => {
@@ -43,6 +44,7 @@ const MainEditor = (props: MainEditorProps) => {
       isOnBreakPoint={props.codeRunner.state === CodeRunnerState.ON_BREAKPOINT}
       debugContext={props.codeRunner.debugContext || emptyDebugContext}
       onToggleFullScreen={props.onToggleFullScreen}
+      isLoading={props.isLoading}
     />
   );
 };
