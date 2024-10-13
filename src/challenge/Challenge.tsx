@@ -170,6 +170,8 @@ const Challenge = (props: ChallengeProps) => {
     starterCode,
     additionalFilesLoaded,
     forceReload,
+    isLoadingGuide,
+    isLoadingCode,
   } = useChallengeLoader({
     fetcher: props.fetcher,
     guidePath: props.guidePath,
@@ -532,6 +534,7 @@ const Challenge = (props: ChallengeProps) => {
                         setEditorFullScreen((x) => !x);
                       }}
                       codeRunner={codeRunner}
+                      isLoading={isLoadingCode}
                     />
                   </Allotment.Pane>
                   <Allotment.Pane
@@ -595,6 +598,7 @@ const Challenge = (props: ChallengeProps) => {
                         turtleExampleImage={turtleExampleRendered}
                         isEditing={isEditingGuide}
                         comment={comment}
+                        isLoading={isLoadingGuide}
                       />
                     )}
                     <BookControlFabs
