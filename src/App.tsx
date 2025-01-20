@@ -94,7 +94,7 @@ export default function App() {
     Cookies.set("theme", theme);
   };
 
-  const serverUrl = window.location.origin;
+  const serverUrl = "http://localhost:5001"; //window.location.origin;
 
   return (
     <VsThemeContext.Provider

@@ -13,5 +13,8 @@
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "esbenp.prettier-vscode"        
     },
-    "cloudcode.duetAI.inlineSuggestions.enableAuto": false
+    "cloudcode.duetAI.inlineSuggestions.enableAuto": false,
+    "yaml.schemas": {
+        "swaggerviewer:openapi": "file:///c%3A/Users/Gyuri/repositories/python-frontend/api.yml"
+    }
 }

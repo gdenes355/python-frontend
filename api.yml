@@ -1,0 +1,1022 @@
+openapi: '3.0.3'
+info:
+  title: PythonSponge API
+  version: '0.9'
+  contact:
+    email: gdenes355@gmail.com
+    url: 'https://www.pythonsponge.com/'
+  license:
+    name: MIT
+    url: 'https://opensource.org/license/mit/'
+  x-logo:
+    url: 'https://raw.githubusercontent.com/gdenes355/python-frontend/b9777bf5974b6d38cc8f25bf652794cf326d5958/public/logo40.png'
+    altText: PythonSponge logo
+  description: | 
+    API for storing and managing student progress with PythonSponge
+    This current schema emerged as a result of continuous tweaks while using PythonSponge in a secondary school
+    Authentication is based on jwt bearer tokens, with a single endpoint to acquire the token. 
+    Access control is two tiered: students and teachers. Students only see books available to them and their own results. Teachers are effectively superusers.
+    Most parts of the API are insipred by REST, but don't follow it strictly.
+
+    Key entities in the API:
+    * Student: A student is identified by their student ID. We've found it best to use the first part of the student email.
+    Students are keyed with this student ID, and the server provides a mapping to human readable names (if available) while resolving results.
+    * Book: is a set of challenges. The book is identified by a URL path (`e.g. /books/unit1/book.json`). Books have a title which the server needs to be 
+    able to figure out when showing the student dashboard.
+    * Challenge: A single challenge within a book. Challenges are identified by a UUID. 
+    * Class: collection of students and books. Classes are identified by a name. Classes have a list of students, books, and disabled books.
+
+    Note that in this API student codes are checked purely client-side. If the server has reason to not trust the reported result, it can re-run checks on the code submitted.
+servers:
+  - url: http://localhost:5001
+    description: Local server -- replace with your own server
+paths: 
+  /api/token:
+    post:
+      summary: Authentication
+      description: Exchange credentials or tokens to receive a JWT token.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    bookUrl:
+                      $ref: '#/components/schemas/BookUrl'
+                    msal_access_token:
+                      type: string
+                      example: 'XXXXXXXX'
+                      description: Access token from Microsoft Authentication Library (MSAL)
+                - type: object
+                  properties:
+                    bookUrl:
+                      $ref: '#/components/schemas/BookUrl'
+                    username:
+                      type: string
+                      example: 'admin'
+                      description: Username for authentication
+                    password:
+                      type: string
+                      example: 'admin'
+                      description: Password for authentication
+                - type: object
+                  properties:
+                    bookUrl:
+                      $ref: '#/components/schemas/BookUrl'
+                    google_access_token:
+                      type: string
+                      example: 'XXXXXXXX'
+                      description: Access token from Google
+      responses:
+        '200':
+          description: Successfully authenticated.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: 'dasdasdasdasa'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      msg:
+                        type: string
+                        example: 'Invalid book path'
+                        description: Error message for an invalid book path
+                  - type: object
+                    properties:
+                      msg:
+                        type: string
+                        example: 'Invalid token'
+                        description: Error message for an invalid token
+                  - type: object
+                    properties:
+                      msg:
+                        type: string
+                        example: 'Invalid email domain'
+                        description: Error message for a user who has been authenticated but not associated with an allow-listed domain (e.g. not in school)
+
+  /api/logout:
+    post:
+      summary: Logout
+      description: End the current session.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Successfully logged out.
+          content:
+            application/json:
+              example:
+                msg: 'logout successful'
+
+  /api/results:
+    post:
+      summary: Save student progress
+      description: Save student progress to the database.
+      tags:
+        - Student endpoints
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ['book', 'id', 'user', 'outcome']
+              properties:
+                book:
+                  $ref: '#/components/schemas/BookUrl'
+                id:
+                  type: object
+                  format: uuid
+                  description: challenge id
+                  example: "dd7d3f05-39c2-4f8c-a5c4-138d702c31fa"
+                outcome:
+                  type: boolean
+                  description: did all tests pass?
+                  example: true
+                code:
+                  type: string
+                  description: the code submitted
+                  example: "print('hello world')"
+                is_long:
+                  type: boolean
+                  description: isLong is set for this challenge. The client knows that this code might be long, but asks the server to store it anyway (otherwise it's OK to crop for example after 4000 characters)
+                
+
+      responses:
+        '200':
+          description: Successfully saved student progress.
+          content:
+            application/json:
+              example:
+                res: ok
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    get:
+      summary: Retrieve student progress
+      description: Retrieve all test passes/fails for the student for a given book
+      tags:
+        - Student endpoints
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: book
+          in: query
+          required: true
+          description: URL of the target challenge book
+          schema:
+            $ref: '#/components/schemas/BookUrl'
+      responses:
+        '200':
+          description: Successfully retrieved student progress.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: ok
+                  results:
+                    type: object
+                    description: Dictionary of challenge IDs and their outcomes
+                    additionalProperties: 
+                      type: object
+                      $ref: '#/components/schemas/SingleStudentProgress'
+              example:
+                res: ok
+                results:
+                  dd7d3f05-39c2-4f8c-a5c4-138d702c31fa:
+                    correct: true
+                    correct-attempts: 1
+                    correct-code: "print('hello world')"
+                    correct-date: "2021-09-01T15:00:00Z"
+                    wrong-attempts: 3
+                    wrong-code: "print("
+                    wrong-date: "2021-09-01T12:00:00Z"      
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                res: err
+                msg: 'no user or book'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/student-dashboard:
+    get:
+      summary: Student entrypoint (list books)
+      description: Retrieve the list of books available to the student, regardless of which book they are currently authenticated for
+      tags:
+        - Student endpoints
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved student dashboard.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+                  books:
+                    type: array
+                    description: List of books available to the student
+                    items:
+                      type: object
+                      properties:
+                        book:
+                          $ref: '#/components/schemas/BookUrl'
+                        title:
+                          type: string
+                          description: Title of the book
+                          example: 'Unit 1'
+                   
+              example:
+                res: ok
+                books:
+                  - book: 'http://localhost:5001/books/unit1/book.json'
+                    title: 'Unit 1'
+                  - book: 'http://localhost:5001/books/unit2/book.json'
+                    title: 'Unit 2'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'        
+
+  /api/admin/classes:
+    get:
+      summary: Retrieve all classes
+      description: Retrieve all classes and their students
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      tags:
+        - Class management
+      parameters:
+        - name: active
+          required: false
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+            example: true
+            default: true
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Successfully retrieved classes.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+                  data:
+                    type: array
+                    description: List of classes
+                    items:
+                      type: object
+                      properties:
+                        active:
+                          type: boolean
+                          description: is this class active? E.g. if it's a class from last year, then false
+                          example: true
+                        name:
+                          type: string
+                          description: Name of the class
+                          example: 'Class 1'
+                        join_code:
+                          type: string
+                          description: Join code for the class
+                          example: '123456'
+                          deprecated: true
+                        books:
+                          type: array
+                          description: List of books available (not disabled!) to students in this class
+                          items:
+                            type: string
+                            example: '/books/unit1/book.json'
+                        disabled_books:
+                          type: array
+                          description: List of books not available to students in this class
+                          items:
+                            type: string
+                            example: '/books/unit1/book.json'
+                        students:
+                          type: array
+                          description: List of student ids in this class
+                          items:
+                            type: string
+                            example: 'gdenes355'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary: Create a new class
+      description: Create a new class. New class defaults to being active with no students or books.
+      tags:
+        - Class management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ['name', 'books']
+              properties:
+                class:
+                  type: string
+                  description: Name of the class
+                  example: 'Class 1'
+              
+      responses:
+        '200':
+          description: Successfully created class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '400':
+          description: Missing class name
+          content:
+            application/json:
+              example:
+                res: err
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  
+  /api/admin/classes/{className}:
+    patch:
+      summary: Update a class
+      description: Update a class's active status
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      tags:
+        - Class management
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ['active']
+              properties:
+                active:
+                  type: boolean
+                  description: is this class active?
+                  example: false
+      responses:
+        '200':
+          description: Successfully updated class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '400':
+          description: Missing active status
+          content:
+            application/json:
+              example:
+                res: err
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              example:
+                res: err
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    delete:
+      summary: Delete a class
+      description: Delete a class (but keep results and students)
+      tags:
+        - Class management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+      responses:
+        '200':
+          description: Successfully deleted class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '404':
+          description: Class not found
+          content:
+            application/json:
+              example:
+                res: err
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/admin/classes/{className}/books:
+    post:
+      summary: Add a book to a class 
+      description: Idempontent operation to update the association between class and book to either enabled or disabled
+      tags:
+        - Class management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ['book']
+              properties:
+                book:
+                  type: string
+                  description: URL of the target challenge book
+                  example: '/books/unit1/book.json'
+                enabled:
+                  type: boolean
+                  description: is this book enabled for students in this class?
+                  example: true
+                  default: true
+      responses:
+        '200':
+          description: Successfully added book to class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  
+  /api/admin/classes/{className}/students:
+    post:
+      summary: Add a student or multiple students to a class
+      description: Add a student to a class
+      tags:
+        - Class management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - type: object
+                  properties:
+                    user:
+                      type: string
+                      description: Student ID
+                      example: 'gdenes355'
+                - type: object
+                  properties:
+                    user:
+                      type: array
+                      items:
+                        type: string
+                      description: List of student IDs
+                      example: ['gdenes355', 'johndoe']
+      responses:
+        '200':
+          description: Successfully added student to class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/admin/classes/{className}/students/{studentId}:
+    delete:
+      summary: Remove a student from a class
+      description: Remove a student from a class (keep results etc.)
+      tags:
+        - Class management
+      security:
+        - BearerAuth: []
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+        - name: studentId
+          in: path
+          required: true
+          description: Student ID
+      responses:
+        '200':
+          description: Successfully removed student from class.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '404':
+          description: Student not found
+          content:
+            application/json:
+              example:
+                res: err
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/admin/classes/{className}/books/{bookUrl}/results:
+    get:
+      summary: Retrieve all student progress for a book in a class
+      description: Retrieve all student progress for a book in a class
+      tags:
+        - Results management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+        - name: bookUrl
+          in: path
+          required: true
+          description: local URL of the target challenge book
+          example: '/books/unit1/book.json'
+      responses:
+        '200':
+          description: Successfully retrieved student progress.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+                  data:
+                    type: array
+                    description: List of students and their progress
+                    items:
+                      type: object
+                      description: Student information
+                      properties:
+                        name: 
+                          type: string
+                          description: Human readable name of the student
+                          example: 'Denes, Gyorgy'
+                        user:
+                          type: string
+                          description: Student ID
+                          example: 'gdenes355'
+
+                      additionalProperties: 
+                        type: object
+                        $ref: '#/components/schemas/SingleStudentProgress'
+              example:
+                res: ok
+                data:
+                  - name: 'Denes, Gyorgy'
+                    user: 'gdenes355'
+                    dd7d3f05-39c2-4f8c-a5c4-138d702c31fa:
+                      correct: true
+                      correct-attempts: 1
+                      correct-code: "print('hello world')"
+                      correct-date: "2021-09-01T15:00:00Z"
+                      wrong-attempts: 3
+                      wrong-code: "print("
+                      wrong-date: "2021-09-01T12:00:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/admin/students/{studentId}/books/{bookUrl}/results/{challengeId}/comment:
+    post:
+      summary: Add a comment to a student's progress
+      description: Add a comment to a student's progress
+      tags:
+        - Results management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          description: Student ID
+        - name: bookUrl
+          in: path
+          required: true
+          description: local URL of the target challenge book
+          example: '/books/unit1/book.json'
+        - name: challengeId
+          in: path
+          required: true
+          description: challenge id
+          example: "dd7d3f05-39c2-4f8c-a5c4-138d702c31fa"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: ['comment']
+              properties:
+                comment:
+                  type: string
+                  description: Comment from the teacher
+                  example: "Great variable names"
+      responses:
+        '200':
+          description: Successfully added comment to student's progress.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/admin/classes/{className}/results/export:
+    get:
+      summary: Export grade book
+      description: Export test case progress for all students for all books in a class
+      tags:
+        - Results management
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: className
+          in: path
+          required: true
+          description: Name of the class
+      responses:
+        '200':
+          description: Successfully generated the Excel file
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+              example: "Base64EncodedExcelDataHere"  # Optional: You can provide an example for better clarity, or remove if not needed
+          headers:
+            Content-Disposition:
+              description: The header indicating the file is an attachment with the specified filename
+              schema:
+                type: string
+                example: 'attachment; filename="classname.xlsx"'
+            Content-Type:
+              description: The MIME type for the Excel file format
+              schema:
+                type: string
+                example: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+
+  /api/admin/token-test:
+    get:
+      summary: Test token
+      description: Test if the token is a valid admin token
+      tags:
+        - Misc
+      security:
+        - BearerAuth: []
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple
+      responses:
+        '200':
+          description: Token is valid
+          content:
+            application/json:
+              example:
+                res: succ
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+  /api/admin/books:
+    get:
+      summary: Retrieve list of book URLs
+      description: Retrieve list of book URLs
+      tags:
+        - Misc
+      security:
+        - BearerAuth: []  
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      responses:
+        '200':
+          description: Successfully retrieved book URLs.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  res:
+                    type: string
+                    description: Status of the request (ok)
+                    example: succ
+                  data:
+                    type: array
+                    description: List of book URLs
+                    items:
+                      type: string
+                      example: '/books/unit1/book.json'
+              example:
+                res: ok
+                books:
+                  - '/books/unit1/book.json'
+                  - '/books/unit2/book.json'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/admin/cache/name:
+    get:
+      summary: Retrieve local cache info
+      description: Retrieve student name cache
+      tags:
+        - Name cache
+      security:
+        - BearerAuth: []  
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple  
+      responses:
+        '200':
+          description: Successfully retrieved student name cache info
+          content:
+            application/json:
+              example:
+                res: ok
+                data:
+                  cache-size: 130
+                    
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    post:
+      summary:  Invalidate local cache
+      description: Invalidate the local cache and refetch from remote db
+      tags:
+        - Name cache
+      security:
+        - BearerAuth: []
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple
+      responses:
+        '200':
+          description: Successfully invalidated local cache
+          content:
+            application/json:
+              example:
+                res: ok
+                data:
+                  cache-size: 131
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    delete:
+      summary: Eliminate personal data
+      description: Eliminate personal data from the cache, and potentially from the remote db if required under GDPR. E.g. at the end of an academic year one might want to wipe the user id to name mappings
+      tags:
+        - Name cache
+      security:
+        - BearerAuth: []
+      x-badges:
+        - name: 'Teacher'
+          position: after
+          color: purple
+      responses:
+        '200':
+          description: Successfully eliminated personal data
+          content:
+            application/json:
+              example:
+                res: ok
+                data:
+                  cache-size: 0
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  
+
+      
+
+
+tags:
+  - name: Authentication
+  - name: Student endpoints
+    description: For accessing books, logging and retrieving progress.
+  - name: Misc
+    description: Miscellaneous endpoints
+  - name: Class management
+    description: For managing classes and students within
+  - name: Results management
+    description: For managing student progress as a teacher
+  - name: Name cache
+    description: Students are identified by their student ID. The server stores a DB of student ID to student name. Ideally, we cache this in memory for performance reasons.
+
+
+
+x-tag-Groups:
+  - name: Teacher endpoints
+    tags:
+      - Class management
+      - Results management
+      - Misc
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token received during authentication
+  responses:
+    UnauthorizedError:
+      description: Needs authentication (missing or expired jwt). Currently only supports MSAL.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: ['jwtEndpoint']
+            properties:
+              error: 
+                type: string
+                example: 'get-jwt'
+              reason:
+                type: string
+                example: 'jwt expired'
+              tenantId:
+                type: string
+                description: MSAL tenant ID
+                example: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+              clientId:
+                type: string
+                description: MSAL client ID
+                example: 'XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX'
+              jwtEndpoint:
+                type: string
+                description: this server's authentication endpoint
+                example: 'http://localhost:5001/api/token'
+              resultsEndpoint:
+                type: string
+                description: this server's results endpoint
+                example: 'http://localhost:5001/api/results'
+              wsEndPoint:
+                type: string
+                description: this server's websocket endpoint if supported
+                example: 'ws://localhost:5001/ws'       
+  schemas:
+    SingleStudentProgress:
+      type: object
+      required: ['correct']
+      description: A single student's progress on a challenge
+      properties:
+        comment:
+          type: string
+          description: Comment from the teacher
+          example: "Great variable names"
+        correct:
+          type: boolean
+          description: did all tests pass?
+          example: true
+        correct-attempts: 
+          type: number
+          description: number of correct submissions
+          example: 1
+        correct-code:
+          type: string
+          description: the correct code
+          example: "print('hello world')"
+        coddect-date:
+          type: string
+          description: the date of the correct submission
+          example: "2021-09-01T12:00:00Z"
+        wrong-attempts:
+          type: number
+          description: number of incorrect submissions
+          example: 3
+        wrong-code:
+          type: string
+          description: the last submitted incorrect code
+          example: "print("
+        wrong-date:
+          type: string
+          description: the date of the last incorrect submission
+          example: "2021-09-01T12:00:00Z"
+      example:
+        correct: true
+        correct-attempts: 1
+        correct-code: "print('hello world')"
+        correct-date: "2021-09-01T12:00:00Z"
+        wrong-attempts: 3
+        wrong-code: "print("
+        wrong-date: "2021-09-01T12:00:00Z"
+
+    BookUrl:
+      type: string
+      example: '/books/unit1/book.json'
+      description: URL of the target challenge book, or for admin/teacher access use http://localhost:5001/admin (replacing the URL with your own server)
