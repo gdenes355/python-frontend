@@ -245,6 +245,12 @@ E.g.
 
 *potential caveat: these advanced output requirements support regexes, but the use of the ignore flags can conflict with complex expressions. Regex supports case insensitive comparisons, but white space ignores are achieved by stripping white spaces and punctuation ignores are achieved by stripping punctuations. To avoid any conflicts, avoid using additional punctuations in your regex when using these flags. E.g. `Hello .* how are you` is fine, but `Hello .*, how are you` is risky.*
 
+# Tracking student progress on a server
+The frontend is portable and serverless. However, if you wanted to track student progress, mark work online etc., we have some frameworks already in place.
+[Documentation](api.html) for the backend API. Sample server [TODO - check again later]().
+
+To regenrate the swagger documentation, run
+`npx @redocly/cli build-docs --output api.html .\api.yml`
 
 # Contributing to the project
 We welcome code additions to this github repo via PRs as long as they are in-line with the original design intentions of the project:
