@@ -11,6 +11,7 @@ let sleepPromiseResolve = null
 let sleepTimeout = null
 let turtlePromiseResolve = null
 let turtleResolveAheadCount = 0  // how many promises have been resolved that we haven't even seen
+let inputLookahead = null
 
 // handle messages from TS
 addEventListener('message', (event) => {
@@ -18,6 +19,7 @@ addEventListener('message', (event) => {
   let data = event.data
   if (data.cmd === 'ps-reset' || data.cmd === 'ps-prerun') {
     turtleResolveAheadCount = 0
+    inputLookahead = null
     if (debugPromiseResolve != null) {
       debugPromiseResolve(new Response('{}', { status: 200 }))
       debugPromiseResolve = null
@@ -52,6 +54,11 @@ addEventListener('message', (event) => {
     inputPromiseResolve = null
     if (local) {
       local(new Response(JSON.stringify(data), { status: 200 }))
+    } else {
+      // We can hit this point if TS received ps-input-req and responded with ps-input resp
+      // before Python called synchronise
+      // unlikely, but can happen with fixed inputs
+      inputLookahead = data  
     }
   } else if (data.cmd === 'ps-debug-continue') {
     
@@ -67,6 +74,13 @@ addEventListener('message', (event) => {
 addEventListener('fetch', e => {
   const u = new URL(e.request.url)
   if (u.pathname === '/@input@/req.js') {
+    if (inputLookahead !== null) {
+      // if we have a lookahead, respond with that
+      const local = inputLookahead
+      inputLookahead = null
+      e.respondWith(new Response(JSON.stringify(local), { status: 200 }))
+      return
+    }
     e.respondWith(new Promise(function (resolve) {
       if (inputPromiseResolve != null) {
         inputPromiseResolve()

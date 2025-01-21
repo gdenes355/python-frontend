@@ -229,7 +229,6 @@ class PythonCodeRunner implements ICodeRunner {
         )
         .join("\n");
     }
-    console.log(code);
     return code;
   };
 
