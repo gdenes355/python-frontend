@@ -36,6 +36,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             sessionContext.login({
               clientId: data.clientId,
               tenantId: data.tenantId || "common",
+              authProvider: data.auth_provider || "MSAL",
               jwtEndpoint: data.jwtEndpoint,
               startUrl: props.urlBase + "/admin",
               resultsEndpoint: data.resultsEndpoint,

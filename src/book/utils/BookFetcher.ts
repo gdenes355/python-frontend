@@ -95,6 +95,7 @@ class BookFetcher implements IBookFetcher {
       throw new UnauthorisedError({
         clientId: data.clientId,
         tenantId: data.tenantId || "common",
+        authProvider: data.auth_provider || "MSAL",
         jwtEndpoint: data.jwtEndpoint,
         startUrl: this.bookPathAbsolute,
         resultsEndpoint: data.resultsEndpoint,

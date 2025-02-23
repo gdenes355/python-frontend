@@ -7,7 +7,7 @@ import React, {
   useState,
 } from "react";
 import SessionContext, { WsResponse } from "./SessionContext";
-import Login from "./Login";
+import Login from "./login/Login";
 import LoginInfo from "./LoginInfo";
 import { absolutisePath } from "../utils/pathTools";
 import { useLocation, Outlet } from "react-router-dom";
