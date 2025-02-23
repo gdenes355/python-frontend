@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Grid, IconButton, Button } from "@mui/material";
+import { Grid2, IconButton, Button } from "@mui/material";
 import { FileDownload } from "@mui/icons-material";
 import FileUploadControl from "../../../components/FileUploadControl";
 import ChallengeContext from "../../ChallengeContext";
@@ -12,19 +12,19 @@ const HeaderButtons = (props: HeaderButtonsProps) => {
   const challengeContext = useContext(ChallengeContext);
   return (
     <React.Fragment>
-      <Grid item key="py-upload">
+      <Grid2 key="py-upload">
         <FileUploadControl
           onUpload={challengeContext?.actions["handle-code-upload"]}
         />
-      </Grid>
-      <Grid item key="py-download">
+      </Grid2>
+      <Grid2 key="py-download">
         <IconButton
           onClick={() => challengeContext?.actions["download-code"]()}
         >
           <FileDownload />
         </IconButton>
-      </Grid>
-      <Grid item>
+      </Grid2>
+      <Grid2>
         <Button
           variant="outlined"
           color="error"
@@ -33,7 +33,7 @@ const HeaderButtons = (props: HeaderButtonsProps) => {
         >
           Reset
         </Button>
-      </Grid>
+      </Grid2>
     </React.Fragment>
   );
 };

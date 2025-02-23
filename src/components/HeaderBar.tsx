@@ -7,8 +7,8 @@ import {
   FormControlLabel,
   Switch,
   ListItemIcon,
-  Grid,
   Button,
+  Grid2,
 } from "@mui/material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -33,18 +33,20 @@ const HeaderBar = (props: HeaderBarProps) => {
   const authContext = useContext(SessionContext);
 
   return (
-    <Toolbar variant="dense" sx={{ paddingTop: "2px" }}>
-      <Grid container spacing={2} style={{ display: "flex" }}>
-        <Grid item>
+    <Toolbar
+      variant="dense"
+      sx={{ paddingTop: "2px", paddingRight: "2px !important" }}
+    >
+      <Grid2 container spacing={2} display="flex" sx={{ width: "100%" }}>
+        <Grid2>
           <Box id="logo">
             {/* placeholder if container site wants to replace it */}
             <a href="/">
               <img src="/logo40.png" alt="logo" style={{ width: "40px" }} />
             </a>
           </Box>
-        </Grid>
-        <Grid
-          item
+        </Grid2>
+        <Grid2
           sx={{
             verticalAlign: "middle",
             color: `color-mix(in srgb, #076669 75%, ${
@@ -57,14 +59,13 @@ const HeaderBar = (props: HeaderBarProps) => {
           }}
         >
           <span>{props.title || ""}</span>
-        </Grid>
-        <Grid item sx={{ flexGrow: 1, display: "flex" }}>
+        </Grid2>
+        <Grid2 display="flex" flexGrow={1}>
           <div>{props.leftAlignedChilden || null}</div>
-        </Grid>
+        </Grid2>
 
-        {props.children}
-
-        <Grid item>
+        <Grid2 container display="flex">
+          {props.children}
           <Menu
             button={
               <Button variant="contained" color="primary">
@@ -107,8 +108,8 @@ const HeaderBar = (props: HeaderBarProps) => {
               </MenuItem>
             ) : undefined}
           </Menu>
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
     </Toolbar>
   );
 };

@@ -5,7 +5,7 @@ import HeaderBar from "../../../components/HeaderBar";
 import BookNodeModel from "../../../models/BookNodeModel";
 import SessionContext from "../../../auth/SessionContext";
 import HeaderMenu from "./HeaderMenu";
-import { Grid, IconButton } from "@mui/material";
+import { Grid2, IconButton } from "@mui/material";
 
 import CachedIcon from "@mui/icons-material/Cached";
 import SessionWsStateIndicator from "../../../auth/components/SessionWsStateIndicator";
@@ -113,11 +113,11 @@ const Header = (props: HeaderProps) => {
         }
       >
         {props.canReloadBook ? (
-          <Grid item>
+          <Grid2>
             <IconButton onClick={() => challengeContext?.actions["reload"]()}>
               <CachedIcon />
             </IconButton>
-          </Grid>
+          </Grid2>
         ) : undefined}
         {challengeContext?.isEditing ? (
           <HeaderButtonsEditor
@@ -131,9 +131,9 @@ const Header = (props: HeaderProps) => {
               canReset={props.codeRunner.state === CodeRunnerState.READY}
             />
             {authContext.token ? (
-              <Grid item>
+              <Grid2>
                 <SessionWsStateIndicator />
-              </Grid>
+              </Grid2>
             ) : undefined}
           </>
         )}

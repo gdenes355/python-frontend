@@ -1,6 +1,6 @@
 import React, { useMemo, useContext } from "react";
 import {
-  Grid,
+  Grid2,
   Button,
   Switch,
   FormControlLabel,
@@ -34,31 +34,31 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
   }, [searchParams, location]);
   return (
     <React.Fragment>
-      <Grid item key="py-upload">
+      <Grid2 key="py-upload">
         <FileUploadControl
           onUpload={challengeContext?.actions["handle-code-upload"]}
         />
-      </Grid>
-      <Grid item key="py-download">
+      </Grid2>
+      <Grid2 key="py-download">
         <IconButton
           onClick={() => challengeContext?.actions["download-code"]()}
         >
           <FileDownload />
         </IconButton>
-      </Grid>
-      <Grid item key="edit-preview">
+      </Grid2>
+      <Grid2 key="edit-preview">
         <a href={previewUrl} target="_blank" rel="noreferrer noopener">
           <Button>Preview</Button>
         </a>
-      </Grid>
-      <Grid item key="unsaved-changes">
+      </Grid2>
+      <Grid2 key="unsaved-changes">
         {props.hasUnsavedChanges ? (
           <Tooltip title="You have unsaved changes">
             <FiberManualRecordIcon sx={{ color: "red", margin: "5px" }} />
           </Tooltip>
         ) : undefined}
-      </Grid>
-      <Grid item key="edit-toggle">
+      </Grid2>
+      <Grid2 key="edit-toggle">
         <FormControlLabel
           control={
             <Switch
@@ -70,7 +70,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
           }
           label="Edit guide"
         />
-      </Grid>
+      </Grid2>
     </React.Fragment>
   );
 };

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 
-import { TreeView, TreeItem } from "@mui/lab";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import CancelIcon from "@mui/icons-material/Cancel";
@@ -11,6 +10,7 @@ import BookNodeModel, { extractIds } from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
 
 import "./BookContents.css";
+import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
 
 type BookContentsProps = {
   bookRoot: BookNodeModel;
@@ -42,7 +42,7 @@ function RecursiveItem({ node, allTestResults }: RecursiveArgs) {
           {node.name}
         </div>
       }
-      nodeId={node.id}
+      itemId={node.id}
     >
       {hasChildren &&
         node.children?.map((item) => (
@@ -64,7 +64,8 @@ const BookContents = (props: BookContentsProps) => {
     setExpandedIds(nodeIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeId: string) => {
+  const handleSelect = (event: React.SyntheticEvent, nodeId: string | null) => {
+    if (!nodeId) return;
     let selectedNode = nodeMap.get(nodeId);
     if (selectedNode) {
       props.onNodeSelected(selectedNode);
@@ -81,21 +82,23 @@ const BookContents = (props: BookContentsProps) => {
 
   return (
     <div className="book-contents">
-      <TreeView
+      <SimpleTreeView
         aria-label="multi-select"
-        defaultCollapseIcon={<ExpandMoreIcon />}
-        defaultExpandIcon={<ChevronRightIcon />}
-        expanded={expandedIds}
-        selected={props.activePageId}
-        onNodeToggle={handleToggle}
-        onNodeSelect={handleSelect}
+        slots={{
+          collapseIcon: ExpandMoreIcon,
+          expandIcon: ChevronRightIcon,
+        }}
+        expandedItems={expandedIds}
+        selectedItems={props.activePageId}
+        onExpandedItemsChange={handleToggle}
+        onSelectedItemsChange={handleSelect}
         sx={{ maxWidth: 400 }}
       >
         <RecursiveItem
           node={props.bookRoot}
           allTestResults={props.allTestResults}
         />
-      </TreeView>
+      </SimpleTreeView>
     </div>
   );
 };

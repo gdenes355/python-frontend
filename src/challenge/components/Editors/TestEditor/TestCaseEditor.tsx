@@ -14,7 +14,7 @@ import {
   Box,
   Button,
   FormControlLabel,
-  Grid,
+  Grid2,
   Switch,
   Table,
   TableBody,
@@ -122,8 +122,8 @@ const TestCaseEditor = React.forwardRef<
         </Box>
       </AccordionSummary>
       <AccordionDetails sx={{ padding: 0 }}>
-        <Grid container sx={{ width: "100%" }}>
-          <Grid item xs={4} sx={{ paddingLeft: 1, paddingTop: 1 }}>
+        <Grid2 container sx={{ width: "100%" }}>
+          <Grid2 size={{ xs: 4 }} sx={{ paddingLeft: 1, paddingTop: 1 }}>
             <TextField
               multiline
               placeholder="Input"
@@ -139,8 +139,8 @@ const TestCaseEditor = React.forwardRef<
               }}
               variant="standard"
             />
-          </Grid>
-          <Grid item xs={8} sx={{ paddingLeft: 1 }}>
+          </Grid2>
+          <Grid2 size={{ xs: 8 }} sx={{ paddingLeft: 1 }}>
             {simpleOutput ? (
               <Tooltip title="Simple output. Allowed wildcard: .* to match rest of the line">
                 <TextField
@@ -228,7 +228,7 @@ const TestCaseEditor = React.forwardRef<
                 </TableBody>
               </Table>
             )}
-          </Grid>
+          </Grid2>
           <Button
             onClick={() => {
               props.onDel?.();
@@ -239,7 +239,7 @@ const TestCaseEditor = React.forwardRef<
           >
             Delete
           </Button>
-        </Grid>
+        </Grid2>
       </AccordionDetails>
     </Accordion>
   );
