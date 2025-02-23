@@ -6,7 +6,7 @@ import {
 } from "../Models";
 import BookNodeModel from "../../models/BookNodeModel";
 import { StudentPopupMenuHandle } from "./StudentPopupMenu";
-import styled from "@emotion/styled";
+import { styled } from "@mui/material/styles";
 import {
   IconButton,
   Skeleton,
