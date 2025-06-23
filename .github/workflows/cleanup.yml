@@ -12,4 +12,5 @@ jobs:
     steps:
       - uses: c-hive/gha-remove-artifacts@v1
         with:
-          age: '10 second'  # deletes everything except the most recent
+          keep: 1
+          skip-recent: false
