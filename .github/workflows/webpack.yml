@@ -11,17 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Use Node.js 18.x
+      - name: Use Node.js 20.x
         uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       - name: Build
         run: |
           npm install
-          npn run build
+          npm run build
 
-      - name: Upload build artifact
+      - name: Upload build artefact
         uses: actions/upload-artifact@v4
         with:
           name: latest-build
