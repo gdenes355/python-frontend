@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
-import SessionContext from "../../auth/SessionContext";
+import SessionContext from "../../auth/contexts/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults, emptyTestResults } from "../../models/Tests";
-import { throttle } from "lodash";
+import throttle from "lodash/throttle";
 import {
   ChallengeResultComplexModel,
   ResultsModel,

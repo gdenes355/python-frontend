@@ -5,7 +5,7 @@ import { OutletContextType } from "../auth/AdminWrapper";
 import { ClassModel } from "./Models";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Checkbox } from "@mui/material";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
 import ClassDeletePopupMenu, {
   ClassDeletePopupMenuHandle,
 } from "./components/ClassDeletePopupMenu";

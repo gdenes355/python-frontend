@@ -7,10 +7,10 @@ import JSZip from "jszip";
 import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
 import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { loadTestStateLocal } from "./ProgressStorage";
-import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import UnauthorisedError from "../../auth/UnauthorisedException";
-import { SessionContextType } from "../../auth/SessionContext";
+import { SessionContextType } from "../../auth/contexts/SessionContext";
 import NotFoundError from "./NotFoundError";
+import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 
 class BookFetcher implements IBookFetcher {
   constructor(
@@ -118,7 +118,7 @@ class BookFetcher implements IBookFetcher {
     authContext?: SessionContextType
   ): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
-      let allRes: AllTestResults = emptyTestResults();
+      const allRes: AllTestResults = emptyTestResults();
       this.fetch(this.bookPathAbsolute, authContext)
         .then((response) =>
           response

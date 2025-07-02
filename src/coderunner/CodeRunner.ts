@@ -187,8 +187,7 @@ class PythonCodeRunner implements ICodeRunner {
 
   public drawTurtleExample = (
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel,
-    sessionFiles: SessionFile[] = []
+    bookNode: BookNodeModel
   ) => {
     if (this.turtleExamplePromiseResRej) {
       this.turtleExamplePromiseResRej.rej("Turtle drawing cancelled");
@@ -196,7 +195,7 @@ class PythonCodeRunner implements ICodeRunner {
 
     return new Promise<string>((res, rej) => {
       this.turtleExamplePromiseResRej = { res, rej };
-      this.runTurtleExample(additionalFilesLoaded, bookNode, sessionFiles);
+      this.runTurtleExample(additionalFilesLoaded, bookNode);
     });
   };
 
@@ -492,8 +491,7 @@ class PythonCodeRunner implements ICodeRunner {
 
   private runTurtleExample = (
     additionalFilesLoaded: AdditionalFilesContents,
-    bookNode: BookNodeModel,
-    sessionFiles: SessionFile[] = []
+    bookNode: BookNodeModel
   ) => {
     const tests = bookNode.tests || [];
     if (!tests || !this.worker || this.state !== CodeRunnerState.READY) {
@@ -542,7 +540,7 @@ class PythonCodeRunner implements ICodeRunner {
     this.onStateChanged.fire(this.state);
   };
 
-  private restartWorker = (force?: boolean, msg?: string) => {
+  private restartWorker = (_?: boolean, msg?: string) => {
     this.onTurtle.fire({ id: -1, msg: '{"action": "stop"}' });
     if (this.state === CodeRunnerState.RESTARTING_WORKER) {
       return; // already restarting

@@ -34,7 +34,7 @@ class VSCodeBookStore implements IEditableBookStore {
         );
       }
 
-      return new Promise<IBookFetchResult>((r, e) => {
+      return new Promise<IBookFetchResult>((_, e) => {
         e(this.error);
       });
     },

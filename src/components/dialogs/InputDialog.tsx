@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
@@ -46,7 +46,7 @@ const InputDialog = (props: InputDialogProps) => {
             renderInput={(params) => (
               <TextField {...params} label="Book" variant="standard" />
             )}
-            onChange={(e, n) => setValue(n || "")}
+            onChange={(_, n) => setValue(n || "")}
             value={value || ""}
             renderOption={(lprops, option) => (
               <li {...lprops}>

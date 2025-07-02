@@ -1,4 +1,4 @@
-import React, { MouseEvent, useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button, Card, CardContent, CardActions, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -24,7 +24,7 @@ const BookUpload = (props: BookUploadProps) => {
   const { acceptedFiles, getRootProps, getInputProps, isFocused } = useDropzone(
     {
       accept: {
-        "application/zip": [".zip"]
+        "application/zip": [".zip"],
       },
       maxFiles: 1,
     }
@@ -59,7 +59,7 @@ const BookUpload = (props: BookUploadProps) => {
     [isFocused, focusedStyle, file, theme]
   );
 
-  const uploadClicked = (event: MouseEvent) => {
+  const uploadClicked = () => {
     if (file) {
       props.onBookUploaded(file, props.isForEditing || false);
     }

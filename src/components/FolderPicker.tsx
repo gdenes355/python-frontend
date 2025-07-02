@@ -1,6 +1,6 @@
 import { Button, Card, CardActions, CardContent } from "@mui/material";
 import { Box } from "@mui/system";
-import React, { useState } from "react";
+import { useState } from "react";
 
 type FolderPickerProps = {
   onFolderPicked: (folder: FileSystemDirectoryHandle) => void;

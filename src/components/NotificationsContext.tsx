@@ -1,5 +1,6 @@
 import React, { useEffect, useImperativeHandle, useRef } from "react";
-import { Alert, AlertColor, Snackbar, Stack } from "@mui/material";
+import { Alert, Snackbar, Stack } from "@mui/material";
+import type { AlertColor } from "@mui/material";
 import { createContext, useCallback, useState } from "react";
 
 type NotificationType = {
@@ -43,7 +44,7 @@ type NotificationBarRef = {
   addMessage: (message: string, severity: AlertColor) => void;
 };
 
-const NotificationBar = React.forwardRef<NotificationBarRef>((props, ref) => {
+const NotificationBar = React.forwardRef<NotificationBarRef>((_, ref) => {
   const [messages, setMessages] = useState<NotificationType[]>([]);
   const messagesRef = useRef(messages);
   useEffect(() => {

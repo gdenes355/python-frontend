@@ -5,7 +5,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import SessionContext from "./SessionContext";
+import SessionContext from "./contexts/SessionContext";
 import { Outlet } from "react-router-dom";
 
 type AdminWrapperProps = {
@@ -13,7 +13,7 @@ type AdminWrapperProps = {
   children?: React.ReactNode;
 };
 
-type OutletContextType = {
+export type OutletContextType = {
   request: (req: string, withCache?: boolean) => Promise<any>;
   urlBase: string;
 };
@@ -25,7 +25,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
 
   useEffect(() => {
     if (authorised) return;
-    let headers = new Headers();
+    const headers = new Headers();
     headers.append("Authorization", `Bearer ${sessionContext.token}`);
     fetch(`${props.urlBase}/api/admin/token-test/`, { headers })
       .then((response) => {
@@ -68,7 +68,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             res(cached);
           }
         }
-        let headers = new Headers();
+        const headers = new Headers();
         headers.append("Authorization", `Bearer ${sessionContext.token}`);
         fetch(`${props.urlBase}/${req}`, { headers })
           .then((resp: Response) => {
@@ -83,7 +83,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
             if (withCache) requestRef.current.set(req, data.data);
             res(data.data);
           })
-          .catch((e) => rej(`Failed to fetch ${req}`));
+          .catch(() => rej(`Failed to fetch ${req}`));
       }),
     [sessionContext.token, props.urlBase]
   );
@@ -104,4 +104,3 @@ const AdminWrapper = (props: AdminWrapperProps) => {
 };
 
 export default AdminWrapper;
-export { OutletContextType };

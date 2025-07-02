@@ -60,13 +60,13 @@ const BookContents = (props: BookContentsProps) => {
   const [expandedIds, setExpandedIds] = useState<string[]>([]);
   const [nodeMap, setNodeMap] = useState<Map<string, BookNodeModel>>(new Map());
 
-  const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+  const handleToggle = (_: React.SyntheticEvent, nodeIds: string[]) => {
     setExpandedIds(nodeIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeId: string | null) => {
+  const handleSelect = (_: React.SyntheticEvent, nodeId: string | null) => {
     if (!nodeId) return;
-    let selectedNode = nodeMap.get(nodeId);
+    const selectedNode = nodeMap.get(nodeId);
     if (selectedNode) {
       props.onNodeSelected(selectedNode);
     }

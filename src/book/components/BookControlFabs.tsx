@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Fab } from "@mui/material";
 
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";

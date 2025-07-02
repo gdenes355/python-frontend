@@ -1,9 +1,8 @@
-import React from "react";
 import { useMsal, MsalProvider, useIsAuthenticated } from "@azure/msal-react";
 import { PublicClientApplication } from "@azure/msal-browser";
-import { loginRequest } from "../authConfig";
-import { msalConfig } from "../authConfig";
-import LoginInfo from "../LoginInfo";
+import { loginRequest } from "../models/authConfig";
+import { msalConfig } from "../models/authConfig";
+import type { LoginInfo } from "../models/LoginInfo";
 import { useEffect, useState } from "react";
 import LoginCard from "./components/LoginCard";
 import useTokenExchange from "./hooks/useTokenExchange";

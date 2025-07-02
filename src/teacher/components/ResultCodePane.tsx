@@ -7,7 +7,7 @@ import {
   TextField,
   Tooltip,
 } from "@mui/material";
-import React, { useContext, useMemo, useRef, useState } from "react";
+import { useContext, useMemo, useRef, useState } from "react";
 import { ChallengeResultComplexModel } from "../Models";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
@@ -23,7 +23,7 @@ import RateReviewIcon from "@mui/icons-material/RateReview";
 
 import { OutletContextType } from "../../auth/AdminWrapper";
 import { useOutletContext } from "react-router-dom";
-import SessionContext from "../../auth/SessionContext";
+import SessionContext from "../../auth/contexts/SessionContext";
 import NotificationsContext from "../../components/NotificationsContext";
 
 type ResultCodePaneProps = {
@@ -205,7 +205,7 @@ const ResultCard = (props: ResultCardProps) => {
           {result["correct-code"] ? (
             <Tooltip title="Show last correct submission">
               <IconButton
-                onClick={(e) => {
+                onClick={() => {
                   setCode(result["correct-code"] || "");
                   if (result["correct-date"])
                     setDate(new Date(result["correct-date"]));
@@ -219,7 +219,7 @@ const ResultCard = (props: ResultCardProps) => {
           {result["wrong-code"] ? (
             <Tooltip title="Show last incorrect submission">
               <IconButton
-                onClick={(e) => {
+                onClick={() => {
                   setCode(result["wrong-code"] || "");
                   if (result["wrong-date"])
                     setDate(new Date(result["wrong-date"]));
@@ -249,7 +249,7 @@ const ResultCard = (props: ResultCardProps) => {
       ) : !comment ? (
         <Tooltip title="Add comment">
           <IconButton
-            onClick={(e) => setCommentVisible(true)}
+            onClick={() => setCommentVisible(true)}
             sx={{ float: "right" }}
             size="small"
           >

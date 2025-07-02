@@ -2,11 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import TeacherContainer from "./TeacherContainer";
 
 import { useOutletContext } from "react-router-dom";
-import SessionContext from "../auth/SessionContext";
 import { OutletContextType } from "../auth/AdminWrapper";
 import { Button, Divider, Link, Paper, Tooltip } from "@mui/material";
 import { Stack } from "@mui/system";
 import DeleteDialog from "../components/dialogs/DeleteDialog";
+import SessionContext from "../auth/contexts/SessionContext";
 import NotificationsContext from "../components/NotificationsContext";
 
 const Tools = () => {
@@ -111,7 +111,7 @@ const Tools = () => {
           </Stack>
         </Paper>
 
-        <Paper elevation={4} sx={{ padding: 1, marginTop: 2 }}>
+        <Paper elevation={4} sx={{ padding: 1, marginTop: 2, marginBottom: 2 }}>
           <h2 style={{ margin: 0 }}>Available books</h2>
           <ul>
             {books?.map((book) => {

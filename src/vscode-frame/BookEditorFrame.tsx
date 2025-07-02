@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import BookEditorDrawer from "../book/components/BookEditorDrawer";
 import VSCodeBookStore from "./VSCodeBookStore";
 import BookNodeModel from "../models/BookNodeModel";

@@ -15,12 +15,12 @@ import ChallengeContext from "../../ChallengeContext";
 import VsThemeContext from "../../../themes/VsThemeContext";
 import { Backdrop, CircularProgress } from "@mui/material";
 
-const STANDALONE_BUILD = false;
-if (STANDALONE_BUILD) {
+if (import.meta.env.VITE_STANDALONE_BUILD === "true") {
   loader.config({
     paths: { vs: "/static/cdn-mirror/monaco-editor@0.52.2/min/vs" },
   });
 }
+
 type PyEditorProps = {
   canRun: boolean;
   canEdit?: boolean | undefined;
@@ -166,7 +166,7 @@ const PyEditor = React.forwardRef<PyEditorHandle, PyEditorProps>(
         ],
         contextMenuGroupId: "navigation",
         contextMenuOrder: 1,
-        run: (ed) => {
+        run: () => {
           download();
         },
       });

@@ -292,7 +292,7 @@ const Challenge = (props: ChallengeProps) => {
                   : undefined,
                 sessionFiles
               )
-              .then((result) => {
+              .then(() => {
                 if (props.bookNode?.isExample) {
                   onReportResult([{ outcome: true }], code, bookNode);
                 }
@@ -356,7 +356,7 @@ const Challenge = (props: ChallengeProps) => {
         }
       },
       "download-code": () => pyEditorRef.current?.download(),
-      "handle-file-read": (e: ProgressEvent<FileReader>) => {
+      "handle-file-read": () => {
         if (fileReader.current?.result) {
           pyEditorRef.current?.setValue(fileReader.current.result.toString());
           fileReader.current = null;

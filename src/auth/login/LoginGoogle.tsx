@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
-import LoginInfo from "../LoginInfo";
+import type { LoginInfo } from "../models/LoginInfo";
 import { useEffect, useState } from "react";
 import LoginCard from "./components/LoginCard";
 import useTokenExchange from "./hooks/useTokenExchange";

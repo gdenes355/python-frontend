@@ -1,4 +1,4 @@
-import React, {
+import {
   useCallback,
   useContext,
   useEffect,
@@ -6,19 +6,20 @@ import React, {
   useRef,
   useState,
 } from "react";
-import SessionContext, { WsResponse } from "./SessionContext";
-import Login from "./login/Login";
-import LoginInfo from "./LoginInfo";
-import { absolutisePath } from "../utils/pathTools";
+import SessionContext from "../contexts/SessionContext";
+import type { WsResponse } from "../contexts/SessionContext";
+import Login from "../login/Login";
+import type { LoginInfo } from "../models/LoginInfo";
+import { absolutisePath } from "../../utils/pathTools";
 import { useLocation, Outlet } from "react-router-dom";
-import NotificationsContext from "../components/NotificationsContext";
+import NotificationsContext from "../../components/NotificationsContext";
 
-type SessionWrapperProps = {};
-
+// eslint-disable-next-line no-var
 var wsCounter = 0;
+// eslint-disable-next-line no-var
 var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 
-const SessionWrapper = (props: SessionWrapperProps) => {
+const SessionWrapper = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
 
@@ -58,11 +59,11 @@ const SessionWrapper = (props: SessionWrapperProps) => {
       }
 
       // otherwise to avoid leaking the token, check that the queryBookPath is from the same origin as the bookPath
-      let queryBookPathAbs = absolutisePath(
+      const queryBookPathAbs = absolutisePath(
         queryBookPath,
         window.location.origin
       );
-      let bookPathAbs = absolutisePath(bookPath, window.location.origin);
+      const bookPathAbs = absolutisePath(bookPath, window.location.origin);
       if (new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin) {
         console.log("force logout...", queryBookPathAbs, bookPathAbs);
         logout();
@@ -106,9 +107,9 @@ const SessionWrapper = (props: SessionWrapperProps) => {
 
   const onWsMessage = useMemo(
     () => (event: WebSocketEventMap["message"]) => {
-      let msg = JSON.parse(event.data);
+      const msg = JSON.parse(event.data);
       if (msg.i !== undefined && wsMap.has(msg.i)) {
-        let future = wsMap.get(msg.i);
+        const future = wsMap.get(msg.i);
         if (future) {
           future(msg);
         }
@@ -121,28 +122,25 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     []
   );
   const onWsError = useMemo(
-    () => (event: WebSocketEventMap["error"]) => {
+    () => () => {
       wsMap.forEach((then) => then({ res: "error" }));
     },
     []
   );
-  const onWsOpen = useCallback(
-    (event: WebSocketEventMap["open"]) => {
-      console.log("WS OPEN");
-      if (bookPath && token) {
-        setWsOpen(true);
-        ws.current?.send(
-          JSON.stringify({
-            cmd: "welcome",
-            Authorization: token,
-            book: bookPath,
-          })
-        );
-        wsCounter = 0;
-      }
-    },
-    [bookPath, token]
-  );
+  const onWsOpen = useCallback(() => {
+    console.log("WS OPEN");
+    if (bookPath && token) {
+      setWsOpen(true);
+      ws.current?.send(
+        JSON.stringify({
+          cmd: "welcome",
+          Authorization: token,
+          book: bookPath,
+        })
+      );
+      wsCounter = 0;
+    }
+  }, [bookPath, token]);
   const onWsClose = useMemo(
     () => (event: WebSocketEventMap["close"]) => {
       console.log("WS CLOSE", ws.current === event.target, event.target);
@@ -205,7 +203,7 @@ const SessionWrapper = (props: SessionWrapperProps) => {
     msg.i = wsCounter;
     wsCounter = (wsCounter + 1) % 10000;
     if (then) {
-      res = new Promise<string>((resp, rej) => {
+      res = new Promise<string>((resp) => {
         wsMap.set(msg.i, resp);
       }).then(then);
     }

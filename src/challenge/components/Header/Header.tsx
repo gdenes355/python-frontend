@@ -3,7 +3,7 @@ import React from "react";
 import { useContext } from "react";
 import HeaderBar from "../../../components/HeaderBar";
 import BookNodeModel from "../../../models/BookNodeModel";
-import SessionContext from "../../../auth/SessionContext";
+import SessionContext from "../../../auth/contexts/SessionContext";
 import HeaderMenu from "./HeaderMenu";
 import { Grid2, IconButton } from "@mui/material";
 
@@ -108,6 +108,7 @@ const Header = (props: HeaderProps) => {
                     }
                   : undefined
               }
+              canReset={props.codeRunner.state === CodeRunnerState.READY}
             />
           )
         }
@@ -127,9 +128,7 @@ const Header = (props: HeaderProps) => {
           />
         ) : (
           <>
-            <HeaderButtons
-              canReset={props.codeRunner.state === CodeRunnerState.READY}
-            />
+            <HeaderButtons />
             {authContext.token ? (
               <Grid2>
                 <SessionWsStateIndicator />

@@ -1,6 +1,6 @@
+import { SessionContextType } from "../../auth/contexts/SessionContext";
 import BookNodeModel from "../../models/BookNodeModel";
 import { AllTestResults } from "../../models/Tests";
-import { SessionContextType } from "../../auth/SessionContext";
 
 type IBookFetchResult = {
   book: BookNodeModel;
@@ -14,7 +14,7 @@ interface IBookFetcher {
   fetchBook: (authContext?: SessionContextType) => Promise<IBookFetchResult>;
 }
 
-const clearBook = (b: BookNodeModel) => {
+export const clearBook = (b: BookNodeModel) => {
   if (b.bookMainUrl) {
     b.bookMainUrl = undefined;
   }
@@ -28,4 +28,4 @@ const clearBook = (b: BookNodeModel) => {
 };
 
 export default IBookFetcher;
-export { IBookFetchResult, clearBook };
+export { IBookFetchResult };

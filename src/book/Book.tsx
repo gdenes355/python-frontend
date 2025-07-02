@@ -22,7 +22,7 @@ import EditableBookStore, {
 import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
 import Challenge from "../challenge/Challenge";

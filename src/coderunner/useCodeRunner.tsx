@@ -18,7 +18,7 @@ import {
   DebugFinishedData,
 } from "./CodeRunner";
 import DebugSetup from "./DebugSetup";
-import { throttle } from "lodash";
+import throttle from "lodash/throttle";
 import DebugContext from "./DebugContext";
 
 type CodeRunnerProps = {

@@ -33,7 +33,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ExcelDownloadIcon from "../icons/ExcelDownloadIcon";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
 import InputDialog from "../components/dialogs/InputDialog";
 import BookNodeModel from "../models/BookNodeModel";
@@ -215,7 +215,7 @@ const ThisYear = () => {
     bookFetcher
       .fetchBook(sessionContext)
       .then((res) => setBook(res.book))
-      .catch((e) => {
+      .catch(() => {
         setBook(undefined);
         setError("Failed to load book from server");
       });
@@ -581,9 +581,9 @@ const ThisYear = () => {
                   <Autocomplete
                     size="small"
                     value={activeGroup || null}
-                    onChange={(e, n) => setActiveGroup(n || undefined)}
+                    onChange={(_, n) => setActiveGroup(n || undefined)}
                     inputValue={groupInputValue}
-                    onInputChange={(e, newValue) =>
+                    onInputChange={(_, newValue) =>
                       setGroupInputValue(newValue)
                     }
                     options={groups}
@@ -609,7 +609,7 @@ const ThisYear = () => {
                   <Autocomplete
                     size="small"
                     value={activeBook || null}
-                    onChange={(e, n) => setActiveBook(n || undefined)}
+                    onChange={(_, n) => setActiveBook(n || undefined)}
                     options={booksInGroup.sort((a, b) =>
                       a.enabled !== b.enabled
                         ? a.enabled

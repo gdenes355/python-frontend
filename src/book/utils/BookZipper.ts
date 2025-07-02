@@ -2,7 +2,7 @@ import BookNodeModel from "../../models/BookNodeModel";
 import JSZip from "jszip";
 import { absolutisePath } from "../../utils/pathTools";
 import IBookFetcher, { clearBook } from "./IBookFetcher";
-import { SessionContextType } from "../../auth/SessionContext";
+import { SessionContextType } from "../../auth/contexts/SessionContext";
 
 class BookZipper {
   constructor(fetcher: IBookFetcher) {
