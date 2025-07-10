@@ -1,10 +1,11 @@
 const STANDALONE_BUILD = false;
 const pyodideImportPath = STANDALONE_BUILD
-  ? "/static/cdn-mirror/pyodide/v0.22.1/full/pyodide.js"
-  : "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js";
+  ? "/static/cdn-mirror/pyodide/v0.28.0/full/pyodide.js"
+  : "https://cdn.jsdelivr.net/pyodide/v0.28.0/full/pyodide.js";
+
 const pyodideIndexUrl = STANDALONE_BUILD
-  ? "/static/cdn-mirror/pyodide/v0.22.1/full/"
-  : "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/";
+  ? "/static/cdn-mirror/pyodide/v0.28.0/full/"
+  : "https://cdn.jsdelivr.net/pyodide/v0.28.0/full/";
 
 importScripts(pyodideImportPath);
 
@@ -30,7 +31,11 @@ onmessage = function (e) {
       if (e.data.initCode) {
         self.pyodide.globals.get("pyexec")(e.data.initCode, [], []);
       }
-      self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints, e.data.watches);
+      self.pyodide.globals.get("pydebug")(
+        e.data.code,
+        e.data.breakpoints,
+        e.data.watches
+      );
     } catch (err) {
       if (err.message.includes("KeyboardInterrupt")) {
         reason = "interrupt";
