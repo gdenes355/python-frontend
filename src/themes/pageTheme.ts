@@ -5,14 +5,14 @@ const pageTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          //borderRadius: 0,
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          //borderRadius: 0,
         },
       },
     },
@@ -33,14 +33,14 @@ const darkTheme = createTheme({
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          //borderRadius: 0,
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 0,
+          //borderRadius: 0,
         },
       },
     },

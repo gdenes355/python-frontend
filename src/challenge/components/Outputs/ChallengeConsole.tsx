@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import Console from "../../../components/Console";
 import ChallengeContext from "../../ChallengeContext";
 

@@ -1,11 +1,11 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import BookNodeModel from "../models/BookNodeModel";
 import { Box } from "@mui/material";
 import HeaderBar from "../components/HeaderBar";
 import Guide from "../components/Guide";
 import BookControlFabs from "../book/components/BookControlFabs";
 import IBookFetcher from "../book/utils/IBookFetcher";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
 
 type GuideOnlyChallengeProps = {
   guidePath: string;
@@ -36,7 +36,7 @@ const GuideOnlyChallenge = (props: GuideOnlyChallengeProps) => {
           setMd(text);
         }
       })
-      .catch((e) => {
+      .catch(() => {
         setError(true);
       });
     return () => ac?.abort();

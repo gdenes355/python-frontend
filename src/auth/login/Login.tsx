@@ -1,5 +1,4 @@
-import React from "react";
-import LoginInfo from "../LoginInfo";
+import type { LoginInfo } from "../models/LoginInfo";
 
 import "./Login.css";
 import LoginMsal from "./LoginMsal";

@@ -7,8 +7,8 @@ import {
   FormControlLabel,
   Switch,
   ListItemIcon,
-  Button,
   Grid2,
+  IconButton,
 } from "@mui/material";
 
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -18,7 +18,8 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import Menu from "./Menu";
 
 import VsThemeContext from "../themes/VsThemeContext";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
+import { useNavigate } from "react-router-dom";
 
 type HeaderBarProps = {
   title?: string;
@@ -29,62 +30,87 @@ type HeaderBarProps = {
 };
 
 const HeaderBar = (props: HeaderBarProps) => {
-  const themeContext = useContext(VsThemeContext);
+  const { theme, handleThemeChange } = useContext(VsThemeContext);
   const authContext = useContext(SessionContext);
+  const navigate = useNavigate();
 
   return (
     <Toolbar
       variant="dense"
-      sx={{ paddingTop: "2px", paddingRight: "2px !important" }}
+      sx={{
+        paddingTop: "2px",
+        paddingRight: "2px !important",
+        boxShadow:
+          theme === "vs-light"
+            ? "0px 2px 4px rgba(0, 0, 0, 0.1)"
+            : "0px 2px 4px #9bc1c3",
+        borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
+        marginLeft: "-10px",
+        zIndex: 100,
+        backgroundColor: theme === "vs-dark" ? "#076669" : "#fff",
+      }}
     >
-      <Grid2 container spacing={2} display="flex" sx={{ width: "100%" }}>
+      <Grid2
+        container
+        spacing={2}
+        display="flex"
+        sx={{ width: "100%" }}
+        alignItems="center"
+      >
         <Grid2>
-          <Box id="logo">
-            {/* placeholder if container site wants to replace it */}
-            <a href="/">
-              <img src="/logo40.png" alt="logo" style={{ width: "40px" }} />
-            </a>
+          <Box
+            id="logo"
+            sx={{
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <img
+              src="/logo40.png"
+              alt="logo"
+              style={{ width: "40px", cursor: "pointer" }}
+              onClick={() => navigate("/")}
+            />
           </Box>
         </Grid2>
         <Grid2
           sx={{
             verticalAlign: "middle",
-            color: `color-mix(in srgb, #076669 75%, ${
-              themeContext.theme === "vs-dark" ? "#fff" : "#000"
-            })`,
+            color: theme === "vs-light" ? "#076669" : "#fff",
             fontWeight: "bold",
             marginLeft: 2,
             margin: "auto",
             fontSize: "1.2rem",
           }}
         >
-          <span>{props.title || ""}</span>
+          <span>{props.title || "PythonSponge"}</span>
         </Grid2>
         <Grid2 display="flex" flexGrow={1}>
           <div>{props.leftAlignedChilden || null}</div>
         </Grid2>
 
-        <Grid2 container display="flex">
+        <Grid2 container display="flex" alignItems="center">
           {props.children}
           <Menu
             button={
-              <Button variant="contained" color="primary">
+              <IconButton sx={{ mr: 1 }} size="small">
                 <MoreVertIcon />
-              </Button>
+              </IconButton>
             }
           >
             <MenuItem>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={themeContext.theme === "vs-dark"}
+                    checked={theme === "vs-dark"}
                     onChange={() => {
-                      themeContext.handleThemeChange(
-                        themeContext.theme === "vs-dark"
-                          ? "vs-light"
-                          : "vs-dark"
+                      handleThemeChange(
+                        theme === "vs-dark" ? "vs-light" : "vs-dark"
                       );
                     }}
+                    size="small"
                   />
                 }
                 label="Dark mode"

@@ -1,6 +1,6 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Button, Grid2, Box, Stack, IconButton } from "@mui/material";
-import { DevicesFoldRounded } from "@mui/icons-material";
+import DevicesFoldRounded from "@mui/icons-material/DevicesFoldRounded";
 import TestResultsIndicator from "../../../components/TestResultIndicator";
 import { TestResults } from "../../../models/Tests";
 import RunSplitButton from "../../../components/RunSplitButton";

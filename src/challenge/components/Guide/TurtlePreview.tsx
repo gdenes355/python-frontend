@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import ChallengeContext from "../../ChallengeContext";
 import { Skeleton } from "@mui/material";
 

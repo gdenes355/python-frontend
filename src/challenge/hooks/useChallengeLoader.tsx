@@ -2,7 +2,9 @@ import { useCallback, useContext, useEffect, useRef, useState } from "react";
 import IBookFetcher from "../../book/utils/IBookFetcher";
 
 import ChallengeTypes from "../../models/ChallengeTypes";
-import SessionContext, { SessionContextType } from "../../auth/SessionContext";
+import SessionContext, {
+  SessionContextType,
+} from "../../auth/contexts/SessionContext";
 import {
   AdditionalFiles,
   AdditionalFilesContents,

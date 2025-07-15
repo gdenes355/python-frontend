@@ -1,14 +1,10 @@
 import React, { useContext } from "react";
-import { Grid2, IconButton, Button } from "@mui/material";
-import { FileDownload } from "@mui/icons-material";
+import { Grid2, IconButton } from "@mui/material";
+import FileDownload from "@mui/icons-material/FileDownload";
 import FileUploadControl from "../../../components/FileUploadControl";
 import ChallengeContext from "../../ChallengeContext";
 
-type HeaderButtonsProps = {
-  canReset?: boolean;
-};
-
-const HeaderButtons = (props: HeaderButtonsProps) => {
+const HeaderButtons = () => {
   const challengeContext = useContext(ChallengeContext);
   return (
     <React.Fragment>
@@ -23,16 +19,6 @@ const HeaderButtons = (props: HeaderButtonsProps) => {
         >
           <FileDownload />
         </IconButton>
-      </Grid2>
-      <Grid2>
-        <Button
-          variant="outlined"
-          color="error"
-          disabled={!props.canReset}
-          onClick={() => challengeContext?.actions["reset-code"]()}
-        >
-          Reset
-        </Button>
       </Grid2>
     </React.Fragment>
   );

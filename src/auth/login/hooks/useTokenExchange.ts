@@ -1,6 +1,6 @@
 import { useCallback, useContext } from "react";
-import LoginInfo from "../../LoginInfo";
-import SessionContext from "../../SessionContext";
+import type { LoginInfo } from "../../models/LoginInfo";
+import SessionContext from "../../contexts/SessionContext";
 
 const useTokenExchange = ({ info }: { info: LoginInfo }) => {
   const sessionContext = useContext(SessionContext);

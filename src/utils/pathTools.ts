@@ -1,10 +1,10 @@
 const absoluteRegex = new RegExp("^(?:[a-z]+:)?//", "i");
 
-function isAbsoluteAddress(path: string) {
+export function isAbsoluteAddress(path: string) {
   return absoluteRegex.test(path);
 }
 
-function absolutisePath(filePath: string, rootPath: string | URL) {
+export function absolutisePath(filePath: string, rootPath: string | URL) {
   // if filepath is a relative path, then transform it to an absolute path using bookPath
   if (absoluteRegex.test(filePath)) {
     return filePath;
@@ -13,9 +13,6 @@ function absolutisePath(filePath: string, rootPath: string | URL) {
   }
 }
 
-function splitToParts(path: string) {
-  let parts = path.split("/");
-  return parts.filter((x) => x !== "." && x);
+export function splitToParts(path: string) {
+  return path.split("/").filter((x) => x !== "." && x);
 }
-
-export { isAbsoluteAddress, absolutisePath, splitToParts };
