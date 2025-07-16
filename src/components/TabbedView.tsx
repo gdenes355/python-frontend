@@ -93,7 +93,7 @@ const TabbedView = React.forwardRef<TabbedViewHandle, TabbedViewProps>(
           <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Tabs
               value={actualCurrent}
-              onChange={(evt, newVal) => setCurrentTab(newVal)}
+              onChange={(_, newVal) => setCurrentTab(newVal)}
               aria-label="Output tabs"
             >
               {props.panes.map((pane) => (

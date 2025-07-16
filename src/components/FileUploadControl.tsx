@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { Box, IconButton } from "@mui/material";
-import { FileUpload } from "@mui/icons-material";
+import FileUpload from "@mui/icons-material/FileUpload";
 
 type FileUploadControlProps = {
   onUpload?: (file: File) => void;

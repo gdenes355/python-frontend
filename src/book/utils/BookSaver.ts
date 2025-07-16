@@ -25,7 +25,7 @@ const saveNode = (
 
   // saving the additional files or solution files
   let updatedFiles = new Map(
-    bookNode.additionalFiles?.map((file, index) => {
+    bookNode.additionalFiles?.map((file) => {
       return [
         file,
         displayedAdditionalFiles?.get(file.filename) ||

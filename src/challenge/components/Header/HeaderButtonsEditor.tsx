@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import FileUploadControl from "../../../components/FileUploadControl";
-import { FileDownload } from "@mui/icons-material";
+import FileDownload from "@mui/icons-material/FileDownload";
 import ChallengeContext from "../../ChallengeContext";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 

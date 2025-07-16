@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from "react";
-import SessionContext from "../auth/SessionContext";
+import { useContext, useEffect, useState } from "react";
+import SessionContext from "../auth/contexts/SessionContext";
 import { Alert, Container, ListItemButton } from "@mui/material";
 import HeaderBar from "../components/HeaderBar";
 import { useNavigate } from "react-router-dom";

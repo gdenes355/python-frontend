@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/material";
 import React, { useState } from "react";
-import LoginInfo from "../../LoginInfo";
+import type { LoginInfo } from "../../models/LoginInfo";
 
 type LoginCardProps = {
   accountName?: string;

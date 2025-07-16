@@ -1,5 +1,5 @@
 import { createContext } from "react";
-import LoginInfo from "./LoginInfo";
+import type { LoginInfo } from "../models/LoginInfo";
 
 type WsResponse = (msg: string) => void;
 
@@ -19,19 +19,19 @@ type SessionContextType = {
   unregisterAdditionalWsHandler?: () => void;
 };
 
-const defContext: SessionContextType = {
+const defaultSessionContext: SessionContextType = {
   token: "",
   requiresAuth: false,
   bookPath: "",
   resultsEndpoint: "",
   logout: () => {},
-  login: (info: LoginInfo) => {},
-  setToken: (token: string) => {},
+  login: () => {},
+  setToken: () => {},
   isLoggedIn: () => false,
   wsOpen: false,
 };
 
-const SessionContext = createContext(defContext);
+const SessionContext = createContext(defaultSessionContext);
 
 export default SessionContext;
-export { SessionContextType, WsResponse };
+export type { SessionContextType, WsResponse };

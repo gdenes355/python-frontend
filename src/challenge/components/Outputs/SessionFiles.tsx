@@ -96,7 +96,7 @@ const FileUploadControl = (props: FileUploadControlProps) => {
 };
 
 const SessionFiles = React.forwardRef<SessionFilesHandle, SessionFilesProps>(
-  (props, ref) => {
+  (props) => {
     // visual state
     const [addFileDialogOpen, setAddFileDialogOpen] = useState<boolean>(false);
 

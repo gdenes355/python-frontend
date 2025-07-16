@@ -10,7 +10,7 @@ type SessionFileViewRef = {};
 const SessionFileView = React.forwardRef<
   SessionFileViewRef,
   SessionFileViewProps
->((props, ref) => {
+>((props) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   if (props.file.isText) {

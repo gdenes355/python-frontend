@@ -1,4 +1,4 @@
-import LoginInfo from "./LoginInfo";
+import type { LoginInfo } from "./models/LoginInfo";
 
 class UnauthorisedError extends Error {
   private info: LoginInfo;

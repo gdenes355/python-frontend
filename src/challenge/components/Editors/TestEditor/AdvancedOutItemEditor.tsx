@@ -165,7 +165,7 @@ const AdvancedOutItemEditor = React.forwardRef<
         <ToggleButtonGroup
           size="small"
           value={ignore}
-          onChange={(e, v) => {
+          onChange={(_, v) => {
             setIgnore(v || []);
             props.onChange?.();
           }}

@@ -1,6 +1,6 @@
 type AuthProvider = "MSAL" | "GOOGLE";
 
-type LoginInfo = {
+export type LoginInfo = {
   clientId: string;
   tenantId: string;
   authProvider: AuthProvider;
@@ -11,5 +11,3 @@ type LoginInfo = {
   wsEndPoint: string;
   bookPath: string;
 };
-
-export default LoginInfo;

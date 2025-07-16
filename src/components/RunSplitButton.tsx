@@ -26,12 +26,12 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
   const challengeContext = useContext(ChallengeContext);
 
   const handleClick = () => {
-    let mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
+    const mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
     challengeContext?.actions["debug"](mode);
   };
 
   const handleMenuItemClick = (
-    event: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    _: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number
   ) => {
     setSelectedIndex(index);

@@ -30,7 +30,7 @@ const TeacherContainer = (props: TeacherContainerProps) => {
           leftAlignedChilden={
             <Tabs
               value={activeTab === "teacher" ? "index" : activeTab}
-              onChange={(event, newValue) => {
+              onChange={(_, newValue) => {
                 if (newValue === "index") navigate("/teacher");
                 else if (newValue === "local") navigate("/upload");
                 else navigate(`/teacher/${newValue}`);
