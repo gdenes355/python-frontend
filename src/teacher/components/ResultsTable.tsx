@@ -35,7 +35,7 @@ import ResultsTableRow, {
 } from "./ResultsTableRow";
 
 type ResultsTableProps = {
-  group?: ClassModel;
+  klass?: ClassModel;
   bookTitle?: string;
   book?: BookNodeModel;
   results?: Array<ResultsModel>;
@@ -109,7 +109,7 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
     const resultsProcessed = useMemo(
       () =>
         new Map(
-          props.group?.students.map((student) => {
+          props.klass?.students.map((student) => {
             let res = props.results?.length
               ? props.results?.filter((r) => r.user === student).at(0)
               : null;
@@ -132,10 +132,10 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
             ];
           })
         ),
-      [props.results, props.group, challengeInfo]
+      [props.results, props.klass, challengeInfo]
     );
 
-    if (!props.group) {
+    if (!props.klass) {
       return <p>Please pick a group to display results.</p>;
     }
 
@@ -220,7 +220,7 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
               </TableRow>
             </TableHead>
             <TableBody>
-              {props.group.students
+              {props.klass.students
                 .map((student) => {
                   const res = resultsProcessed.get(student);
                   const name = res?.results?.name || student;

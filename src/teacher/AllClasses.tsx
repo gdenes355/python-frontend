@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import TeacherContainer from "./TeacherContainer";
 import { useOutletContext } from "react-router-dom";
 import { OutletContextType } from "../auth/AdminWrapper";
@@ -16,12 +16,16 @@ const AllClasses = () => {
   const sessionContext = useContext(SessionContext);
   const notificationContext = useContext(NotificationsContext);
 
-  const [classes, setClasses] = React.useState<ClassModel[]>([]);
+  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
+  const [classes, setClasses] = useState<ClassModel[]>([]);
 
   const popupMenuRef = useRef<ClassDeletePopupMenuHandle>(null);
 
   useEffect(() => {
-    oc.request("api/admin/classes").then(setClasses);
+    setIsLoadingClasses(true);
+    oc.request("api/admin/classes")
+      .then(setClasses)
+      .finally(() => setIsLoadingClasses(false));
   }, [oc]);
 
   const patchClass = (className: string, active: boolean) => {
@@ -121,7 +125,7 @@ const AllClasses = () => {
           pagination: { paginationModel: { pageSize: 15 } },
         }}
         pageSizeOptions={[5, 15, 50, 100]}
-        loading={classes.length === 0}
+        loading={isLoadingClasses}
         disableRowSelectionOnClick
         slotProps={{
           row: {

@@ -105,7 +105,7 @@ class BookFetcher implements IBookFetcher {
     } else if (res.status === 404 || res.status === 500) {
       throw new NotFoundError(url);
     } else if (sessionContext?.token) {
-      let newToken = res.headers.get("new-token");
+      const newToken = res.headers.get("new-token");
       if (newToken) {
         console.log("refresh token");
         sessionContext.setToken(newToken);
