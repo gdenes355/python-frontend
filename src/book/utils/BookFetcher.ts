@@ -119,7 +119,6 @@ class BookFetcher implements IBookFetcher {
   ): Promise<IBookFetchResult> {
     return new Promise<IBookFetchResult>((r, e) => {
       const allRes: AllTestResults = emptyTestResults();
-
       this.fetch(this.bookPathAbsolute, authContext)
         .then((response) =>
           response

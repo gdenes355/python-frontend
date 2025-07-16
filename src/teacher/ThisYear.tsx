@@ -219,8 +219,7 @@ const ThisYear = () => {
     bookFetcher
       .fetchBook(sessionContext)
       .then((res) => setBook(res.book))
-      .catch((e) => {
-        console.log("ERROR HERE", e);
+      .catch(() => {
         setBook(undefined);
         setError("Failed to load book from server");
       });
