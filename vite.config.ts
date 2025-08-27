@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
 import { fileURLToPath } from "url";
@@ -34,40 +34,64 @@ const rewriteWorkerJs = (isStandalone: boolean) => {
 };
 
 // https://vite.dev/config/
-export default defineConfig({
-  server: {
-    port: 3000,
-    proxy: {
-      "/books": {
-        target: "http://localhost:5001",
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-      "/api": {
-        target: "http://localhost:5001",
-        changeOrigin: true,
-        rewrite: (path) => path,
-      },
-    },
-  },
-  build: {
-    outDir: "build",
-  },
-  plugins: [
-    {
-      name: "transform-pyworker",
-      apply: "build",
-      buildStart() {
-        rewriteWorkerJs(process.env.VITE_STANDALONE_BUILD === "true");
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "");
+  const isStandalone = env.VITE_STANDALONE_BUILD === "true";
+  return {
+    server: {
+      port: 3000,
+      proxy: {
+        "/books": {
+          target: "http://localhost:5001",
+          changeOrigin: true,
+          rewrite: (path) => path,
+        },
+        "/api": {
+          target: "http://localhost:5001",
+          changeOrigin: true,
+          rewrite: (path) => path,
+        },
       },
     },
-    {
-      name: "transform-pyworker-dev",
-      apply: "serve",
-      configureServer() {
-        rewriteWorkerJs(false);
-      },
+    build: {
+      outDir: "build",
     },
-    react({}),
-  ],
+    plugins: [
+      {
+        name: "transform-pyworker",
+        apply: "build",
+        buildStart() {
+          rewriteWorkerJs(isStandalone);
+        },
+      },
+      {
+        name: "transform-pyworker-dev",
+        apply: "serve",
+        configureServer() {
+          rewriteWorkerJs(false);
+        },
+      },
+      // 🔑 Conditional removal of cdn-mirror from output
+      {
+        name: "remove-cdn-mirror-when-not-standalone",
+        apply: "build",
+        writeBundle() {
+          if (!isStandalone) {
+            const target = path.resolve(__dirname, "build/static/cdn-mirror");
+            try {
+              fs.rmSync(target, { recursive: true, force: true });
+              console.log(
+                "[vite] Removed static/cdn-mirror (non-standalone build)."
+              );
+            } catch (e) {
+              // okay if it wasn't there
+            }
+          } else {
+            console.log("[vite] Keeping static/cdn-mirror (standalone build).");
+          }
+        },
+      },
+      react({}),
+    ],
+  };
 });
