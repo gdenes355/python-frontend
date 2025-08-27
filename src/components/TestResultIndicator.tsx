@@ -208,7 +208,7 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
   );
 
   if (props.testResults.length < 1) {
-    return <span></span>;
+    return <span style={{ width: "35px" }}></span>;
   }
 
   if (allPassing) {
