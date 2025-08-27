@@ -16,7 +16,7 @@ import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 
 import useCodeRunner, { CodeRunnerState } from "../coderunner/useCodeRunner";
 import BookUploadModal from "../book/components/BookUploadModal";
-import { Card, CardContent, Paper } from "@mui/material";
+import { Paper } from "@mui/material";
 import { Box } from "@mui/system";
 
 import { Allotment } from "allotment";
@@ -24,7 +24,6 @@ import "allotment/dist/style.css";
 
 import BookControlFabs from "../book/components/BookControlFabs";
 import DebugPane from "./components/Debug/DebugPane";
-import MainControls from "./components/Guide/MainControls";
 import ChallengeContext, { Actions, wrapActions } from "./ChallengeContext";
 import useChallengeLoader from "./hooks/useChallengeLoader";
 import "./Challenge.css";
@@ -41,6 +40,8 @@ import saveNode from "../book/utils/BookSaver";
 import SaveDialog, { SaveDialogProps } from "../components/dialogs/SaveDialog";
 import NotificationsContext from "../components/NotificationsContext";
 import { SessionFile } from "../models/SessionFile";
+
+import { GuideToggleFab } from "./components/GuideToggleFab";
 
 type ChallengeProps = {
   uid: string;
@@ -84,7 +85,7 @@ const Challenge = (props: ChallengeProps) => {
   const [editorFullScreen, setEditorFullScreen] = useState<boolean>(false);
   const [testResults, setTestResults] = useState<TestResults>([]);
   const [comment, setComment] = useState<string | undefined>(undefined);
-  const [guideMinimised, setGuideMinimised] = useState<boolean>(false);
+  const [isGuideMinimised, setGuideMinimised] = useState<boolean>(false);
   const [typ, setTyp] = useState<ChallengeTypes>(ChallengeTypes.py);
   const [usesFixedInput, setUsesFixedInput] = useState<boolean>(false);
   const [showBookUpload, setShowBookUpload] = useState<boolean>(false);
@@ -474,6 +475,10 @@ const Challenge = (props: ChallengeProps) => {
 
   return (
     <>
+      <GuideToggleFab
+        isGuideMinimised={isGuideMinimised}
+        onGuideDisplayToggle={() => setGuideMinimised((x) => !x)}
+      />
       {showBookUpload && props.onBookUploaded ? (
         <BookUploadModal
           visible={true}
@@ -518,6 +523,10 @@ const Challenge = (props: ChallengeProps) => {
                 setHasEdited((x) => x || editing);
               }}
               bookFetcher={props.fetcher}
+              canRunOnly={nodeTyp === "parsons" && !props.isEditing}
+              canSubmit={canSubmit}
+              testResults={testResults}
+              isAssessment={!!props.bookNode.isAssessment}
             />
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
@@ -561,7 +570,7 @@ const Challenge = (props: ChallengeProps) => {
               </Allotment.Pane>
               <Allotment.Pane
                 visible={getVisibilityWithHack(
-                  !editorFullScreen && !guideMinimised
+                  !editorFullScreen && !isGuideMinimised
                 )}
               >
                 <Allotment vertical className="challenge__right-pane">
@@ -574,23 +583,7 @@ const Challenge = (props: ChallengeProps) => {
                       height: "100%",
                     }}
                   >
-                    <Card sx={{ overflow: "visible" }}>
-                      <CardContent>
-                        <MainControls
-                          guideMinimised={guideMinimised}
-                          onGuideDisplayToggle={() =>
-                            setGuideMinimised((x) => !x)
-                          }
-                          canDebug={codeRunner.state === CodeRunnerState.READY}
-                          canRunOnly={nodeTyp === "parsons" && !props.isEditing}
-                          canSubmit={canSubmit}
-                          testResults={testResults}
-                          canKill={codeRunner.state === CodeRunnerState.RUNNING}
-                          isAssessment={!!props.bookNode.isAssessment}
-                        />
-                      </CardContent>
-                    </Card>
-                    {guideMinimised ? null : (
+                    {isGuideMinimised ? null : (
                       <ChallengeGuide
                         ref={guideRef}
                         challengeId={props.bookNode.id}
@@ -645,26 +638,6 @@ const Challenge = (props: ChallengeProps) => {
                 </Allotment>
               </Allotment.Pane>
             </Allotment>
-          </Box>
-          <Box>
-            {!guideMinimised ? undefined : (
-              <div>
-                <Card sx={{ overflow: "visible" }}>
-                  <CardContent>
-                    <MainControls
-                      guideMinimised={guideMinimised}
-                      onGuideDisplayToggle={() => setGuideMinimised((x) => !x)}
-                      canDebug={codeRunner.state === CodeRunnerState.READY}
-                      canRunOnly={nodeTyp === "parsons" && !props.isEditing}
-                      canSubmit={canSubmit}
-                      testResults={testResults}
-                      canKill={codeRunner.state === CodeRunnerState.RUNNING}
-                      isAssessment={!!props.bookNode.isAssessment}
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-            )}
           </Box>
         </Paper>
         <SaveDialog

@@ -21,6 +21,8 @@ import IBookFetcher from "../../../book/utils/IBookFetcher";
 import { saveAs } from "file-saver";
 import BookZipper from "../../../book/utils/BookZipper";
 import InfoDialog from "../../../components/dialogs/InfoDialog";
+import CodeRunnerControls from "./CodeRunnerControls";
+import { TestResults } from "../../../models/Tests";
 
 type HeaderProps = {
   title?: string;
@@ -31,6 +33,12 @@ type HeaderProps = {
   onSetUsesFixedInput: (usesFixedInput: boolean) => void;
   onSetShowBookUpload?: (showBookUpload: boolean) => void;
   codeRunner: CodeRunnerRef;
+
+  // for controls
+  canRunOnly: boolean;
+  canSubmit: boolean;
+  testResults: TestResults;
+  isAssessment: boolean;
 
   // for editing book
   hasEdited: boolean;
@@ -113,6 +121,13 @@ const Header = (props: HeaderProps) => {
           )
         }
       >
+        <CodeRunnerControls
+          codeRunner={props.codeRunner}
+          canRunOnly={props.canRunOnly}
+          canSubmit={props.canSubmit}
+          testResults={props.testResults}
+          isAssessment={props.isAssessment}
+        />
         {props.canReloadBook ? (
           <Grid2>
             <IconButton onClick={() => challengeContext?.actions["reload"]()}>
