@@ -1,8 +1,11 @@
 import type { LoginInfo } from "../models/LoginInfo";
 
 import "./Login.css";
-import LoginMsal from "./LoginMsal";
+
 import LoginGoogle from "./LoginGoogle";
+import { lazy } from "react";
+
+const LoginMsal = lazy(() => import("./LoginMsal"));
 
 type LoginProps = {
   info?: LoginInfo;

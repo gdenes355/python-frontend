@@ -12,9 +12,7 @@ import {
 } from "react-router-dom";
 import StartPage from "./StartPage";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
-import AllClasses from "./teacher/AllClasses";
-import Tools from "./teacher/Tools";
-import ThisYear from "./teacher/ThisYear";
+
 import BookEditorFrame from "./vscode-frame/BookEditorFrame";
 import StudentDashboard from "./studentDashboard/StudentDashboard";
 import HeaderBar from "./components/HeaderBar";
@@ -24,6 +22,9 @@ import Book from "./book/Book";
 import FolderPicker from "./components/FolderPicker";
 
 const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
+const AllClasses = lazy(() => import("./teacher/AllClasses"));
+const Tools = lazy(() => import("./teacher/Tools"));
+const ThisYear = lazy(() => import("./teacher/ThisYear"));
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);

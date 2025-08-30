@@ -56,6 +56,11 @@ The build is minified and the filenames include the hashes.
 Your site is ready to run even if you don't have access to the internet.\
 For ease of use, on Windows you can just launch `portable/PythonSponge.bat` which makes use of [civetweb](https://github.com/civetweb/civetweb) to host the site locally.
 
+
+#### `npx vite-bundle-analyzer`
+
+Builds the app and analysies the final bundle size. This can be helpful to detect large dependencies which are pulled in without consideration and can impact initial load time.
+
 # Learn More
 
 You can learn more in the the [React documentation](https://reactjs.org/).

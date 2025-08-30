@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useContext, useMemo, useRef, useState } from "react";
 import { ChallengeResultComplexModel } from "../Models";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   vs,
   vscDarkPlus,
@@ -25,6 +25,11 @@ import { OutletContextType } from "../../auth/AdminWrapper";
 import { useOutletContext } from "react-router-dom";
 import SessionContext from "../../auth/contexts/SessionContext";
 import NotificationsContext from "../../components/NotificationsContext";
+
+// register languages which are needed for syntax highlighting
+import py from "react-syntax-highlighter/dist/esm/languages/prism/python";
+
+SyntaxHighlighter.registerLanguage("python", py);
 
 type ResultCodePaneProps = {
   results: ChallengeResultComplexModel[];
