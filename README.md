@@ -60,6 +60,10 @@ For ease of use, on Windows you can just launch `portable/PythonSponge.bat` whic
 
 The standalone build only contains core Python packages. If you want to ship custom wheels in the bundle, then this command will fetch the appropriate wheels from cdn at build time. The list of packages are defined in `vite.config.ts` (with transitive closure downloading all dependencies recursively)
 
+#### `npx vite-bundle-analyzer`
+
+Builds the app and analysies the final bundle size. This can be helpful to detect large dependencies which are pulled in without consideration and can impact initial load time.
+
 # Learn More
 
 You can learn more in the the [React documentation](https://reactjs.org/).
