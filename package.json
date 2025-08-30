@@ -1,6 +1,6 @@
 {
   "name": "python-sponge",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "private": true,
   "type": "module",
   "description": "Client-side framework for learning Python and authoring Python challenges",
