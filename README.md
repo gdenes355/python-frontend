@@ -56,6 +56,9 @@ The build is minified and the filenames include the hashes.
 Your site is ready to run even if you don't have access to the internet.\
 For ease of use, on Windows you can just launch `portable/PythonSponge.bat` which makes use of [civetweb](https://github.com/civetweb/civetweb) to host the site locally.
 
+#### `npm run build-standalone-with-wheels`
+
+The standalone build only contains core Python packages. If you want to ship custom wheels in the bundle, then this command will fetch the appropriate wheels from cdn at build time. The list of packages are defined in `vite.config.ts` (with transitive closure downloading all dependencies recursively)
 
 #### `npx vite-bundle-analyzer`
 

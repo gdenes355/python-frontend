@@ -334,7 +334,7 @@ const Challenge = (props: ChallengeProps) => {
         }
       },
       "input-entered": (input: string | null) => {
-        let inputStr = input == null ? "" : input;
+        const inputStr = input == null ? "" : input;
         codeRunner?.input(inputStr, makeDebugSetup());
       },
       kill: () => codeRunner?.kill(),
@@ -393,6 +393,9 @@ const Challenge = (props: ChallengeProps) => {
               });
           })
           .catch(() => setTurtleExampleRendered(undefined));
+      },
+      "install-dependencies": (deps: string[]) => {
+        codeRunner?.installDependencies(deps);
       },
       reload: () => {
         forceReload();

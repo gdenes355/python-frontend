@@ -143,7 +143,7 @@ const ChallengeOutputs = React.forwardRef<
     return filesProperties;
   }, [props.tests, props.additionalFiles]);
 
-  let panes = [
+  const panes = [
     {
       label: "Console",
       content: (
@@ -152,6 +152,7 @@ const ChallengeOutputs = React.forwardRef<
           inputEnabled={
             props.codeRunner.state === CodeRunnerState.AWAITING_INPUT
           }
+          ready={props.codeRunner.state === CodeRunnerState.READY}
         />
       ),
       show: true,

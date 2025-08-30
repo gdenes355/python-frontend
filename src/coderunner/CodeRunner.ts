@@ -64,6 +64,9 @@ interface ICodeRunner {
   // send keyboard events to the running code
   keyDown: (data: React.KeyboardEvent) => void;
   keyUp: (data: React.KeyboardEvent) => void;
+
+  // install pip dependencies
+  installDependencies: (deps: string[]) => void;
 }
 
 type WorkerResponse = {
@@ -257,7 +260,7 @@ class PythonCodeRunner implements ICodeRunner {
       this.interruptBuffer[0] = 0;
     }
 
-    let additionalCode = this.additionalCodeForFiles(
+    const additionalCode = this.additionalCodeForFiles(
       additionalFiles,
       additionalFilesLoaded,
       sessionFiles
@@ -281,6 +284,27 @@ class PythonCodeRunner implements ICodeRunner {
         : CodeRunnerState.RUNNING;
     this.onStateChanged.fire(this.state);
     this.onCls.fire();
+  };
+
+  public installDependencies = (deps: string[]) => {
+    if (!this.worker || this.state !== CodeRunnerState.READY) {
+      this.debugPromiseResRej?.rej("cannot install dependencies");
+      console.log(
+        "installDependencies",
+        "not ready",
+        deps,
+        this.worker,
+        this.state
+      );
+      return;
+    }
+
+    this.worker.postMessage({
+      cmd: "install-deps",
+      deps,
+    });
+    this.state = CodeRunnerState.RUNNING;
+    this.onStateChanged.fire(this.state);
   };
 
   public kill = () => {
@@ -385,7 +409,7 @@ class PythonCodeRunner implements ICodeRunner {
     },
     "debug-finished": ({ reason }: DebugFinishedData) => {
       this.forceStopping = false;
-      let msg = {
+      const msg = {
         ok: "Program finished ok. Press run/debug to run again...",
         error:
           "Interrupted by error. Check the error message, then press run/debug to execute again...",
@@ -416,6 +440,11 @@ class PythonCodeRunner implements ICodeRunner {
       this.state = CodeRunnerState.READY;
       this.onStateChanged.fire(this.state);
     },
+    "install-deps-finished": () => {
+      this.forceStopping = false;
+      this.state = CodeRunnerState.READY;
+      this.onStateChanged.fire(this.state);
+    },
     cls: () => {
       this.onCls.fire();
     },
@@ -441,7 +470,7 @@ class PythonCodeRunner implements ICodeRunner {
     if (this.interruptBuffer) {
       this.interruptBuffer[0] = 0;
     }
-    let additionalCode = this.additionalCodeForFiles(
+    const additionalCode = this.additionalCodeForFiles(
       additionalFiles,
       additionalFilesLoaded,
       sessionFiles
@@ -505,11 +534,11 @@ class PythonCodeRunner implements ICodeRunner {
     let code = "";
     let inputs: string | (number | string)[] = "";
     // find the first turtle test
-    loop: for (let test of tests || []) {
+    loop: for (const test of tests || []) {
       if (!(test.out instanceof Array)) {
         continue;
       }
-      for (let out of test.out) {
+      for (const out of test.out) {
         if (out.typ === "t" && out.filename) {
           code = additionalFilesLoaded[out.filename];
           if (!code) {
@@ -557,7 +586,7 @@ class PythonCodeRunner implements ICodeRunner {
       "message",
       (msg: MessageEvent<WorkerResponse>) => {
         try {
-          // @ts-ignore  dynamic dispatch from worker
+          // @ts-expect-error dynamic dispatch from worker
           this.actions[msg.data.cmd](msg.data);
         } catch (e) {
           console.error(
@@ -595,7 +624,7 @@ class PythonCodeRunner implements ICodeRunner {
 
   public keyDown = (data: React.KeyboardEvent) => {
     if (this.keyDownBuffer) {
-      let code = keyToVMCode(data.key);
+      const code = keyToVMCode(data.key);
       if (code && code > 0 && code < 256) {
         this.keyDownBuffer[code] = 1;
       }
@@ -604,7 +633,7 @@ class PythonCodeRunner implements ICodeRunner {
 
   public keyUp = (data: React.KeyboardEvent) => {
     if (this.keyDownBuffer) {
-      let code = keyToVMCode(data.key);
+      const code = keyToVMCode(data.key);
       if (code && code > 0 && code < 256) {
         this.keyDownBuffer[code] = 0;
       }

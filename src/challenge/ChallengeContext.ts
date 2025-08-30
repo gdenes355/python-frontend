@@ -22,6 +22,7 @@ type Actions = {
   "save-node": () => void;
   "save-book": (book: string) => void;
   "draw-turtle-example": () => void;
+  "install-dependencies": (deps: string[]) => void;
 };
 
 interface IChallengeContext {
@@ -56,6 +57,8 @@ const wrapActions = (r: React.MutableRefObject<any>) => {
     "save-book": (book: string) => r.current["save-book"](book),
     "hide-turtle": () => r.current["hide-turtle"](),
     "draw-turtle-example": () => r.current["draw-turtle-example"](),
+    "install-dependencies": (deps: string[]) =>
+      r.current["install-dependencies"](deps),
   };
 };
 

@@ -1,12 +1,15 @@
 const STANDALONE_BUILD = false;
 const pyodideImportPath = STANDALONE_BUILD
-  ? "/static/cdn-mirror/pyodide/v0.22.1/full/pyodide.js"
-  : "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/pyodide.js";
+  ? "/static/cdn-mirror/pyodide/v0.28.0/full/pyodide.js"
+  : "https://cdn.jsdelivr.net/pyodide/v0.28.0/full/pyodide.js";
+
 const pyodideIndexUrl = STANDALONE_BUILD
-  ? "/static/cdn-mirror/pyodide/v0.22.1/full/"
-  : "https://cdn.jsdelivr.net/pyodide/v0.22.1/full/";
+  ? "/static/cdn-mirror/pyodide/v0.28.0/full/"
+  : "https://cdn.jsdelivr.net/pyodide/v0.28.0/full/";
 
 importScripts(pyodideImportPath);
+
+
 
 // communication with the main site
 // there are two commands implemented at the moment:
@@ -24,13 +27,26 @@ onmessage = function (e) {
     }
     self.interruptBuffer = e.data.interruptBuffer;
     self.keyDownBuffer = e.data.keyDownBuffer;
+  } else if (e.data.cmd === "install-deps") {
+    (async () => {
+      for (const dep of e.data.deps) {
+        await installPackage(dep);
+      }
+      self.postMessage({
+        cmd: "install-deps-finished",
+      });
+    })();
   } else if (e.data.cmd === "debug") {
     let reason = "ok";
     try {
       if (e.data.initCode) {
         self.pyodide.globals.get("pyexec")(e.data.initCode, [], []);
       }
-      self.pyodide.globals.get("pydebug")(e.data.code, e.data.breakpoints, e.data.watches);
+      self.pyodide.globals.get("pydebug")(
+        e.data.code,
+        e.data.breakpoints,
+        e.data.watches
+      );
     } catch (err) {
       if (err.message.includes("KeyboardInterrupt")) {
         reason = "interrupt";
@@ -116,9 +132,31 @@ onmessage = function (e) {
   }
 };
 
+const initialiseMicroPip = async () => {
+  workerPrint("PythonSponge initialising micropip\n");
+  await self.pyodide.loadPackage("micropip");
+  workerPrint(`PythonSponge successfully installed package: micropip\n`);
+  self.micropipInitialised = true;
+};
+
+const installPackage = async (packageName) => {
+  if (!self.micropipInitialised) {
+    await initialiseMicroPip();
+  }
+  workerPrint(`Installing package: ${packageName}\n`);
+  try {
+    await pyodide.loadPackage(packageName);
+    workerPrint(`PythonSponge successfully installed package '${packageName}'\n`);
+  } catch (err) {
+    console.log(err);
+    workerPrint(`Error installing package: ${packageName}\n${err}`);
+  }
+};
+
 // loading code
 const loadPyodideAsync = async () => {
   let initPyPromise = fetch("./init.py");
+  self.micropipInitialised = false;
   self.pyodide = await loadPyodide({ indexURL: pyodideIndexUrl });
 
   initPyCode = await (await initPyPromise).text();
