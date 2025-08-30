@@ -12,7 +12,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build-standalone": "set VITE_STANDALONE_BUILD=true&& tsc -b && vite build && xcopy \".\\build\\\" \".\\portable\\data\\\" /E /y",
+    "build-standalone": "set VITE_STANDALONE_BUILD=true&& tsc -b && vite build && if exist \".\\portable\\data\" rmdir /S /Q \".\\portable\\data\" && mkdir \".\\portable\\data\" && xcopy \".\\build\\\" \".\\portable\\data\\\" /E /y",
+    "build-standalone-with-wheels": "set VITE_STANDALONE_BUILD=true&&set VITE_INCLUDE_WHEELS=true&& tsc -b && vite build && if exist \".\\portable\\data\" rmdir /S /Q \".\\portable\\data\" && mkdir \".\\portable\\data\" && xcopy \".\\build\\\" \".\\portable\\data\\\" /E /y",
     "lint": "eslint .",
     "preview": "vite preview"
   },

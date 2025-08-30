@@ -9,6 +9,8 @@ const pyodideIndexUrl = STANDALONE_BUILD
 
 importScripts(pyodideImportPath);
 
+
+
 // communication with the main site
 // there are two commands implemented at the moment:
 //   run(code) which runs a piece of code
@@ -25,6 +27,15 @@ onmessage = function (e) {
     }
     self.interruptBuffer = e.data.interruptBuffer;
     self.keyDownBuffer = e.data.keyDownBuffer;
+  } else if (e.data.cmd === "install-deps") {
+    (async () => {
+      for (const dep of e.data.deps) {
+        await installPackage(dep);
+      }
+      self.postMessage({
+        cmd: "install-deps-finished",
+      });
+    })();
   } else if (e.data.cmd === "debug") {
     let reason = "ok";
     try {
@@ -121,9 +132,31 @@ onmessage = function (e) {
   }
 };
 
+const initialiseMicroPip = async () => {
+  workerPrint("PythonSponge initialising micropip\n");
+  await self.pyodide.loadPackage("micropip");
+  workerPrint(`PythonSponge successfully installed package: micropip\n`);
+  self.micropipInitialised = true;
+};
+
+const installPackage = async (packageName) => {
+  if (!self.micropipInitialised) {
+    await initialiseMicroPip();
+  }
+  workerPrint(`Installing package: ${packageName}\n`);
+  try {
+    await pyodide.loadPackage(packageName);
+    workerPrint(`PythonSponge successfully installed package '${packageName}'\n`);
+  } catch (err) {
+    console.log(err);
+    workerPrint(`Error installing package: ${packageName}\n${err}`);
+  }
+};
+
 // loading code
 const loadPyodideAsync = async () => {
   let initPyPromise = fetch("./init.py");
+  self.micropipInitialised = false;
   self.pyodide = await loadPyodide({ indexURL: pyodideIndexUrl });
 
   initPyCode = await (await initPyPromise).text();

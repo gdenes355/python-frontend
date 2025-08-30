@@ -64,6 +64,7 @@ type CodeRunnerRef = {
   input: (input: string) => void;
   addConsoleText: (text: string) => void;
   clear: () => void;
+  installDependencies: (deps: string[]) => void;
 };
 
 var pythonCodeRunner: PythonCodeRunner | null = null;
@@ -126,30 +127,30 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     if (!pythonCodeRunner) {
       pythonCodeRunner = new PythonCodeRunner();
     }
-    let newStateId = pythonCodeRunner.onStateChanged.register((newState) => {
+    const newStateId = pythonCodeRunner.onStateChanged.register((newState) => {
       setState(newState);
     });
-    let onPrintId = pythonCodeRunner.onPrint.register((msg) => {
+    const onPrintId = pythonCodeRunner.onPrint.register((msg) => {
       onPrint.current?.(msg);
       consoleTextUnthrottled.current += msg;
       throttledPrint.current();
     });
-    let onAwaitCanvasId = pythonCodeRunner.onAwaitCanvas.register(() =>
+    const onAwaitCanvasId = pythonCodeRunner.onAwaitCanvas.register(() =>
       onAwaitCanvas.current ? onAwaitCanvas.current() : Promise.resolve()
     );
-    let onTurtleResetId = pythonCodeRunner.onTurtleReset.register((virtual) =>
+    const onTurtleResetId = pythonCodeRunner.onTurtleReset.register((virtual) =>
       onTurtleReset.current?.(virtual)
     );
-    let onTurtleId = pythonCodeRunner.onTurtle.register(({ id, msg }) =>
+    const onTurtleId = pythonCodeRunner.onTurtle.register(({ id, msg }) =>
       onTurtle.current ? onTurtle.current(id, msg) : Promise.resolve(undefined)
     );
-    let onDrawId = pythonCodeRunner.onDraw.register((cmds) =>
+    const onDrawId = pythonCodeRunner.onDraw.register((cmds) =>
       onDraw.current ? onDraw.current(cmds) : Promise.resolve()
     );
-    let onAudioId = pythonCodeRunner.onAudio.register((msg) =>
+    const onAudioId = pythonCodeRunner.onAudio.register((msg) =>
       onAudio.current?.(msg)
     );
-    let onClsId = pythonCodeRunner.onCls.register(() => {
+    const onClsId = pythonCodeRunner.onCls.register(() => {
       consoleTextUnthrottled.current = "";
       throttledPrint.current();
       onCls.current?.();
@@ -195,6 +196,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     drawTurtleExample: pythonCodeRunner.drawTurtleExample,
     addConsoleText: addConsoleText,
     clear: clear,
+    installDependencies: pythonCodeRunner.installDependencies,
   };
 };
 
