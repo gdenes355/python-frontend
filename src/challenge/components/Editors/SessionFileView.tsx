@@ -1,16 +1,11 @@
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { SessionFile } from "../../../models/SessionFile";
 
 type SessionFileViewProps = {
   file: SessionFile;
 };
 
-type SessionFileViewRef = {};
-
-const SessionFileView = React.forwardRef<
-  SessionFileViewRef,
-  SessionFileViewProps
->((props, ref) => {
+const SessionFileView = (props: SessionFileViewProps) => {
   const textAreaRef = useRef<HTMLTextAreaElement>(null);
 
   if (props.file.isText) {
@@ -41,7 +36,6 @@ const SessionFileView = React.forwardRef<
       bytes
     </p>
   );
-});
+};
 
 export default SessionFileView;
-export type { SessionFileViewRef };

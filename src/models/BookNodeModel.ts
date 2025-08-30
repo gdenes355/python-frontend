@@ -42,7 +42,7 @@ const getSinglePage: (root: BookNodeModel) => BookNodeModel | null = (root) => {
 
 const findBookNode: (
   node: BookNodeModel,
-  id: String
+  id: string
 ) => BookNodeModel | null = (node, id) => {
   if (node.id === id) {
     return node;

@@ -9,7 +9,8 @@ import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import ChallengeContext from "../challenge/ChallengeContext";
-import Box from "@mui/material/Box";
+import RunIcon from "../icons/RunIcon";
+import DebugIcon from "../icons/DebugIcon";
 
 type RunSplitButtonProps = {
   disabled: boolean;
@@ -17,6 +18,7 @@ type RunSplitButtonProps = {
 };
 
 const options = ["DEBUG", "RUN"];
+const icons = [() => <DebugIcon />, () => <RunIcon />];
 
 export default function RunSplitButton(props: RunSplitButtonProps) {
   const [open, setOpen] = useState(false);
@@ -26,12 +28,12 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
   const challengeContext = useContext(ChallengeContext);
 
   const handleClick = () => {
-    let mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
+    const mode: "debug" | "run" = selectedIndex === 0 ? "debug" : "run";
     challengeContext?.actions["debug"](mode);
   };
 
   const handleMenuItemClick = (
-    event: React.MouseEvent<HTMLLIElement, MouseEvent>,
+    _: React.MouseEvent<HTMLLIElement, MouseEvent>,
     index: number
   ) => {
     setSelectedIndex(index);
@@ -50,16 +52,16 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
   };
 
   return props.canRunOnly ? (
-    <Box>
-      <Button
-        variant="contained"
-        color="primary"
-        disabled={props.disabled}
-        onClick={() => challengeContext?.actions["debug"]("run")}
-      >
-        RUN
-      </Button>
-    </Box>
+    <Button
+      variant="contained"
+      color="primary"
+      disabled={props.disabled}
+      onClick={() => challengeContext?.actions["debug"]("run")}
+      size="small"
+      startIcon={<RunIcon />}
+    >
+      RUN
+    </Button>
   ) : (
     <React.Fragment>
       <ButtonGroup
@@ -72,8 +74,15 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
           variant="contained"
           color="primary"
           disabled={props.disabled}
+          size="small"
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            flexWrap: "wrap",
+          }}
         >
-          {options[selectedIndex]}
+          {icons[selectedIndex]()}
+          <span style={{ marginLeft: "10px" }}>{options[selectedIndex]}</span>
         </Button>
         <Button
           size="small"
@@ -112,7 +121,8 @@ export default function RunSplitButton(props: RunSplitButtonProps) {
                       selected={index === selectedIndex}
                       onClick={(event) => handleMenuItemClick(event, index)}
                     >
-                      {option}
+                      {icons[index]()}
+                      <span style={{ marginLeft: "10px" }}>{option}</span>
                     </MenuItem>
                   ))}
                 </MenuList>

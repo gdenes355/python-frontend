@@ -7,7 +7,7 @@ type AudioPlayerHandle = {
 };
 
 const AudioPlayer = React.forwardRef<AudioPlayerHandle, AudioPlayerProps>(
-  (props, ref) => {
+  (_, ref) => {
     const audioRef = useRef<HTMLAudioElement>(null);
     const audioSourceRef = useRef<HTMLSourceElement>(null);
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { ReactElement, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -134,16 +134,81 @@ const ExpectedDisplay = (props: TestResult) => {
   );
 };
 
+const ResultsTooltip = (
+  props: TestResultsIndicatorProps & { children: ReactElement }
+) => {
+  return (
+    <HtmlTooltip
+      slots={{
+        transition: Fade,
+      }}
+      slotProps={{
+        transition: { timeout: 600 },
+      }}
+      title={
+        <React.Fragment>
+          {props.testResults.filter((x) => x.outcome).length} /{" "}
+          {props.testResults.length} tests passed
+          <TableContainer>
+            <Table sx={{}} aria-label="test table" size="small">
+              <TableHead>
+                <TableRow>
+                  <TableCell></TableCell>
+                  <TableCell>Error</TableCell>
+                  <TableCell>Input</TableCell>
+                  <TableCell>Expected</TableCell>
+                  <TableCell>Actual</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {props.testResults.map((tr, i) => {
+                  return (
+                    <TableRow key={i}>
+                      <TableCell>
+                        {tr.outcome ? (
+                          <DoneIcon color="success"></DoneIcon>
+                        ) : (
+                          <CancelIcon color="error"></CancelIcon>
+                        )}
+                      </TableCell>
+                      <TableCell>{tr.err}</TableCell>
+                      <TableCell>
+                        <InputDisplay {...tr} />
+                      </TableCell>
+                      <TableCell>
+                        <ExpectedDisplay {...tr} />
+                      </TableCell>
+                      <TableCell>
+                        {tr.actual?.split("\n").map((x, j) => (
+                          <span key={j}>
+                            {x}
+                            <br />
+                          </span>
+                        ))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </React.Fragment>
+      }
+      arrow
+    >
+      {props.children}
+    </HtmlTooltip>
+  );
+};
+
 const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
-  const [allPassing, setAllPassing] = useState<boolean | null>(null);
-  useEffect(
-    () =>
-      setAllPassing(props.testResults.filter((x) => !x.outcome).length === 0),
+  const allPassing = useMemo(
+    () => props.testResults.filter((x) => !x.outcome).length === 0,
     [props.testResults]
   );
 
   if (props.testResults.length < 1) {
-    return <span></span>;
+    return <span style={{ width: "35px" }}></span>;
   }
 
   if (allPassing) {
@@ -175,60 +240,7 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
     );
   } else {
     return (
-      <HtmlTooltip
-        TransitionComponent={Fade}
-        TransitionProps={{ timeout: 600 }}
-        title={
-          <React.Fragment>
-            {props.testResults.filter((x) => x.outcome).length} /{" "}
-            {props.testResults.length} tests passed
-            <TableContainer>
-              <Table sx={{}} aria-label="test table" size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell></TableCell>
-                    <TableCell>Error</TableCell>
-                    <TableCell>Input</TableCell>
-                    <TableCell>Expected</TableCell>
-                    <TableCell>Actual</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {props.testResults.map((tr, i) => {
-                    return (
-                      <TableRow key={i}>
-                        <TableCell>
-                          {tr.outcome ? (
-                            <DoneIcon color="success"></DoneIcon>
-                          ) : (
-                            <CancelIcon color="error"></CancelIcon>
-                          )}
-                        </TableCell>
-                        <TableCell>{tr.err}</TableCell>
-                        <TableCell>
-                          <InputDisplay {...tr} />
-                        </TableCell>
-                        <TableCell>
-                          <ExpectedDisplay {...tr} />
-                        </TableCell>
-                        <TableCell>
-                          {tr.actual?.split("\n").map((x, j) => (
-                            <span key={j}>
-                              {x}
-                              <br />
-                            </span>
-                          ))}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          </React.Fragment>
-        }
-        arrow
-      >
+      <ResultsTooltip {...props}>
         <CancelIcon
           style={{
             display: "inline-block",
@@ -238,7 +250,7 @@ const TestResultsIndicator = (props: TestResultsIndicatorProps) => {
           color="error"
           fontSize="large"
         />
-      </HtmlTooltip>
+      </ResultsTooltip>
     );
   }
 };

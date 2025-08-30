@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 
-import LoginInfo from "../LoginInfo";
-import { useEffect, useState } from "react";
+import type { LoginInfo } from "../models/LoginInfo";
 import LoginCard from "./components/LoginCard";
 import useTokenExchange from "./hooks/useTokenExchange";
 import { v4 as uuid } from "uuid";
 import { jwtDecode } from "jwt-decode";
+import { useNeedsManualApproval } from "./hooks/useNeedsManualApproval";
 
 const LoginGoogle = ({ info }: { info: LoginInfo }) => {
   const idToken = sessionStorage.getItem("google-auth-id-token");
@@ -26,17 +26,14 @@ const LoginGoogle = ({ info }: { info: LoginInfo }) => {
     };
   }, [idToken, info]);
 
-  const [needsManualApproval, setNeedsManualApproval] = useState<boolean>(true);
+  const { needsManualApproval, onApprovalReceived } =
+    useNeedsManualApproval(info);
 
   const tokenExchange = useTokenExchange({ info });
 
   if (!needsManualApproval && googleIdentity && idToken) {
     tokenExchange.exchangeToken(idToken);
   }
-
-  useEffect(() => {
-    setNeedsManualApproval(true);
-  }, [info]);
 
   return (
     <LoginCard
@@ -56,7 +53,7 @@ const LoginGoogle = ({ info }: { info: LoginInfo }) => {
         window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=id_token&scope=email%20profile&nonce=${nonce}`;
       }}
       onManualApproval={() => {
-        setNeedsManualApproval(false);
+        onApprovalReceived();
       }}
     />
   );

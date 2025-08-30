@@ -21,7 +21,7 @@ You *can* also roll out this frontend application without using PythonSponge by 
 ## ...as a JS/TS/React developer
 ...or as someone who would like to understand and improve this frontend repo. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project was bootstrapped with CRA, later ported to Vite + React + TS.
 
 Once you have cloned the repository, you need to make sure that you have NodeJS and npm installed on your computer. VSCode or some other IDE is also recommended. In the project directory, you can run:
 
@@ -29,15 +29,10 @@ Once you have cloned the repository, you need to make sure that you have NodeJS 
 
 Installs all npm dependencies. Might take some time; must be run before first launching the app.
 
-#### `npm start`
+#### `npm run dev`
 
 Runs the app in the development mode. Open [http://localhost:3000?coop=1](http://localhost:3000?coop=1) to view it in your browser. [http://localhost:3000/start](http://localhost:3000/start) has some code demos.
 The page will reload when you make changes. You may also see any lint errors in the console.
-
-#### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information. The current repository has *very limited* test coverage!
 
 #### `npm run build`
 
@@ -61,15 +56,9 @@ The build is minified and the filenames include the hashes.
 Your site is ready to run even if you don't have access to the internet.\
 For ease of use, on Windows you can just launch `portable/PythonSponge.bat` which makes use of [civetweb](https://github.com/civetweb/civetweb) to host the site locally.
 
-#### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project. Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own. **You don't have to ever use `eject`**. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
 # Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started) and the [React documentation](https://reactjs.org/).
+You can learn more in the the [React documentation](https://reactjs.org/).
 
 For UI elements, we have mostly used [Material UI 5](https://mui.com/), and the excellent [Monaco editor](https://microsoft.github.io/monaco-editor/).
 

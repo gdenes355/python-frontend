@@ -1,5 +1,5 @@
-import React, { useContext } from "react";
-import SessionContext from "../SessionContext";
+import { useContext } from "react";
+import SessionContext from "../contexts/SessionContext";
 import PowerIcon from "@mui/icons-material/Power";
 import { Tooltip } from "@mui/material";
 

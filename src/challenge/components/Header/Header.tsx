@@ -3,7 +3,7 @@ import React from "react";
 import { useContext } from "react";
 import HeaderBar from "../../../components/HeaderBar";
 import BookNodeModel from "../../../models/BookNodeModel";
-import SessionContext from "../../../auth/SessionContext";
+import SessionContext from "../../../auth/contexts/SessionContext";
 import HeaderMenu from "./HeaderMenu";
 import { Grid2, IconButton } from "@mui/material";
 
@@ -21,6 +21,8 @@ import IBookFetcher from "../../../book/utils/IBookFetcher";
 import { saveAs } from "file-saver";
 import BookZipper from "../../../book/utils/BookZipper";
 import InfoDialog from "../../../components/dialogs/InfoDialog";
+import CodeRunnerControls from "./CodeRunnerControls";
+import { TestResults } from "../../../models/Tests";
 
 type HeaderProps = {
   title?: string;
@@ -31,6 +33,12 @@ type HeaderProps = {
   onSetUsesFixedInput: (usesFixedInput: boolean) => void;
   onSetShowBookUpload?: (showBookUpload: boolean) => void;
   codeRunner: CodeRunnerRef;
+
+  // for controls
+  canRunOnly: boolean;
+  canSubmit: boolean;
+  testResults: TestResults;
+  isAssessment: boolean;
 
   // for editing book
   hasEdited: boolean;
@@ -108,10 +116,18 @@ const Header = (props: HeaderProps) => {
                     }
                   : undefined
               }
+              canReset={props.codeRunner.state === CodeRunnerState.READY}
             />
           )
         }
       >
+        <CodeRunnerControls
+          codeRunner={props.codeRunner}
+          canRunOnly={props.canRunOnly}
+          canSubmit={props.canSubmit}
+          testResults={props.testResults}
+          isAssessment={props.isAssessment}
+        />
         {props.canReloadBook ? (
           <Grid2>
             <IconButton onClick={() => challengeContext?.actions["reload"]()}>
@@ -127,9 +143,7 @@ const Header = (props: HeaderProps) => {
           />
         ) : (
           <>
-            <HeaderButtons
-              canReset={props.codeRunner.state === CodeRunnerState.READY}
-            />
+            <HeaderButtons />
             {authContext.token ? (
               <Grid2>
                 <SessionWsStateIndicator />

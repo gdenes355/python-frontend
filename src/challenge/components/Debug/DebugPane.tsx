@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { Button, Grid2, Stack, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
@@ -146,11 +146,6 @@ const DebugPane = (props: DebugPaneProps) => {
   const debugContext = codeRunner.debugContext || emptyDebugContext;
   const hasLocals = debugContext.locals.size > 0;
 
-  const canKill =
-    codeRunner.state === CodeRunnerState.RUNNING_WITH_DEBUGGER ||
-    codeRunner.state === CodeRunnerState.ON_BREAKPOINT ||
-    codeRunner.state === CodeRunnerState.AWAITING_INPUT;
-
   const canContinue = codeRunner.state === CodeRunnerState.ON_BREAKPOINT;
 
   const inputRef = useRef<HTMLInputElement>();
@@ -177,16 +172,6 @@ const DebugPane = (props: DebugPaneProps) => {
               onClick={() => challengeContext?.actions["step"]()}
             >
               Step into
-            </Button>
-          </Grid2>
-          <Grid2>
-            <Button
-              variant="contained"
-              color="error"
-              disabled={!canKill}
-              onClick={() => challengeContext?.actions["kill"]()}
-            >
-              Stop
             </Button>
           </Grid2>
         </Grid2>

@@ -1,19 +1,20 @@
-import React from "react";
 import { useMsal, MsalProvider, useIsAuthenticated } from "@azure/msal-react";
 import { PublicClientApplication } from "@azure/msal-browser";
-import { loginRequest } from "../authConfig";
-import { msalConfig } from "../authConfig";
-import LoginInfo from "../LoginInfo";
+import { loginRequest } from "../models/authConfig";
+import { msalConfig } from "../models/authConfig";
+import type { LoginInfo } from "../models/LoginInfo";
 import { useEffect, useState } from "react";
 import LoginCard from "./components/LoginCard";
 import useTokenExchange from "./hooks/useTokenExchange";
+import { useNeedsManualApproval } from "./hooks/useNeedsManualApproval";
 
 const MsalLoginInternal = ({ info }: { info: LoginInfo }) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
   const isAuthenticated = useIsAuthenticated();
 
-  const [needsManualApproval, setNeedsManualApproval] = useState<boolean>(true);
+  const { needsManualApproval, onApprovalReceived } =
+    useNeedsManualApproval(info);
 
   const tokenExchange = useTokenExchange({ info });
 
@@ -37,10 +38,6 @@ const MsalLoginInternal = ({ info }: { info: LoginInfo }) => {
         });
     }
   }, [accounts, instance, needsManualApproval]);
-
-  useEffect(() => {
-    setNeedsManualApproval(true);
-  }, [info]);
 
   /// Exchange MS access token for JWT token
   useEffect(() => {
@@ -67,7 +64,7 @@ const MsalLoginInternal = ({ info }: { info: LoginInfo }) => {
         });
       }}
       onManualApproval={() => {
-        setNeedsManualApproval(false);
+        onApprovalReceived();
       }}
     />
   );
@@ -84,7 +81,7 @@ const LoginMsal = ({ info }: { info: LoginInfo }) => {
       return;
     }
 
-    let config = { ...msalConfig };
+    const config = { ...msalConfig };
     config.auth.clientId = info.clientId;
     config.auth.authority = `https://login.microsoftonline.com/${info.tenantId}/`;
     config.auth.redirectUri = window.location.origin + "/auth-callback";

@@ -40,11 +40,10 @@ import BookNodeModel, {
 } from "../../models/BookNodeModel";
 
 import "./BookContents.css";
-import {
-  ArrowBack,
-  ArrowForward,
-  DriveFileRenameOutline,
-} from "@mui/icons-material";
+
+import ArrowBack from "@mui/icons-material/ArrowBack";
+import ArrowForward from "@mui/icons-material/ArrowForward";
+import DriveFileRenameOutline from "@mui/icons-material/DriveFileRenameOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
@@ -251,11 +250,11 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
 
   const popupMenuRef = useRef<PopupMenuHandle>(null);
 
-  const handleToggle = (event: React.SyntheticEvent, nodeIds: string[]) => {
+  const handleToggle = (_: React.SyntheticEvent, nodeIds: string[]) => {
     setExpandedIds(nodeIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, itemId: string | null) => {
+  const handleSelect = (_: React.SyntheticEvent, itemId: string | null) => {
     if (!itemId) return;
     let selectedNode = nodeMap.get(itemId);
     if (selectedNode) {

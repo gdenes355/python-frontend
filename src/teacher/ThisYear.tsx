@@ -33,7 +33,7 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckBoxIcon from "@mui/icons-material/CheckBox";
 import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ExcelDownloadIcon from "../icons/ExcelDownloadIcon";
-import SessionContext from "../auth/SessionContext";
+import SessionContext from "../auth/contexts/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
 import InputDialog from "../components/dialogs/InputDialog";
 import BookNodeModel from "../models/BookNodeModel";
@@ -64,9 +64,10 @@ const ThisYear = () => {
   const sessionContext = useContext(SessionContext);
   const textfieldUsernamesRef = useRef<HTMLTextAreaElement>(null);
 
-  const [groups, setGroups] = useState<Array<ClassModel>>([]);
-  const [groupInputValue, setGroupInputValue] = React.useState("");
-  const [activeGroup, setActiveGroup] = useState<ClassModel | undefined>(
+  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
+  const [classes, setClasses] = useState<Array<ClassModel>>([]);
+  const [classInputValue, setClassInputValue] = React.useState("");
+  const [activeClass, setActiveGroup] = useState<ClassModel | undefined>(
     undefined
   );
   const [updateCtr, setUpdateCtr] = useState<number>(0);
@@ -141,14 +142,17 @@ const ThisYear = () => {
   }, [sessionContext, onWsMessage]);
 
   useEffect(() => {
-    oc.request("api/admin/classes?active=true").then((data) => {
-      data = data.filter((cls: ClassModel) => !!cls.active); // remove inactive classes
-      setGroups(data);
-      const prevActGroup = localStorage.getItem("teacher-activeGroup");
-      if (prevActGroup) {
-        setActiveGroup(data.find((g: ClassModel) => g.name === prevActGroup));
-      }
-    });
+    setIsLoadingClasses(true);
+    oc.request("api/admin/classes?active=true")
+      .then((data) => {
+        data = data.filter((cls: ClassModel) => !!cls.active); // remove inactive classes
+        setClasses(data);
+        const prevActGroup = localStorage.getItem("teacher-activeGroup");
+        if (prevActGroup) {
+          setActiveGroup(data.find((g: ClassModel) => g.name === prevActGroup));
+        }
+      })
+      .finally(() => setIsLoadingClasses(false));
     oc.request("api/admin/books").then((data) => setBookTitles(data));
   }, [oc]);
 
@@ -157,12 +161,12 @@ const ThisYear = () => {
   }, [activeBook]);
 
   useEffect(() => {
-    if (!activeGroup) return;
-    localStorage.setItem("teacher-activeGroup", activeGroup.name);
-    let displayBooks: Array<GroupBook> = [
-      ...(activeGroup.books?.map((b) => ({ bookTitle: b, enabled: true })) ||
+    if (!activeClass) return;
+    localStorage.setItem("teacher-activeGroup", activeClass.name);
+    const displayBooks: Array<GroupBook> = [
+      ...(activeClass.books?.map((b) => ({ bookTitle: b, enabled: true })) ||
         []),
-      ...(activeGroup.disabled_books?.map((b) => ({
+      ...(activeClass.disabled_books?.map((b) => ({
         bookTitle: b,
         enabled: false,
       })) || []),
@@ -178,15 +182,15 @@ const ThisYear = () => {
     if (sessionContext.wsSend) {
       sessionContext.wsSend({
         cmd: "reg-teacher-group",
-        students: activeGroup.students,
+        students: activeClass.students,
       });
     }
-  }, [activeGroup, updateCtr, sessionContext]);
+  }, [activeClass, updateCtr, sessionContext]);
 
   useEffect(() => {
     setError(undefined);
 
-    if (!activeBook || !activeGroup) {
+    if (!activeBook || !activeClass) {
       setBookFetcher(undefined);
       setResults([]);
       return;
@@ -196,13 +200,13 @@ const ThisYear = () => {
 
     setBookFetcher(new BookFetcher(activeBook.bookTitle));
     oc.request(
-      `api/admin/classes/${activeGroup.name}/books/${encodeURIComponent(
+      `api/admin/classes/${activeClass.name}/books/${encodeURIComponent(
         activeBook.bookTitle
       )}/results`
     )
       .then((r) => setResults(r))
       .catch((e) => setError(e.reason));
-  }, [activeBook, oc, activeGroup, updateCtr]);
+  }, [activeBook, oc, activeClass, updateCtr]);
 
   useEffect(() => {
     if (!bookFetcher) {
@@ -215,26 +219,26 @@ const ThisYear = () => {
     bookFetcher
       .fetchBook(sessionContext)
       .then((res) => setBook(res.book))
-      .catch((e) => {
+      .catch(() => {
         setBook(undefined);
         setError("Failed to load book from server");
       });
   }, [bookFetcher, sessionContext, error]);
 
   const onResultAdd = useCallback((res: ChallengeResultComplexModel) => {
-    let key = `${res.student}-${res.id}`;
+    const key = `${res.student}-${res.id}`;
     setStagedResults((stagedResults) => new Map(stagedResults).set(key, res)); // trigger update
   }, []);
 
   const onResultSet = useCallback((res: ChallengeResultComplexModel) => {
-    let key = `${res.student}-${res.id}`;
+    const key = `${res.student}-${res.id}`;
     setStagedResults(new Map().set(key, res));
   }, []);
 
   const onResultsSet = useCallback((ress: ChallengeResultComplexModel[]) => {
-    let newMap = new Map<string, ChallengeResultComplexModel>();
-    for (let res of ress) {
-      let key = `${res.student}-${res.id}`;
+    const newMap = new Map<string, ChallengeResultComplexModel>();
+    for (const res of ress) {
+      const key = `${res.student}-${res.id}`;
       newMap.set(key, res);
     }
     setStagedResults(newMap);
@@ -242,9 +246,9 @@ const ThisYear = () => {
 
   const onAddBook = (bookTitle: string) => {
     setDialogState("");
-    if (!activeGroup || !bookTitle) return;
-    if (activeGroup.books?.includes(bookTitle)) return;
-    fetch(`${oc.urlBase}/api/admin/classes/${activeGroup.name}/books`, {
+    if (!activeClass || !bookTitle) return;
+    if (activeClass.books?.includes(bookTitle)) return;
+    fetch(`${oc.urlBase}/api/admin/classes/${activeClass.name}/books`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -254,7 +258,7 @@ const ThisYear = () => {
       body: JSON.stringify({ book: bookTitle }),
     }).then((resp) => {
       if (resp.status === 200) {
-        activeGroup.books?.push(bookTitle);
+        activeClass.books?.push(bookTitle);
         setActiveBook({ bookTitle, enabled: true });
         forceUpdate();
       }
@@ -264,7 +268,7 @@ const ThisYear = () => {
   const onAddGroup = (groupName: string) => {
     setDialogState("");
     if (!groupName) return;
-    for (let group of groups) {
+    for (const group of classes) {
       if (group.name === groupName) {
         return; // group already exists
       }
@@ -280,8 +284,8 @@ const ThisYear = () => {
       body: JSON.stringify({ class: groupName }),
     }).then((resp) => {
       if (resp.status === 200) {
-        groups.push({ name: groupName, students: [] });
-        setActiveGroup(groups[groups.length - 1]);
+        classes.push({ name: groupName, students: [] });
+        setActiveGroup(classes[classes.length - 1]);
         window.location.reload(); // happens rarely enough and when it does, the cache would need to be purged anyway
       }
     });
@@ -289,13 +293,13 @@ const ThisYear = () => {
 
   const onAddStudents = (usernames: string) => {
     setDialogState("");
-    if (!activeGroup || !usernames) return;
+    if (!activeClass || !usernames) return;
 
     const studentsToAdd = usernames
       .split("\n")
       .map((u) => u.trim())
-      .filter((u) => u !== "" && !activeGroup.students.includes(u));
-    fetch(`${oc.urlBase}/api/admin/classes/${activeGroup.name}/students`, {
+      .filter((u) => u !== "" && !activeClass.students.includes(u));
+    fetch(`${oc.urlBase}/api/admin/classes/${activeClass.name}/students`, {
       method: "post",
       cache: "no-cache",
       headers: {
@@ -305,16 +309,16 @@ const ThisYear = () => {
       body: JSON.stringify({ user: studentsToAdd }),
     }).then((resp) => {
       if (resp.status === 200) {
-        activeGroup?.students.push(...studentsToAdd);
+        activeClass?.students.push(...studentsToAdd);
         forceUpdate();
       }
     });
   };
 
   const onDeleteStudent = (student: string) => {
-    if (!activeGroup || !student) return;
+    if (!activeClass || !student) return;
     fetch(
-      `${oc.urlBase}/api/admin/classes/${activeGroup.name}/students/${student}`,
+      `${oc.urlBase}/api/admin/classes/${activeClass.name}/students/${student}`,
       {
         method: "delete",
         cache: "no-cache",
@@ -325,7 +329,7 @@ const ThisYear = () => {
       }
     ).then((resp) => {
       if (resp.status === 200) {
-        activeGroup.students = activeGroup.students.filter(
+        activeClass.students = activeClass.students.filter(
           (s) => s !== student
         );
         forceUpdate();
@@ -334,8 +338,8 @@ const ThisYear = () => {
   };
 
   const onUpdateBookEnabled = (book: GroupBook, enabled: boolean) => {
-    if (!activeGroup) return;
-    const group = activeGroup;
+    if (!activeClass) return;
+    const group = activeClass;
     fetch(`${oc.urlBase}/api/admin/classes/${group.name}/books`, {
       method: "post",
       cache: "no-cache",
@@ -397,7 +401,7 @@ const ThisYear = () => {
   };
 
   const onDownloadResultsXslx = () => {
-    if (!activeGroup) {
+    if (!activeClass) {
       setExcelDownloadState("error");
       setTimeout(() => {
         setExcelDownloadState("idle");
@@ -406,7 +410,7 @@ const ThisYear = () => {
     }
     setExcelDownloadState("downloading");
     fetch(
-      `${oc.urlBase}/api/admin/classes/${activeGroup.name}/results/export`,
+      `${oc.urlBase}/api/admin/classes/${activeClass.name}/results/export`,
       {
         headers: {
           Authorization: `Bearer ${sessionContext.token}`,
@@ -419,7 +423,7 @@ const ThisYear = () => {
         }
         return resp.blob();
       })
-      .then((blob) => saveAs(blob, `results-${activeGroup.name}.xlsx`))
+      .then((blob) => saveAs(blob, `results-${activeClass.name}.xlsx`))
       .then(() => {
         setExcelDownloadState("done");
       })
@@ -479,7 +483,7 @@ const ThisYear = () => {
                 onClick={() => onDownloadResultsXslx()}
                 style={{ height: "100%", borderRadius: "0px" }}
                 color="primary"
-                disabled={excelDownloadState !== "idle" || !activeGroup}
+                disabled={excelDownloadState !== "idle" || !activeClass}
               >
                 {excelDownloadState === "downloading" ? (
                   <CircularProgress size={24} />
@@ -563,14 +567,14 @@ const ThisYear = () => {
         fullWidth
       />
       <AddGroupDialog
-        groups={groups}
+        groups={classes}
         onInputEntered={onAddGroup}
         open={dialogState === "addGroup"}
         onClose={() => setDialogState("")}
       />
       <Allotment defaultSizes={[650, 350]} minSize={3} ref={allotmentRef}>
         <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
-          {groups.length ? (
+          {!isLoadingClasses ? (
             <Stack spacing={2}>
               <Grid2 direction="row" container>
                 <Grid2
@@ -580,13 +584,13 @@ const ThisYear = () => {
                 >
                   <Autocomplete
                     size="small"
-                    value={activeGroup || null}
-                    onChange={(e, n) => setActiveGroup(n || undefined)}
-                    inputValue={groupInputValue}
-                    onInputChange={(e, newValue) =>
-                      setGroupInputValue(newValue)
+                    value={activeClass || null}
+                    onChange={(_, n) => setActiveGroup(n || undefined)}
+                    inputValue={classInputValue}
+                    onInputChange={(_, newValue) =>
+                      setClassInputValue(newValue)
                     }
-                    options={groups}
+                    options={classes}
                     getOptionLabel={(option) => (option ? option.name : "")}
                     renderInput={(params) => (
                       <TextField {...params} label="Group" />
@@ -609,7 +613,7 @@ const ThisYear = () => {
                   <Autocomplete
                     size="small"
                     value={activeBook || null}
-                    onChange={(e, n) => setActiveBook(n || undefined)}
+                    onChange={(_, n) => setActiveBook(n || undefined)}
                     options={booksInGroup.sort((a, b) =>
                       a.enabled !== b.enabled
                         ? a.enabled
@@ -651,12 +655,12 @@ const ThisYear = () => {
                         />
                       </li>
                     )}
-                    disabled={!activeGroup}
+                    disabled={!activeClass}
                   />
                 </Grid2>
                 <Grid2>
                   <IconButton
-                    disabled={!activeGroup}
+                    disabled={!activeClass}
                     onClick={() => setDialogState("addBook")}
                   >
                     <AddIcon />
@@ -686,7 +690,7 @@ const ThisYear = () => {
                 ref={resultsTableRef}
                 book={book}
                 bookTitle={activeBook?.bookTitle}
-                group={activeGroup}
+                klass={activeClass}
                 updateCtr={updateCtr}
                 results={results}
                 onResultSelected={onResultSet}
@@ -694,7 +698,7 @@ const ThisYear = () => {
                 onResultsSelected={onResultsSet}
                 onDeleteStudent={onDeleteStudent}
               />
-              {activeGroup ? (
+              {activeClass ? (
                 <IconButton
                   size="small"
                   onClick={() => setDialogState("addStudent")}

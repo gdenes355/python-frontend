@@ -9,12 +9,12 @@ import React, {
 import Editor, { OnMount, Monaco } from "@monaco-editor/react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 
-import VsThemeContext from "../../../themes/VsThemeContext";
 import { clearBook } from "../../../book/utils/IBookFetcher";
 import BookNodeModel from "../../../models/BookNodeModel";
 import { Box, Button } from "@mui/material";
 import ChallengeContext from "../../ChallengeContext";
 import EditableBookStore from "../../../book/utils/EditableBookStore";
+import VsThemeContext from "../../../themes/VsThemeContext";
 
 type BookJsonEditorProps = {
   onChange?: () => void;

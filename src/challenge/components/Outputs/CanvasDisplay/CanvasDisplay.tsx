@@ -15,7 +15,7 @@ type CanvasDisplayHandle = {
 type CanvasDisplayProps = {};
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
-  (props, ref) => {
+  (_, ref) => {
     const canvasEl = useRef<HTMLCanvasElement>(null);
     const challengeContext = useContext(ChallengeContext);
     const turtleUsed = useRef<boolean>(false);
@@ -42,7 +42,7 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       const turtleObj = JSON.parse(msg);
       if (turtleObj.action === "done") {
         turtleRetained.current = true;
-        return new Promise<void>((r, e) => {
+        return new Promise<void>((r) => {
           r();
         });
       }

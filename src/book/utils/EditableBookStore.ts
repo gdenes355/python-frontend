@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 import { absolutisePath } from "../../utils/pathTools";
 import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import { AllTestResults, emptyTestResults } from "../../models/Tests";
-import { SessionContextType } from "../../auth/SessionContext";
+import { SessionContextType } from "../../auth/contexts/SessionContext";
 
 async function addNode(
   node: BookNodeModel,

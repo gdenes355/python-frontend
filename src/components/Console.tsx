@@ -1,4 +1,4 @@
-import React, {
+import {
   useEffect,
   useRef,
   KeyboardEvent,
@@ -54,7 +54,7 @@ const Console = (props: ConsoleProps) => {
     }
   };
 
-  const onClick = (event: MouseEvent) => {
+  const onClick = (_: MouseEvent) => {
     if (props.isInputEnabled) {
       inputFieldEl.current?.focus();
     }

@@ -11,7 +11,7 @@ type FixedInputFieldHandle = {
 const FixedInputField = React.forwardRef<
   FixedInputFieldHandle,
   FixedInputFieldProps
->((props, ref) => {
+>((_, ref) => {
   const [value, setValue] = useState("");
 
   const getValue = () => value;

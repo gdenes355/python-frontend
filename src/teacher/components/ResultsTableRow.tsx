@@ -76,13 +76,13 @@ const ResultsTableRow = React.forwardRef<
 
   const [updateCtr, setUpdateCtr] = useState<number>(0);
 
-  const updateCell = (id: string) => {
+  const updateCell = () => {
     setUpdateCtr((updateCtr) => updateCtr + 1);
   };
 
   const resultToCode = (
     outcome: boolean,
-    hasSeenCorrect: boolean,
+    _: boolean,
     hasSeenWrong: boolean
   ) => {
     if (outcome === false) return -1;
@@ -115,7 +115,7 @@ const ResultsTableRow = React.forwardRef<
   const StyledResCell = useMemo(
     () =>
       styled("span")(
-        ({ theme }) => `
+        () => `
   width: ${100 / (props.challengeInfo?.ids.length || 10)}%;
   `
       ),
@@ -208,7 +208,7 @@ const ResultsTableRow = React.forwardRef<
           <IconButton
             size="small"
             sx={{ padding: "0px" }}
-            onClick={(e) => selectAllResults()}
+            onClick={() => selectAllResults()}
           >
             <SelectAllIcon />
           </IconButton>
