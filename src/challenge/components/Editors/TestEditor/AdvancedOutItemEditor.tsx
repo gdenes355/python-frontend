@@ -27,6 +27,17 @@ type AdvancedOutItemEditorProps = {
 };
 
 const typs = ["+", "-", "c+", "c-", "f+", "f-", "s+", "s-", "t"];
+const TYP_TO_READABLE: Map<string, string> = new Map([
+  ["+", "output matches (+)"],
+  ["-", "output doesn't match (-)"],
+  ["c+", "code contains (c+)"],
+  ["c-", "code doesn't contain (c-)"],
+  ["f+", "file contains (f+)"],
+  ["f-", "file doesn't contain (f-)"],
+  ["s+", "statement result contains (s+)"],
+  ["s-", "statement result doesn't contain (s-)"],
+  ["t", "Turtle test (t)"],
+]);
 
 const AdvancedOutItemEditor = React.forwardRef<
   AdvancedOutItemEditorHandle,
@@ -153,10 +164,14 @@ const AdvancedOutItemEditor = React.forwardRef<
             setTyp(e.target.value as AdvancedOutRequirementType);
             props.onChange?.();
           }}
+          renderValue={(selected) => {
+            // Short label in collapsed view
+            return selected as string;
+          }}
         >
           {typs.map((t) => (
             <MenuItem value={t} key={t}>
-              {t}
+              {TYP_TO_READABLE.get(t) ?? t}
             </MenuItem>
           ))}
         </Select>
