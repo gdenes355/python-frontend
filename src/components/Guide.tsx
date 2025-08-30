@@ -2,7 +2,7 @@ import { useEffect, useState, useContext, useMemo } from "react";
 import Markdown, { defaultUrlTransform } from "react-markdown";
 import { Box, Table, TableContainer, TableHead, TableRow } from "@mui/material";
 import { styled } from "@mui/material/styles";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { PrismLight as SyntaxHighlighter } from "react-syntax-highlighter";
 import {
   vs,
   vscDarkPlus,
@@ -10,10 +10,16 @@ import {
 
 import VsThemeContext from "../themes/VsThemeContext";
 import remarkMath from "remark-math";
-import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import TurtlePreview from "../challenge/components/Guide/TurtlePreview";
 import remarkGfm from "remark-gfm";
+
+// register languages which are needed for syntax highlighting
+import py from "react-syntax-highlighter/dist/esm/languages/prism/python";
+import json from "react-syntax-highlighter/dist/esm/languages/prism/json";
+
+SyntaxHighlighter.registerLanguage("python", py);
+SyntaxHighlighter.registerLanguage("json", json);
 
 type GuideProps = {
   md: string;
@@ -34,20 +40,36 @@ const StyledGuide = styled("div")(
 `
 );
 
+const hasMath = (s: string) => /\$(?:[^$]|\\\$)+\$|$$[\s\S]+?$$/.test(s);
+
 const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
   const [localMd, setLocalMd] = useState("");
   const themeContext = useContext(VsThemeContext);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [rehypeKatex, setRehypeKatex] = useState<any>(null);
+
   useEffect(() => {
     // For best visuals, the md cannot have ``` tags without a language definition
     // the code below will ensure that opening ``` tags have a plaintext annotation
-    let parts = md.split("```");
+    const parts = md.split("```");
     for (let i = 1; i < parts.length; i += 2) {
       if (/^[\r\n].*/.test(parts[i])) {
         parts[i] = "plaintext" + parts[i];
       }
     }
     setLocalMd(parts.join("```"));
+    if (hasMath(md)) {
+      // dynamic import keeps KaTeX out of the main bundle
+      import("rehype-katex").then((mod) => setRehypeKatex(() => mod.default));
+    } else {
+      setRehypeKatex(null);
+    }
   }, [md]);
+
+  const rehypePlugins = useMemo(
+    () => (rehypeKatex ? [rehypeKatex] : []),
+    [rehypeKatex]
+  );
 
   const rendered = useMemo(() => {
     return (
@@ -120,14 +142,20 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
               },
             }}
             remarkPlugins={[remarkMath, remarkGfm]}
-            rehypePlugins={[rehypeKatex]}
+            rehypePlugins={rehypePlugins}
           >
             {localMd}
           </Markdown>
         </Box>
       </StyledGuide>
     );
-  }, [localMd, turtleExampleImage, challengeId, themeContext.theme]);
+  }, [
+    localMd,
+    turtleExampleImage,
+    challengeId,
+    themeContext.theme,
+    rehypePlugins,
+  ]);
 
   return rendered;
 };
