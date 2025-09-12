@@ -402,7 +402,9 @@ def synchronise():
         raise Exception("Turtle command failed")
     return x.response
 def post_message(data):
-    js.workerPostMessage(js.Object.fromEntries(to_js(data)))
+    # Convert Python dicts to plain JS objects recursively to avoid
+    # posting Map instances across the worker boundary (StructuredClone).
+    js.workerPostMessage(to_js(data, dict_converter=js.Object.fromEntries))
 def mode(mode_type):
     msg = {_A:"mode", _V:mode_type}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
@@ -755,7 +757,9 @@ def update_watches(new_watches):
 
 
 def post_message(data):
-    js.workerPostMessage(js.Object.fromEntries(to_js(data)))
+    # Convert Python dicts to plain JS objects recursively to avoid
+    # posting Map instances across the worker boundary (StructuredClone).
+    js.workerPostMessage(to_js(data, dict_converter=js.Object.fromEntries))
 
 
 def synchronise(typ):

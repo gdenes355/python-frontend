@@ -19,7 +19,6 @@ import Menu from "./Menu";
 
 import VsThemeContext from "../themes/VsThemeContext";
 import SessionContext from "../auth/contexts/SessionContext";
-import { useNavigate } from "react-router-dom";
 
 type HeaderBarProps = {
   title?: string;
@@ -32,7 +31,6 @@ type HeaderBarProps = {
 const HeaderBar = (props: HeaderBarProps) => {
   const { theme, handleThemeChange } = useContext(VsThemeContext);
   const authContext = useContext(SessionContext);
-  const navigate = useNavigate();
 
   return (
     <Toolbar
@@ -71,7 +69,9 @@ const HeaderBar = (props: HeaderBarProps) => {
               src="/logo40.png"
               alt="logo"
               style={{ width: "40px", cursor: "pointer" }}
-              onClick={() => navigate("/")}
+              onClick={() =>
+                window.location.assign(`${window.location.origin}/`)
+              }
             />
           </Box>
         </Grid2>
