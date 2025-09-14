@@ -6,13 +6,14 @@ import {
   useContext,
   useState,
 } from "react";
-import { Box } from "@mui/material";
+import { Box, Fade } from "@mui/material";
 import "./Console.css";
 import VsThemeContext from "../themes/VsThemeContext";
 import Anser from "anser";
 import parse from "html-react-parser";
 
 type ConsoleProps = {
+  highlightColour?: string;
   isInputEnabled: boolean;
   content: string;
   onInput: (input: string) => void;
@@ -89,6 +90,16 @@ const Console = (props: ConsoleProps) => {
     inputFieldEl.current?.focus();
   }
 
+  const [highlightColour, setHighlightColour] = useState<string | undefined>(
+    props.highlightColour
+  );
+
+  useEffect(() => {
+    setTimeout(() => {
+      setHighlightColour(props.highlightColour);
+    }, 100);
+  }, [props.highlightColour]);
+
   return (
     <Box sx={{ width: "100%", height: "100%", bgcolor: "background.default" }}>
       <div
@@ -117,6 +128,12 @@ const Console = (props: ConsoleProps) => {
             contentEditable
           />
         )}
+      </div>
+
+      <div className="highlight-overlay" style={{ color: highlightColour }}>
+        <Fade in={!!props.highlightColour}>
+          <div className="highlight-border" />
+        </Fade>
       </div>
     </Box>
   );
