@@ -70,6 +70,7 @@ const ChallengeConsole = (props: {
         </div>
       )}
       <Console
+        highlightColour={props.inputEnabled ? "orange" : undefined}
         content={props.content}
         isInputEnabled={props.inputEnabled}
         onInput={(input) => {
