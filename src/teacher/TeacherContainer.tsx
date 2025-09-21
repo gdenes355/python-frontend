@@ -1,4 +1,4 @@
-import { Box, Grid, Tab, Tabs } from "@mui/material";
+import { Box, Grid2, Tab, Tabs } from "@mui/material";
 import React from "react";
 import SessionWsStateIndicator from "../auth/components/SessionWsStateIndicator";
 import HeaderBar from "../components/HeaderBar";
@@ -44,9 +44,9 @@ const TeacherContainer = (props: TeacherContainerProps) => {
           }
         >
           <React.Fragment>
-            <Grid item key="ws-indicator">
+            <Grid2 key="ws-indicator">
               <SessionWsStateIndicator />
-            </Grid>
+            </Grid2>
             {props.headerChildren}
           </React.Fragment>
         </HeaderBar>

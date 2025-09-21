@@ -8,7 +8,6 @@ import {
   useTheme,
   ListItemIcon,
 } from "@mui/material";
-import { TreeView, TreeItem } from "@mui/lab";
 
 import {
   DndContext,
@@ -48,6 +47,7 @@ import {
 } from "@mui/icons-material";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
+import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
 
 type EditorTestResults = {
   passed: Set<string>;
@@ -221,7 +221,7 @@ function RecursiveItem(props: RecursiveItemProps) {
         style={style}
         {...listeners}
         {...attributes}
-        nodeId={node.id}
+        itemId={node.id}
         onContextMenu={(e) => menu.current?.handleContextMenu(e, node)}
       >
         {hasChildren &&
@@ -255,8 +255,9 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
     setExpandedIds(nodeIds);
   };
 
-  const handleSelect = (event: React.SyntheticEvent, nodeId: string) => {
-    let selectedNode = nodeMap.get(nodeId);
+  const handleSelect = (event: React.SyntheticEvent, itemId: string | null) => {
+    if (!itemId) return;
+    let selectedNode = nodeMap.get(itemId);
     if (selectedNode) {
       props.onNodeSelected(selectedNode);
     }
@@ -335,14 +336,16 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
         onDragEnd={handleDragEnd}
         modifiers={[restrictToVerticalAxis, restrictToWindowEdges]}
       >
-        <TreeView
+        <SimpleTreeView
           aria-label="multi-select"
-          defaultCollapseIcon={<ExpandMoreIcon />}
-          defaultExpandIcon={<ChevronRightIcon />}
-          expanded={expandedIds}
-          selected={props.activePageId}
-          onNodeToggle={handleToggle}
-          onNodeSelect={handleSelect}
+          slots={{
+            collapseIcon: ExpandMoreIcon,
+            expandIcon: ChevronRightIcon,
+          }}
+          expandedItems={expandedIds}
+          selectedItems={props.activePageId}
+          onExpandedItemsChange={handleToggle}
+          onSelectedItemsChange={handleSelect}
           sx={{ maxWidth: 400 }}
         >
           <RecursiveItem
@@ -350,7 +353,7 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
             menu={popupMenuRef}
             testRes={props.testRes}
           />
-        </TreeView>
+        </SimpleTreeView>
       </DndContext>
       <PopupMenu
         ref={popupMenuRef}

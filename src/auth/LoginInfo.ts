@@ -1,6 +1,9 @@
+type AuthProvider = "MSAL" | "GOOGLE";
+
 type LoginInfo = {
   clientId: string;
   tenantId: string;
+  authProvider: AuthProvider;
   jwtEndpoint: string;
   ended?: boolean;
   startUrl: string;

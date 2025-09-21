@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useState } from "react";
-import { Button, Grid, Stack, TextField } from "@mui/material";
+import { Button, Grid2, Stack, TextField } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import {
   Table,
@@ -158,8 +158,8 @@ const DebugPane = (props: DebugPaneProps) => {
   return (
     <Stack sx={{ height: "100%" }}>
       <Paper sx={{ width: "100%", pl: 1, pb: 1 }}>
-        <Grid container spacing={2} sx={{ mt: 0.5 }}>
-          <Grid item>
+        <Grid2 container spacing={2} sx={{ mt: 0.5 }}>
+          <Grid2>
             <Button
               variant="contained"
               color="success"
@@ -168,8 +168,8 @@ const DebugPane = (props: DebugPaneProps) => {
             >
               Continue
             </Button>
-          </Grid>
-          <Grid item>
+          </Grid2>
+          <Grid2>
             <Button
               variant="contained"
               color="primary"
@@ -178,8 +178,8 @@ const DebugPane = (props: DebugPaneProps) => {
             >
               Step into
             </Button>
-          </Grid>
-          <Grid item>
+          </Grid2>
+          <Grid2>
             <Button
               variant="contained"
               color="error"
@@ -188,8 +188,8 @@ const DebugPane = (props: DebugPaneProps) => {
             >
               Stop
             </Button>
-          </Grid>
-        </Grid>
+          </Grid2>
+        </Grid2>
       </Paper>
       <Paper sx={{ width: "100%", overflow: "hidden", height: "100%" }}>
         {canContinue ? (

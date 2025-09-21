@@ -1,0 +1,16 @@
+name: Cleanup old artifacts
+
+on:
+  workflow_run:
+    workflows: ["Build with NodeJS and Webpack"]
+    types:
+      - completed
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: c-hive/gha-remove-artifacts@v1
+        with:
+          keep: 1
+          skip-recent: false

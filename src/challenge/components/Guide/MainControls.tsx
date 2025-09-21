@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Button, Grid, Box, Stack, IconButton } from "@mui/material";
+import { Button, Grid2, Box, Stack, IconButton } from "@mui/material";
 import { DevicesFoldRounded } from "@mui/icons-material";
 import TestResultsIndicator from "../../../components/TestResultIndicator";
 import { TestResults } from "../../../models/Tests";
@@ -93,8 +93,8 @@ const MainControlsStack = (props: MainControlsProps) => {
 const MainControlsGrid = (props: MainControlsProps) => {
   const challengeContext = useContext(ChallengeContext);
   return (
-    <Grid container spacing={2} style={{ display: "flex" }}>
-      <Grid item style={{ flexGrow: 1 }}>
+    <Grid2 container spacing={2} style={{ display: "flex" }}>
+      <Grid2 style={{ flexGrow: 1 }}>
         <Stack spacing={2} direction="row">
           <Box>
             <RunSplitButton
@@ -119,8 +119,8 @@ const MainControlsGrid = (props: MainControlsProps) => {
             isAssessment={props.isAssessment}
           />
         </Stack>
-      </Grid>
-      <Grid item>
+      </Grid2>
+      <Grid2>
         <Button
           variant="contained"
           color="error"
@@ -138,8 +138,8 @@ const MainControlsGrid = (props: MainControlsProps) => {
         >
           <DevicesFoldRounded />
         </IconButton>
-      </Grid>
-    </Grid>
+      </Grid2>
+    </Grid2>
   );
 };
 

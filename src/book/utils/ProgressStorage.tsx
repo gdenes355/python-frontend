@@ -164,6 +164,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
               sessionContext.login({
                 clientId: data.clientId,
                 tenantId: data.tenantId || "common",
+                authProvider: data.auth_provider || "MSAL",
                 jwtEndpoint: data.jwtEndpoint,
                 startUrl: window.location.href,
                 resultsEndpoint: data.resultsEndpoint,
@@ -315,6 +316,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
               sessionContext.login({
                 clientId: data.clientId,
                 tenantId: data.tenantId || "common",
+                authProvider: data.auth_provider || "MSAL",
                 jwtEndpoint: data.jwtEndpoint,
                 startUrl: window.location.href,
                 resultsEndpoint: data.resultsEndpoint,

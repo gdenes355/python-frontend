@@ -10,7 +10,7 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
-  Grid,
+  Grid2,
   IconButton,
   Stack,
   TextField,
@@ -437,7 +437,7 @@ const ThisYear = () => {
   return (
     <TeacherContainer
       headerChildren={
-        <Grid item key="reset-view">
+        <Grid2 key="reset-view">
           <Button
             style={{ height: "100%" }}
             onClick={() => {
@@ -493,7 +493,7 @@ const ThisYear = () => {
               </IconButton>
             </span>
           </Tooltip>
-        </Grid>
+        </Grid2>
       }
     >
       <Dialog
@@ -572,9 +572,8 @@ const ThisYear = () => {
         <Container sx={{ pt: 3, overflow: "auto", height: "100%" }}>
           {groups.length ? (
             <Stack spacing={2}>
-              <Grid direction="row" container>
-                <Grid
-                  item
+              <Grid2 direction="row" container>
+                <Grid2
                   sx={{
                     flexGrow: 1,
                   }}
@@ -593,17 +592,16 @@ const ThisYear = () => {
                       <TextField {...params} label="Group" />
                     )}
                   />
-                </Grid>
-                <Grid item>
+                </Grid2>
+                <Grid2>
                   <IconButton onClick={() => setDialogState("addGroup")}>
                     <AddIcon />
                   </IconButton>
-                </Grid>
-              </Grid>
+                </Grid2>
+              </Grid2>
 
-              <Grid direction="row" container>
-                <Grid
-                  item
+              <Grid2 direction="row" container>
+                <Grid2
                   sx={{
                     flexGrow: 1,
                   }}
@@ -655,16 +653,16 @@ const ThisYear = () => {
                     )}
                     disabled={!activeGroup}
                   />
-                </Grid>
-                <Grid item>
+                </Grid2>
+                <Grid2>
                   <IconButton
                     disabled={!activeGroup}
                     onClick={() => setDialogState("addBook")}
                   >
                     <AddIcon />
                   </IconButton>
-                </Grid>
-              </Grid>
+                </Grid2>
+              </Grid2>
             </Stack>
           ) : (
             <CircularProgress />

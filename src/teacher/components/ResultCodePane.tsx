@@ -1,6 +1,6 @@
 import {
   Box,
-  Grid,
+  Grid2,
   IconButton,
   Paper,
   Stack,
@@ -194,20 +194,14 @@ const ResultCard = (props: ResultCardProps) => {
 
   return (
     <Box sx={{ backgroundColor, paddingLeft: 1, paddingRight: 1 }}>
-      <Grid container spacing={2} style={{ display: "flex" }}>
-        <Grid item>{`${result.name || result.student} for challenge ${
+      <Grid2 container spacing={2} style={{ display: "flex" }}>
+        <Grid2>{`${result.name || result.student} for challenge ${
           result.title
-        }`}</Grid>
-        <Grid
-          item
-          sx={{ flexGrow: 1, justifyContent: "center", display: "flex" }}
-        >
+        }`}</Grid2>
+        <Grid2 sx={{ flexGrow: 1, justifyContent: "center", display: "flex" }}>
           {date?.toLocaleString("en-gb", dateOpts)}
-        </Grid>
-        <Grid
-          item
-          sx={{ flexGrow: 1, justifyContent: "right", display: "flex" }}
-        >
+        </Grid2>
+        <Grid2 sx={{ flexGrow: 1, justifyContent: "right", display: "flex" }}>
           {result["correct-code"] ? (
             <Tooltip title="Show last correct submission">
               <IconButton
@@ -236,8 +230,8 @@ const ResultCard = (props: ResultCardProps) => {
               </IconButton>
             </Tooltip>
           ) : undefined}
-        </Grid>
-      </Grid>
+        </Grid2>
+      </Grid2>
       {code ? (
         <SyntaxHighlighter
           children={code}

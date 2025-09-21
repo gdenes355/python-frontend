@@ -18,7 +18,7 @@ import { Backdrop, CircularProgress } from "@mui/material";
 const STANDALONE_BUILD = false;
 if (STANDALONE_BUILD) {
   loader.config({
-    paths: { vs: "/static/cdn-mirror/monaco-editor@0.34.1/min/vs" },
+    paths: { vs: "/static/cdn-mirror/monaco-editor@0.52.2/min/vs" },
   });
 }
 type PyEditorProps = {
