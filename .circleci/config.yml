@@ -8,8 +8,11 @@ jobs:
   build:
     working_directory: ~/repo
     docker:
-      - image: cimg/node:20.6.0
+      - image: cimg/node:24.8.0
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "SHA256:7JrOUxz5O7v11X52n/KAIsXOF71OMulvGaHnt3BLixs" 
       - checkout
       - add_ssh_keys:
           fingerprints:
