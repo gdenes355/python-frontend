@@ -20,7 +20,6 @@ import BookUpload from "./book/components/BookUpload";
 import { useEffect, useState, lazy, Suspense } from "react";
 import Book from "./book/Book";
 import FolderPicker from "./components/FolderPicker";
-import packageJson from "../package.json";
 
 const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
 const AllClasses = lazy(() => import("./teacher/AllClasses"));
@@ -56,7 +55,6 @@ const AppContainer = () => {
         window.location.reload();
       }
     });
-    console.log("PythonSponge version: " + packageJson.version);
   }, []);
 
   if (bookPath || bookFile) {

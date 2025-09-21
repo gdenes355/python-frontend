@@ -429,29 +429,9 @@ class PythonCodeRunner implements ICodeRunner {
         this.onStateChanged.fire(this.state);
       }
     },
-    breakpt: (data: any) => {
-      // Normalise payload to maintain DebugContext contract with Maps
-      const toMap = (m: any): Map<string, string> => {
-        if (!m) return new Map();
-        // If it already looks like a Map, keep it
-        if (typeof m.get === "function" && typeof m.keys === "function") {
-          return m as Map<string, string>;
-        }
-        // Otherwise assume plain object and convert
-        try {
-          return new Map<string, string>(Object.entries(m));
-        } catch {
-          return new Map();
-        }
-      };
-
+    breakpt: (data: DebugContext) => {
       this.state = CodeRunnerState.ON_BREAKPOINT;
-      this.debugContext = {
-        lineno: data.lineno,
-        locals: toMap(data.locals),
-        globals: toMap(data.globals),
-        watches: toMap(data.watches),
-      };
+      this.debugContext = data;
       this.onStateChanged.fire(this.state);
     },
     "draw-turtle-example-finished": (data: { bookNode: BookNodeModel }) => {

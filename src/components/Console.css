@@ -60,30 +60,3 @@
     opacity: 1;
   }
 }
-
-@keyframes pulseBorder {
-  0% {
-    opacity: 0.65;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.65;
-  }
-}
-
-.highlight-overlay {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 1000;
-  /* color will be injected from inline style; used by currentColor below */
-}
-
-.highlight-border {
-  width: 100%;
-  height: 100%;
-  border: 2px solid currentColor;
-  animation: pulseBorder 1.5s ease-in-out infinite;
-}
