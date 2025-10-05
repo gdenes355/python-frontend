@@ -9,9 +9,10 @@ import { SessionContextType } from "../../auth/contexts/SessionContext";
 async function addNode(
   node: BookNodeModel,
   fetcher: BookFetcher,
-  authContext: SessionContextType
+  authContext: SessionContextType,
+  cloneWithNewIds: boolean
 ) {
-  node.id = uuidv4(); // update UUID so this becomes a unique book
+  node.id = cloneWithNewIds ? uuidv4() : node.id; // update UUID so this becomes a unique book
   if (node.guide) {
     let absPath = absolutisePath(
       node.guide,
@@ -70,7 +71,7 @@ async function addNode(
 
   if (node.children) {
     for (let child of node.children) {
-      await addNode(child, fetcher, authContext);
+      await addNode(child, fetcher, authContext, cloneWithNewIds);
     }
   }
   node.bookMainUrl = "edit://edit/book.json";
@@ -80,9 +81,10 @@ async function addNode(
 async function createEditableBookStore(
   book: BookNodeModel,
   originalFetcher: BookFetcher,
-  authContext: SessionContextType
+  authContext: SessionContextType,
+  cloneWithNewIds: boolean
 ) {
-  await addNode(book, originalFetcher, authContext);
+  await addNode(book, originalFetcher, authContext, cloneWithNewIds);
   localStorage.setItem("edit://edit/book.json", JSON.stringify(book));
   return new EditableBookStore(book);
 }
