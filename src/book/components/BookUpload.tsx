@@ -1,11 +1,20 @@
 import { useMemo, useState, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { Button, Card, CardContent, CardActions, Box } from "@mui/material";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardActions,
+  Box,
+  Tooltip,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+
+export type BookUploadType = "reading" | "cloning" | "editing";
 
 type BookUploadProps = {
   isForEditing?: boolean;
-  onBookUploaded: (zip: File, forEdit: boolean) => void;
+  onBookUploaded: (zip: File, uploadType: BookUploadType) => void;
 };
 
 const baseStyle = {
@@ -59,9 +68,21 @@ const BookUpload = (props: BookUploadProps) => {
     [isFocused, focusedStyle, file, theme]
   );
 
-  const uploadClicked = () => {
+  const handleUploadForReading = () => {
     if (file) {
-      props.onBookUploaded(file, props.isForEditing || false);
+      props.onBookUploaded(file, "reading");
+    }
+  };
+
+  const handleUploadForCloning = () => {
+    if (file) {
+      props.onBookUploaded(file, "cloning");
+    }
+  };
+
+  const handleUploadForEditing = () => {
+    if (file) {
+      props.onBookUploaded(file, "editing");
     }
   };
 
@@ -80,9 +101,24 @@ const BookUpload = (props: BookUploadProps) => {
         <p>File:{file ? file.name : undefined}</p>
       </CardContent>
       <CardActions>
-        <Button onClick={uploadClicked} disabled={!file}>
-          {props.isForEditing ? "Clone" : "Load"}
-        </Button>
+        {!props.isForEditing ? (
+          <Button onClick={handleUploadForReading} disabled={!file}>
+            Load
+          </Button>
+        ) : (
+          <>
+            <Tooltip title="Edit the uploaded book in the browser. Challenge Ids will be kept.">
+              <Button onClick={handleUploadForEditing} disabled={!file}>
+                Edit
+              </Button>
+            </Tooltip>
+            <Tooltip title="Clone to fork the uploaded book and edit it in the browser. Challenge Ids will be changed.">
+              <Button onClick={handleUploadForCloning} disabled={!file}>
+                Clone
+              </Button>
+            </Tooltip>
+          </>
+        )}
         <Button color="error" disabled={!file} onClick={() => setFile(null)}>
           Cancel
         </Button>
