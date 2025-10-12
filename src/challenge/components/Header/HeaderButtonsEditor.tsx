@@ -1,4 +1,4 @@
-import React, { useMemo, useContext } from "react";
+import { useMemo, useContext } from "react";
 import {
   Grid2,
   Button,
@@ -33,7 +33,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
     );
   }, [searchParams, location]);
   return (
-    <React.Fragment>
+    <>
       <Grid2 key="py-upload">
         <FileUploadControl
           onUpload={challengeContext?.actions["handle-code-upload"]}
@@ -71,7 +71,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
           label="Edit guide"
         />
       </Grid2>
-    </React.Fragment>
+    </>
   );
 };
 

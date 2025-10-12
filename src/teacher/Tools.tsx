@@ -1,83 +1,37 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import TeacherContainer from "./TeacherContainer";
 
-import { useOutletContext } from "react-router-dom";
-import { OutletContextType } from "../auth/AdminWrapper";
-import { Button, Divider, Link, Paper, Tooltip } from "@mui/material";
+import { Button, Divider, Paper, Tooltip } from "@mui/material";
 import { Stack } from "@mui/system";
 import DeleteDialog from "../components/dialogs/DeleteDialog";
-import SessionContext from "../auth/contexts/SessionContext";
 import NotificationsContext from "../components/NotificationsContext";
 
-const Tools = () => {
-  const oc: OutletContextType = useOutletContext();
+import BookTree from "./components/BookTree";
+import { useNameCacheSize } from "./hooks/api/useNameCacheSize";
+import { useNameCacheInvalidate } from "./hooks/api/useNameCacheInvalidate";
+import { useNameCacheDelete } from "./hooks/api/useNameCacheDelete";
 
-  const sessionContext = useContext(SessionContext);
+const Tools = () => {
   const notificationContext = useContext(NotificationsContext);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-
-  const [books, setBooks] = React.useState<string[] | undefined>(undefined);
-  const [cache_size, setCacheSize] = React.useState<number | undefined>(
-    undefined
-  );
-
-  useEffect(() => {
-    oc.request("api/admin/books").then((data) => setBooks(data));
-    oc.request("api/admin/cache/name").then((data) => {
-      setCacheSize(data?.["cache-size"]);
-    });
-  }, [oc]);
-
-  const refreshLocalNameCache = () => {
-    fetch(`${oc.urlBase}/api/admin/cache/name`, {
-      method: "POST",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-    })
-      .then((resp) => {
-        if (resp.status === 200) {
-          resp.json().then((r) => {
-            setCacheSize(r?.["data"]?.["cache-size"]);
-          });
-          notificationContext.addMessage("Cache refreshed", "success");
-        } else {
-          notificationContext.addMessage("Failed to refresh cache", "error");
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        notificationContext.addMessage("Failed to refresh cache", "error");
-      });
-  };
-
-  const deleteNamesFromServer = () => {
-    fetch(`${oc.urlBase}/api/admin/cache/name`, {
-      method: "DELETE",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-    })
-      .then((resp) => {
-        if (resp.status === 200) {
-          resp.json().then((r) => {
-            setCacheSize(r?.["data"]?.["cache-size"]);
-          });
-          notificationContext.addMessage("Names deleted", "success");
-        } else {
-          notificationContext.addMessage("Failed to delete names", "error");
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        notificationContext.addMessage("Failed to delete names", "error");
-      });
-  };
+  const { data: cacheSize } = useNameCacheSize();
+  const { mutate: invalidate } = useNameCacheInvalidate({
+    onSuccess: () => {
+      notificationContext.addMessage("Name cache refreshed", "success");
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: deleteNames } = useNameCacheDelete({
+    onSuccess: () => {
+      notificationContext.addMessage("Names deleted", "success");
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
 
   return (
     <TeacherContainer>
@@ -89,15 +43,15 @@ const Tools = () => {
           <p>
             Results are stored using user IDs. To resolve these, the server
             currently has{" "}
-            {cache_size === undefined
+            {cacheSize === undefined
               ? "an unknown number of"
-              : cache_size.toString()}{" "}
+              : cacheSize.toString()}{" "}
             email to name mappings stored.{" "}
           </p>
           <Divider />
           <Stack spacing={2} direction={"row"} sx={{ marginTop: 1 }}>
             <Tooltip title="Are you missing the latest name from your dashboard? Click here to refetch the name cache. No risk.">
-              <Button variant="contained" onClick={refreshLocalNameCache}>
+              <Button variant="contained" onClick={() => invalidate()}>
                 Refresh local cache
               </Button>
             </Tooltip>
@@ -113,18 +67,7 @@ const Tools = () => {
 
         <Paper elevation={4} sx={{ padding: 1, marginTop: 2, marginBottom: 2 }}>
           <h2 style={{ margin: 0 }}>Available books</h2>
-          <ul>
-            {books?.map((book) => {
-              const link = `${window.location.origin}?bk=${book}`;
-              return (
-                <li key={book}>
-                  <Link href={link} target="_blank" rel="noreferrer">
-                    {link}
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+          <BookTree />
         </Paper>
         <DeleteDialog
           open={deleteDialogOpen}
@@ -132,7 +75,7 @@ const Tools = () => {
             setDeleteDialogOpen(false);
           }}
           onDelete={() => {
-            deleteNamesFromServer();
+            deleteNames();
             setDeleteDialogOpen(false);
           }}
           title="Delete names from server"

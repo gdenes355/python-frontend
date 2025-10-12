@@ -1,6 +1,6 @@
 {
   "name": "python-sponge",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "private": true,
   "type": "module",
   "description": "Client-side framework for learning Python and authoring Python challenges",
@@ -28,6 +28,7 @@
     "@mui/material": "^6.4.5",
     "@mui/x-data-grid": "^7.27.0",
     "@mui/x-tree-view": "^7.26.0",
+    "@tanstack/react-query": "^5.90.2",
     "allotment": "^1.20.3",
     "anser": "^2.1.1",
     "babel-plugin-react-compiler": "^19.1.0-rc.2",

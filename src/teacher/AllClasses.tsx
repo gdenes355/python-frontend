@@ -1,85 +1,51 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import TeacherContainer from "./TeacherContainer";
-import { useOutletContext } from "react-router-dom";
-import { OutletContextType } from "../auth/AdminWrapper";
-import { ClassModel } from "./Models";
 import { DataGrid, GridColDef } from "@mui/x-data-grid";
-import { Checkbox } from "@mui/material";
-import SessionContext from "../auth/contexts/SessionContext";
+import { Box, Checkbox, Fab } from "@mui/material";
 import ClassDeletePopupMenu, {
   ClassDeletePopupMenuHandle,
 } from "./components/ClassDeletePopupMenu";
 import NotificationsContext from "../components/NotificationsContext";
+import { useClasses } from "./hooks/api/useClasses";
+import { useClassesDelete } from "./hooks/api/useClassesDelete";
+import { useClassesPatch } from "./hooks/api/useClassesPatch";
+import { useClassesCreate } from "./hooks/api/useClassesCreate";
+import AddGroupDialog from "./components/AddGroupDialog";
+import AddIcon from "@mui/icons-material/Add";
 
 const AllClasses = () => {
-  const oc: OutletContextType = useOutletContext();
-  const sessionContext = useContext(SessionContext);
   const notificationContext = useContext(NotificationsContext);
 
-  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
-  const [classes, setClasses] = useState<ClassModel[]>([]);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  const { data: classes, isLoading: isLoadingClasses } = useClasses();
+  const { mutate: deleteClass } = useClassesDelete({
+    onSuccess: () => {
+      notificationContext.addMessage("Class deleted", "success");
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: patchClass } = useClassesPatch({
+    onSuccess: () => {
+      notificationContext.addMessage("Class updated", "success");
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: createClass } = useClassesCreate({
+    onSuccess: () => {
+      notificationContext.addMessage("Class created", "success");
+      setIsAddDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
 
   const popupMenuRef = useRef<ClassDeletePopupMenuHandle>(null);
-
-  useEffect(() => {
-    setIsLoadingClasses(true);
-    oc.request("api/admin/classes")
-      .then(setClasses)
-      .finally(() => setIsLoadingClasses(false));
-  }, [oc]);
-
-  const patchClass = (className: string, active: boolean) => {
-    fetch(`${oc.urlBase}/api/admin/classes/${className}`, {
-      method: "PATCH",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ active }),
-    })
-      .then((resp) => {
-        if (resp.status === 200) {
-          for (let c of classes) {
-            if (c.name === className) {
-              c.active = active;
-              setClasses([...classes]);
-              notificationContext.addMessage("Class updated", "success");
-              break;
-            }
-          }
-        } else {
-          notificationContext.addMessage("Failed to update class", "error");
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        notificationContext.addMessage("Failed to update class", "error");
-      });
-  };
-
-  const deleteClass = (className: string) => {
-    fetch(`${oc.urlBase}/api/admin/classes/${className}`, {
-      method: "DELETE",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-    })
-      .then((resp) => {
-        if (resp.status === 200) {
-          setClasses(classes.filter((c) => c.name !== className));
-          notificationContext.addMessage("Class deleted", "success");
-        } else {
-          notificationContext.addMessage("Failed to delete class", "error");
-        }
-      })
-      .catch((e) => {
-        console.log(e);
-        notificationContext.addMessage("Failed to delete class", "error");
-      });
-  };
 
   const columns: GridColDef[] = [
     { field: "name", headerName: "Class name", width: 200 },
@@ -87,7 +53,7 @@ const AllClasses = () => {
       field: "students",
       headerName: "Students",
       width: 200,
-      valueGetter: (params) => (params as string[]).length,
+      valueGetter: (params) => (params as string[])?.length ?? 0,
     },
     {
       field: "active",
@@ -98,7 +64,10 @@ const AllClasses = () => {
           <Checkbox
             checked={params.value}
             onChange={(e) => {
-              patchClass(params.row.name, e.target.checked);
+              patchClass({
+                className: params.row.name,
+                active: e.target.checked,
+              });
             }}
           />
         );
@@ -134,6 +103,30 @@ const AllClasses = () => {
         }}
       />
       <ClassDeletePopupMenu ref={popupMenuRef} onDeleteClass={deleteClass} />
+      <AddGroupDialog
+        groups={classes || []}
+        onInputEntered={(className) => createClass({ className })}
+        open={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+      />
+      <Box
+        sx={{
+          top: "auto",
+          left: "auto",
+          position: "absolute",
+          right: "6px",
+          bottom: "64px",
+        }}
+      >
+        <Fab
+          key="toggleGuide"
+          size="small"
+          color="primary"
+          onClick={() => setIsAddDialogOpen(true)}
+        >
+          <AddIcon />
+        </Fab>
+      </Box>
     </TeacherContainer>
   );
 };

@@ -41,6 +41,7 @@ type HeaderProps = {
   isAssessment: boolean;
 
   // for editing book
+  isEditing: boolean;
   hasEdited: boolean;
   isEditingGuide?: boolean;
   bookFetcher: IBookFetcher;
@@ -93,7 +94,7 @@ const Header = (props: HeaderProps) => {
       <HeaderBar
         title={`${props.title ? props.title + " \u203A " : ""}  ${
           props.bookNode?.name
-        }`}
+        }${props.isEditing ? " (Editing)" : ""}`}
         onHelpOpen={() =>
           window.open("https://www.pythonsponge.com/", "_blank", "noopener")
         }
