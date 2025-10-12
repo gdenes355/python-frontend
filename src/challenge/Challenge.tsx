@@ -42,6 +42,7 @@ import NotificationsContext from "../components/NotificationsContext";
 import { SessionFile } from "../models/SessionFile";
 
 import { GuideToggleFab } from "./components/GuideToggleFab";
+import { BookUploadType } from "../book/components/BookUpload";
 
 type ChallengeProps = {
   uid: string;
@@ -54,7 +55,7 @@ type ChallengeProps = {
   openBookDrawer?: (open: boolean) => void;
   onRequestPreviousChallenge?: () => void;
   onRequestNextChallenge?: () => void;
-  onBookUploaded?: (file: File, edit: boolean) => void;
+  onBookUploaded?: (file: File, uploadType: BookUploadType) => void;
   canReloadBook?: boolean;
   onBookReloadRequested: () => void;
 

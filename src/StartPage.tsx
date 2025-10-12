@@ -52,14 +52,20 @@ const StartPage = () => {
           <a href="/?coop=1">/</a>
         </p>
         <h3>For content creators</h3>
-        To clone a book for editing, you can just append <code>
-          clone=true
-        </code>{" "}
-        in the query path. E.g.:
+        When you have a book open in the borwser, you can open it for editing by
+        appending <code>edit=open-edit</code> in the query path. E.g.:
+        <a href="/?bk=.%2Fexamples%2Fbook.json&edit=open-edit">
+          ?bk=.%2Fexamples%2Fbook.json&edit=open-edit
+        </a>
+        . This will open the book for editing. <br />
+        If you want to fork the book, it is best practice to spawn new ids for
+        the challenges. For this, just append <code>clone=true</code> in the
+        query path. E.g.:
         <a href="/?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone">
           ?bk=.%2Fexamples%2Fbook.json&chid=afb57340-1197-473c-b24d-5687796fd3d4&edit=clone
         </a>
-        .
+        . This will opend the book for editing, spawning new ids for each
+        challenge.
         <p>
           Or you can upload the zip file as well to the landing page{" "}
           <a href="/?teacher=true&coop=1">/?teacher=true&coop=1</a>

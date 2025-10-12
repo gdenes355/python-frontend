@@ -1,9 +1,9 @@
 import { Dialog, DialogContent, DialogTitle } from "@mui/material";
-import BookUpload from "./BookUpload";
+import BookUpload, { BookUploadType } from "./BookUpload";
 
 type BookUploadModalProps = {
   visible: boolean;
-  onBookUploaded: (file: File, edit: boolean) => void;
+  onBookUploaded: (file: File, uploadType: BookUploadType) => void;
   onClose: () => void;
 };
 

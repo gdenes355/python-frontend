@@ -21,6 +21,7 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import Book from "./book/Book";
 import FolderPicker from "./components/FolderPicker";
 import packageJson from "../package.json";
+import { BookUploadType } from "./book/components/BookUpload";
 
 const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
 const AllClasses = lazy(() => import("./teacher/AllClasses"));
@@ -37,17 +38,31 @@ const AppContainer = () => {
   >();
   const navigate = useNavigate();
 
-  const openBookFromZip = (file: File, edit: boolean) => {
+  const openBookFromZip = (file: File, openType: BookUploadType) => {
     setBookFile(file);
+    let editParam = "";
+    if (openType === "editing") {
+      editParam = "open-edit";
+    } else if (openType === "cloning") {
+      editParam = "clone";
+    }
     navigate({
       pathname: "/",
-      search: `?bk=book.json${edit ? "&edit=clone" : ""}`,
+      search: `?bk=book.json${editParam ? "&edit=" + editParam : ""}`,
     });
   };
 
-  const openLocalFolder = (folder: FileSystemDirectoryHandle) => {
+  const openLocalFolder = (
+    folder: FileSystemDirectoryHandle,
+    isForEditing: boolean
+  ) => {
     setLocalFolder(folder);
-    navigate({ pathname: "/", search: "?bk=book.json&edit=localpreview" });
+    navigate({
+      pathname: "/",
+      search: `?bk=book.json${
+        isForEditing ? "&edit=open-edit" : "&edit=localpreview"
+      }`,
+    });
   };
 
   useEffect(() => {
@@ -75,7 +90,10 @@ const AppContainer = () => {
           isForEditing={isTeacher?.length > 0}
           onBookUploaded={openBookFromZip}
         />
-        <FolderPicker onFolderPicked={openLocalFolder} />
+        <FolderPicker
+          isForEditing={isTeacher?.length > 0}
+          onFolderPicked={openLocalFolder}
+        />
       </>
     );
   }

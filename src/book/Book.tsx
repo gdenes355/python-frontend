@@ -26,11 +26,12 @@ import SessionContext from "../auth/contexts/SessionContext";
 import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
 import Challenge from "../challenge/Challenge";
+import { BookUploadType } from "./components/BookUpload";
 
 type BookProps = {
   zipFile?: File;
   localFolder?: FileSystemDirectoryHandle;
-  onBookUploaded: (file: File, edit: boolean) => void;
+  onBookUploaded: (file: File, uploadType: BookUploadType) => void;
 };
 
 type PathsState = {
@@ -134,15 +135,18 @@ const Book = (props: BookProps) => {
     () => (store: EditableBookStore) => {
       setEditableBookStore(store);
       setEditState("editing");
-      navigate({
-        search:
-          "?" +
-          new URLSearchParams({
-            bk: "edit://edit/book.json",
-            chid: activeNode?.id || "",
-            edit: "editing",
-          }),
-      });
+      navigate(
+        {
+          search:
+            "?" +
+            new URLSearchParams({
+              bk: "edit://edit/book.json",
+              chid: activeNode?.id || "",
+              edit: "editing",
+            }),
+        },
+        { replace: true }
+      );
     },
     [activeNode, navigate]
   );
@@ -155,7 +159,20 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
-      createEditableBookStore(rootNode, bookFetcher, authContext).then(
+      createEditableBookStore(rootNode, bookFetcher, authContext, true).then(
+        bookClonedForEditing
+      );
+      return;
+    }
+    if (
+      editParam === "open-edit" &&
+      !editState &&
+      rootNode &&
+      bookFetcher &&
+      bookFetcher instanceof BookFetcher
+    ) {
+      setEditState("cloning");
+      createEditableBookStore(rootNode, bookFetcher, authContext, false).then(
         bookClonedForEditing
       );
       return;

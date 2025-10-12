@@ -75,6 +75,20 @@ const Guide = ({ md, turtleExampleImage, challengeId }: GuideProps) => {
     return (
       <StyledGuide>
         <Box>
+          {/* mask out the guide toggle fab, so we don't have text running behind it */}
+          <Box
+            id="guide-toggle-mask"
+            aria-hidden
+            sx={{
+              float: "right",
+              position: "sticky",
+              top: 0,
+              width: 40,
+              height: 40,
+              mr: "6px",
+              pointerEvents: "none",
+            }}
+          />
           <Markdown
             urlTransform={(url) => {
               if (url.startsWith("data:image/")) {
