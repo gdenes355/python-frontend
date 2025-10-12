@@ -13,7 +13,7 @@ import useBookHistory from "../hooks/api/useBookHistory";
 import { BookHistoryEntry } from "../../models/BookHistory";
 import DownloadIcon from "@mui/icons-material/Download";
 import { useBookHistoryDownload } from "../hooks/api/useBookHistoryDownload";
-import BookUpload, { BookUploadType } from "../../book/components/BookUpload";
+import BookUpload from "../../book/components/BookUpload";
 import { useContext, useEffect, useState } from "react";
 import JSZip from "jszip";
 import { extractIds } from "../../models/BookNodeModel";
@@ -97,7 +97,7 @@ const NewVersionComponent = ({
     }
   );
 
-  const handleBookUploaded = (file: File, _: BookUploadType) => {
+  const handleBookUploaded = (file: File, _: boolean) => {
     setFile(file);
     setIsComputingNewVersionStats(true);
     getNodeIdsFromBookZip(file).then((nodeIds) => {
