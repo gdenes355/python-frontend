@@ -9,7 +9,7 @@ export const useNeedsManualApproval = (info: LoginInfo) => {
   const needsManualApproval = useMemo(() => {
     const jwtUrl = new URL(info.jwtEndpoint);
     const hasBeenApproved = approvedHosts.has(jwtUrl.host);
-    console.log(jwtUrl, approvedHosts, hasBeenApproved);
+
     return !hasBeenApproved;
   }, [info, approvedHosts]);
 

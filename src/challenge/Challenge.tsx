@@ -519,6 +519,7 @@ const Challenge = (props: ChallengeProps) => {
                 props.onBookUploaded ? setShowBookUpload : undefined
               }
               codeRunner={codeRunner}
+              isEditing={props.isEditing || false}
               hasEdited={hasEdited}
               isEditingGuide={isEditingGuide}
               onEditingGuideChange={(editing) => {
