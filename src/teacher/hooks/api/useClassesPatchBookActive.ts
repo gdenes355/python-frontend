@@ -44,7 +44,7 @@ export const useClassesPatchBookActive = (
             "Content-Type": "application/json",
           },
           method: "POST",
-          body: JSON.stringify({ book, active }),
+          body: JSON.stringify({ book, enabled: active }),
         }
       );
       if (!resp.ok) {
