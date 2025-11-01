@@ -9,16 +9,18 @@ import {
   Divider,
   Button,
 } from "@mui/material";
-import useBookHistory from "../hooks/api/useBookHistory";
-import { BookHistoryEntry } from "../../models/BookHistory";
+import useBookHistory from "../../hooks/api/useBookHistory";
+import { BookHistoryEntry } from "../../../models/BookHistory";
 import DownloadIcon from "@mui/icons-material/Download";
-import { useBookHistoryDownload } from "../hooks/api/useBookHistoryDownload";
-import BookUpload, { BookUploadType } from "../../book/components/BookUpload";
+import { useBookHistoryDownload } from "../../hooks/api/useBookHistoryDownload";
+import BookUpload, {
+  BookUploadType,
+} from "../../../book/components/BookUpload";
 import { useContext, useEffect, useState } from "react";
 import JSZip from "jszip";
-import { extractIds } from "../../models/BookNodeModel";
-import { useBookVersionUpload } from "../hooks/api/useBookVersionUpload";
-import NotificationsContext from "../../components/NotificationsContext";
+import { extractIds } from "../../../models/BookNodeModel";
+import { useBookVersionUpload } from "../../hooks/api/useBookVersionUpload";
+import NotificationsContext from "../../../components/NotificationsContext";
 
 type BookHistoryDialogProps = {
   bookPath?: string;

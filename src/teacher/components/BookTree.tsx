@@ -6,13 +6,13 @@ import BookTreeNode from "./BookTreeNode";
 import { SimpleTreeView } from "@mui/x-tree-view";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderIcon from "@mui/icons-material/Folder";
-import BookHistoryDialog from "./BookHistoryDialog";
+import BookHistoryDialog from "./dialogs/BookHistoryDialog";
 import { Button } from "@mui/material";
-import NewBookDialog from "./NewBookDialog";
+import NewBookDialog from "./dialogs/NewBookDialog";
 
 import BookDeletePopupMenu, {
   BookDeletePopupMenuHandle,
-} from "./BookDeletePopupMenu";
+} from "./menus/BookDeletePopupMenu";
 import { useBookDelete } from "../hooks/api/useBookDelete";
 import NotificationsContext from "../../components/NotificationsContext";
 

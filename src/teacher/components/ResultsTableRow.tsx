@@ -2,10 +2,11 @@ import React, { useImperativeHandle, useMemo, useState } from "react";
 import {
   ChallengeResultComplexModel,
   ChallengeResultModel,
+  AggregatedResultsModel,
   ResultsModel,
 } from "../Models";
 import BookNodeModel from "../../models/BookNodeModel";
-import { StudentPopupMenuHandle } from "./StudentPopupMenu";
+import { StudentPopupMenuHandle } from "./menus/StudentPopupMenu";
 import { styled } from "@mui/material/styles";
 import {
   IconButton,
@@ -26,12 +27,13 @@ type ResultsTableRowRef = {
 };
 
 type ResultsTableRowProps = {
+  aggregatedResultsFetcher: (
+    student: string
+  ) => AggregatedResultsModel | undefined;
   student: string;
-  name: string;
-  passCount?: number;
-  results?: ResultsModel | null;
   bookSelected: boolean;
   challengeInfo?: ChallengeInfo;
+  highlightAttemptedToday: boolean;
   menu: React.RefObject<StudentPopupMenuHandle>;
   onResultSelected: (
     res: ChallengeResultComplexModel,
@@ -68,32 +70,54 @@ const resultFromId = (
   }
 };
 
+const resultToCode = (
+  outcome: boolean,
+  _: boolean,
+  hasSeenWrong: boolean,
+  isAttemptedToday: boolean
+) => {
+  if (isAttemptedToday) {
+    if (outcome === false) return -1;
+    if (outcome === true && hasSeenWrong) return 1;
+    return 2;
+  }
+  if (outcome === false) return "-1-p";
+  if (outcome === true && hasSeenWrong) return "1-p";
+  return "2-p";
+};
+
 const ResultsTableRow = React.forwardRef<
   ResultsTableRowRef,
   ResultsTableRowProps
->((props, ref) => {
+>(({ aggregatedResultsFetcher, ...props }, ref) => {
   useImperativeHandle(ref, () => ({ updateCell }));
 
   const [updateCtr, setUpdateCtr] = useState<number>(0);
+
+  const aggregatedResults = aggregatedResultsFetcher(props.student);
+
+  const passCount = aggregatedResults?.passCount || 0;
+  const results = aggregatedResults?.results;
+  const name = results?.name || props.student;
+
+  let computedPassCount = 0;
+  for (let id of props.challengeInfo?.ids || []) {
+    let r = (results as any)?.[id] as any;
+    if (
+      (r instanceof Boolean && (r as boolean)) ||
+      (r as ChallengeResultComplexModel)?.correct
+    ) {
+      computedPassCount++;
+    }
+  }
 
   const updateCell = () => {
     setUpdateCtr((updateCtr) => updateCtr + 1);
   };
 
-  const resultToCode = (
-    outcome: boolean,
-    _: boolean,
-    hasSeenWrong: boolean
-  ) => {
-    if (outcome === false) return -1;
-    if (outcome === undefined) return 0;
-    if (outcome === true && hasSeenWrong) return 1;
-    return 2;
-  };
-
-  const passed = (id: string) => {
+  const getPassedCode = (id: string) => {
     let res = (
-      props.results ? (props.results as any)[id] : undefined
+      results ? (results as any)[id] : undefined
     ) as ChallengeResultModel;
     if (res === undefined) {
       return 0;
@@ -101,13 +125,16 @@ const ResultsTableRow = React.forwardRef<
 
     // we might be able to retire the instanceof selector later
     if (res === true || res === false) {
-      return resultToCode(res as boolean, false, false);
+      return resultToCode(res as boolean, false, false, false);
     } else {
       let resc = res as ChallengeResultComplexModel;
       return resultToCode(
         resc.correct,
         !!resc["correct-date"],
-        !!resc["wrong-date"]
+        !!resc["wrong-date"],
+        props.highlightAttemptedToday
+          ? aggregatedResults?.challengeIdsAttemptedToday?.has(id) || false
+          : true
       );
     }
   };
@@ -123,12 +150,12 @@ const ResultsTableRow = React.forwardRef<
   );
 
   const onIndividialResultClicked = (e: React.MouseEvent, id: string) => {
-    if (!props.results) return;
+    if (!results) return;
     let res = resultFromId(
       id,
-      props.results,
+      results,
       props.student,
-      props.results.name || props.student,
+      results.name || props.student,
       props.challengeInfo
     );
     if (res === undefined) return;
@@ -136,21 +163,21 @@ const ResultsTableRow = React.forwardRef<
   };
 
   const selectAllResults = () => {
-    if (!props.results) return;
-    let results: ChallengeResultComplexModel[] = [];
+    if (!results) return;
+    let sResults: ChallengeResultComplexModel[] = [];
     for (let id of props.challengeInfo?.ids || []) {
       let res = resultFromId(
         id,
-        props.results,
+        results,
         props.student,
-        props.results.name || props.student,
+        results.name || props.student,
         props.challengeInfo
       );
       if (res) {
-        results.push(res);
+        sResults.push(res);
       }
     }
-    props.onResultsSelected(results);
+    props.onResultsSelected(sResults);
   };
 
   return (
@@ -160,13 +187,13 @@ const ResultsTableRow = React.forwardRef<
           props.menu.current?.handleContextMenu(e, props.student)
         }
       >
-        {props.name.replace(/ /g, "\u00A0")}
+        {name.replace(/ /g, "\u00A0")}
         <span style={{ visibility: "collapse" }}>{updateCtr}</span>
       </TableCell>
       <TableCell>
         {props.bookSelected ? (
           <span>
-            {props.passCount || "?"}/{props.challengeInfo?.ids?.length}
+            {passCount || "?"}/{props.challengeInfo?.ids?.length}
           </span>
         ) : (
           <span />
@@ -175,13 +202,12 @@ const ResultsTableRow = React.forwardRef<
       <TableCell>
         {props.bookSelected ? (
           <div className="res-container">
-            {props.results !== null && props.challengeInfo ? (
+            {results !== null && props.challengeInfo ? (
               props.challengeInfo?.ids?.map((id) => {
-                let p = passed(id);
                 return (
                   <Tooltip
                     key={id}
-                    className={" res res-" + p}
+                    className={" res res-" + getPassedCode(id)}
                     title={props.challengeInfo?.map.get(id)?.name}
                     onClick={(e) => onIndividialResultClicked(e, id)}
                   >
@@ -189,7 +215,7 @@ const ResultsTableRow = React.forwardRef<
                   </Tooltip>
                 );
               })
-            ) : props.results === null || !props.challengeInfo ? (
+            ) : results === null || !props.challengeInfo ? (
               <Skeleton
                 animation="wave"
                 sx={{ width: "100%" }}

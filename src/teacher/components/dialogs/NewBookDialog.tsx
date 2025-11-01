@@ -8,8 +8,8 @@ import {
 } from "@mui/material";
 import { DialogContent } from "@mui/material";
 import { useContext, useState } from "react";
-import { useBookCreate } from "../hooks/api/useBookCreate";
-import NotificationsContext from "../../components/NotificationsContext";
+import { useBookCreate } from "../../hooks/api/useBookCreate";
+import NotificationsContext from "../../../components/NotificationsContext";
 type NewBookDialogProps = {
   currentBooks: string[];
   open: boolean;

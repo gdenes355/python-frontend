@@ -4,13 +4,13 @@ import { DataGrid, GridColDef } from "@mui/x-data-grid";
 import { Box, Checkbox, Fab } from "@mui/material";
 import ClassDeletePopupMenu, {
   ClassDeletePopupMenuHandle,
-} from "./components/ClassDeletePopupMenu";
+} from "./components/menus/ClassDeletePopupMenu";
 import NotificationsContext from "../components/NotificationsContext";
 import { useClasses } from "./hooks/api/useClasses";
 import { useClassesDelete } from "./hooks/api/useClassesDelete";
 import { useClassesPatch } from "./hooks/api/useClassesPatch";
 import { useClassesCreate } from "./hooks/api/useClassesCreate";
-import AddGroupDialog from "./components/AddGroupDialog";
+import AddGroupDialog from "./components/dialogs/AddGroupDialog";
 import AddIcon from "@mui/icons-material/Add";
 
 const AllClasses = () => {

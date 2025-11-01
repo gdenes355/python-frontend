@@ -28,3 +28,18 @@
 .res-2 {
   background-color: #00ee00;
 }
+
+.res--1-p {
+  background-color: #550000;
+  opacity: 0.3;
+}
+
+.res-1-p {
+  background-color: #005500;
+  opacity: 0.2;
+}
+
+.res-2-p {
+  background-color: #009900;
+  opacity: 0.2;
+}
