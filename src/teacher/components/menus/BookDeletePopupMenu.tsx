@@ -1,6 +1,6 @@
 import React, { useImperativeHandle, useState } from "react";
 import { ListItemIcon, Menu, MenuItem, MenuList } from "@mui/material";
-import DeleteDialog from "../../components/dialogs/DeleteDialog";
+import DeleteDialog from "../../../components/dialogs/DeleteDialog";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 type BookDeletePopupMenuProps = {

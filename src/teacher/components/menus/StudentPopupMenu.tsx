@@ -1,35 +1,35 @@
 import React, { useImperativeHandle, useState } from "react";
 import { Menu, MenuItem, MenuList } from "@mui/material";
-import DeleteDialog from "../../components/dialogs/DeleteDialog";
+import DeleteDialog from "../../../components/dialogs/DeleteDialog";
 
-type ClassDeletePopupMenuProps = {
-  onDeleteClass: (klass: string) => void;
+type StudentPopupMenuProps = {
+  onDeleteStudent: (student: string) => void;
 };
 
-type ClassDeletePopupMenuHandle = {
-  handleContextMenu: (e: React.MouseEvent, klass: string) => void;
+type StudentPopupMenuHandle = {
+  handleContextMenu: (e: React.MouseEvent, student: string) => void;
 };
 
-const ClassDeletePopupMenu = React.forwardRef<
-  ClassDeletePopupMenuHandle,
-  ClassDeletePopupMenuProps
+const StudentPopupMenu = React.forwardRef<
+  StudentPopupMenuHandle,
+  StudentPopupMenuProps
 >((props, ref) => {
   const [contextMenu, setContextMenu] = useState<{
     mouseX: number;
     mouseY: number;
-    klass: string;
+    student: string;
   } | null>(null);
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useImperativeHandle(ref, () => ({ handleContextMenu }));
-  const handleContextMenu = (event: React.MouseEvent, klass: string) => {
+  const handleContextMenu = (event: React.MouseEvent, student: string) => {
     setContextMenu(
       contextMenu === null
         ? {
             mouseX: event.clientX - 2,
             mouseY: event.clientY - 4,
-            klass,
+            student,
           }
         : null
     );
@@ -56,7 +56,7 @@ const ClassDeletePopupMenu = React.forwardRef<
       >
         <MenuList dense>
           <MenuItem onClick={() => setDeleteDialogOpen(true)}>
-            Delete class
+            Remove student
           </MenuItem>
         </MenuList>
       </Menu>
@@ -67,15 +67,15 @@ const ClassDeletePopupMenu = React.forwardRef<
           close();
         }}
         onDelete={() => {
-          props.onDeleteClass(contextMenu?.klass || "");
+          props.onDeleteStudent(contextMenu?.student || "");
           close();
         }}
-        title="Delete Class"
-        message={`Are you sure you want to permanently delete ${contextMenu?.klass}? Related student results will not be lost`}
+        title="Remove Student"
+        message={`Are you sure you want to remove ${contextMenu?.student} from the class?`}
       />
     </>
   );
 });
 
-export default ClassDeletePopupMenu;
-export { ClassDeletePopupMenuHandle };
+export default StudentPopupMenu;
+export { StudentPopupMenuHandle };

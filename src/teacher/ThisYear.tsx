@@ -4,11 +4,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Grid2,
   IconButton,
   Stack,
@@ -42,8 +37,8 @@ import {
 } from "./Models";
 import ResultCodePane from "./components/ResultCodePane";
 import ResultsTable, { ResultsTableRef } from "./components/ResultsTable";
-import AddGroupDialog from "./components/AddGroupDialog";
-import { sanitisePastedEmails, zipResults } from "./utils";
+import AddGroupDialog from "./components/dialogs/AddGroupDialog";
+import { zipResults } from "./utils";
 import TeacherContainer from "./TeacherContainer";
 import { useOutletContext } from "react-router-dom";
 import { OutletContextType } from "../auth/AdminWrapper";
@@ -58,6 +53,11 @@ import { useClassesStudentsDelete } from "./hooks/api/useClassesStudentsDelete";
 import BookInput from "./components/BookInput";
 import { useClassesPatchBookActive } from "./hooks/api/useClassesPatchBookActive";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import TimerIcon from "@mui/icons-material/Timer";
+import TimerOffIcon from "@mui/icons-material/TimerOff";
+import StarIcon from "@mui/icons-material/Star";
+import StarHalfIcon from "@mui/icons-material/StarHalf";
+import AddStudentsToClassDialog from "./components/dialogs/AddStudentsToClassDialog";
 
 type GroupBook = {
   bookTitle: string;
@@ -69,7 +69,6 @@ type DownloadState = "idle" | "done" | "error" | "downloading";
 const ThisYear = () => {
   const sessionContext = useContext(SessionContext);
   const notificationContext = useContext(NotificationsContext);
-  const textfieldUsernamesRef = useRef<HTMLTextAreaElement>(null);
 
   const [classInputValue, setClassInputValue] = React.useState("");
   const [activeClass, setActiveGroup] = useState<ClassModel | undefined>(
@@ -102,6 +101,10 @@ const ThisYear = () => {
   const [stagedResults, setStagedResults] = useState<
     Map<string, ChallengeResultComplexModel>
   >(new Map());
+
+  const [highlightAttemptedToday, setHighlightAttemptedToday] =
+    useState<boolean>(false);
+  const [onlyShowTop5, setOnlyShowTop5] = useState<boolean>(false);
 
   const { mutate: downloadResultsExcel, isPending: isDownloadingExcel } =
     useResultsDownloadExcel({
@@ -209,6 +212,7 @@ const ThisYear = () => {
               }
               resultsTableRef.current?.updateCell(msg.student, id);
             }
+            return;
           }
         }
       }
@@ -311,13 +315,12 @@ const ThisYear = () => {
     setStagedResults(newMap);
   }, []);
 
-  const handleAddStudents = (usernames: string) => {
+  const handleAddStudents = (usernames: string[]) => {
     setDialogState("");
     if (!activeClass || !usernames) return;
-    const studentsToAdd = usernames
-      .split("\n")
-      .map((u) => u.trim())
-      .filter((u) => u !== "" && !activeClass.students.includes(u));
+    const studentsToAdd = usernames.filter(
+      (u) => u !== "" && !activeClass.students.includes(u)
+    );
     if (studentsToAdd.length === 0) return;
     addStudentsToClass({
       className: activeClass.name,
@@ -422,59 +425,11 @@ const ThisYear = () => {
         </Grid2>
       }
     >
-      <Dialog
+      <AddStudentsToClassDialog
         open={dialogState === "addStudent"}
         onClose={() => setDialogState("")}
-        title="Add students"
-      >
-        <DialogTitle>Add Students</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Enter students below, one per line, with or without the @ email
-            suffix. You can also paste a list of students from Outlook.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="usernames"
-            label="Student usernames"
-            fullWidth
-            variant="standard"
-            multiline
-            inputRef={textfieldUsernamesRef}
-            inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
-            onPaste={(e) => {
-              if (
-                e.clipboardData.getData("Text") &&
-                textfieldUsernamesRef.current
-              ) {
-                let txt = sanitisePastedEmails(e.clipboardData.getData("Text"));
-                let textarea = textfieldUsernamesRef.current;
-                let start_position = textarea.selectionStart;
-                let end_position = textarea.selectionEnd;
-                textarea.value = `${textarea.value.substring(
-                  0,
-                  start_position
-                )}${txt}${textarea.value.substring(
-                  end_position,
-                  textarea.value.length
-                )}`;
-                e.preventDefault();
-              }
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogState("")}>Cancel</Button>
-          <Button
-            onClick={() =>
-              handleAddStudents(textfieldUsernamesRef?.current?.value || "")
-            }
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onAddStudents={handleAddStudents}
+      />
       <InputDialog
         type="combo"
         options={bookTitles}
@@ -569,7 +524,7 @@ const ThisYear = () => {
           {error ? (
             <Alert severity="error">{error}</Alert>
           ) : (
-            <React.Fragment>
+            <>
               <h2>{book?.name}&nbsp;</h2>
               {activeBookTitle ? (
                 <Stack
@@ -586,11 +541,42 @@ const ThisYear = () => {
                     {window.location.origin}?bk={activeBookTitle}
                   </a>
 
-                  <Tooltip title="Reload the results table. This is resource intensive and should be used sparingly when Websocket is not available.">
-                    <IconButton size="small" onClick={() => forceUpdate()}>
-                      <RefreshIcon />
-                    </IconButton>
-                  </Tooltip>
+                  <div>
+                    <Tooltip
+                      title={
+                        highlightAttemptedToday
+                          ? "Show all results the same way"
+                          : "Highlight results that have been attempted today"
+                      }
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => setHighlightAttemptedToday((v) => !v)}
+                        color={highlightAttemptedToday ? "primary" : "default"}
+                      >
+                        {highlightAttemptedToday ? (
+                          <TimerIcon />
+                        ) : (
+                          <TimerOffIcon />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Only show the top 5 students">
+                      <IconButton
+                        size="small"
+                        onClick={() => setOnlyShowTop5((v) => !v)}
+                        color={onlyShowTop5 ? "primary" : "default"}
+                      >
+                        {onlyShowTop5 ? <StarIcon /> : <StarHalfIcon />}
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Reload the results table. This is resource intensive and should be used sparingly when Websocket is not available.">
+                      <IconButton size="small" onClick={() => forceUpdate()}>
+                        <RefreshIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
                 </Stack>
               ) : undefined}
               <ResultsTable
@@ -599,6 +585,8 @@ const ThisYear = () => {
                 bookTitle={activeBookTitle}
                 klass={activeClass}
                 updateCtr={updateCtr}
+                highlightAttemptedToday={highlightAttemptedToday}
+                onlyShowTop5={onlyShowTop5}
                 results={results}
                 onResultSelected={onResultSet}
                 onResultAdd={onResultAdd}
@@ -624,7 +612,7 @@ const ThisYear = () => {
                   Add students
                 </IconButton>
               ) : undefined}
-            </React.Fragment>
+            </>
           )}
         </Container>
 
