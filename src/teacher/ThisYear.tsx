@@ -3,13 +3,7 @@ import {
   Autocomplete,
   Box,
   Button,
-  Checkbox,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   Grid2,
   IconButton,
   Stack,
@@ -23,6 +17,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -30,8 +25,6 @@ import DownloadIcon from "@mui/icons-material/Download";
 import DoneIcon from "@mui/icons-material/Done";
 import ErrorIcon from "@mui/icons-material/Error";
 import AddIcon from "@mui/icons-material/Add";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import CheckBoxOutlineBlankIcon from "@mui/icons-material/CheckBoxOutlineBlank";
 import ExcelDownloadIcon from "../icons/ExcelDownloadIcon";
 import SessionContext from "../auth/contexts/SessionContext";
 import BookFetcher from "../book/utils/BookFetcher";
@@ -44,28 +37,39 @@ import {
 } from "./Models";
 import ResultCodePane from "./components/ResultCodePane";
 import ResultsTable, { ResultsTableRef } from "./components/ResultsTable";
-import AddGroupDialog from "./components/AddGroupDialog";
-import { sanitisePastedEmails, zipResults } from "./utils";
+import AddGroupDialog from "./components/dialogs/AddGroupDialog";
+import { zipResults } from "./utils";
 import TeacherContainer from "./TeacherContainer";
 import { useOutletContext } from "react-router-dom";
 import { OutletContextType } from "../auth/AdminWrapper";
+import { useResultsDownloadExcel } from "./hooks/api/useResultsDownloadExcel";
+import { useClasses } from "./hooks/api/useClasses";
+import NotificationsContext from "../components/NotificationsContext";
+import { useClassesCreate } from "./hooks/api/useClassesCreate";
+import { useClassesAddBook } from "./hooks/api/useClassesAddBook";
+import useBookList from "./hooks/api/useBookList";
+import { useClassesStudentsAdd } from "./hooks/api/useClassesStudentsAdd";
+import { useClassesStudentsDelete } from "./hooks/api/useClassesStudentsDelete";
+import BookInput from "./components/BookInput";
+import { useClassesPatchBookActive } from "./hooks/api/useClassesPatchBookActive";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import TimerIcon from "@mui/icons-material/Timer";
+import TimerOffIcon from "@mui/icons-material/TimerOff";
+import StarIcon from "@mui/icons-material/Star";
+import StarHalfIcon from "@mui/icons-material/StarHalf";
+import AddStudentsToClassDialog from "./components/dialogs/AddStudentsToClassDialog";
 
 type GroupBook = {
   bookTitle: string;
   enabled: boolean;
 };
 
-type DownloadState = "idle" | "downloading" | "done" | "error";
-
-const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
-const checkedIcon = <CheckBoxIcon fontSize="small" />;
+type DownloadState = "idle" | "done" | "error" | "downloading";
 
 const ThisYear = () => {
   const sessionContext = useContext(SessionContext);
-  const textfieldUsernamesRef = useRef<HTMLTextAreaElement>(null);
+  const notificationContext = useContext(NotificationsContext);
 
-  const [isLoadingClasses, setIsLoadingClasses] = useState<boolean>(false);
-  const [classes, setClasses] = useState<Array<ClassModel>>([]);
   const [classInputValue, setClassInputValue] = React.useState("");
   const [activeClass, setActiveGroup] = useState<ClassModel | undefined>(
     undefined
@@ -73,12 +77,11 @@ const ThisYear = () => {
   const [updateCtr, setUpdateCtr] = useState<number>(0);
   const forceUpdate = useCallback(() => setUpdateCtr((c) => c + 1), []);
 
-  const [bookTitles, setBookTitles] = useState<Array<string>>([]);
   const [booksInGroup, setBooksInGroup] = useState<Array<GroupBook>>([]);
-  const [activeBook, setActiveBook] = useState<GroupBook | undefined>(
+  const [activeBookTitle, setActiveBookTitle] = useState<string | undefined>(
     undefined
   );
-  const activeBookTitle = useRef<string | undefined>(undefined); // not for rendering, just for persistence across group changes
+  const activeBookTitleRef = useRef<string | undefined>(undefined); // not for rendering, just for persistence across group changes
 
   const [book, setBook] = useState<BookNodeModel | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
@@ -99,11 +102,93 @@ const ThisYear = () => {
     Map<string, ChallengeResultComplexModel>
   >(new Map());
 
+  const [highlightAttemptedToday, setHighlightAttemptedToday] =
+    useState<boolean>(false);
+  const [onlyShowTop5, setOnlyShowTop5] = useState<boolean>(false);
+
+  const { mutate: downloadResultsExcel, isPending: isDownloadingExcel } =
+    useResultsDownloadExcel({
+      onSuccess: () => {
+        setExcelDownloadState("done");
+        setTimeout(() => {
+          setExcelDownloadState("idle");
+        }, 3000);
+      },
+      onError: (error) => {
+        setExcelDownloadState("error");
+        console.log(error);
+      },
+    });
+  const { data: classes, isLoading: isLoadingClasses } = useClasses();
+  const { data: bookTitles } = useBookList();
+  const activeClasses = useMemo(
+    () => classes?.filter((c) => c.active),
+    [classes]
+  );
+  const { mutate: createClass } = useClassesCreate({
+    onSuccess: (_, { className }: { className: string }) => {
+      localStorage.setItem("teacher-activeGroup", className);
+      window.location.reload(); // happens rarely enough and when it does, the cache would need to be purged anyway
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: addBookToClass } = useClassesAddBook({
+    onSuccess: (_, { book }: { book: string }) => {
+      notificationContext.addMessage("Book added to class", "success");
+      setActiveBookTitle(book);
+      setDialogState("");
+      forceUpdate();
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: addStudentsToClass } = useClassesStudentsAdd({
+    onSuccess: () => {
+      notificationContext.addMessage("Students added to class", "success");
+      forceUpdate();
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: deleteStudentFromClass } = useClassesStudentsDelete({
+    onSuccess: () => {
+      notificationContext.addMessage("Student removed from class", "success");
+      forceUpdate();
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: patchBookActive } = useClassesPatchBookActive({
+    onSuccess: () => {
+      notificationContext.addMessage("Book active updated", "success");
+      forceUpdate();
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+
   const allotmentRef = useRef<AllotmentHandle>(null);
 
   const resultsTableRef = useRef<ResultsTableRef>(null);
 
   const oc: OutletContextType = useOutletContext();
+
+  useEffect(() => {
+    if (activeClasses) {
+      const prevActGroup = localStorage.getItem("teacher-activeGroup");
+      if (prevActGroup) {
+        setActiveGroup(
+          activeClasses.find((g: ClassModel) => g.name === prevActGroup)
+        );
+      }
+    }
+  }, [activeClasses]);
 
   const onWsMessage = useCallback(
     (msg: any) => {
@@ -127,6 +212,7 @@ const ThisYear = () => {
               }
               resultsTableRef.current?.updateCell(msg.student, id);
             }
+            return;
           }
         }
       }
@@ -142,23 +228,8 @@ const ThisYear = () => {
   }, [sessionContext, onWsMessage]);
 
   useEffect(() => {
-    setIsLoadingClasses(true);
-    oc.request("api/admin/classes?active=true")
-      .then((data) => {
-        data = data.filter((cls: ClassModel) => !!cls.active); // remove inactive classes
-        setClasses(data);
-        const prevActGroup = localStorage.getItem("teacher-activeGroup");
-        if (prevActGroup) {
-          setActiveGroup(data.find((g: ClassModel) => g.name === prevActGroup));
-        }
-      })
-      .finally(() => setIsLoadingClasses(false));
-    oc.request("api/admin/books").then((data) => setBookTitles(data));
-  }, [oc]);
-
-  useEffect(() => {
-    activeBookTitle.current = activeBook?.bookTitle;
-  }, [activeBook]);
+    activeBookTitleRef.current = activeBookTitle;
+  }, [activeBookTitle]);
 
   useEffect(() => {
     if (!activeClass) return;
@@ -173,12 +244,12 @@ const ThisYear = () => {
     ];
     setBooksInGroup(displayBooks);
     let newActiveBook: GroupBook | undefined = undefined;
-    if (activeBookTitle.current) {
+    if (activeBookTitleRef.current) {
       newActiveBook = displayBooks.find(
-        (b) => b.bookTitle === activeBookTitle.current
+        (b) => b.bookTitle === activeBookTitleRef.current
       );
     }
-    setActiveBook(newActiveBook);
+    setActiveBookTitle(newActiveBook?.bookTitle);
     if (sessionContext.wsSend) {
       sessionContext.wsSend({
         cmd: "reg-teacher-group",
@@ -190,7 +261,7 @@ const ThisYear = () => {
   useEffect(() => {
     setError(undefined);
 
-    if (!activeBook || !activeClass) {
+    if (!activeBookTitle || !activeClass) {
       setBookFetcher(undefined);
       setResults([]);
       return;
@@ -198,15 +269,15 @@ const ThisYear = () => {
 
     setBook(undefined);
 
-    setBookFetcher(new BookFetcher(activeBook.bookTitle));
+    setBookFetcher(new BookFetcher(activeBookTitle));
     oc.request(
       `api/admin/classes/${activeClass.name}/books/${encodeURIComponent(
-        activeBook.bookTitle
+        activeBookTitle
       )}/results`
     )
       .then((r) => setResults(r))
       .catch((e) => setError(e.reason));
-  }, [activeBook, oc, activeClass, updateCtr]);
+  }, [activeBookTitle, oc, activeClass, updateCtr]);
 
   useEffect(() => {
     if (!bookFetcher) {
@@ -244,134 +315,16 @@ const ThisYear = () => {
     setStagedResults(newMap);
   }, []);
 
-  const onAddBook = (bookTitle: string) => {
-    setDialogState("");
-    if (!activeClass || !bookTitle) return;
-    if (activeClass.books?.includes(bookTitle)) return;
-    fetch(`${oc.urlBase}/api/admin/classes/${activeClass.name}/books`, {
-      method: "post",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ book: bookTitle }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        activeClass.books?.push(bookTitle);
-        setActiveBook({ bookTitle, enabled: true });
-        forceUpdate();
-      }
-    });
-  };
-
-  const onAddGroup = (groupName: string) => {
-    setDialogState("");
-    if (!groupName) return;
-    for (const group of classes) {
-      if (group.name === groupName) {
-        return; // group already exists
-      }
-    }
-
-    fetch(`${oc.urlBase}/api/admin/classes`, {
-      method: "post",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ class: groupName }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        classes.push({ name: groupName, students: [] });
-        setActiveGroup(classes[classes.length - 1]);
-        window.location.reload(); // happens rarely enough and when it does, the cache would need to be purged anyway
-      }
-    });
-  };
-
-  const onAddStudents = (usernames: string) => {
+  const handleAddStudents = (usernames: string[]) => {
     setDialogState("");
     if (!activeClass || !usernames) return;
-
-    const studentsToAdd = usernames
-      .split("\n")
-      .map((u) => u.trim())
-      .filter((u) => u !== "" && !activeClass.students.includes(u));
-    fetch(`${oc.urlBase}/api/admin/classes/${activeClass.name}/students`, {
-      method: "post",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ user: studentsToAdd }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        activeClass?.students.push(...studentsToAdd);
-        forceUpdate();
-      }
-    });
-  };
-
-  const onDeleteStudent = (student: string) => {
-    if (!activeClass || !student) return;
-    fetch(
-      `${oc.urlBase}/api/admin/classes/${activeClass.name}/students/${student}`,
-      {
-        method: "delete",
-        cache: "no-cache",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionContext.token}`,
-        },
-      }
-    ).then((resp) => {
-      if (resp.status === 200) {
-        activeClass.students = activeClass.students.filter(
-          (s) => s !== student
-        );
-        forceUpdate();
-      }
-    });
-  };
-
-  const onUpdateBookEnabled = (book: GroupBook, enabled: boolean) => {
-    if (!activeClass) return;
-    const group = activeClass;
-    fetch(`${oc.urlBase}/api/admin/classes/${group.name}/books`, {
-      method: "post",
-      cache: "no-cache",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${sessionContext.token}`,
-      },
-      body: JSON.stringify({ book: book.bookTitle, enabled }),
-    }).then((resp) => {
-      if (resp.status === 200) {
-        book.enabled = enabled;
-        if (enabled) {
-          group.books = [
-            ...(group.books?.filter((b) => b !== book.bookTitle) || []),
-            book.bookTitle,
-          ];
-          group.disabled_books = [
-            ...(group.disabled_books?.filter((b) => b !== book.bookTitle) ||
-              []),
-          ];
-        } else {
-          group.books = [
-            ...(group.books?.filter((b) => b !== book.bookTitle) || []),
-          ];
-          group.disabled_books = [
-            ...(group.disabled_books?.filter((b) => b !== book.bookTitle) ||
-              []),
-            book.bookTitle,
-          ];
-        }
-        forceUpdate();
-      }
+    const studentsToAdd = usernames.filter(
+      (u) => u !== "" && !activeClass.students.includes(u)
+    );
+    if (studentsToAdd.length === 0) return;
+    addStudentsToClass({
+      className: activeClass.name,
+      students: studentsToAdd,
     });
   };
 
@@ -383,7 +336,6 @@ const ThisYear = () => {
       }, 3000);
       return;
     }
-    setZipDownloadState("downloading");
     zipResults(results, book)
       .then((blob) => saveAs(blob, `results-${book.name}.zip`))
       .then(() => {
@@ -408,34 +360,7 @@ const ThisYear = () => {
       }, 3000);
       return;
     }
-    setExcelDownloadState("downloading");
-    fetch(
-      `${oc.urlBase}/api/admin/classes/${activeClass.name}/results/export`,
-      {
-        headers: {
-          Authorization: `Bearer ${sessionContext.token}`,
-        },
-      }
-    )
-      .then((resp) => {
-        if (resp.status !== 200) {
-          throw new Error("Failed to download results");
-        }
-        return resp.blob();
-      })
-      .then((blob) => saveAs(blob, `results-${activeClass.name}.xlsx`))
-      .then(() => {
-        setExcelDownloadState("done");
-      })
-      .catch((e: any) => {
-        setExcelDownloadState("error");
-        console.log(e);
-      })
-      .then(() => {
-        setTimeout(() => {
-          setExcelDownloadState("idle");
-        }, 3000);
-      });
+    downloadResultsExcel(activeClass.name);
   };
 
   return (
@@ -485,7 +410,7 @@ const ThisYear = () => {
                 color="primary"
                 disabled={excelDownloadState !== "idle" || !activeClass}
               >
-                {excelDownloadState === "downloading" ? (
+                {isDownloadingExcel ? (
                   <CircularProgress size={24} />
                 ) : excelDownloadState === "done" ? (
                   <DoneIcon />
@@ -500,66 +425,23 @@ const ThisYear = () => {
         </Grid2>
       }
     >
-      <Dialog
+      <AddStudentsToClassDialog
         open={dialogState === "addStudent"}
         onClose={() => setDialogState("")}
-        title="Add students"
-      >
-        <DialogTitle>Add Students</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            Enter students below, one per line, with or without the @ email
-            suffix. You can also paste a list of students from Outlook.
-          </DialogContentText>
-          <TextField
-            autoFocus
-            margin="dense"
-            id="usernames"
-            label="Student usernames"
-            fullWidth
-            variant="standard"
-            multiline
-            inputRef={textfieldUsernamesRef}
-            inputProps={{ maxLength: 1500 }} // say max 60 students at 25 chars per email
-            onPaste={(e) => {
-              if (
-                e.clipboardData.getData("Text") &&
-                textfieldUsernamesRef.current
-              ) {
-                let txt = sanitisePastedEmails(e.clipboardData.getData("Text"));
-                let textarea = textfieldUsernamesRef.current;
-                let start_position = textarea.selectionStart;
-                let end_position = textarea.selectionEnd;
-                textarea.value = `${textarea.value.substring(
-                  0,
-                  start_position
-                )}${txt}${textarea.value.substring(
-                  end_position,
-                  textarea.value.length
-                )}`;
-                e.preventDefault();
-              }
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogState("")}>Cancel</Button>
-          <Button
-            onClick={() =>
-              onAddStudents(textfieldUsernamesRef?.current?.value || "")
-            }
-          >
-            Confirm
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onAddStudents={handleAddStudents}
+      />
       <InputDialog
         type="combo"
         options={bookTitles}
         disabledOptions={booksInGroup.map((b) => b.bookTitle)}
         title="Add book"
         inputLabel="Book"
-        onInputEntered={onAddBook}
+        onInputEntered={(bookTitle) =>
+          addBookToClass({
+            className: activeClass?.name || "",
+            book: bookTitle,
+          })
+        }
         okButtonLabel="Add"
         open={dialogState === "addBook"}
         onClose={() => setDialogState("")}
@@ -567,8 +449,8 @@ const ThisYear = () => {
         fullWidth
       />
       <AddGroupDialog
-        groups={classes}
-        onInputEntered={onAddGroup}
+        groups={classes || []}
+        onInputEntered={(className) => createClass({ className })}
         open={dialogState === "addGroup"}
         onClose={() => setDialogState("")}
       />
@@ -590,7 +472,7 @@ const ThisYear = () => {
                     onInputChange={(_, newValue) =>
                       setClassInputValue(newValue)
                     }
-                    options={classes}
+                    options={activeClasses || []}
                     getOptionLabel={(option) => (option ? option.name : "")}
                     renderInput={(params) => (
                       <TextField {...params} label="Group" />
@@ -610,52 +492,19 @@ const ThisYear = () => {
                     flexGrow: 1,
                   }}
                 >
-                  <Autocomplete
-                    size="small"
-                    value={activeBook || null}
-                    onChange={(_, n) => setActiveBook(n || undefined)}
-                    options={booksInGroup.sort((a, b) =>
-                      a.enabled !== b.enabled
-                        ? a.enabled
-                          ? -1
-                          : 1
-                        : a.bookTitle.localeCompare(b.bookTitle)
-                    )}
-                    groupBy={(option) =>
-                      option.enabled ? "Enabled" : "Disabled"
-                    }
-                    getOptionLabel={(option) =>
-                      option
-                        ? option.bookTitle
-                            .replace(/^books\//, "")
-                            .replace(/\//g, "  /  ")
-                        : ""
-                    }
-                    renderInput={(params) => (
-                      <>
-                        <TextField {...params} label="Book" />
-                      </>
-                    )}
-                    renderOption={(props, option) => (
-                      <li {...props}>
-                        <Box sx={{ flex: 1 }}>
-                          {option.bookTitle
-                            .replace(/^books\//, "")
-                            .replace(/\//g, " / ")}
-                        </Box>
-                        <Checkbox
-                          icon={icon}
-                          checkedIcon={checkedIcon}
-                          style={{ marginRight: 8 }}
-                          checked={option.enabled}
-                          onClick={(e) => e.stopPropagation()}
-                          onChange={(e) => {
-                            onUpdateBookEnabled(option, e.target.checked);
-                          }}
-                        />
-                      </li>
-                    )}
+                  <BookInput
                     disabled={!activeClass}
+                    activeBooks={activeClass?.books || []}
+                    inactiveBooks={activeClass?.disabled_books || []}
+                    value={activeBookTitle || null}
+                    onChange={(value) => setActiveBookTitle(value || undefined)}
+                    onUpdateBookActive={(book, active) =>
+                      patchBookActive({
+                        className: activeClass?.name || "",
+                        book,
+                        active,
+                      })
+                    }
                   />
                 </Grid2>
                 <Grid2>
@@ -675,29 +524,85 @@ const ThisYear = () => {
           {error ? (
             <Alert severity="error">{error}</Alert>
           ) : (
-            <React.Fragment>
+            <>
               <h2>{book?.name}&nbsp;</h2>
-              {activeBook ? (
-                <a
-                  href={`${window.location.origin}?bk=${activeBook.bookTitle}`}
-                  target="_blank"
-                  rel="noreferrer"
+              {activeBookTitle ? (
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="space-between"
                 >
-                  {window.location.origin}?bk={activeBook.bookTitle}
-                </a>
+                  <a
+                    href={`${window.location.origin}?bk=${activeBookTitle}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {window.location.origin}?bk={activeBookTitle}
+                  </a>
+
+                  <div>
+                    <Tooltip
+                      title={
+                        highlightAttemptedToday
+                          ? "Show all results the same way"
+                          : "Highlight results that have been attempted today"
+                      }
+                    >
+                      <IconButton
+                        size="small"
+                        onClick={() => setHighlightAttemptedToday((v) => !v)}
+                        color={highlightAttemptedToday ? "primary" : "default"}
+                      >
+                        {highlightAttemptedToday ? (
+                          <TimerIcon />
+                        ) : (
+                          <TimerOffIcon />
+                        )}
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Only show the top 5 students">
+                      <IconButton
+                        size="small"
+                        onClick={() => setOnlyShowTop5((v) => !v)}
+                        color={onlyShowTop5 ? "primary" : "default"}
+                      >
+                        {onlyShowTop5 ? <StarIcon /> : <StarHalfIcon />}
+                      </IconButton>
+                    </Tooltip>
+
+                    <Tooltip title="Reload the results table. This is resource intensive and should be used sparingly when Websocket is not available.">
+                      <IconButton size="small" onClick={() => forceUpdate()}>
+                        <RefreshIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </div>
+                </Stack>
               ) : undefined}
               <ResultsTable
                 ref={resultsTableRef}
                 book={book}
-                bookTitle={activeBook?.bookTitle}
+                bookTitle={activeBookTitle}
                 klass={activeClass}
                 updateCtr={updateCtr}
+                highlightAttemptedToday={highlightAttemptedToday}
+                onlyShowTop5={onlyShowTop5}
                 results={results}
                 onResultSelected={onResultSet}
                 onResultAdd={onResultAdd}
                 onResultsSelected={onResultsSet}
-                onDeleteStudent={onDeleteStudent}
+                onDeleteStudent={(student) =>
+                  deleteStudentFromClass({
+                    className: activeClass?.name || "",
+                    student,
+                  })
+                }
               />
+              {activeClass?.students.length === 0 ? (
+                <Alert severity="info" sx={{ my: 2 }}>
+                  No students in this class. Add some to get started.
+                </Alert>
+              ) : undefined}
               {activeClass ? (
                 <IconButton
                   size="small"
@@ -707,14 +612,14 @@ const ThisYear = () => {
                   Add students
                 </IconButton>
               ) : undefined}
-            </React.Fragment>
+            </>
           )}
         </Container>
 
         <Box sx={{ overflow: "auto", height: "100%" }}>
           <ResultCodePane
             results={[...stagedResults.values()]}
-            book={activeBookTitle.current || ""}
+            book={activeBookTitleRef.current || ""}
           />
         </Box>
       </Allotment>

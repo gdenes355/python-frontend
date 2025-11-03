@@ -3,15 +3,17 @@ import { PublicClientApplication } from "@azure/msal-browser";
 import { loginRequest } from "../models/authConfig";
 import { msalConfig } from "../models/authConfig";
 import type { LoginInfo } from "../models/LoginInfo";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import LoginCard from "./components/LoginCard";
 import useTokenExchange from "./hooks/useTokenExchange";
 import { useNeedsManualApproval } from "./hooks/useNeedsManualApproval";
+import NotificationsContext from "../../components/NotificationsContext";
 
 const MsalLoginInternal = ({ info }: { info: LoginInfo }) => {
   const { instance, accounts } = useMsal();
   const [accessToken, setAccessToken] = useState<string>("");
   const isAuthenticated = useIsAuthenticated();
+  const notifications = useContext(NotificationsContext);
 
   const { needsManualApproval, onApprovalReceived } =
     useNeedsManualApproval(info);
@@ -60,6 +62,10 @@ const MsalLoginInternal = ({ info }: { info: LoginInfo }) => {
       }}
       onLoginClick={() => {
         instance.loginRedirect(loginRequest).catch((e) => {
+          notifications.addMessage(
+            `Failed to redirect to MSAL login page ${e}`,
+            "error"
+          );
           console.log(e);
         });
       }}

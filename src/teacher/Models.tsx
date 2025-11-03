@@ -1,4 +1,4 @@
-type ClassModel = {
+export type ClassModel = {
   name: string;
   active?: boolean;
   books?: Array<string>;
@@ -7,7 +7,7 @@ type ClassModel = {
   students: Array<string>;
 };
 
-type ChallengeResultComplexModel = {
+export type ChallengeResultComplexModel = {
   correct: boolean;
   "wrong-code"?: string;
   "wrong-date"?: string;
@@ -20,9 +20,9 @@ type ChallengeResultComplexModel = {
   comment?: string;
 };
 
-type ChallengeResultModel = boolean | ChallengeResultComplexModel;
+export type ChallengeResultModel = boolean | ChallengeResultComplexModel;
 
-type ResultsModel = {
+export type ResultsModel = {
   user: string;
   name: string;
   book: string;
@@ -30,9 +30,9 @@ type ResultsModel = {
   // and all the other fields are string keys
 };
 
-export {
-  ClassModel,
-  ResultsModel,
-  ChallengeResultModel,
-  ChallengeResultComplexModel,
+export type AggregatedResultsModel = {
+  student: string;
+  passCount?: number;
+  results?: ResultsModel;
+  challengeIdsAttemptedToday?: Set<string>;
 };

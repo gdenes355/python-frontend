@@ -10,9 +10,9 @@ import {
 } from "@mui/material";
 import { Box } from "@mui/system";
 import React, {
+  useCallback,
   useEffect,
   useImperativeHandle,
-  useMemo,
   useRef,
   useState,
 } from "react";
@@ -27,12 +27,15 @@ import {
 } from "../Models";
 
 import "./ResultsTable.css";
-import StudentPopupMenu, { StudentPopupMenuHandle } from "./StudentPopupMenu";
+import StudentPopupMenu, {
+  StudentPopupMenuHandle,
+} from "./menus/StudentPopupMenu";
 import ResultsTableRow, {
   ChallengeInfo,
   ResultsTableRowRef,
   resultFromId,
 } from "./ResultsTableRow";
+import useAggregatedResults from "../hooks/useAggregatedResults";
 
 type ResultsTableProps = {
   klass?: ClassModel;
@@ -40,6 +43,8 @@ type ResultsTableProps = {
   book?: BookNodeModel;
   results?: Array<ResultsModel>;
   updateCtr: number;
+  highlightAttemptedToday: boolean;
+  onlyShowTop5: boolean;
   onResultsSelected: (res: ChallengeResultComplexModel[]) => void;
   onResultSelected: (res: ChallengeResultComplexModel) => void;
   onResultAdd: (res: ChallengeResultComplexModel) => void;
@@ -75,6 +80,32 @@ const SortableTableHeadCell = (props: SortableTableHeadCellProps) => {
   );
 };
 
+const getComparator = (
+  orderBy: SortKey,
+  orderDir: SortDirection,
+  onlyShowTop5: boolean
+) => {
+  if (onlyShowTop5) {
+    // force order by passCount
+    return (a: any, b: any) => {
+      return (b["passCount"] || 0) - (a["passCount"] || 0);
+    };
+  }
+  if (!orderBy) return () => 0;
+  if (orderBy === "student") {
+    return orderDir === "asc"
+      ? (a: any, b: any) =>
+          (a["name"] as string).localeCompare(b["name"] as string)
+      : (a: any, b: any) =>
+          (b["name"] as string).localeCompare(a["name"] as string);
+  }
+  if (orderBy === "pass") {
+    return orderDir === "asc"
+      ? (a: any, b: any) => (a["passCount"] || 0) - (b["passCount"] || 0)
+      : (a: any, b: any) => (b["passCount"] || 0) - (a["passCount"] || 0);
+  }
+};
+
 const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
   (props, ref) => {
     useImperativeHandle(ref, () => ({ updateCell }));
@@ -82,14 +113,34 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
     const [orderBy, setOrderBy] = useState<SortKey>(undefined);
     const [orderDir, setOrderDir] = useState<SortDirection>("asc");
 
-    const updateCell = (student: string, id: string) => {
-      let row = rowRefs.current.get(student);
-      if (row) row.updateCell(id);
-    };
-
     const [challengeInfo, setChallengeInfo] = useState<
       ChallengeInfo | undefined
     >(undefined);
+
+    const handleInvalidateRowOnly = (student: string, id?: string) => {
+      if (!id) {
+        return;
+      }
+      let row = rowRefs.current.get(student);
+      if (row) {
+        row.updateCell(id);
+      }
+    };
+
+    const {
+      aggregatedResults,
+      updateAggregatedResults,
+      getAggregateResultsFromRef,
+    } = useAggregatedResults(
+      props.results,
+      props.klass,
+      challengeInfo,
+      handleInvalidateRowOnly
+    );
+
+    const updateCell = (student: string, id: string) => {
+      updateAggregatedResults(student, id);
+    };
 
     const rowRefs = useRef<Map<string, ResultsTableRowRef>>(new Map());
 
@@ -106,33 +157,11 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
 
     const popupMenuRef = useRef<StudentPopupMenuHandle>(null);
 
-    const resultsProcessed = useMemo(
-      () =>
-        new Map(
-          props.klass?.students.map((student) => {
-            let res = props.results?.length
-              ? props.results?.filter((r) => r.user === student).at(0)
-              : null;
-            let passCount: number | undefined = undefined;
-            if (res && challengeInfo) {
-              passCount = 0;
-              for (let id of challengeInfo.ids) {
-                let r = (res as any)[id] as any;
-                if (
-                  (r instanceof Boolean && (r as boolean)) ||
-                  (r as ChallengeResultComplexModel)?.correct
-                ) {
-                  passCount++;
-                }
-              }
-            }
-            return [
-              student,
-              { student: student, results: res, passCount: passCount },
-            ];
-          })
-        ),
-      [props.results, props.klass, challengeInfo]
+    const aggregatedResultsFetcher = useCallback(
+      (student: string) => {
+        return getAggregateResultsFromRef(student);
+      },
+      [getAggregateResultsFromRef]
     );
 
     if (!props.klass) {
@@ -174,22 +203,6 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
       setOrderBy(name);
     };
 
-    const getComparator = () => {
-      if (!orderBy) return () => 0;
-      if (orderBy === "student") {
-        return orderDir === "asc"
-          ? (a: any, b: any) =>
-              (a["name"] as string).localeCompare(b["name"] as string)
-          : (a: any, b: any) =>
-              (b["name"] as string).localeCompare(a["name"] as string);
-      }
-      if (orderBy === "pass") {
-        return orderDir === "asc"
-          ? (a: any, b: any) => (a["passCount"] || 0) - (b["passCount"] || 0)
-          : (a: any, b: any) => (b["passCount"] || 0) - (a["passCount"] || 0);
-      }
-    };
-
     return (
       <Box sx={{ width: "100%" }}>
         <TableContainer>
@@ -222,24 +235,27 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
             <TableBody>
               {props.klass.students
                 .map((student) => {
-                  const res = resultsProcessed.get(student);
-                  const name = res?.results?.name || student;
-                  const passCount = res?.passCount || 0;
-                  const results = res?.results;
-                  return { student, name, passCount, results };
+                  const passCount =
+                    aggregatedResults.get(student)?.passCount || 0;
+                  return {
+                    student,
+                    passCount,
+                    name:
+                      aggregatedResults.get(student)?.results?.name || student,
+                  };
                 })
-                .sort(getComparator())
-                .map(({ student, name, passCount, results }) => {
+                .sort(getComparator(orderBy, orderDir, props.onlyShowTop5))
+                .slice(0, props.onlyShowTop5 ? 5 : undefined)
+                .map(({ student }) => {
                   return (
                     <ResultsTableRow
                       key={student}
+                      aggregatedResultsFetcher={aggregatedResultsFetcher}
                       student={student}
-                      name={name}
                       bookSelected={!!props.book}
+                      highlightAttemptedToday={props.highlightAttemptedToday}
                       menu={popupMenuRef}
                       challengeInfo={challengeInfo}
-                      passCount={passCount}
-                      results={results}
                       onResultSelected={onResultSelected}
                       onResultsSelected={props.onResultsSelected}
                       ref={(r) => {

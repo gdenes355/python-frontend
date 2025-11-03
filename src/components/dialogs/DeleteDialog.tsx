@@ -31,6 +31,7 @@ const DeleteDialog = (props: DeleteDialogProps) => {
           onClick={() => {
             props.onDelete();
           }}
+          autoFocus
         >
           Delete
         </Button>
