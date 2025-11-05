@@ -23,7 +23,7 @@ export const useClassesCreate = (
           "Content-Type": "application/json",
         },
         method: "POST",
-        body: JSON.stringify({ class_name: className }),
+        body: JSON.stringify({ class: className }),
       });
       if (!resp.ok) {
         throw new Error(
