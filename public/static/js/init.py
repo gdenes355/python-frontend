@@ -393,6 +393,7 @@ import inspect
 _A = "action"
 _V = "value"
 _idc = 0
+_col_mode = 255
 def synchronise():
     x = js.XMLHttpRequest.new()
     x.open('get', '/@turtle@/req.js', False)
@@ -411,8 +412,21 @@ def done():
     msg = {_A:"done"}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
     synchronise()
+def _colormode(mode=None):
+    global _col_mode
+    if mode is None: return _col_mode
+    if mode == 1.0: _col_mode = float(mode)
+    elif mode == 255: _col_mode = int(mode)
+    else: raise ValueError(f"Invalid color mode: {mode}")
+colormode = _colormode
+class __Screen:
+    def setup(self, width, height):
+        msg = {_A:"setup", "width":width, "height":height}
+        post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+        return J.loads(synchronise())
+    def colormode(self, mode=None): return _colormode(mode)
+def Screen():return __Screen()
 class Turtle:
-    
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
@@ -441,16 +455,20 @@ class Turtle:
     def pd(self):self.pendown()
     def down(self):self.pendown()
     def speed(self, speed_value):self.send({_A:"speed", _V:speed_value})
-    def reset(self):self.send({_A:"reset"})
+    def reset(self):self.send({_A:"reset", _V:"sync"})
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, color, color2=-1, color3=-1):
-        if color2 == -1 and color3 == -1:
-            self.send({_A:"pencolor", _V:color})
+    def __send_col(self, c1, c2, c3, prop):
+        if c2 == c3 and c3 == -1 and isinstance(c1, str):
+            self.send({_A:prop, _V:c1})
         else:
-            rgb = (color,color2,color3)
-            self.send({_A:"pencolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
+            if isinstance(c1, tuple) or isinstance(c1, list):
+                c1, c2, c3 = c1
+            col_mul = 255 if _col_mode == 1.0 else 1
+            rgb = (int(c1*col_mul), int(c2*col_mul), int(c3*col_mul))
+            self.send({_A:prop, _V:"#" + struct.pack('BBB',*rgb).hex()})
+    def pencolor(self, color, color2=-1, color3=-1): self.__send_col(color, color2, color3, "pencolor")
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
     def color(self, color, color2=-1, color3=-1): self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
@@ -458,18 +476,13 @@ class Turtle:
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, color, color2=-1, color3=-1):
-        if color2 == -1 and color3 == -1:
-            self.send({_A:"fillcolor", _V:color})
-        else:
-            rgb = (color,color2,color3)
-            self.send({_A:"fillcolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
+    def fillcolor(self, color, color2=-1, color3=-1): self.__send_col(color, color2, color3, "fillcolor")
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
-
+mode("standard")
 ''')
 
 
@@ -484,10 +497,6 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
     time.sleep = test_sleep
     os.system = test_shell
     input = test_input
-
-    # ensure turtle canvas cleared if used
-    code = code.replace(
-        "import turtle", "import turtle;turtle.mode('standard')")
 
     # prepare inputs
     if not expected_input:

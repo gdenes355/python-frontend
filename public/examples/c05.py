@@ -1,4 +1,10 @@
 import turtle
+
+# use the Screen object to set the canvas size and also the color mode
+sc = turtle.Screen()
+sc.colormode(255.0)
+sc.setup(600,450)
+
 t = turtle.Turtle()
 
 t.pensize(3)
