@@ -400,7 +400,11 @@ def synchronise():
     x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
     x.send()
     if x.status != 200:
-        raise Exception("Turtle command failed")
+        try:
+            error = J.loads(x.response).get("data", {}).get("error", "unknown turtle error")
+        except Exception as e:
+            error = "unknown turtle error"
+        raise Exception("Turtle command failed: " + error)
     return x.response
 def post_message(data):
     js.workerPostMessage(to_js(data, dict_converter=js.Object.fromEntries))
@@ -455,7 +459,7 @@ class Turtle:
     def pd(self):self.pendown()
     def down(self):self.pendown()
     def speed(self, speed_value):self.send({_A:"speed", _V:speed_value})
-    def reset(self):self.send({_A:"reset", _V:"sync"})
+    def reset(self):self.send({_A:"reset"})
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
@@ -482,7 +486,6 @@ for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to 
   args = str(inspect.signature(eval(f"Turtle.{m}")))
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
-mode("standard")
 ''')
 
 
@@ -496,6 +499,7 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
     sys.stdaud = debug_audio
     time.sleep = test_sleep
     os.system = test_shell
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
     input = test_input
 
     # prepare inputs
@@ -520,6 +524,7 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
     except NotEnoughInputsError:
         return js.Object.fromEntries(to_js({"err": "You've requested too many inputs", "ins": expected_input}))
     except Exception as e:
+        js.console.log("error executing code", str(e))
         return js.Object.fromEntries(to_js({"err": "Runtime error", "ins": expected_input}))
 
     if len(test_inputs) == 1 and test_inputs[0] == '':
@@ -586,16 +591,25 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
                     screen_dump_user = run_turtle_cmd(
                         {"action": "dump", "value": ""})
                     # now using virtual for both user & soln, must ensure reset between runs
+                    run_turtle_cmd({"action": "setup", "width":500, "height":400})
                     run_turtle_cmd({"action": "mode", "value": "standard"})
                     test_inputs = copy.deepcopy(test_input_copy)
                     exec(requirement.get("filename"), global_vars)
                     screen_dump_soln = run_turtle_cmd(
                         {"action": "dump", "value": ""})
                     if screen_dump_user != screen_dump_soln:
-                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
+                        try:
+                            exp = json.loads(screen_dump_soln).get('data') or None if reveal_expected and screen_dump_soln else None
+                            act = json.loads(screen_dump_user).get('data') or None if reveal_expected and screen_dump_user else None
+                        except Exception as e:
+                            js.console.log("error fetching Turtle data", str(e))
+                            exp = None
+                            act = None
+                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input, "expected": exp, "actual": act}))
                     else:
                         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
                 except Exception as e:
+                    js.console.log("error", str(e))
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
             else:
                 test_string = test_output.buffer
@@ -745,7 +759,6 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
-
     exec(code, global_vars)
 
 

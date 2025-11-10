@@ -560,7 +560,9 @@ const processTurtleCommand = (
             });
         });
       default:
-        return Promise.reject(new Error(`unknown turtle action ${cmd.action}`));
+        return Promise.reject(
+          new Error(`unknown turtle action '${cmd.action}'`)
+        );
     }
   } catch (err) {
     return Promise.reject(err);
@@ -588,6 +590,9 @@ const initialiseTurtle: (canvas: HTMLCanvasElement) => SimpleTurtle = (
 const clearTurtlesAndCanvas = (canvas: HTMLCanvasElement) => {
   turtles.clear();
   canvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
+  if (virtualMode) {
+    virtualCanvas.getContext("2d")?.clearRect(0, 0, 1000, 1000);
+  }
 };
 
 const setVirtualMode = (canvas: HTMLCanvasElement, virtual: boolean) => {
@@ -595,9 +600,23 @@ const setVirtualMode = (canvas: HTMLCanvasElement, virtual: boolean) => {
   virtualMode = virtual;
   if (virtualMode) {
     virtualCanvas = document.createElement("canvas");
-    virtualCanvas.width = canvas.width;
-    virtualCanvas.height = canvas.height;
+    virtualCanvas.width = 500;
+    virtualCanvas.height = 400;
+    clearTurtlesAndCanvas(virtualCanvas);
   }
 };
 
-export { processTurtleCommand, clearTurtlesAndCanvas, setVirtualMode };
+const resizeScreen = (width: number, height: number) => {
+  if (virtualMode) {
+    virtualCanvas.width = width;
+    virtualCanvas.height = height;
+    virtualCanvas.getContext("2d")?.clearRect(0, 0, width, height);
+  }
+};
+
+export {
+  processTurtleCommand,
+  clearTurtlesAndCanvas,
+  setVirtualMode,
+  resizeScreen,
+};

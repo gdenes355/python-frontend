@@ -41,7 +41,7 @@ addEventListener('message', (event) => {
     const local = turtlePromiseResolve
     turtlePromiseResolve = null
     if (local) {
-      local(new Response(JSON.stringify(data), { status: 200 }))
+      local(new Response(JSON.stringify(data), { status: data?.status ?? 200 }))
     } else {
       //this seems very unlikely, but if the turtle command
       // was so easy to complete (e.g. state update), TS might have
