@@ -394,12 +394,21 @@ class PythonCodeRunner implements ICodeRunner {
       this.onAudio.fire(msg);
     },
     turtle: ({ id, msg }: TurtleData) => {
-      this.onTurtle.fire({ id, msg }).then((turtleResult) => {
-        navigator.serviceWorker.controller?.postMessage({
-          cmd: "ps-turtle-resp",
-          data: turtleResult,
+      this.onTurtle
+        .fire({ id, msg })
+        .then((turtleResult) => {
+          navigator.serviceWorker.controller?.postMessage({
+            cmd: "ps-turtle-resp",
+            data: turtleResult,
+          });
+        })
+        .catch((e: any) => {
+          navigator.serviceWorker.controller?.postMessage({
+            cmd: "ps-turtle-resp",
+            data: { error: e?.message || "Unknown error" },
+            status: 500,
+          });
         });
-      });
     },
     "test-finished": ({ results, bookNode, code }: TestFinishedData) => {
       this.forceStopping = false;

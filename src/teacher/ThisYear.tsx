@@ -273,7 +273,7 @@ const ThisYear = () => {
     oc.request(
       `api/admin/classes/${activeClass.name}/books/${encodeURIComponent(
         activeBookTitle
-      )}/results`
+      )}/results?ts=${Date.now()}`
     )
       .then((r) => setResults(r))
       .catch((e) => setError(e.reason));

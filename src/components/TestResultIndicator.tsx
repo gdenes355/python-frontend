@@ -1,4 +1,4 @@
-import React, { ReactElement, useMemo } from "react";
+import React, { ReactElement, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -78,6 +78,45 @@ const OptionalSpan = (props: OptionalSpanProps) => {
   return <span>{props.children}</span>;
 };
 
+const ImageResult = (props: { encodedData: string }) => {
+  const { encodedData } = props;
+  const [hovering, setHovering] = useState(false);
+  const handleMouseEnter = () => {
+    setHovering(true);
+  };
+  const handleMouseLeave = () => {
+    setHovering(false);
+  };
+
+  const handleClick = () => {
+    fetch(encodedData)
+      .then((res) => res.blob())
+      .then((blob) => {
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, "_blank");
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      });
+  };
+  return (
+    <img
+      src={encodedData}
+      alt="Expected"
+      style={{
+        aspectRatio: "1",
+        maxHeight: "100px",
+        width: "100px",
+        objectFit: "contain",
+        display: "block",
+        cursor: "pointer",
+        boxShadow: hovering ? "0 0 10px 0 rgba(0, 0, 0, 0.5)" : "none",
+      }}
+      onClick={handleClick}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    />
+  );
+};
+
 const ExpectedDisplay = (props: TestResult) => {
   const { expected, criteriaOutcomes } = props;
   if (!expected) {
@@ -86,6 +125,10 @@ const ExpectedDisplay = (props: TestResult) => {
 
   // string with \n in it
   if (typeof expected === "string") {
+    if (expected.startsWith("data:image/png;base64")) {
+      return <ImageResult encodedData={expected} />;
+    }
+
     return (
       <span>
         {expected.split("\n").map((x, j) => (
@@ -127,6 +170,28 @@ const ExpectedDisplay = (props: TestResult) => {
             {x.count} time{x.count !== undefined && x.count > 1 ? "s" : ""}
           </OptionalSpan>
           <OptionalSpan visible={!!x.ignore}> ({x.ignore})</OptionalSpan>
+          <br />
+        </span>
+      ))}
+    </span>
+  );
+};
+
+const ActualDisplay = (props: TestResult) => {
+  const { actual } = props;
+  if (!actual) {
+    return <span></span>;
+  }
+
+  if (actual.startsWith("data:image/png;base64")) {
+    return <ImageResult encodedData={actual} />;
+  }
+
+  return (
+    <span>
+      {actual.split("\n").map((x, j) => (
+        <span key={j}>
+          {x}
           <br />
         </span>
       ))}
@@ -179,12 +244,7 @@ const ResultsTooltip = (
                         <ExpectedDisplay {...tr} />
                       </TableCell>
                       <TableCell>
-                        {tr.actual?.split("\n").map((x, j) => (
-                          <span key={j}>
-                            {x}
-                            <br />
-                          </span>
-                        ))}
+                        <ActualDisplay {...tr} />
                       </TableCell>
                     </TableRow>
                   );

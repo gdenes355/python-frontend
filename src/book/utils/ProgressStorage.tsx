@@ -236,6 +236,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
       comments: new Map(),
     }; // make a copy
     // let's be optimistic and take all new passes
+    if (!node?.id || !newResults) return;
     let res = (newResults as any)[node.id] as ChallengeResultComplexModel;
     if (res && res.correct && !currentRes.passed.has(node.id)) {
       saveTestStateLocal(node, true);
