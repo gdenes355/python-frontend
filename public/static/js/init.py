@@ -393,13 +393,18 @@ import inspect
 _A = "action"
 _V = "value"
 _idc = 0
+_col_mode = 255
 def synchronise():
     x = js.XMLHttpRequest.new()
     x.open('get', '/@turtle@/req.js', False)
     x.setRequestHeader('cache-control', 'no-cache, no-store, max-age=0')
     x.send()
     if x.status != 200:
-        raise Exception("Turtle command failed")
+        try:
+            error = J.loads(x.response).get("data", {}).get("error", "unknown turtle error")
+        except Exception as e:
+            error = "unknown turtle error"
+        raise Exception("Turtle command failed: " + error)
     return x.response
 def post_message(data):
     js.workerPostMessage(to_js(data, dict_converter=js.Object.fromEntries))
@@ -411,8 +416,21 @@ def done():
     msg = {_A:"done"}
     post_message({"cmd": "turtle", "msg": J.dumps(msg)})
     synchronise()
+def _colormode(mode=None):
+    global _col_mode
+    if mode is None: return _col_mode
+    if mode == 1.0: _col_mode = float(mode)
+    elif mode == 255: _col_mode = int(mode)
+    else: raise ValueError(f"Invalid color mode: {mode}")
+colormode = _colormode
+class __Screen:
+    def setup(self, width, height):
+        msg = {_A:"setup", "width":width, "height":height}
+        post_message({"cmd": "turtle", "msg": J.dumps(msg)})
+        return J.loads(synchronise())
+    def colormode(self, mode=None): return _colormode(mode)
+def Screen():return __Screen()
 class Turtle:
-    
     def send(self, msg=None):
       arg = {"cmd": "turtle", "id": self.__id}
       if msg: arg["msg"] = J.dumps(msg)
@@ -445,12 +463,16 @@ class Turtle:
     def hideturtle(self):self.send({_A:"hideturtle"})
     def showturtle(self):self.send({_A:"showturtle"})
     def home(self):self.setposition(0, 0)
-    def pencolor(self, color, color2=-1, color3=-1):
-        if color2 == -1 and color3 == -1:
-            self.send({_A:"pencolor", _V:color})
+    def __send_col(self, c1, c2, c3, prop):
+        if c2 == c3 and c3 == -1 and isinstance(c1, str):
+            self.send({_A:prop, _V:c1})
         else:
-            rgb = (color,color2,color3)
-            self.send({_A:"pencolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
+            if isinstance(c1, tuple) or isinstance(c1, list):
+                c1, c2, c3 = c1
+            col_mul = 255 if _col_mode == 1.0 else 1
+            rgb = (int(c1*col_mul), int(c2*col_mul), int(c3*col_mul))
+            self.send({_A:prop, _V:"#" + struct.pack('BBB',*rgb).hex()})
+    def pencolor(self, color, color2=-1, color3=-1): self.__send_col(color, color2, color3, "pencolor")
     def setheading(self, angle):self.send({_A:"setheading", _V:angle})
     def color(self, color, color2=-1, color3=-1): self.pencolor(color, color2, color3)
     def pensize(self, size):self.send({_A:"pensize", _V:size})
@@ -458,18 +480,12 @@ class Turtle:
     def circle(self, radius, extent = 360):self.send({_A:"circle", "radius":radius, "extent": extent})
     def begin_fill (self):self.send({_A:"begin_fill"})
     def end_fill(self):self.send({_A:"end_fill"})
-    def fillcolor(self, color, color2=-1, color3=-1):
-        if color2 == -1 and color3 == -1:
-            self.send({_A:"fillcolor", _V:color})
-        else:
-            rgb = (color,color2,color3)
-            self.send({_A:"fillcolor", _V:"#" + struct.pack('BBB',*rgb).hex()})
+    def fillcolor(self, color, color2=-1, color3=-1): self.__send_col(color, color2, color3, "fillcolor")
 _t0 = Turtle()
 for m in [m for m in dir(_t0) if not m.startswith("_")]:  # reflection magic to expose default turtle
   args = str(inspect.signature(eval(f"Turtle.{m}")))
   args = args.replace("self, ", "").replace("self", "")
   exec(f"def {m}{args}: _t0.{m}{args}")
-
 ''')
 
 
@@ -483,11 +499,8 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
     sys.stdaud = debug_audio
     time.sleep = test_sleep
     os.system = test_shell
+    code = code.replace("import turtle", "import turtle;turtle.mode('standard')")
     input = test_input
-
-    # ensure turtle canvas cleared if used
-    code = code.replace(
-        "import turtle", "import turtle;turtle.mode('standard')")
 
     # prepare inputs
     if not expected_input:
@@ -511,6 +524,7 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
     except NotEnoughInputsError:
         return js.Object.fromEntries(to_js({"err": "You've requested too many inputs", "ins": expected_input}))
     except Exception as e:
+        js.console.log("error executing code", str(e))
         return js.Object.fromEntries(to_js({"err": "Runtime error", "ins": expected_input}))
 
     if len(test_inputs) == 1 and test_inputs[0] == '':
@@ -577,16 +591,25 @@ def pyexec(code, expected_input, expected_output, reveal_expected=True):
                     screen_dump_user = run_turtle_cmd(
                         {"action": "dump", "value": ""})
                     # now using virtual for both user & soln, must ensure reset between runs
+                    run_turtle_cmd({"action": "setup", "width":500, "height":400})
                     run_turtle_cmd({"action": "mode", "value": "standard"})
                     test_inputs = copy.deepcopy(test_input_copy)
                     exec(requirement.get("filename"), global_vars)
                     screen_dump_soln = run_turtle_cmd(
                         {"action": "dump", "value": ""})
                     if screen_dump_user != screen_dump_soln:
-                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input}))
+                        try:
+                            exp = json.loads(screen_dump_soln).get('data') or None if reveal_expected and screen_dump_soln else None
+                            act = json.loads(screen_dump_user).get('data') or None if reveal_expected and screen_dump_user else None
+                        except Exception as e:
+                            js.console.log("error fetching Turtle data", str(e))
+                            exp = None
+                            act = None
+                        return js.Object.fromEntries(to_js({"outcome": False, "err": "Incorrect turtle output", "ins": expected_input, "expected": exp, "actual": act}))
                     else:
                         return js.Object.fromEntries(to_js({"outcome": True, "ins": expected_input}))
                 except Exception as e:
+                    js.console.log("error", str(e))
                     return js.Object.fromEntries(to_js({"outcome": False, "err": "Error evaluating turtle canvas test-case", "ins": expected_input}))
             else:
                 test_string = test_output.buffer
@@ -736,7 +759,6 @@ def pyrun(code):
     time.sleep = debug_sleep
     os.system = debug_shell
     input = debug_input
-
     exec(code, global_vars)
 
 

@@ -128,63 +128,73 @@ const useAggregatedResults = (
       studentIdsByPassCountRef.current = newStudentIdsByPassCount;
       setAggregatedResults(new Map([...newResults]));
     },
-    [aggregatedResultsRef, studentIdsByPassCountRef]
+    []
   );
+
+  const updateAggregatedResultsInternal = (
+    targetStudent?: string,
+    targetId?: string
+  ) => {
+    const {
+      aggregatedResults: newAggregatedResults,
+      studentIdsByPassCount: newStudentIdsByPassCount,
+    } = processResults(klass, results, challengeInfo);
+    if (newAggregatedResults.size === 0) {
+      updateAggregatedResultsByReplacement(
+        newAggregatedResults,
+        newStudentIdsByPassCount
+      );
+    } else if (
+      newAggregatedResults.size !== aggregatedResultsRef.current.size
+    ) {
+      // different number of students
+      updateAggregatedResultsByReplacement(
+        newAggregatedResults,
+        newStudentIdsByPassCount
+      );
+    } else if (
+      Object.entries(aggregatedResultsRef.current).filter(
+        ([student, _]) => !newAggregatedResults.has(student)
+      ).length > 0
+    ) {
+      // same number of students, but some students are missing (so it's not a perfect overlap)
+      updateAggregatedResultsByReplacement(
+        newAggregatedResults,
+        newStudentIdsByPassCount
+      );
+    } else if (
+      !areStudentResultIdsTheSame(
+        studentIdsByPassCountRef.current,
+        newStudentIdsByPassCount
+      )
+    ) {
+      // different order
+
+      updateAggregatedResultsByReplacement(
+        newAggregatedResults,
+        newStudentIdsByPassCount
+      );
+    } else {
+      updateAggregatedResultsInPlace(
+        newAggregatedResults,
+        newStudentIdsByPassCount
+      );
+      if (targetStudent) {
+        onInvalidateRowOnly?.(targetStudent, targetId);
+      }
+    }
+  };
+
+  const updateAggregatedResultsRef = useRef<
+    (targetStudent?: string, targetId?: string) => void
+  >(updateAggregatedResultsInternal);
+  updateAggregatedResultsRef.current = updateAggregatedResultsInternal;
 
   const updateAggregatedResults = useCallback(
     (targetStudent?: string, targetId?: string) => {
-      const {
-        aggregatedResults: newAggregatedResults,
-        studentIdsByPassCount: newStudentIdsByPassCount,
-      } = processResults(klass, results, challengeInfo);
-      if (newAggregatedResults.size === 0) {
-        updateAggregatedResultsByReplacement(
-          newAggregatedResults,
-          newStudentIdsByPassCount
-        );
-      } else if (
-        newAggregatedResults.size !== aggregatedResultsRef.current.size
-      ) {
-        // different number of students
-        updateAggregatedResultsByReplacement(
-          newAggregatedResults,
-          newStudentIdsByPassCount
-        );
-      } else if (
-        Object.entries(aggregatedResultsRef.current).filter(
-          ([student, _]) => !newAggregatedResults.has(student)
-        ).length > 0
-      ) {
-        // same number of students, but some students are missing (so it's not a perfect overlap)
-        updateAggregatedResultsByReplacement(
-          newAggregatedResults,
-          newStudentIdsByPassCount
-        );
-      } else if (
-        !areStudentResultIdsTheSame(
-          studentIdsByPassCountRef.current,
-          newStudentIdsByPassCount
-        )
-      ) {
-        // different order
-
-        updateAggregatedResultsByReplacement(
-          newAggregatedResults,
-          newStudentIdsByPassCount
-        );
-      } else {
-        updateAggregatedResultsInPlace(
-          newAggregatedResults,
-          newStudentIdsByPassCount
-        );
-        if (targetStudent) {
-          onInvalidateRowOnly?.(targetStudent, targetId);
-        }
-      }
-      // ignore dependency inconsistencies. aggregatedResults, studentIdsByPassCount are read, but that's on purpose.
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      return updateAggregatedResultsRef.current(targetStudent, targetId);
     },
-    [klass, results, challengeInfo, onInvalidateRowOnly]
+    []
   );
 
   // listen to updated props

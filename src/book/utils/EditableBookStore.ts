@@ -6,6 +6,33 @@ import IBookFetcher, { IBookFetchResult } from "./IBookFetcher";
 import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { SessionContextType } from "../../auth/contexts/SessionContext";
 
+function runTasksWithLimit(limit: number) {
+  let active = 0;
+  const q: Array<() => void> = [];
+
+  const runNext = () => {
+    active--;
+    q.shift()?.();
+  };
+
+  return <T>(task: () => Promise<T>) =>
+    new Promise<T>((resolve, reject) => {
+      const run = () => {
+        active++;
+        task()
+          .then((v) => {
+            resolve(v);
+            runNext();
+          })
+          .catch((e) => {
+            reject(e);
+            runNext();
+          });
+      };
+      active < limit ? run() : q.push(run);
+    });
+}
+
 async function addNode(
   node: BookNodeModel,
   fetcher: BookFetcher,
@@ -69,10 +96,14 @@ async function addNode(
     });
   }
 
-  if (node.children) {
-    for (let child of node.children) {
-      await addNode(child, fetcher, authContext, cloneWithNewIds);
-    }
+  const runLimited = runTasksWithLimit(6);
+
+  if (node.children?.length) {
+    await Promise.all(
+      node.children.map((child) =>
+        runLimited(() => addNode(child, fetcher, authContext, cloneWithNewIds))
+      )
+    );
   }
   node.bookMainUrl = "edit://edit/book.json";
   node.bookLink = undefined; // flatten books

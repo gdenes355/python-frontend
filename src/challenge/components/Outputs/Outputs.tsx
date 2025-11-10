@@ -175,6 +175,8 @@ const ChallengeOutputs = React.forwardRef<
           canvasDisplayRef.current = c;
           if (canvasDisplayRef.current) canvasMountedCallback();
         }}
+        initialWidth={500}
+        initialHeight={400}
       />
     ),
     show: props.typ === ChallengeTypes.canvas,

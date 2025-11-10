@@ -1,7 +1,16 @@
-import React, { useContext, useRef, useImperativeHandle } from "react";
+import React, {
+  useContext,
+  useRef,
+  useImperativeHandle,
+  useState,
+} from "react";
 import "./CanvasDisplay.css";
 import { processCanvasCommand } from "./CanvasController";
-import { processTurtleCommand, setVirtualMode } from "./TurtleController";
+import {
+  processTurtleCommand,
+  resizeScreen,
+  setVirtualMode,
+} from "./TurtleController";
 
 import ChallengeContext from "../../../ChallengeContext";
 
@@ -12,11 +21,25 @@ type CanvasDisplayHandle = {
   runCommand: (commands: any[]) => void;
 };
 
-type CanvasDisplayProps = {};
+type CanvasDisplayProps = {
+  initialWidth: number;
+  initialHeight: number;
+};
 
 const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
-  (_, ref) => {
+  (props, ref) => {
+    const [dimensions, setDimensions] = useState<{
+      width: number;
+      height: number;
+    }>({
+      width: props.initialWidth,
+      height: props.initialHeight,
+    });
+
+    const [zoom, setZoom] = useState(1);
+
     const canvasEl = useRef<HTMLCanvasElement>(null);
+    const divEl = useRef<HTMLDivElement | null>(null);
     const challengeContext = useContext(ChallengeContext);
     const turtleUsed = useRef<boolean>(false);
     const turtleRetained = useRef<boolean>(false);
@@ -45,6 +68,18 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
         return new Promise<void>((r) => {
           r();
         });
+      } else if (turtleObj.action === "setup") {
+        setDimensions({
+          width: turtleObj.width,
+          height: turtleObj.height,
+        });
+        resizeScreen(turtleObj.width, turtleObj.height);
+        processTurtleCommand(
+          id,
+          { action: "reset" },
+          canvasEl.current as HTMLCanvasElement
+        );
+        return Promise.resolve();
       }
       return processTurtleCommand(
         id,
@@ -65,6 +100,17 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       }
     };
 
+    const onWheel = (event: WheelEvent) => {
+      if (event && event.ctrlKey) {
+        if (event.deltaY > 0) {
+          setZoom((prev) => Math.max(0.5, prev - 0.1));
+        } else {
+          setZoom((prev) => Math.min(2, prev + 0.1));
+        }
+        event.preventDefault();
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       runCommand,
       runTurtleCommand,
@@ -72,17 +118,35 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
       turtleReset,
     }));
 
+    const setDivRef = (el: HTMLDivElement) => {
+      if (divEl.current) {
+        divEl.current.removeEventListener("wheel", onWheel);
+      }
+      if (el) {
+        el.addEventListener("wheel", onWheel, { passive: false });
+        divEl.current = el;
+      }
+    };
+
     return (
-      <div style={{ width: "100%", height: "100%" }} className="graphicsPane">
+      <div
+        ref={setDivRef}
+        style={{ width: "100%", height: "100%" }}
+        className="graphicsPane"
+      >
         <canvas
           id="canvasDisplay"
-          width={500}
-          height={400}
+          width={dimensions.width}
+          height={dimensions.height}
           ref={canvasEl}
           onKeyDown={challengeContext?.actions["canvas-keydown"]}
           onKeyUp={challengeContext?.actions["canvas-keyup"]}
           tabIndex={1}
-          style={{ outline: "none" }}
+          style={{
+            outline: "none",
+            transform: `scale(${zoom})`,
+            transformOrigin: "top center",
+          }}
         />
       </div>
     );
