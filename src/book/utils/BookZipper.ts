@@ -59,6 +59,18 @@ class BookZipper {
         await this.addNode(child, authContext);
       }
     }
+    if (node.sol && node.sol.file) {
+      let absPath = absolutisePath(
+        node.sol.file,
+        node.bookMainUrl || this.fetcher.getBookPathAbsolute()
+      );
+      let resp = await this.fetcher.fetch(absPath, authContext);
+
+      if (resp.ok) {
+        const text = await resp.text();
+        this.zip.file(node.sol.file, text);
+      }
+    }
   }
 }
 

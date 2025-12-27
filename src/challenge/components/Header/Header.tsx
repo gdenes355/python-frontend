@@ -41,6 +41,7 @@ type HeaderProps = {
   isAssessment: boolean;
 
   // for editing book
+  canVerifySolutions: boolean;
   isEditing: boolean;
   hasEdited: boolean;
   isEditingGuide?: boolean;
@@ -126,6 +127,7 @@ const Header = (props: HeaderProps) => {
           codeRunner={props.codeRunner}
           canRunOnly={props.canRunOnly}
           canSubmit={props.canSubmit}
+          canVerifySolutions={props.canVerifySolutions}
           testResults={props.testResults}
           isAssessment={props.isAssessment}
         />

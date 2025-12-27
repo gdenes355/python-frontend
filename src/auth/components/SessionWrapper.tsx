@@ -64,7 +64,10 @@ const SessionWrapper = () => {
         window.location.origin
       );
       const bookPathAbs = absolutisePath(bookPath, window.location.origin);
-      if (new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin) {
+      if (
+        queryBookPathAbs !== "edit://edit/book.json" &&
+        new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin
+      ) {
         console.log("force logout...", queryBookPathAbs, bookPathAbs);
         logout();
       } else {

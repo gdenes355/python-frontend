@@ -94,6 +94,23 @@ async function addNode(
         });
       }
     });
+    if (node.sol) {
+      let absPath = node.sol.file
+        ? absolutisePath(
+            node.sol.file,
+            node.bookMainUrl || fetcher.getBookPathAbsolute()
+          )
+        : undefined;
+      if (absPath) {
+        let resp = await fetcher.fetch(absPath, authContext);
+        if (resp.ok) {
+          localStorage.setItem(
+            "edit://edit/" + node.sol.file,
+            await resp.text()
+          );
+        }
+      }
+    }
   }
 
   const runLimited = runTasksWithLimit(6);

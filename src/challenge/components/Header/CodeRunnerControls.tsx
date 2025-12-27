@@ -14,6 +14,7 @@ import CropSquareIcon from "@mui/icons-material/CropSquare";
 type CodeRunnerControlsProps = {
   canRunOnly: boolean;
   canSubmit: boolean;
+  canVerifySolutions: boolean;
   codeRunner: CodeRunnerRef;
   testResults: TestResults;
   isAssessment: boolean;
@@ -49,6 +50,17 @@ const CodeRunnerControls = (props: CodeRunnerControlsProps) => {
           size="small"
         >
           Submit
+        </Button>
+      ) : null}
+      {props.canVerifySolutions ? (
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!canDebug}
+          onClick={() => challengeContext?.actions["verify-solutions"]()}
+          size="small"
+        >
+          Verify Solution
         </Button>
       ) : null}
       <TestResultsIndicator

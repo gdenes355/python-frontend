@@ -31,7 +31,9 @@ const BookEditorFrame = () => {
     undefined
   );
 
-  const codeRunner = useCodeRunner({});
+  const codeRunner = useCodeRunner({
+    enabled: true,
+  });
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
