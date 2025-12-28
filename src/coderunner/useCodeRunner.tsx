@@ -197,12 +197,25 @@ const useCodeRunner = ({
   return {
     test:
       pythonCodeRunner?.test ||
-      (() => Promise.resolve({ results: [], code: "", bookNode: undefined })),
+      ((
+        code: string,
+        tests: TestCases,
+        additionalFiles: AdditionalFile[] | undefined,
+        additionalFilesLoaded: AdditionalFilesContents,
+        bookNode: BookNodeModel
+      ) => Promise.resolve({ results: [], code: "", bookNode: bookNode })),
     state: state,
     kill: pythonCodeRunner?.kill || (() => {}),
     debug:
       pythonCodeRunner?.debug ||
-      (() => Promise.resolve({ results: [], code: "", bookNode: undefined })),
+      ((
+        code: string,
+        mode: "debug" | "run",
+        dbgSetup?: DebugSetup,
+        additionalFiles?: AdditionalFile[] | undefined,
+        additionalFilesLoaded?: AdditionalFilesContents,
+        fixedUserInput?: string
+      ) => Promise.resolve({ reason: "" })),
     keyDown: pythonCodeRunner?.keyDown || (() => {}),
     keyUp: pythonCodeRunner?.keyUp || (() => {}),
     step: pythonCodeRunner?.step || (() => {}),

@@ -19,6 +19,23 @@ var wsCounter = 0;
 // eslint-disable-next-line no-var
 var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 
+const getRoles = (token: string) => {
+  if (!token) return [];
+  const base64Url = token.split(".")[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const jsonPayload = decodeURIComponent(
+    window
+      .atob(base64)
+      .split("")
+      .map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join("")
+  );
+  const blob = JSON.parse(jsonPayload);
+  return blob.roles || [];
+};
+
 const SessionWrapper = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
@@ -98,9 +115,18 @@ const SessionWrapper = () => {
     setToken("");
     setLoginInfo(undefined);
   };
-  const isLoggedIn = () => {
+
+  const isLoggedIn = useCallback(() => {
     return token !== "";
-  };
+  }, [token]);
+
+  const isTeacher = useCallback(() => {
+    return getRoles(token).includes("teacher");
+  }, [token]);
+
+  const canUploadBook = useCallback(() => {
+    return getRoles(token).includes("book-uploader");
+  }, [token]);
 
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
@@ -227,6 +253,8 @@ const SessionWrapper = () => {
         logout,
         setToken: setAuthToken,
         isLoggedIn,
+        isTeacher,
+        canUploadBook,
         bookPath,
         resultsEndpoint,
         wsOpen,

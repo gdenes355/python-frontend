@@ -2,6 +2,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -25,9 +26,11 @@ const queryClient = new QueryClient();
 const AdminWrapper = (props: AdminWrapperProps) => {
   const sessionContext = useContext(SessionContext);
   const [authorised, setAuthorised] = useState(false);
-  const [canEditServerBooksFolder, setCanEditServerBooksFolder] =
-    useState(false);
   const [error, setError] = useState("");
+
+  const canEditServerBooksFolder = useMemo(() => {
+    return sessionContext.canUploadBook();
+  }, [sessionContext]);
 
   useEffect(() => {
     if (authorised) return;
@@ -36,9 +39,8 @@ const AdminWrapper = (props: AdminWrapperProps) => {
     fetch(`${props.urlBase}/api/admin/token-test/`, { headers })
       .then((response) => {
         if (response.status === 200) {
-          response.json().then((data) => {
+          response.json().then(() => {
             setAuthorised(true);
-            setCanEditServerBooksFolder(data.canEditServerBooksFolder || false);
           });
         } else if (response.status === 401) {
           response.json().then((data) => {

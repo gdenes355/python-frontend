@@ -14,6 +14,7 @@ import {
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import QuestionMarkIcon from "@mui/icons-material/QuestionMark";
 import LogoutIcon from "@mui/icons-material/Logout";
+import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
 
 import Menu from "./Menu";
 
@@ -123,6 +124,18 @@ const HeaderBar = (props: HeaderBarProps) => {
                   <QuestionMarkIcon />
                 </ListItemIcon>
                 Help
+              </MenuItem>
+            ) : undefined}
+            {authContext.isTeacher() ? (
+              <MenuItem
+                onClick={() =>
+                  window.location.assign(`${window.location.origin}/teacher`)
+                }
+              >
+                <ListItemIcon>
+                  <AssignmentIndIcon />
+                </ListItemIcon>
+                Teacher portal
               </MenuItem>
             ) : undefined}
             {authContext.isLoggedIn() ? (

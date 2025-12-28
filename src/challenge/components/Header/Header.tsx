@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 
 import { useContext } from "react";
 import HeaderBar from "../../../components/HeaderBar";
@@ -17,12 +17,15 @@ import {
 import ChallengeContext from "../../ChallengeContext";
 import HeaderButtonsEditor from "./HeaderButtonsEditor";
 import HeaderMenuEditor from "./HeaderMenuEditor";
-import IBookFetcher from "../../../book/utils/IBookFetcher";
+import IBookFetcher, {
+  IBookFetchResult,
+} from "../../../book/utils/IBookFetcher";
 import { saveAs } from "file-saver";
 import BookZipper from "../../../book/utils/BookZipper";
 import InfoDialog from "../../../components/dialogs/InfoDialog";
 import CodeRunnerControls from "./CodeRunnerControls";
 import { TestResults } from "../../../models/Tests";
+import { LazyBookUploadDialog } from "../Editors/LazyBookUploadDialog";
 
 type HeaderProps = {
   title?: string;
@@ -53,9 +56,19 @@ const Header = (props: HeaderProps) => {
   const authContext = useContext(SessionContext);
   const challengeContext = useContext(ChallengeContext);
 
+  const [showBookUpload, setShowBookUpload] = useState(false);
+
   const [exportText, setExportText] = React.useState<string | undefined>(
     undefined
   );
+
+  const [uploadData, setUploadData] = useState<
+    | {
+        book: BookNodeModel;
+        zip: Blob;
+      }
+    | undefined
+  >(undefined);
 
   const exportBookZip = async () => {
     let book = await props.bookFetcher.fetchBook(authContext);
@@ -90,20 +103,47 @@ const Header = (props: HeaderProps) => {
     );
   };
 
+  const uploadBookToServer = async () => {
+    setShowBookUpload(true);
+    let book = await props.bookFetcher.fetchBook(authContext);
+    const zipper = new BookZipper(props.bookFetcher);
+    let zip = await zipper.zipBook(book.book, authContext);
+    let blob = await zip.generateAsync({
+      type: "blob",
+      compression: "DEFLATE",
+      compressionOptions: {
+        level: 9,
+      },
+    });
+    setUploadData({ book: book.book, zip: blob });
+  };
+
+  const isEditingRemote = useMemo(() => {
+    return localStorage.getItem("@editor-original-book") !== null;
+  }, [props.title]);
+
   return (
     <>
       <HeaderBar
         title={`${props.title ? props.title + " \u203A " : ""}  ${
           props.bookNode?.name
-        }${props.isEditing ? " (Editing)" : ""}`}
+        }${
+          props.isEditing
+            ? isEditingRemote
+              ? " (Editing local copy)"
+              : " (Editing)"
+            : ""
+        }`}
         onHelpOpen={() =>
           window.open("https://www.pythonsponge.com/", "_blank", "noopener")
         }
         menuItems={
           challengeContext?.isEditing ? (
             <HeaderMenuEditor
+              canUploadRemote={authContext.canUploadBook() && isEditingRemote}
               onBookDownload={() => exportBookZip()}
               onBookExportAsUrl={() => previewAsZip()}
+              onBookUploadRemote={() => uploadBookToServer()}
               onUsingFixedInputChange={props.onSetUsesFixedInput}
               usingFixedInput={props.usesFixedInput}
             />
@@ -161,6 +201,13 @@ const Header = (props: HeaderProps) => {
         text={exportText}
         onClose={() => setExportText(undefined)}
       />
+      {challengeContext?.isEditing && (
+        <LazyBookUploadDialog
+          uploadData={showBookUpload ? uploadData : undefined}
+          open={showBookUpload}
+          onClose={() => setShowBookUpload(false)}
+        />
+      )}
     </>
   );
 };

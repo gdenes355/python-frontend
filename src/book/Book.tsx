@@ -174,6 +174,11 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
+      if (authContext.isTeacher()) {
+        localStorage.setItem("@editor-original-book", bookPath);
+      } else {
+        localStorage.removeItem("@editor-original-book");
+      }
       createEditableBookStore(rootNode, bookFetcher, authContext, false).then(
         bookClonedForEditing
       );
