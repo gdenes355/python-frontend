@@ -15,6 +15,9 @@ const useRestartWsServer = (options: UseMutationOptions<void, Error>) => {
         },
         method: "POST",
       });
+      if (!res.ok) {
+        throw new Error("Failed to restart WebSocket server");
+      }
     },
     ...options,
   });
