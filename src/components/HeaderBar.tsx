@@ -126,7 +126,7 @@ const HeaderBar = (props: HeaderBarProps) => {
                 Help
               </MenuItem>
             ) : undefined}
-            {authContext.isTeacher() ? (
+            {authContext.isTeacher ? (
               <MenuItem
                 onClick={() =>
                   window.location.assign(`${window.location.origin}/teacher`)

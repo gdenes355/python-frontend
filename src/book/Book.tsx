@@ -135,6 +135,9 @@ const Book = (props: BookProps) => {
    */
   const bookClonedForEditing = useMemo(
     () => (store: EditableBookStore) => {
+      const currentLocation = window.location.href;
+      const queryParams = new URLSearchParams(currentLocation.split("?")[1]);
+      const chid = queryParams.get("chid");
       setEditableBookStore(store);
       setEditState("editing");
       navigate(
@@ -143,7 +146,7 @@ const Book = (props: BookProps) => {
             "?" +
             new URLSearchParams({
               bk: "edit://edit/book.json",
-              chid: activeNode?.id || "",
+              chid: activeNode?.id || chid || "",
               edit: "editing",
             }),
         },
@@ -174,7 +177,7 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
-      if (authContext.isTeacher()) {
+      if (authContext.isTeacher) {
         localStorage.setItem("@editor-original-book", bookPath);
       } else {
         localStorage.removeItem("@editor-original-book");

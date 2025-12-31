@@ -29,7 +29,7 @@ const AdminWrapper = (props: AdminWrapperProps) => {
   const [error, setError] = useState("");
 
   const canEditServerBooksFolder = useMemo(() => {
-    return sessionContext.canUploadBook();
+    return sessionContext.canUploadBook;
   }, [sessionContext]);
 
   useEffect(() => {

@@ -43,6 +43,9 @@ import { SessionFile } from "../models/SessionFile";
 
 import { GuideToggleFab } from "./components/GuideToggleFab";
 import { BookUploadType } from "../book/components/BookUpload";
+import BookServerUploader, {
+  BookServerUploaderRef,
+} from "./components/Editors/BookServerUploader";
 
 type ChallengeProps = {
   uid: string;
@@ -264,6 +267,9 @@ const Challenge = (props: ChallengeProps) => {
       watches: watches.current,
     };
   }, []);
+
+  // editor->server upload
+  const bookServerUploaderRef = useRef<BookServerUploaderRef | null>(null);
 
   // accepting actions from child nodes
   // actions interface; cached, so the
@@ -565,6 +571,9 @@ const Challenge = (props: ChallengeProps) => {
               canVerifySolutions={canVerifySolutions}
               testResults={testResults}
               isAssessment={!!props.bookNode.isAssessment}
+              onBookUploadToServer={() => {
+                bookServerUploaderRef.current?.showDialog(props.fetcher);
+              }}
             />
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
@@ -634,6 +643,7 @@ const Challenge = (props: ChallengeProps) => {
                       />
                     )}
                     <BookControlFabs
+                      hasEdited={hasEdited}
                       onNavigateToPrevPage={() =>
                         callWithSaveCheck(props.onRequestPreviousChallenge)
                       }
@@ -645,6 +655,15 @@ const Challenge = (props: ChallengeProps) => {
                       }}
                       onSave={
                         props.isEditing ? actions["save-node"] : undefined
+                      }
+                      onUploadToServer={
+                        props.isEditing
+                          ? () => {
+                              bookServerUploaderRef.current?.showDialog(
+                                props.fetcher
+                              );
+                            }
+                          : undefined
                       }
                     />
                   </Box>
@@ -686,6 +705,7 @@ const Challenge = (props: ChallengeProps) => {
           message="You might have unsaved changes on this page. Would you like to save first?"
           cancelText="Don't save"
         />
+        {props.isEditing && <BookServerUploader ref={bookServerUploaderRef} />}
       </ChallengeContext.Provider>
     </>
   );

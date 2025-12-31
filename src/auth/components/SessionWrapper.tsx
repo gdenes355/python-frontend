@@ -83,6 +83,7 @@ const SessionWrapper = () => {
       const bookPathAbs = absolutisePath(bookPath, window.location.origin);
       if (
         queryBookPathAbs !== "edit://edit/book.json" &&
+        bookPathAbs !== "edit://edit/book.json" &&
         new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin
       ) {
         console.log("force logout...", queryBookPathAbs, bookPathAbs);
@@ -120,13 +121,17 @@ const SessionWrapper = () => {
     return token !== "";
   }, [token]);
 
-  const isTeacher = useCallback(() => {
+  const isTeacher = useMemo(() => {
     return getRoles(token).includes("teacher");
   }, [token]);
 
-  const canUploadBook = useCallback(() => {
+  const canUploadBook = useMemo(() => {
     return getRoles(token).includes("book-uploader");
   }, [token]);
+
+  const isEditingRemote = useMemo(() => {
+    return localStorage.getItem("@editor-original-book") !== null;
+  }, [bookPath]);
 
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
@@ -255,6 +260,7 @@ const SessionWrapper = () => {
         isLoggedIn,
         isTeacher,
         canUploadBook,
+        isEditingRemote,
         bookPath,
         resultsEndpoint,
         wsOpen,

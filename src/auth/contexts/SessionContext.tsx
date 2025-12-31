@@ -12,8 +12,9 @@ type SessionContextType = {
   login: (info: LoginInfo) => void;
   setToken: (token: string) => void;
   isLoggedIn: () => boolean;
-  isTeacher: () => boolean;
-  canUploadBook: () => boolean;
+  isTeacher: boolean;
+  canUploadBook: boolean;
+  isEditingRemote: boolean;
   wsOpen: boolean;
   wsSend?: (msg: any, then?: WsResponse) => void;
   wsReconnect?: () => void;
@@ -30,8 +31,9 @@ const defaultSessionContext: SessionContextType = {
   login: () => {},
   setToken: () => {},
   isLoggedIn: () => false,
-  isTeacher: () => false,
-  canUploadBook: () => false,
+  isTeacher: false,
+  canUploadBook: false,
+  isEditingRemote: false,
   wsOpen: false,
 };
 

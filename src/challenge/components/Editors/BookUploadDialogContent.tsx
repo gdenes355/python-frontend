@@ -104,7 +104,13 @@ const BookUploadDialogContent = ({
               })
             );
           }}
-          disabled={isUploading}
+          disabled={
+            isUploading ||
+            !!errorBookHistory ||
+            !bookHistory ||
+            isLoadingBookHistory ||
+            false
+          }
         >
           {isUploading ? "Uploading..." : "Upload"}
         </Button>
