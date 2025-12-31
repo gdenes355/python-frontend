@@ -10,6 +10,7 @@ import BookTree from "./components/BookTree";
 import { useNameCacheSize } from "./hooks/api/useNameCacheSize";
 import { useNameCacheInvalidate } from "./hooks/api/useNameCacheInvalidate";
 import { useNameCacheDelete } from "./hooks/api/useNameCacheDelete";
+import useRestartWsServer from "./hooks/api/useRestartWsServer";
 
 const Tools = () => {
   const notificationContext = useContext(NotificationsContext);
@@ -27,6 +28,14 @@ const Tools = () => {
   const { mutate: deleteNames } = useNameCacheDelete({
     onSuccess: () => {
       notificationContext.addMessage("Names deleted", "success");
+    },
+    onError: (error: Error) => {
+      notificationContext.addMessage(error.message, "error");
+    },
+  });
+  const { mutate: restartWsServer } = useRestartWsServer({
+    onSuccess: () => {
+      notificationContext.addMessage("WebSocket server restarted", "success");
     },
     onError: (error: Error) => {
       notificationContext.addMessage(error.message, "error");
@@ -63,6 +72,16 @@ const Tools = () => {
               Delete all names
             </Button>
           </Stack>
+        </Paper>
+        <Paper elevation={4} sx={{ padding: 1, marginTop: 2 }}>
+          <h2 style={{ margin: 0 }}>WebSocket server</h2>
+          <p>
+            The WebSocket server is used to communicate with the students. If
+            you suspect its file cache is stale, you can restart it here.
+          </p>
+          <Button variant="contained" onClick={() => restartWsServer()}>
+            Restart WebSocket server
+          </Button>
         </Paper>
 
         <Paper elevation={4} sx={{ padding: 1, marginTop: 2, marginBottom: 2 }}>
