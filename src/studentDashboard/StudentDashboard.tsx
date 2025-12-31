@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import SessionContext from "../auth/contexts/SessionContext";
-import { Alert, Container, ListItemButton } from "@mui/material";
+import { Alert, Button, Container, ListItemButton } from "@mui/material";
 import HeaderBar from "../components/HeaderBar";
 import { useNavigate } from "react-router-dom";
 
@@ -16,7 +16,7 @@ type DashboardBook = {
 const StudentDashboard = (props: StudentDashboardProps) => {
   const { baseUrl } = props;
 
-  const sessionContext = useContext(SessionContext);
+  const authContext = useContext(SessionContext);
   const [token, setToken] = useState("");
 
   const [error, setError] = useState("");
@@ -27,10 +27,10 @@ const StudentDashboard = (props: StudentDashboardProps) => {
 
   useEffect(() => {
     if (books) return;
-    if (!sessionContext.token || sessionContext.token !== token) {
-      setToken(sessionContext.token);
+    if (!authContext.token || authContext.token !== token) {
+      setToken(authContext.token);
       let headers = new Headers();
-      headers.append("Authorization", `Bearer ${sessionContext.token}`);
+      headers.append("Authorization", `Bearer ${authContext.token}`);
       fetch(`${baseUrl}/api/student-dashboard`, { headers })
         .then((response) => {
           if (response.status === 200) {
@@ -46,7 +46,7 @@ const StudentDashboard = (props: StudentDashboardProps) => {
             });
           } else if (response.status === 401) {
             response.json().then((data) => {
-              sessionContext.login({
+              authContext.login({
                 clientId: data.clientId,
                 tenantId: data.tenantId || "common",
                 authProvider: data.auth_provider || "MSAL",
@@ -68,7 +68,7 @@ const StudentDashboard = (props: StudentDashboardProps) => {
         });
       return;
     }
-  }, [sessionContext, baseUrl, books, token]);
+  }, [authContext, baseUrl, books, token]);
 
   const openBook = (bookPath: string) => {
     navigate(`/?bk=${bookPath}`);
@@ -89,6 +89,15 @@ const StudentDashboard = (props: StudentDashboardProps) => {
             </ListItemButton>
           ))
         )}
+        {authContext.isTeacher ? (
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => navigate("/teacher")}
+          >
+            Teacher Dashboard
+          </Button>
+        ) : undefined}
       </Container>
     </>
   );
