@@ -43,6 +43,9 @@ import { SessionFile } from "../models/SessionFile";
 
 import { GuideToggleFab } from "./components/GuideToggleFab";
 import { BookUploadType } from "../book/components/BookUpload";
+import BookServerUploader, {
+  BookServerUploaderRef,
+} from "./components/Editors/BookServerUploader";
 
 type ChallengeProps = {
   uid: string;
@@ -81,6 +84,11 @@ const Challenge = (props: ChallengeProps) => {
     [props.bookNode, nodeTyp]
   );
 
+  const canVerifySolutions = useMemo(
+    () => (!!props.bookNode.sol && props.isEditing) || false,
+    [props.bookNode.sol, props.isEditing]
+  );
+
   /// state
 
   const [editorFullScreen, setEditorFullScreen] = useState<boolean>(false);
@@ -117,6 +125,7 @@ const Challenge = (props: ChallengeProps) => {
 
   /// hooks
   const codeRunner = useCodeRunner({
+    enabled: true,
     onDraw: async (commands) => {
       if (codeRunner.state !== CodeRunnerState.READY) {
         if (typ !== ChallengeTypes.canvas) {
@@ -174,6 +183,7 @@ const Challenge = (props: ChallengeProps) => {
     forceReload,
     isLoadingGuide,
     isLoadingCode,
+    solutionFile,
   } = useChallengeLoader({
     fetcher: props.fetcher,
     guidePath: props.guidePath,
@@ -183,6 +193,7 @@ const Challenge = (props: ChallengeProps) => {
     uid: props.uid,
     store: props.store || null,
     isEditing: props.isEditing,
+    solution: props.bookNode.sol,
   });
 
   const onReportResult = useCallback(
@@ -256,6 +267,9 @@ const Challenge = (props: ChallengeProps) => {
       watches: watches.current,
     };
   }, []);
+
+  // editor->server upload
+  const bookServerUploaderRef = useRef<BookServerUploaderRef | null>(null);
 
   // accepting actions from child nodes
   // actions interface; cached, so the
@@ -333,6 +347,27 @@ const Challenge = (props: ChallengeProps) => {
               });
           }
         }
+      },
+      "verify-solutions": () => {
+        if (!props.bookNode) return;
+        const code = outputsRef.current
+          ?.getSolutionFileEditor()
+          ?.getSolutionValue();
+        if (!code) return;
+        const tests = props.bookNode.tests || [];
+        if (!code || !tests) return;
+        codeRunner
+          ?.test(
+            code,
+            tests,
+            props.bookNode?.additionalFiles || [],
+            additionalFilesLoaded,
+            props.bookNode,
+            sessionFiles
+          )
+          .then((results) => {
+            onReportResult(results.results, results.code, results.bookNode);
+          });
       },
       "input-entered": (input: string | null) => {
         const inputStr = input == null ? "" : input;
@@ -414,7 +449,9 @@ const Challenge = (props: ChallengeProps) => {
           guideRef.current?.getValue(),
           outputsRef.current?.getBookNodeEditor()?.getValue(),
           additionalFilesLoaded,
-          outputsRef.current?.getVisibleFileContents()
+          outputsRef.current?.getVisibleFileContents(),
+          outputsRef.current?.getSolutionFileEditor()?.getSolutionObject(),
+          outputsRef.current?.getSolutionFileEditor()?.getSolutionValue()
         );
         forceReload();
         setHasEdited(false);
@@ -438,6 +475,7 @@ const Challenge = (props: ChallengeProps) => {
     codeRunner,
     onReportResult,
     starterCode,
+    solutionFile,
     usesFixedInput,
     typ,
     sessionFiles,
@@ -530,8 +568,12 @@ const Challenge = (props: ChallengeProps) => {
               bookFetcher={props.fetcher}
               canRunOnly={nodeTyp === "parsons" && !props.isEditing}
               canSubmit={canSubmit}
+              canVerifySolutions={canVerifySolutions}
               testResults={testResults}
               isAssessment={!!props.bookNode.isAssessment}
+              onBookUploadToServer={() => {
+                bookServerUploaderRef.current?.showDialog(props.fetcher);
+              }}
             />
             <Allotment className="h-100" defaultSizes={[650, 350]}>
               <Allotment.Pane>
@@ -569,6 +611,7 @@ const Challenge = (props: ChallengeProps) => {
                         props.bookNode.isSessionFilesAllowed
                       }
                       sessionFiles={sessionFiles}
+                      solutionFile={solutionFile}
                     />
                   </Allotment.Pane>
                 </Allotment>
@@ -600,6 +643,7 @@ const Challenge = (props: ChallengeProps) => {
                       />
                     )}
                     <BookControlFabs
+                      hasEdited={hasEdited}
                       onNavigateToPrevPage={() =>
                         callWithSaveCheck(props.onRequestPreviousChallenge)
                       }
@@ -611,6 +655,15 @@ const Challenge = (props: ChallengeProps) => {
                       }}
                       onSave={
                         props.isEditing ? actions["save-node"] : undefined
+                      }
+                      onUploadToServer={
+                        props.isEditing
+                          ? () => {
+                              bookServerUploaderRef.current?.showDialog(
+                                props.fetcher
+                              );
+                            }
+                          : undefined
                       }
                     />
                   </Box>
@@ -652,6 +705,7 @@ const Challenge = (props: ChallengeProps) => {
           message="You might have unsaved changes on this page. Would you like to save first?"
           cancelText="Don't save"
         />
+        {props.isEditing && <BookServerUploader ref={bookServerUploaderRef} />}
       </ChallengeContext.Provider>
     </>
   );

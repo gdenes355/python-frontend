@@ -31,7 +31,6 @@ type HeaderProps = {
   usesFixedInput: boolean;
 
   onSetUsesFixedInput: (usesFixedInput: boolean) => void;
-  onSetShowBookUpload?: (showBookUpload: boolean) => void;
   codeRunner: CodeRunnerRef;
 
   // for controls
@@ -39,13 +38,16 @@ type HeaderProps = {
   canSubmit: boolean;
   testResults: TestResults;
   isAssessment: boolean;
+  onSetShowBookUpload?: (showBookUpload: boolean) => void;
 
   // for editing book
+  canVerifySolutions: boolean;
   isEditing: boolean;
   hasEdited: boolean;
   isEditingGuide?: boolean;
   bookFetcher: IBookFetcher;
   onEditingGuideChange: (editing: boolean) => void;
+  onBookUploadToServer: () => void;
 };
 
 const Header = (props: HeaderProps) => {
@@ -94,15 +96,25 @@ const Header = (props: HeaderProps) => {
       <HeaderBar
         title={`${props.title ? props.title + " \u203A " : ""}  ${
           props.bookNode?.name
-        }${props.isEditing ? " (Editing)" : ""}`}
+        }${
+          props.isEditing
+            ? authContext.isEditingRemote
+              ? " (Editing local copy)"
+              : " (Editing)"
+            : ""
+        }`}
         onHelpOpen={() =>
           window.open("https://www.pythonsponge.com/", "_blank", "noopener")
         }
         menuItems={
           challengeContext?.isEditing ? (
             <HeaderMenuEditor
+              canUploadRemote={
+                authContext.canUploadBook && authContext.isEditingRemote
+              }
               onBookDownload={() => exportBookZip()}
               onBookExportAsUrl={() => previewAsZip()}
+              onBookUploadRemote={props.onBookUploadToServer}
               onUsingFixedInputChange={props.onSetUsesFixedInput}
               usingFixedInput={props.usesFixedInput}
             />
@@ -126,6 +138,7 @@ const Header = (props: HeaderProps) => {
           codeRunner={props.codeRunner}
           canRunOnly={props.canRunOnly}
           canSubmit={props.canSubmit}
+          canVerifySolutions={props.canVerifySolutions}
           testResults={props.testResults}
           isAssessment={props.isAssessment}
         />

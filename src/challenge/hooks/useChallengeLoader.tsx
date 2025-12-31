@@ -11,6 +11,7 @@ import {
 } from "../../models/AdditionalFiles";
 import { absolutisePath } from "../../utils/pathTools";
 import EditableBookStore from "../../book/utils/EditableBookStore";
+import { Solution } from "../../models/BookNodeModel";
 
 type HookProps = {
   guidePath: string;
@@ -18,6 +19,7 @@ type HookProps = {
   additionalFiles: AdditionalFiles;
   typ: ChallengeTypes;
   uid: string;
+  solution?: Solution;
   fetcher: IBookFetcher;
   store: EditableBookStore | null;
 
@@ -34,6 +36,9 @@ const useChallengeLoader = (props: HookProps) => {
   const [isLoadingCode, setIsLoadingCode] = useState<boolean>(true);
   const [additionalFilesLoaded, setAdditionalFilesLoaded] =
     useState<AdditionalFilesContents>({});
+  const [solutionFile, setSolutionFile] = useState<string | undefined>(
+    undefined
+  );
 
   const authContext = useContext(SessionContext);
   const authContextRef = useRef<SessionContextType>(authContext);
@@ -175,11 +180,42 @@ const useChallengeLoader = (props: HookProps) => {
     reloadCtr,
   ]);
 
+  // solution file
+  const fetchSolutionFile = async (
+    solutionPath: string,
+    authContext: SessionContextType,
+    fetcher: IBookFetcher
+  ) => {
+    let resp = await fetcher.fetch(solutionPath, authContext);
+    if (!resp.ok) {
+      throw Error("Failed to load solution file");
+    }
+    let text = await resp.text();
+    return { solution: text, solutionPath };
+  };
+
+  useEffect(() => {
+    if (props.solution?.file) {
+      fetchSolutionFile(
+        props.solution.file,
+        authContextRef.current,
+        props.fetcher
+      ).then(({ solution, solutionPath }) => {
+        if (solutionPath === props.solution?.file) {
+          setSolutionFile(solution);
+        }
+      });
+    } else {
+      setSolutionFile(undefined);
+    }
+  }, [props.solution?.file, props.fetcher, reloadCtr]);
+
   return {
     guideMd,
     savedCode,
     starterCode,
     additionalFilesLoaded,
+    solutionFile,
     forceReload,
     isLoadingGuide,
     isLoadingCode,

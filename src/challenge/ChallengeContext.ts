@@ -3,6 +3,7 @@ import React, { createContext } from "react";
 type Actions = {
   debug: (mode?: "debug" | "run") => void;
   test: () => void;
+  "verify-solutions": () => void;
   "input-entered": (input: string | null) => void;
   kill: () => void;
   step: () => void;
@@ -34,6 +35,7 @@ const wrapActions = (r: React.MutableRefObject<any>) => {
   return {
     debug: (mode?: "debug" | "run") => r.current.debug(mode || "debug"),
     test: () => r.current.test(),
+    "verify-solutions": () => r.current["verify-solutions"](),
     "input-entered": (input: string | null) =>
       r.current["input-entered"](input),
     kill: () => r.current.kill(),

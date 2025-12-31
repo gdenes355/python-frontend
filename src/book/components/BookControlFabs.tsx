@@ -1,30 +1,61 @@
-import { Box, Fab } from "@mui/material";
-
+import { Box, Fab, Tooltip } from "@mui/material";
+import { useContext } from "react";
+import SessionContext from "../../auth/contexts/SessionContext";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import ListIcon from "@mui/icons-material/List";
 import SaveIcon from "@mui/icons-material/Save";
+import UploadIcon from "@mui/icons-material/Upload";
 
 type BookControlFabsProps = {
+  hasEdited: boolean;
   onNavigateToPrevPage?: () => void;
   onNavigateToNextPage?: () => void;
   onOpenMenu?: () => void;
   onSave?: () => void;
+  onUploadToServer?: () => void;
 };
 
 const BookControlFabs = (props: BookControlFabsProps) => {
+  const { canUploadBook, isEditingRemote } = useContext(SessionContext);
   let btns = [];
+  if (props.onUploadToServer && canUploadBook && isEditingRemote) {
+    btns.push(
+      <Tooltip
+        title={
+          props.hasEdited
+            ? "You have unsaved changes. Save first."
+            : "Upload to server"
+        }
+      >
+        <span>
+          <Fab
+            key="upload-to-server"
+            sx={{ m: 1 }}
+            size="small"
+            color="secondary"
+            onClick={() => props.onUploadToServer?.()}
+            disabled={props.hasEdited}
+          >
+            <UploadIcon />
+          </Fab>
+        </span>
+      </Tooltip>
+    );
+  }
   if (props.onSave) {
     btns.push(
-      <Fab
-        key="save"
-        sx={{ m: 1 }}
-        size="small"
-        onClick={() => props.onSave?.()}
-        color="primary"
-      >
-        <SaveIcon />
-      </Fab>
+      <Tooltip title="Save">
+        <Fab
+          key="save"
+          sx={{ m: 1 }}
+          size="small"
+          onClick={() => props.onSave?.()}
+          color="primary"
+        >
+          <SaveIcon />
+        </Fab>
+      </Tooltip>
     );
   }
 

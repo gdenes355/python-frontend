@@ -19,6 +19,23 @@ var wsCounter = 0;
 // eslint-disable-next-line no-var
 var wsMap = new Map<number, (value: any | PromiseLike<any>) => void>();
 
+const getRoles = (token: string) => {
+  if (!token) return [];
+  const base64Url = token.split(".")[1];
+  const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const jsonPayload = decodeURIComponent(
+    window
+      .atob(base64)
+      .split("")
+      .map(function (c) {
+        return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join("")
+  );
+  const blob = JSON.parse(jsonPayload);
+  return blob.roles || [];
+};
+
 const SessionWrapper = () => {
   const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
@@ -64,7 +81,11 @@ const SessionWrapper = () => {
         window.location.origin
       );
       const bookPathAbs = absolutisePath(bookPath, window.location.origin);
-      if (new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin) {
+      if (
+        queryBookPathAbs !== "edit://edit/book.json" &&
+        bookPathAbs !== "edit://edit/book.json" &&
+        new URL(queryBookPathAbs).origin !== new URL(bookPathAbs).origin
+      ) {
         console.log("force logout...", queryBookPathAbs, bookPathAbs);
         logout();
       } else {
@@ -95,9 +116,22 @@ const SessionWrapper = () => {
     setToken("");
     setLoginInfo(undefined);
   };
-  const isLoggedIn = () => {
+
+  const isLoggedIn = useCallback(() => {
     return token !== "";
-  };
+  }, [token]);
+
+  const isTeacher = useMemo(() => {
+    return getRoles(token).includes("teacher");
+  }, [token]);
+
+  const canUploadBook = useMemo(() => {
+    return getRoles(token).includes("book-uploader");
+  }, [token]);
+
+  const isEditingRemote = useMemo(() => {
+    return localStorage.getItem("@editor-original-book") !== null;
+  }, [bookPath]);
 
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
@@ -224,6 +258,9 @@ const SessionWrapper = () => {
         logout,
         setToken: setAuthToken,
         isLoggedIn,
+        isTeacher,
+        canUploadBook,
+        isEditingRemote,
         bookPath,
         resultsEndpoint,
         wsOpen,

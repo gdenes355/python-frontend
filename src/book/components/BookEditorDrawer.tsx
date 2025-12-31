@@ -91,7 +91,7 @@ const BookEditorDrawer = (props: BookEditorDrawerProps) => {
               Code runner:{" "}
               <CodeRunnerStateDisplay state={props.codeRunner?.state} />
             </Box>
-            <Button onClick={props.onRunTests}>Rerun tests</Button>
+            <Button onClick={props.onRunTests}>Verify all solutions</Button>
             <Divider />
           </>
         ) : null}

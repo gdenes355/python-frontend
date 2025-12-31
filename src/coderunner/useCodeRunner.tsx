@@ -22,6 +22,7 @@ import throttle from "lodash/throttle";
 import DebugContext from "./DebugContext";
 
 type CodeRunnerProps = {
+  enabled: boolean;
   onCls?: () => void;
   onPrint?: (msg: string) => void;
   awaitCanvas?: () => Promise<void>;
@@ -80,11 +81,22 @@ const CodeRunnerStateDisplay = (props: CodeRunnerStateDisplayProps) => {
   return <span>{stateText}</span>;
 };
 
-const useCodeRunner = (props: CodeRunnerProps) => {
-  if (!pythonCodeRunner) {
+const useCodeRunner = ({
+  onAudio: onAudioProp,
+  onPrint: onPrintProp,
+  awaitCanvas: onAwaitCanvasProp,
+  onTurtle: onTurtleProp,
+  turtleReset: onTurtleResetProp,
+  onCls: onClsProp,
+  onDraw: onDrawProp,
+  enabled,
+}: CodeRunnerProps) => {
+  if (!pythonCodeRunner && enabled) {
     pythonCodeRunner = new PythonCodeRunner();
   }
-  const [state, setState] = useState(pythonCodeRunner.state);
+  const [state, setState] = useState(
+    pythonCodeRunner?.state || CodeRunnerState.UNINITIALISED
+  );
   const [consoleText, setConsoleText] = useState("");
   const consoleTextUnthrottled = useRef("");
   const throttledPrint = useRef(
@@ -94,36 +106,38 @@ const useCodeRunner = (props: CodeRunnerProps) => {
   // callback references tued to the relevant props
   // this prop redirection helps to maintain a single callback
   // to the actual underlying code runner instance
-  const onPrint = useRef(props.onPrint);
-  const onAwaitCanvas = useRef(props.awaitCanvas);
-  const onTurtleReset = useRef(props.turtleReset);
-  const onTurtle = useRef(props.onTurtle);
-  const onDraw = useRef(props.onDraw);
-  const onAudio = useRef(props.onAudio);
-  const onCls = useRef(props.onCls);
+  const onPrint = useRef(onPrintProp);
+  const onAwaitCanvas = useRef(onAwaitCanvasProp);
+  const onTurtleReset = useRef(onTurtleResetProp);
+  const onTurtle = useRef(onTurtleProp);
+  const onDraw = useRef(onDrawProp);
+  const onAudio = useRef(onAudioProp);
+  const onCls = useRef(onClsProp);
   useEffect(() => {
-    onPrint.current = props.onPrint;
-  }, [props.onPrint]);
+    onPrint.current = onPrintProp;
+  }, [onPrintProp]);
   useEffect(() => {
-    onAwaitCanvas.current = props.awaitCanvas;
-  }, [props.awaitCanvas]);
+    onAwaitCanvas.current = onAwaitCanvasProp;
+  }, [onAwaitCanvasProp]);
   useEffect(() => {
-    onTurtleReset.current = props.turtleReset;
-  }, [props.turtleReset]);
+    onTurtleReset.current = onTurtleResetProp;
+  }, [onTurtleResetProp]);
   useEffect(() => {
-    onTurtle.current = props.onTurtle;
-  }, [props.onTurtle]);
+    onTurtle.current = onTurtleProp;
+  }, [onTurtleProp]);
   useEffect(() => {
-    onDraw.current = props.onDraw;
-  }, [props.onDraw]);
+    onDraw.current = onDrawProp;
+  }, [onDrawProp]);
   useEffect(() => {
-    onAudio.current = props.onAudio;
-  }, [props.onAudio]);
+    onAudio.current = onAudioProp;
+  }, [onAudioProp]);
   useEffect(() => {
-    onCls.current = props.onCls;
-  }, [props.onCls]);
+    onCls.current = onClsProp;
+  }, [onClsProp]);
 
   useEffect(() => {
+    if (!enabled) return;
+
     if (!pythonCodeRunner) {
       pythonCodeRunner = new PythonCodeRunner();
     }
@@ -168,7 +182,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
         pythonCodeRunner.onCls.unregister(onClsId);
       }
     };
-  }, []);
+  }, [enabled]);
 
   const clear = useCallback(() => {
     consoleTextUnthrottled.current = "";
@@ -181,22 +195,41 @@ const useCodeRunner = (props: CodeRunnerProps) => {
   }, []);
 
   return {
-    test: pythonCodeRunner.test,
+    test:
+      pythonCodeRunner?.test ||
+      ((
+        __code: string,
+        __tests: TestCases,
+        __additionalFiles: AdditionalFile[] | undefined,
+        __additionalFilesLoaded: AdditionalFilesContents,
+        bookNode: BookNodeModel
+      ) => Promise.resolve({ results: [], code: "", bookNode: bookNode })),
     state: state,
-    kill: pythonCodeRunner.kill,
-    debug: pythonCodeRunner.debug,
-    keyDown: pythonCodeRunner.keyDown,
-    keyUp: pythonCodeRunner.keyUp,
-    step: pythonCodeRunner.step,
-    refreshDebugContext: pythonCodeRunner.refreshDebugContext,
-    continue: pythonCodeRunner.continue,
-    input: pythonCodeRunner.input,
+    kill: pythonCodeRunner?.kill || (() => {}),
+    debug:
+      pythonCodeRunner?.debug ||
+      ((
+        __code: string,
+        __mode: "debug" | "run",
+        __dbgSetup?: DebugSetup,
+        __additionalFiles?: AdditionalFile[] | undefined,
+        __additionalFilesLoaded?: AdditionalFilesContents,
+        __fixedUserInput?: string
+      ) => Promise.resolve({ reason: "" })),
+    keyDown: pythonCodeRunner?.keyDown || (() => {}),
+    keyUp: pythonCodeRunner?.keyUp || (() => {}),
+    step: pythonCodeRunner?.step || (() => {}),
+    refreshDebugContext:
+      pythonCodeRunner?.refreshDebugContext || ((_: DebugSetup) => {}),
+    continue: pythonCodeRunner?.continue || (() => {}),
+    input: pythonCodeRunner?.input || (() => {}),
     consoleText: consoleText,
-    debugContext: pythonCodeRunner.debugContext,
-    drawTurtleExample: pythonCodeRunner.drawTurtleExample,
+    debugContext: pythonCodeRunner?.debugContext || undefined,
+    drawTurtleExample:
+      pythonCodeRunner?.drawTurtleExample || (() => Promise.resolve("")),
     addConsoleText: addConsoleText,
     clear: clear,
-    installDependencies: pythonCodeRunner.installDependencies,
+    installDependencies: pythonCodeRunner?.installDependencies || (() => {}),
   };
 };
 

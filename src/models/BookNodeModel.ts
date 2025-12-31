@@ -1,7 +1,7 @@
 import { TestCases } from "./Tests";
 import { AdditionalFiles } from "./AdditionalFiles";
 
-type Solution = {
+export type Solution = {
   file: string;
   showSolution?: number | boolean;
 };

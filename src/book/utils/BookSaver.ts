@@ -1,5 +1,5 @@
 import { AdditionalFilesContents } from "../../models/AdditionalFiles";
-import BookNodeModel from "../../models/BookNodeModel";
+import BookNodeModel, { Solution } from "../../models/BookNodeModel";
 import { IEditableBookStore } from "./EditableBookStore";
 
 // save code/guide/json to the store
@@ -12,7 +12,9 @@ const saveNode = (
   guideMd?: string,
   newBookNode?: BookNodeModel,
   currentAdditionalFiles?: AdditionalFilesContents,
-  displayedAdditionalFiles?: Map<string, string>
+  displayedAdditionalFiles?: Map<string, string>,
+  solution?: Solution,
+  solutionValue?: string
 ) => {
   if (!store) return;
 
@@ -23,7 +25,7 @@ const saveNode = (
   // saving the guide is also easy
   store.store.save(guideMd || "", bookNode.guide!);
 
-  // saving the additional files or solution files
+  // saving the additional files
   let updatedFiles = new Map(
     bookNode.additionalFiles?.map((file) => {
       return [
@@ -39,10 +41,17 @@ const saveNode = (
     }
   });
 
+  // save solutions
+  if (solution && solutionValue) {
+    store.store.save(solutionValue, solution.file);
+  }
+
   // update the book
   if (!newBookNode) {
     return false;
   }
+  newBookNode.sol = solution;
+
   let changed = false;
   if (newBookNode.name && newBookNode.name !== bookNode.name) {
     changed = true;
@@ -73,6 +82,18 @@ const saveNode = (
     bookNode.isSessionFilesAllowed = newBookNode.isSessionFilesAllowed
       ? true
       : undefined;
+  }
+  if (newBookNode.sol?.file !== bookNode.sol?.file) {
+    changed = true;
+    bookNode.sol = newBookNode.sol;
+  }
+  if (newBookNode.sol?.showSolution !== bookNode.sol?.showSolution) {
+    changed = true;
+    bookNode.sol = newBookNode.sol;
+  }
+  if (!newBookNode.sol && bookNode.sol) {
+    changed = true;
+    bookNode.sol = undefined;
   }
   if (changed) {
     store.store.saveBook();

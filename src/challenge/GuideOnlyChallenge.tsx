@@ -69,6 +69,7 @@ const GuideOnlyChallenge = (props: GuideOnlyChallengeProps) => {
         onNavigateToNextPage={props.onRequestNextChallenge}
         onNavigateToPrevPage={props.onRequestPreviousChallenge}
         onOpenMenu={() => props.openBookDrawer?.(true)}
+        hasEdited={false}
       />
     </Box>
   );

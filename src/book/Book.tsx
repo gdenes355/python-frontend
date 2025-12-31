@@ -27,6 +27,8 @@ import { ProgressStorage, useProgressStorage } from "./utils/ProgressStorage";
 import GuideOnlyChallenge from "../challenge/GuideOnlyChallenge";
 import Challenge from "../challenge/Challenge";
 import { BookUploadType } from "./components/BookUpload";
+import useCodeRunner from "../coderunner/useCodeRunner";
+import { EditorTestResults } from "./components/BookEditorContents";
 
 type BookProps = {
   zipFile?: File;
@@ -133,6 +135,9 @@ const Book = (props: BookProps) => {
    */
   const bookClonedForEditing = useMemo(
     () => (store: EditableBookStore) => {
+      const currentLocation = window.location.href;
+      const queryParams = new URLSearchParams(currentLocation.split("?")[1]);
+      const chid = queryParams.get("chid");
       setEditableBookStore(store);
       setEditState("editing");
       navigate(
@@ -141,7 +146,7 @@ const Book = (props: BookProps) => {
             "?" +
             new URLSearchParams({
               bk: "edit://edit/book.json",
-              chid: activeNode?.id || "",
+              chid: activeNode?.id || chid || "",
               edit: "editing",
             }),
         },
@@ -172,6 +177,11 @@ const Book = (props: BookProps) => {
       bookFetcher instanceof BookFetcher
     ) {
       setEditState("cloning");
+      if (authContext.isTeacher) {
+        localStorage.setItem("@editor-original-book", bookPath);
+      } else {
+        localStorage.removeItem("@editor-original-book");
+      }
       createEditableBookStore(rootNode, bookFetcher, authContext, false).then(
         bookClonedForEditing
       );
@@ -298,6 +308,68 @@ const Book = (props: BookProps) => {
     }
   };
 
+  /** code runner and solution checking for editor */
+  const codeRunner = useCodeRunner({ enabled: editState === "editing" });
+  const [editorTestResults, setEditorTestResults] = useState<EditorTestResults>(
+    {
+      passed: new Set(),
+      failed: new Set(),
+    }
+  );
+
+  const onRunTests = async () => {
+    if (editState !== "editing" || !codeRunner) return;
+    if (!rootNode) return;
+    const onRunTest = async (node: BookNodeModel) => {
+      let tests = node.tests || [];
+      let additionalFiles = node.additionalFiles || [];
+      let sol = node.sol?.file;
+      if (sol) {
+        try {
+          let resp = await bookFetcher?.fetch(sol, authContext);
+          if (resp.status === 200) {
+            const code = await resp.text();
+            let resData = await codeRunner.test(
+              code,
+              tests,
+              additionalFiles,
+              {},
+              node
+            );
+            if (resData) {
+              let pass = resData.results.every((r) => r.outcome === true);
+              if (pass) {
+                editorTestResults.passed.add(node.id);
+                editorTestResults.failed.delete(node.id);
+              } else {
+                editorTestResults.failed.add(node.id);
+                editorTestResults.passed.delete(node.id);
+              }
+              setEditorTestResults({
+                passed: editorTestResults.passed,
+                failed: editorTestResults.failed,
+              });
+            }
+          }
+        } catch (e) {
+          console.log("ERROR when getting solution", e);
+        }
+      }
+
+      for (let child of node.children || []) {
+        await onRunTest(child);
+      }
+    };
+
+    editorTestResults.passed.clear();
+    editorTestResults.failed.clear();
+    setEditorTestResults({
+      passed: editorTestResults.passed,
+      failed: editorTestResults.failed,
+    });
+    await onRunTest(rootNode);
+  };
+
   if (rootNode) {
     if (editState === "cloning" || editParam === "clone") {
       return <p>Cloning this book for editing... Please wait...</p>;
@@ -414,6 +486,9 @@ const Book = (props: BookProps) => {
                 editableBookStore.store.saveBook();
                 requestBookReload();
               }}
+              testResults={editorTestResults}
+              codeRunner={codeRunner}
+              onRunTests={onRunTests}
             />
           </ErrorBounday>
         );

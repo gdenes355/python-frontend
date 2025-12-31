@@ -34,6 +34,9 @@ import EditableBookStore from "../../../book/utils/EditableBookStore";
 import SessionFiles from "./SessionFiles";
 import { SessionFile } from "../../../models/SessionFile";
 import SessionFileView from "../Editors/SessionFileView";
+import SolutionFileEditor, {
+  SolutionFileEditorHandle,
+} from "../Editors/SolutionFileEditor";
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -43,6 +46,7 @@ type ChallengeOutputsProps = {
   usesFixedInput: boolean;
   isSessionFilesAllowed?: boolean;
   sessionFiles: SessionFile[];
+  solutionFile: string | undefined;
 
   codeRunner: CodeRunnerRef;
 
@@ -59,6 +63,7 @@ type ChallengeOutputsHandle = {
   getBookNodeEditor: () => BookNodeEditorHandle | null;
   getVisibleFileContents: () => Map<string, string>;
   getAudioPlayer: () => AudioPlayerHandle | null;
+  getSolutionFileEditor: () => SolutionFileEditorHandle | null;
 };
 
 const ChallengeOutputs = React.forwardRef<
@@ -90,6 +95,7 @@ const ChallengeOutputs = React.forwardRef<
   // editors (if editing book)
   const bookNodeEditorRef = useRef<BookNodeEditorHandle | null>(null);
   const fileEditorRefs = useRef<Map<string, AdditionalFileViewRef>>(new Map());
+  const solutionFileEditorRef = useRef<SolutionFileEditorHandle | null>(null);
 
   useImperativeHandle(ref, () => ({
     focusPane: (pane: PaneType) => {
@@ -120,6 +126,7 @@ const ChallengeOutputs = React.forwardRef<
       return map;
     },
     getAudioPlayer: () => audioPlayerRef.current,
+    getSolutionFileEditor: () => solutionFileEditorRef.current,
   }));
 
   const displayFilesProperties = useMemo(() => {
@@ -213,6 +220,22 @@ const ChallengeOutputs = React.forwardRef<
       ),
       show: challengeContext?.isEditing,
       name: "book.json",
+    });
+    panes.push({
+      label: "Solution",
+      content: (
+        <SolutionFileEditor
+          solutionFile={props.solutionFile}
+          ref={solutionFileEditorRef}
+          bookNode={props.bookNode}
+          bookStore={props.bookStore}
+          onChange={() => {
+            challengeContext?.actions["has-made-edit"]();
+          }}
+        />
+      ),
+      show: challengeContext?.isEditing,
+      name: "solution",
     });
   } else if (props.isSessionFilesAllowed) {
     panes.push({
