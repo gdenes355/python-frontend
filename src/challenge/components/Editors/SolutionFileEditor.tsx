@@ -29,7 +29,7 @@ type SolutionFileEditorHandle = {
 const SolutionFileEditor = forwardRef<
   SolutionFileEditorHandle,
   SolutionFileEditorProps
->(({ solutionFile, bookNode, bookStore, onChange }, ref) => {
+>(({ solutionFile, bookNode, onChange }, ref) => {
   const [hasSolution, setHasSolution] = useState<boolean>(
     solutionFile ? true : false
   );
