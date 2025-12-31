@@ -198,10 +198,10 @@ const useCodeRunner = ({
     test:
       pythonCodeRunner?.test ||
       ((
-        code: string,
-        tests: TestCases,
-        additionalFiles: AdditionalFile[] | undefined,
-        additionalFilesLoaded: AdditionalFilesContents,
+        __code: string,
+        __tests: TestCases,
+        __additionalFiles: AdditionalFile[] | undefined,
+        __additionalFilesLoaded: AdditionalFilesContents,
         bookNode: BookNodeModel
       ) => Promise.resolve({ results: [], code: "", bookNode: bookNode })),
     state: state,
@@ -209,12 +209,12 @@ const useCodeRunner = ({
     debug:
       pythonCodeRunner?.debug ||
       ((
-        code: string,
-        mode: "debug" | "run",
-        dbgSetup?: DebugSetup,
-        additionalFiles?: AdditionalFile[] | undefined,
-        additionalFilesLoaded?: AdditionalFilesContents,
-        fixedUserInput?: string
+        __code: string,
+        __mode: "debug" | "run",
+        __dbgSetup?: DebugSetup,
+        __additionalFiles?: AdditionalFile[] | undefined,
+        __additionalFilesLoaded?: AdditionalFilesContents,
+        __fixedUserInput?: string
       ) => Promise.resolve({ reason: "" })),
     keyDown: pythonCodeRunner?.keyDown || (() => {}),
     keyUp: pythonCodeRunner?.keyUp || (() => {}),
