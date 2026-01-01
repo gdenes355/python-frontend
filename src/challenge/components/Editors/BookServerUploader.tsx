@@ -24,10 +24,6 @@ const BookServerUploader = forwardRef<
     | undefined
   >(undefined);
 
-  if (!authContext.canUploadBook || !authContext.isEditingRemote) {
-    return null;
-  }
-
   const showDialog = async (bookFetcher: IBookFetcher) => {
     setDialogOpen(true);
     let book = await bookFetcher.fetchBook(authContext);
@@ -42,9 +38,15 @@ const BookServerUploader = forwardRef<
     });
     setDialogData({ book: book.book, zip: blob });
   };
+
   useImperativeHandle(ref, () => ({
     showDialog,
   }));
+
+  if (!authContext.canUploadBook || !authContext.isEditingRemote) {
+    return null;
+  }
+
   return (
     <LazyBookUploadDialog
       uploadData={dialogData}

@@ -53,6 +53,9 @@ type ChallengeOutputsProps = {
   // for editing book
   bookNode: BookNodeModel;
   bookStore?: EditableBookStore;
+  guideMd?: string;
+  starterCode?: string;
+  hasEdited?: boolean;
 };
 
 type ChallengeOutputsHandle = {
@@ -225,6 +228,9 @@ const ChallengeOutputs = React.forwardRef<
       label: "Solution",
       content: (
         <SolutionFileEditor
+          guideMd={props.guideMd}
+          starterCode={props.starterCode}
+          hasEdited={props.hasEdited}
           solutionFile={props.solutionFile}
           ref={solutionFileEditorRef}
           bookNode={props.bookNode}

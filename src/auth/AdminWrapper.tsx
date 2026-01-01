@@ -8,7 +8,6 @@ import React, {
 } from "react";
 import SessionContext from "./contexts/SessionContext";
 import { Outlet } from "react-router-dom";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 type AdminWrapperProps = {
   urlBase: string;
@@ -20,8 +19,6 @@ export type OutletContextType = {
   urlBase: string;
   canEditServerBooksFolder: boolean;
 };
-
-const queryClient = new QueryClient();
 
 const AdminWrapper = (props: AdminWrapperProps) => {
   const sessionContext = useContext(SessionContext);
@@ -106,15 +103,13 @@ const AdminWrapper = (props: AdminWrapperProps) => {
   if (authorised) {
     return (
       <React.Fragment>
-        <QueryClientProvider client={queryClient}>
-          <Outlet
-            context={{
-              request,
-              urlBase: props.urlBase,
-              canEditServerBooksFolder,
-            }}
-          />
-        </QueryClientProvider>
+        <Outlet
+          context={{
+            request,
+            urlBase: props.urlBase,
+            canEditServerBooksFolder,
+          }}
+        />
       </React.Fragment>
     );
   }

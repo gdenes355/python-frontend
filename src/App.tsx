@@ -22,6 +22,7 @@ import Book from "./book/Book";
 import FolderPicker from "./components/FolderPicker";
 import packageJson from "../package.json";
 import { BookUploadType } from "./book/components/BookUpload";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
 const AllClasses = lazy(() => import("./teacher/AllClasses"));
@@ -100,6 +101,7 @@ const AppContainer = () => {
 };
 
 const envServerUrlOverride = import.meta.env.VITE_SERVER_URL;
+const queryClient = new QueryClient();
 
 function App() {
   const serverUrl = envServerUrlOverride
@@ -110,32 +112,37 @@ function App() {
     <VsThemeContextProvider>
       <CssBaseline>
         <NotificationsWrapper>
-          <BrowserRouter>
-            <Routes>
-              <Route element={<SessionWrapper />}>
-                <Route path="start" element={<StartPage />} />
-                <Route path="auth-callback" element={<AuthCallbackPage />} />
-                <Route
-                  path="student/books"
-                  element={<StudentDashboard baseUrl={serverUrl} />}
-                />
-                <Route
-                  path="teacher"
-                  element={
-                    <Suspense fallback={<div>Loading teacher area...</div>}>
-                      <AdminWrapper urlBase={serverUrl} />
-                    </Suspense>
-                  }
-                >
-                  <Route path="classes" element={<AllClasses />} />
-                  <Route path="tools" element={<Tools />} />
-                  <Route index path="*" element={<ThisYear />} />
+          <QueryClientProvider client={queryClient}>
+            <BrowserRouter>
+              <Routes>
+                <Route element={<SessionWrapper serverUrl={serverUrl} />}>
+                  <Route path="start" element={<StartPage />} />
+                  <Route path="auth-callback" element={<AuthCallbackPage />} />
+                  <Route
+                    path="student/books"
+                    element={<StudentDashboard baseUrl={serverUrl} />}
+                  />
+                  <Route
+                    path="teacher"
+                    element={
+                      <Suspense fallback={<div>Loading teacher area...</div>}>
+                        <AdminWrapper urlBase={serverUrl} />
+                      </Suspense>
+                    }
+                  >
+                    <Route path="classes" element={<AllClasses />} />
+                    <Route path="tools" element={<Tools />} />
+                    <Route index path="*" element={<ThisYear />} />
+                  </Route>
+                  <Route
+                    path="book-editor-frame"
+                    element={<BookEditorFrame />}
+                  />
+                  <Route index path="*" element={<AppContainer />} />
                 </Route>
-                <Route path="book-editor-frame" element={<BookEditorFrame />} />
-                <Route index path="*" element={<AppContainer />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
+              </Routes>
+            </BrowserRouter>
+          </QueryClientProvider>
         </NotificationsWrapper>
       </CssBaseline>
     </VsThemeContextProvider>

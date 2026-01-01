@@ -27,6 +27,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
             ? "You have unsaved changes. Save first."
             : "Upload to server"
         }
+        key="upload-to-server"
       >
         <span>
           <Fab
