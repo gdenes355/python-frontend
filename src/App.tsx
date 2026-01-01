@@ -13,7 +13,6 @@ import {
 import StartPage from "./StartPage";
 import AuthCallbackPage from "./auth/AuthCallbackPage";
 
-import BookEditorFrame from "./vscode-frame/BookEditorFrame";
 import StudentDashboard from "./studentDashboard/StudentDashboard";
 import HeaderBar from "./components/HeaderBar";
 import BookUpload from "./book/components/BookUpload";
@@ -28,6 +27,7 @@ const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
 const AllClasses = lazy(() => import("./teacher/AllClasses"));
 const Tools = lazy(() => import("./teacher/Tools"));
 const ThisYear = lazy(() => import("./teacher/ThisYear"));
+const BookEditorFrame = lazy(() => import("./vscode-frame/BookEditorFrame"));
 
 const AppContainer = () => {
   const searchParams = new URLSearchParams(useLocation().search);
@@ -136,7 +136,11 @@ function App() {
                   </Route>
                   <Route
                     path="book-editor-frame"
-                    element={<BookEditorFrame />}
+                    element={
+                      <Suspense fallback={<div>Loading book editor...</div>}>
+                        <BookEditorFrame />
+                      </Suspense>
+                    }
                   />
                   <Route index path="*" element={<AppContainer />} />
                 </Route>

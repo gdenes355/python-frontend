@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useMemo, useContext } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useContext,
+  lazy,
+  Suspense,
+} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 import BookCover from "./BookCover";
@@ -19,7 +26,6 @@ import ErrorBounday from "../components/ErrorBoundary";
 import EditableBookStore, {
   createEditableBookStore,
 } from "./utils/EditableBookStore";
-import BookEditorDrawer from "./components/BookEditorDrawer";
 import HeaderBar from "../components/HeaderBar";
 import UnauthorisedError from "../auth/UnauthorisedException";
 import SessionContext from "../auth/contexts/SessionContext";
@@ -29,6 +35,8 @@ import Challenge from "../challenge/Challenge";
 import { BookUploadType } from "./components/BookUpload";
 import useCodeRunner from "../coderunner/useCodeRunner";
 import { EditorTestResults } from "./components/BookEditorContents";
+
+const BookEditorDrawer = lazy(() => import("./components/BookEditorDrawer"));
 
 type BookProps = {
   zipFile?: File;
@@ -474,22 +482,24 @@ const Book = (props: BookProps) => {
               onBookReloadRequested={() => requestBookReload()}
             />
 
-            <BookEditorDrawer
-              bookRoot={rootNode}
-              bookNode={activeNode}
-              store={editableBookStore}
-              activePageId={bookChallengeId || undefined}
-              onRequestOpen={openDrawer}
-              onNodeSelected={openNode}
-              open={drawerOpen}
-              onBookModified={() => {
-                editableBookStore.store.saveBook();
-                requestBookReload();
-              }}
-              testResults={editorTestResults}
-              codeRunner={codeRunner}
-              onRunTests={onRunTests}
-            />
+            <Suspense fallback={<p>Loading editor...</p>}>
+              <BookEditorDrawer
+                bookRoot={rootNode}
+                bookNode={activeNode}
+                store={editableBookStore}
+                activePageId={bookChallengeId || undefined}
+                onRequestOpen={openDrawer}
+                onNodeSelected={openNode}
+                open={drawerOpen}
+                onBookModified={() => {
+                  editableBookStore.store.saveBook();
+                  requestBookReload();
+                }}
+                testResults={editorTestResults}
+                codeRunner={codeRunner}
+                onRunTests={onRunTests}
+              />
+            </Suspense>
           </ErrorBounday>
         );
       }
