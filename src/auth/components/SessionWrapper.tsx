@@ -36,7 +36,7 @@ const getRoles = (token: string) => {
   return blob.roles || [];
 };
 
-const SessionWrapper = () => {
+const SessionWrapper = ({ serverUrl }: { serverUrl: string }) => {
   const searchParams = new URLSearchParams(useLocation().search);
   const queryBookPath = searchParams.get("bk") || searchParams.get("book");
 
@@ -132,6 +132,10 @@ const SessionWrapper = () => {
   const isEditingRemote = useMemo(() => {
     return localStorage.getItem("@editor-original-book") !== null;
   }, [bookPath]);
+
+  const canUseAi = useMemo(() => {
+    return getRoles(token).includes("ai-enabled");
+  }, [token]);
 
   const setAuthToken = (newToken: string) => {
     localStorage.setItem("jwt-token", newToken);
@@ -268,6 +272,8 @@ const SessionWrapper = () => {
         wsReconnect,
         registerAdditionalWsHandler,
         unregisterAdditionalWsHandler,
+        serverUrl,
+        canUseAi,
       }}
     >
       {requiresAuth && token === "" ? <Login info={loginInfo} /> : <Outlet />}

@@ -15,11 +15,13 @@ type SessionContextType = {
   isTeacher: boolean;
   canUploadBook: boolean;
   isEditingRemote: boolean;
+  canUseAi: boolean;
   wsOpen: boolean;
   wsSend?: (msg: any, then?: WsResponse) => void;
   wsReconnect?: () => void;
   registerAdditionalWsHandler?: (handler: (msg: any) => void) => void;
   unregisterAdditionalWsHandler?: () => void;
+  serverUrl: string;
 };
 
 const defaultSessionContext: SessionContextType = {
@@ -34,7 +36,9 @@ const defaultSessionContext: SessionContextType = {
   isTeacher: false,
   canUploadBook: false,
   isEditingRemote: false,
+  canUseAi: false,
   wsOpen: false,
+  serverUrl: "",
 };
 
 const SessionContext = createContext(defaultSessionContext);

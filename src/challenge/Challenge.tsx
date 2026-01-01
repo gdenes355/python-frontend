@@ -612,6 +612,9 @@ const Challenge = (props: ChallengeProps) => {
                       }
                       sessionFiles={sessionFiles}
                       solutionFile={solutionFile}
+                      guideMd={props.isEditing ? guideMd : undefined}
+                      starterCode={props.isEditing ? starterCode : undefined}
+                      hasEdited={hasEdited}
                     />
                   </Allotment.Pane>
                 </Allotment>
