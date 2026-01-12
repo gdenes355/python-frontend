@@ -32,6 +32,9 @@ type BookNodeEditorProps = {
   onChange?: () => void;
   onToggleFullScreen: () => void;
   bookNode: BookNodeModel;
+  hasEdited?: boolean;
+  guideMd?: string;
+  starterCode?: string;
 };
 
 type BookNodeEditorHandle = {
@@ -246,6 +249,9 @@ const BookNodeEditor = React.forwardRef<
                   ref={testEditor}
                   tests={props.bookNode.tests}
                   onChange={props.onChange}
+                  guideMd={props.guideMd}
+                  starterCode={props.starterCode}
+                  hasEdited={props.hasEdited}
                 />
               </div>
             </Stack>

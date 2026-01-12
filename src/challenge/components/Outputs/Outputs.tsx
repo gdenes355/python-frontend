@@ -198,12 +198,15 @@ const ChallengeOutputs = React.forwardRef<
       label: "Edit challenge",
       content: (
         <BookNodeEditor
+          guideMd={props.guideMd}
+          starterCode={props.starterCode}
           ref={bookNodeEditorRef}
           onToggleFullScreen={() => {}}
           onChange={() => {
             challengeContext?.actions["has-made-edit"]();
           }}
           bookNode={props.bookNode}
+          hasEdited={props.hasEdited}
         />
       ),
       show: challengeContext?.isEditing,

@@ -1,11 +1,25 @@
-import React, { useEffect, useImperativeHandle, useRef, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { TestCases } from "../../../../models/Tests";
 import TestCaseEditor, { TestCaseEditorHandle } from "./TestCaseEditor";
-import { Box, Button, Tooltip } from "@mui/material";
+import { Box, Button, CircularProgress, Fab, Tooltip } from "@mui/material";
+import useAiTeacherTests from "../../../../ai/hooks/useAiTeacherTests";
+import NotificationsContext from "../../../../components/NotificationsContext";
+import SessionContext from "../../../../auth/contexts/SessionContext";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 
 type TestEditorProps = {
   tests?: TestCases;
+  guideMd?: string;
+  starterCode?: string;
+  hasEdited?: boolean;
   onChange?: () => void;
 };
 
@@ -14,14 +28,27 @@ type TestEditorHandle = {
 };
 
 const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
-  (props, ref) => {
-    const [testCases, setTestCases] = useState<TestCases>(props.tests || []);
+  ({ tests, guideMd, starterCode, hasEdited, onChange }, ref) => {
+    const { canUseAi } = useContext(SessionContext);
+    const [testCases, setTestCases] = useState<TestCases>(tests || []);
 
     const testCaseRefs = useRef<(TestCaseEditorHandle | null)[]>([]);
+    const notificationsContext = useContext(NotificationsContext);
+
+    const { mutate: generateTests, isPending: isGeneratingTests } =
+      useAiTeacherTests({
+        onSuccess: (data) => {
+          setTestCases([...testCases, ...data]);
+          onChange?.();
+        },
+        onError: (error) => {
+          notificationsContext.addMessage(error.message, "error");
+        },
+      });
 
     useEffect(() => {
-      setTestCases(props.tests || []);
-    }, [props.tests]);
+      setTestCases(tests || []);
+    }, [tests]);
 
     const getValue = () => {
       if (!testCases) return [];
@@ -33,16 +60,50 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
       getValue,
     }));
 
+    const generateImpediment = useMemo(() => {
+      if (hasEdited) {
+        return "Save your changes first to generate a solution";
+      }
+      if (!guideMd) {
+        return "No guide found. Please save your changes first to generate a solution";
+      }
+      if (!starterCode) {
+        return "No starter code found. Please save your changes first to generate a solution";
+      }
+      return undefined;
+    }, [hasEdited, guideMd, starterCode]);
+
+    const handleGenerateTests = () => {
+      if (!guideMd) {
+        notificationsContext.addMessage(
+          "No guide found. Please save your changes first to generate a solution",
+          "error"
+        );
+        return;
+      }
+      if (!starterCode) {
+        notificationsContext.addMessage(
+          "No starter code found. Please save your changes first to generate a solution",
+          "error"
+        );
+        return;
+      }
+      generateTests({
+        guideMd: guideMd || "",
+        starterCode: starterCode || "",
+      });
+    };
+
     return (
       <div>
         {testCases?.map((test, i) => (
           <TestCaseEditor
             key={i}
             testCase={test}
-            onChange={props.onChange}
+            onChange={onChange}
             onDel={() => {
               setTestCases((t) => t.filter((_, j) => j !== i));
-              props.onChange?.();
+              onChange?.();
             }}
             ref={(r) => (testCaseRefs.current[i] = r)}
           />
@@ -59,6 +120,30 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
           </Tooltip>
         </Box>
         <Box sx={{ height: "100px" }} />
+        {canUseAi ? (
+          <Box sx={{ position: "absolute", bottom: "5px", left: "5px" }}>
+            <Tooltip
+              title={generateImpediment || "Ask AI to draft a solution for you"}
+            >
+              <span>
+                <Fab
+                  size="small"
+                  color="secondary"
+                  onClick={() => {
+                    handleGenerateTests();
+                  }}
+                  disabled={isGeneratingTests || !!generateImpediment}
+                >
+                  {isGeneratingTests ? (
+                    <CircularProgress size={24} color="warning" />
+                  ) : (
+                    <AutoAwesomeIcon />
+                  )}
+                </Fab>
+              </span>
+            </Tooltip>
+          </Box>
+        ) : null}
       </div>
     );
   }
