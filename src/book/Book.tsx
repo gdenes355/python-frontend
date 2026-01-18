@@ -77,7 +77,7 @@ const Book = (props: BookProps) => {
   const zipPath = searchParams.get("zip-path");
   const zipPathTransformed = useMemo(
     () => ZipPathTransformer.transformZipPath(zipPath),
-    [zipPath]
+    [zipPath],
   );
   const zipData = searchParams.get("zip-data") || "";
   const bookChallengeId = searchParams.get("chid");
@@ -103,11 +103,11 @@ const Book = (props: BookProps) => {
           {
             search: "?" + newSearchParams.toString(),
           },
-          { replace: false }
+          { replace: false },
         );
       }
     },
-    [bookPath, editParam, navigate, zipData, zipPath, editState]
+    [bookPath, editParam, navigate, zipData, zipPath, editState],
   );
 
   const bookFetcher = useMemo(() => {
@@ -126,7 +126,7 @@ const Book = (props: BookProps) => {
       bookPath,
       zipPathTransformed,
       zipData || props.zipFile,
-      props.localFolder
+      props.localFolder,
     );
   }, [
     bookPath,
@@ -158,10 +158,10 @@ const Book = (props: BookProps) => {
               edit: "editing",
             }),
         },
-        { replace: true }
+        { replace: true },
       );
     },
-    [activeNode, navigate]
+    [activeNode, navigate],
   );
   useEffect(() => {
     if (
@@ -173,7 +173,7 @@ const Book = (props: BookProps) => {
     ) {
       setEditState("cloning");
       createEditableBookStore(rootNode, bookFetcher, authContext, true).then(
-        bookClonedForEditing
+        bookClonedForEditing,
       );
       return;
     }
@@ -191,7 +191,7 @@ const Book = (props: BookProps) => {
         localStorage.removeItem("@editor-original-book");
       }
       createEditableBookStore(rootNode, bookFetcher, authContext, false).then(
-        bookClonedForEditing
+        bookClonedForEditing,
       );
       return;
     }
@@ -256,12 +256,12 @@ const Book = (props: BookProps) => {
         setPaths({
           guidePath: absolutisePath(
             node.guide,
-            node.bookMainUrl || bookFetcher.getBookPathAbsolute()
+            node.bookMainUrl || bookFetcher.getBookPathAbsolute(),
           ),
           pyPath: node.py
             ? absolutisePath(
                 node.py,
-                node.bookMainUrl || bookFetcher.getBookPathAbsolute()
+                node.bookMainUrl || bookFetcher.getBookPathAbsolute(),
               )
             : null,
         });
@@ -288,7 +288,7 @@ const Book = (props: BookProps) => {
             "zip-data": zipData || "",
           }),
       },
-      { replace: false }
+      { replace: false },
     );
   };
 
@@ -298,8 +298,8 @@ const Book = (props: BookProps) => {
         nextBookNode(
           rootNode,
           bookChallengeId,
-          (node) => node.guide !== undefined
-        )
+          (node) => node.guide !== undefined,
+        ),
       );
     }
   };
@@ -310,8 +310,8 @@ const Book = (props: BookProps) => {
         prevBookNode(
           rootNode,
           bookChallengeId,
-          (node) => node.guide !== undefined
-        )
+          (node) => node.guide !== undefined,
+        ),
       );
     }
   };
@@ -322,7 +322,7 @@ const Book = (props: BookProps) => {
     {
       passed: new Set(),
       failed: new Set(),
-    }
+    },
   );
 
   const onRunTests = async () => {
@@ -342,7 +342,7 @@ const Book = (props: BookProps) => {
               tests,
               additionalFiles,
               {},
-              node
+              node,
             );
             if (resData) {
               let pass = resData.results.every((r) => r.outcome === true);

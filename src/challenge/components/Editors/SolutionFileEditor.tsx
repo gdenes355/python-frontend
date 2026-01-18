@@ -49,11 +49,11 @@ const SolutionFileEditor = forwardRef<
       starterCode,
       hasEdited,
     },
-    ref
+    ref,
   ) => {
     const { canUseAi } = useContext(SessionContext);
     const [hasSolution, setHasSolution] = useState<boolean>(
-      solutionFile ? true : false
+      solutionFile ? true : false,
     );
 
     const notificationsContext = useContext(NotificationsContext);
@@ -105,7 +105,7 @@ const SolutionFileEditor = forwardRef<
         if (ms && ms.length > 0) {
           editorRef.current?.revealRangeAtTop(
             ms[0].range,
-            monaco.editor.ScrollType.Smooth
+            monaco.editor.ScrollType.Smooth,
           );
           ms.forEach((m) => {
             editorRef.current?.deltaDecorations(
@@ -118,12 +118,12 @@ const SolutionFileEditor = forwardRef<
                     className: "breakpoint-hit",
                   },
                 },
-              ]
+              ],
             );
           });
         }
       },
-      [bookNode.id]
+      [bookNode.id],
     );
 
     const handleEditorDidMount: OnMount = (editor, monaco) => {
@@ -195,7 +195,7 @@ const SolutionFileEditor = forwardRef<
             onClick={() => {
               setHasSolution(true);
               setValue(
-                `print('Write your solution to "${bookNode.name}" here')\n`
+                `print('Write your solution to "${bookNode.name}" here')\n`,
               );
               onChange?.();
             }}
@@ -255,7 +255,7 @@ const SolutionFileEditor = forwardRef<
         </Box>
       </Box>
     );
-  }
+  },
 );
 
 export default SolutionFileEditor;

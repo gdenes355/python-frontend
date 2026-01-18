@@ -17,9 +17,7 @@ import {
 import AdditionalFileView, {
   AdditionalFileViewRef,
 } from "../Editors/AdditionalFileView";
-import BookNodeEditor, {
-  BookNodeEditorHandle,
-} from "../Editors/BookNodeEditor";
+import type BookNodeEditorHandle from "../../refs/BookNodeEditorHandle";
 import ChallengeContext from "../../ChallengeContext";
 import { TestCases } from "../../../models/Tests";
 import AudioPlayer, {
@@ -37,6 +35,8 @@ import SessionFileView from "../Editors/SessionFileView";
 import SolutionFileEditor, {
   SolutionFileEditorHandle,
 } from "../Editors/SolutionFileEditor";
+
+const BookNodeEditor = React.lazy(() => import("../Editors/BookNodeEditor"));
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -102,6 +102,13 @@ const ChallengeOutputs = React.forwardRef<
 
   useImperativeHandle(ref, () => ({
     focusPane: (pane: PaneType) => {
+      if (
+        challengeContext?.isEditing &&
+        (pane === "console" || pane === "canvas")
+      ) {
+        // avoid jumping to console/canvas when editing book. It gets pretty annoying.
+        return;
+      }
       tabbedViewRef.current?.requestPane(pane);
     },
     awaitCanvas: () => {
@@ -197,17 +204,19 @@ const ChallengeOutputs = React.forwardRef<
     panes.push({
       label: "Edit challenge",
       content: (
-        <BookNodeEditor
-          guideMd={props.guideMd}
-          starterCode={props.starterCode}
-          ref={bookNodeEditorRef}
-          onToggleFullScreen={() => {}}
-          onChange={() => {
-            challengeContext?.actions["has-made-edit"]();
-          }}
-          bookNode={props.bookNode}
-          hasEdited={props.hasEdited}
-        />
+        <React.Suspense fallback={<div>Loading book node editor...</div>}>
+          <BookNodeEditor
+            guideMd={props.guideMd}
+            starterCode={props.starterCode}
+            ref={bookNodeEditorRef}
+            onToggleFullScreen={() => {}}
+            onChange={() => {
+              challengeContext?.actions["has-made-edit"]();
+            }}
+            bookNode={props.bookNode}
+            hasEdited={props.hasEdited}
+          />
+        </React.Suspense>
       ),
       show: challengeContext?.isEditing,
       name: "json",
@@ -258,7 +267,7 @@ const ChallengeOutputs = React.forwardRef<
           sessionFiles={props.sessionFiles}
           onRemoveSessionFile={(fileName) => {
             const index = props.sessionFiles.findIndex(
-              (file) => file.filename === fileName
+              (file) => file.filename === fileName,
             );
             if (index >= 0) {
               props.sessionFiles.splice(index, 1);

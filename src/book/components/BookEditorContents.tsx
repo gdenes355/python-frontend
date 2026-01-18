@@ -7,6 +7,8 @@ import {
   Divider,
   useTheme,
   ListItemIcon,
+  Box,
+  Tooltip,
 } from "@mui/material";
 
 import {
@@ -47,6 +49,10 @@ import DriveFileRenameOutline from "@mui/icons-material/DriveFileRenameOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
+import CodeIcon from '@mui/icons-material/Code';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import AbcOutlinedIcon from '@mui/icons-material/AbcOutlined';
 
 type EditorTestResults = {
   passed: Set<string>;
@@ -87,10 +93,10 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
       setContextMenu(
         contextMenu === null
           ? {
-              mouseX: event.clientX - 2,
-              mouseY: event.clientY - 4,
-              node,
-            }
+            mouseX: event.clientX - 2,
+            mouseY: event.clientY - 4,
+            node,
+          }
           : null
       );
       event.preventDefault();
@@ -153,8 +159,8 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
             Make subpage
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => dispatchCommand(props.onDeleteNode)}>
-            <ListItemIcon>
+          <MenuItem onClick={() => dispatchCommand(props.onDeleteNode)} sx={{ color: (theme) => theme.palette.error.main }}>
+            <ListItemIcon sx={{ color: (theme) => theme.palette.error.main }} >
               <DeleteIcon />
             </ListItemIcon>
             Delete
@@ -193,8 +199,8 @@ function RecursiveItem(props: RecursiveItemProps) {
 
   const style = transform
     ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-      }
+      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    }
     : undefined;
 
   const dropStyle: React.CSSProperties = {
@@ -207,14 +213,21 @@ function RecursiveItem(props: RecursiveItemProps) {
     <div style={dropStyle} ref={setNodeDropRef}>
       <TreeItem
         label={
-          <div className="test-state-icon">
-            {props.testRes?.passed.has(node.id) ? (
-              <DoneIcon color="success"></DoneIcon>
-            ) : props.testRes?.failed.has(node.id) ? (
-              <CancelIcon color="error"></CancelIcon>
-            ) : null}
-            {node.name}
-          </div>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box className="test-state-icon">
+              {props.testRes?.passed.has(node.id) ? (
+                <DoneIcon color="success"></DoneIcon>
+              ) : props.testRes?.failed.has(node.id) ? (
+                <CancelIcon color="error"></CancelIcon>
+              ) : null}
+              {node.name}
+            </Box>
+            {!!node.guide ? <Tooltip title="Guide"><AbcOutlinedIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
+            {node.py ? <Tooltip title="Python code"><CodeIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
+            {!!node.tests?.length ? <Tooltip title="Tests"><TaskAltIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
+            {!!node.sol?.file ? <Tooltip title="Solutions"><LightbulbOutlinedIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
+
+          </Box>
         }
         ref={setNodeDragRef}
         style={style}

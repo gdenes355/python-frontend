@@ -12,7 +12,7 @@ type BookNodeModel = {
   children?: BookNodeModel[];
   py?: string;
   guide?: string;
-  tests: TestCases;
+  tests?: TestCases;
   additionalFiles?: AdditionalFiles;
   bookLink?: string;
   isExample?: boolean;
@@ -42,7 +42,7 @@ const getSinglePage: (root: BookNodeModel) => BookNodeModel | null = (root) => {
 
 const findBookNode: (
   node: BookNodeModel,
-  id: string
+  id: string,
 ) => BookNodeModel | null = (node, id) => {
   if (node.id === id) {
     return node;
@@ -60,7 +60,7 @@ const findBookNode: (
 
 const findParent: (
   root: BookNodeModel,
-  child: BookNodeModel
+  child: BookNodeModel,
 ) => BookNodeModel | null = (root, child) => {
   let workingStack: Array<BookNodeModel> = [root];
   while (workingStack.length > 0) {
@@ -79,7 +79,7 @@ const findParent: (
 const nextBookNode: (
   root: BookNodeModel,
   currentId: string,
-  nodeFilter?: (node: BookNodeModel) => boolean
+  nodeFilter?: (node: BookNodeModel) => boolean,
 ) => BookNodeModel = (root, currentId, nodeFilter) => {
   let currentSeen = false;
   let workingStack: Array<BookNodeModel> = [root];
@@ -108,7 +108,7 @@ const nextBookNode: (
 const prevBookNode: (
   root: BookNodeModel,
   currentId: string,
-  nodeFilter?: (node: BookNodeModel) => boolean
+  nodeFilter?: (node: BookNodeModel) => boolean,
 ) => BookNodeModel = (root, currentId, nodeFilter) => {
   let lastGoodNode = root;
   let workingStack: Array<BookNodeModel> = [root];
@@ -133,7 +133,7 @@ const prevBookNode: (
 
 const deleteBookNode: (root: BookNodeModel, toDelete: BookNodeModel) => void = (
   root,
-  toDelete
+  toDelete,
 ) => {
   let workingStack: Array<BookNodeModel> = [root];
   if (toDelete === root) {
@@ -160,7 +160,7 @@ type NodeParentPair = {
 
 const promoteBookNode: (
   root: BookNodeModel,
-  toPromote: BookNodeModel
+  toPromote: BookNodeModel,
 ) => void = (root, toPromote) => {
   let workingStack: Array<NodeParentPair> = [{ node: root, parent: undefined }];
   while (workingStack.length > 0) {
@@ -184,7 +184,7 @@ const promoteBookNode: (
 
 const demoteBookNode: (root: BookNodeModel, toDemote: BookNodeModel) => void = (
   root,
-  toDemote
+  toDemote,
 ) => {
   let workingStack: Array<BookNodeModel> = [root];
   if (toDemote === root) {
@@ -217,7 +217,7 @@ const demoteBookNode: (root: BookNodeModel, toDemote: BookNodeModel) => void = (
 const moveBookNodeAfter = (
   root: BookNodeModel,
   from: BookNodeModel,
-  to: BookNodeModel
+  to: BookNodeModel,
 ) => {
   if (!from || !to || from === to) {
     return;
@@ -248,7 +248,7 @@ const extractIds = (node: BookNodeModel) => {
 
 const _extractIdsWithTestsInOrder = (
   node: BookNodeModel,
-  arr: Array<string>
+  arr: Array<string>,
 ) => {
   if (
     node.isExample ||

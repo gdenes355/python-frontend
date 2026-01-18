@@ -28,7 +28,7 @@ const loadTestStateLocal: (node: BookNodeModel) => AllTestResults = (node) => {
 
 const saveTestStateLocal: (
   node: BookNodeModel,
-  pass: boolean | null
+  pass: boolean | null,
 ) => void = (node, pass) => {
   let passPath = encodeURIComponent(node.bookMainUrl + "-testsPassing");
   let failPath = encodeURIComponent(node.bookMainUrl + "-testsFailing");
@@ -75,25 +75,25 @@ type ProgressStorage = {
     challenge: BookNodeModel,
     outcome?: boolean,
     code?: string,
-    isLongCodeAllowed?: boolean
+    isLongCodeAllowed?: boolean,
   ) => void;
   getResult: (challenge: BookNodeModel) => boolean | undefined;
   updateResults: (
     currResults: AllTestResults,
-    newResults: AllTestResults
+    newResults: AllTestResults,
   ) => void;
   fetchResults: (root: BookNodeModel, currentRes: AllTestResults) => void;
 };
 
 const useProgressStorage: (bookPath: string) => ProgressStorage = (
-  bookPath
+  bookPath,
 ) => {
   const CODE_REPORT_LIMIT = 4000;
   const sessionContext = useContext(SessionContext);
   const notificationContext = useContext(NotificationsContext);
 
   const [allTestResults, setAllTestResults] = useState<AllTestResults>(
-    emptyTestResults()
+    emptyTestResults(),
   );
 
   const persistInMemory = (challenge: BookNodeModel, outcome: boolean) => {
@@ -112,7 +112,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
       challenge: BookNodeModel,
       outcome?: boolean,
       code?: string,
-      isLongCodeAllowed?: boolean
+      isLongCodeAllowed?: boolean,
     ) => {
       if (!sessionContext.isLoggedIn()) return;
 
@@ -126,7 +126,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
         code = code.substring(0, CODE_REPORT_LIMIT);
         notificationContext.addMessage(
           `Code too long to store on server, we will only keep the first ${CODE_REPORT_LIMIT} characters. Click download to save the rest.`,
-          "error"
+          "error",
         );
       }
 
@@ -176,7 +176,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
         });
       }
     },
-    3000
+    3000,
   );
 
   useEffect(() => {
@@ -187,7 +187,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     challenge: BookNodeModel,
     outcome?: boolean,
     code?: string,
-    isLongCodeAllowed?: boolean
+    isLongCodeAllowed?: boolean,
   ) => {
     if (outcome === null || outcome === undefined) {
       //ignore
@@ -210,14 +210,14 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
 
   const updateResults = (
     currResults: AllTestResults,
-    newResults: AllTestResults
+    newResults: AllTestResults,
   ) => {
     // let's be optimistic and take all new passes
     let passed = new Set([...currResults.passed, ...newResults.passed]);
     let failed = new Set(
       [...allTestResults.failed, ...newResults.failed].filter(
-        (x) => !allTestResults.passed.has(x)
-      )
+        (x) => !allTestResults.passed.has(x),
+      ),
     );
     setAllTestResults({ passed, failed, comments: newResults.comments });
   };
@@ -228,7 +228,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     currentRes: AllTestResults,
     newPasses: Set<string>,
     newCode: Map<string, string>,
-    comments: Map<string, string>
+    comments: Map<string, string>,
   ) => {
     currentRes = {
       passed: new Set(currentRes.passed),
@@ -256,7 +256,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           currentRes,
           newPasses,
           newCode,
-          comments
+          comments,
         );
       }
     }
@@ -265,7 +265,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
   const processResultsFromServer = (
     root: BookNodeModel,
     data: ResultsModel,
-    currentRes: AllTestResults
+    currentRes: AllTestResults,
   ) => {
     let newPasses = new Set<string>();
     let newCode = new Map<string, string>();
@@ -277,7 +277,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
     for (let [id, comment] of comments) {
       localStorage.setItem(
         "comment-" + encodeURIComponent(bookPath + id),
-        comment
+        comment,
       );
     }
     updateResults(currentRes, {
@@ -297,7 +297,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
           },
           (msg: any) => {
             processResultsFromServer(root, msg.data, currentRes);
-          }
+          },
         );
       } else if (sessionContext.resultsEndpoint) {
         fetch(
@@ -310,7 +310,7 @@ const useProgressStorage: (bookPath: string) => ProgressStorage = (
               "Content-Type": "application/json",
               Authorization: `Bearer ${sessionContext.token}`,
             },
-          }
+          },
         ).then((response) => {
           if (response.status === 401) {
             response.json().then((data) => {

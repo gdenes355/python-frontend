@@ -52,7 +52,9 @@ const TestCaseEditor = React.forwardRef<
   useEffect(() => {
     if (props.testCase.in instanceof Array) {
       setInString(
-        (props.testCase.in as (number | string)[]).map((v) => "" + v).join("\n")
+        (props.testCase.in as (number | string)[])
+          .map((v) => "" + v)
+          .join("\n"),
       );
     } else {
       setInString(props.testCase.in + "");
@@ -81,7 +83,7 @@ const TestCaseEditor = React.forwardRef<
     return {
       in: inString.split("\n"),
       out: advancedOut.map(
-        (r, i) => advancedOutRefs.current?.[i]?.getValue() || r
+        (r, i) => advancedOutRefs.current?.[i]?.getValue() || r,
       ),
     };
   };
@@ -91,22 +93,43 @@ const TestCaseEditor = React.forwardRef<
   }));
 
   const summary = useMemo(() => {
-    const whole = inString.split("\n").join(", ");
+    let whole = inString.split("\n").join(", ");
+    if (simpleOutput) {
+      if (simpleOutString) {
+        whole += " -> " + simpleOutString.split("\n").join(", ");
+      } else {
+        return "Blank test case; expand to edit";
+      }
+    } else {
+      whole += " -> ...";
+    }
     return whole.length > 30 ? whole.slice(0, 30) + "..." : whole;
-  }, [inString]);
+  }, [inString, simpleOutput, simpleOutString]);
 
   return (
-    <Accordion>
-      <AccordionSummary sx={{ bgcolor: "primary.main", color: "white" }}>
+    <Accordion
+      defaultExpanded
+      disableGutters
+      sx={{
+        border: "1px solid",
+        borderRadius: 1,
+        borderColor: (theme) => theme.palette.primary.main,
+        boxShadow: "3px 3px 3px 0 rgba(0, 0, 0, 0.2)",
+        marginBottom: 1,
+        padding: 1,
+        marginRight: 2,
+      }}
+    >
+      <AccordionSummary>
         <Box sx={{ width: "100%" }}>
           <span>{summary}</span>
 
           <FormControlLabel
             sx={{ float: "right" }}
-            label="Simple"
+            label={simpleOutput ? "Simple" : "Advanced"}
             control={
               <Switch
-                color="default"
+                color={simpleOutput ? "default" : "primary"}
                 size="small"
                 onClick={(e) => {
                   e.preventDefault();
@@ -114,8 +137,8 @@ const TestCaseEditor = React.forwardRef<
                   setSimpleOutput((x) => !x);
                   props.onChange?.();
                 }}
-                checked={simpleOutput}
-                value={simpleOutput}
+                checked={!simpleOutput}
+                value={!simpleOutput}
               />
             }
           />
@@ -215,6 +238,7 @@ const TestCaseEditor = React.forwardRef<
                     <VeryDenseTableCell>
                       <Tooltip title="Add new pattern">
                         <Button
+                          sx={{ width: "100%", justifyContent: "left" }}
                           onClick={() => {
                             setAdvancedOut([...advancedOut, { pattern: "" }]);
                             props.onChange?.();

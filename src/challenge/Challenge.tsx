@@ -72,7 +72,7 @@ const Challenge = (props: ChallengeProps) => {
       props.bookNode.typ
         ? ChallengeTypes[props.bookNode.typ]
         : ChallengeTypes.py,
-    [props.bookNode.typ]
+    [props.bookNode.typ],
   );
 
   const canSubmit = useMemo(
@@ -81,12 +81,12 @@ const Challenge = (props: ChallengeProps) => {
         ((!!props.bookNode.tests && props.bookNode.tests.length > 0) ||
           nodeTyp === "parsons")) ||
       !!props.bookNode.isAssessment,
-    [props.bookNode, nodeTyp]
+    [props.bookNode, nodeTyp],
   );
 
   const canVerifySolutions = useMemo(
     () => (!!props.bookNode.sol && props.isEditing) || false,
-    [props.bookNode.sol, props.isEditing]
+    [props.bookNode.sol, props.isEditing],
   );
 
   /// state
@@ -208,10 +208,10 @@ const Challenge = (props: ChallengeProps) => {
         bookNode,
         newTestOutcome,
         code,
-        bookNode.isLong
+        bookNode.isLong,
       );
     },
-    [props.progressStorage]
+    [props.progressStorage],
   );
 
   const getVisibilityWithHack = (visible: boolean) => {
@@ -288,7 +288,7 @@ const Challenge = (props: ChallengeProps) => {
               props.bookNode?.additionalFiles || [],
               additionalFilesLoaded,
               usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined,
-              sessionFiles
+              sessionFiles,
             );
           }
         } else {
@@ -306,7 +306,7 @@ const Challenge = (props: ChallengeProps) => {
                 usesFixedInput
                   ? outputsRef.current?.getFixedInputs()
                   : undefined,
-                sessionFiles
+                sessionFiles,
               )
               .then(() => {
                 if (props.bookNode?.isExample) {
@@ -340,7 +340,7 @@ const Challenge = (props: ChallengeProps) => {
                 props.bookNode?.additionalFiles || [],
                 additionalFilesLoaded,
                 props.bookNode,
-                sessionFiles
+                sessionFiles,
               )
               .then((results) => {
                 onReportResult(results.results, results.code, results.bookNode);
@@ -363,7 +363,7 @@ const Challenge = (props: ChallengeProps) => {
             props.bookNode?.additionalFiles || [],
             additionalFilesLoaded,
             props.bookNode,
-            sessionFiles
+            sessionFiles,
           )
           .then((results) => {
             onReportResult(results.results, results.code, results.bookNode);
@@ -411,7 +411,7 @@ const Challenge = (props: ChallengeProps) => {
         if (typ === ChallengeTypes.canvas) {
           setTyp(nodeTyp);
           codeRunner.addConsoleText(
-            "Hiding turtle. Did you forget to call turtle.done()?"
+            "Hiding turtle. Did you forget to call turtle.done()?",
           );
         }
       },
@@ -451,7 +451,7 @@ const Challenge = (props: ChallengeProps) => {
           additionalFilesLoaded,
           outputsRef.current?.getVisibleFileContents(),
           outputsRef.current?.getSolutionFileEditor()?.getSolutionObject(),
-          outputsRef.current?.getSolutionFileEditor()?.getSolutionValue()
+          outputsRef.current?.getSolutionFileEditor()?.getSolutionValue(),
         );
         forceReload();
         setHasEdited(false);
@@ -492,6 +492,20 @@ const Challenge = (props: ChallengeProps) => {
     actionsRef.current = actions;
   }, [actions]);
 
+  // save on Ctrl+S
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!props.isEditing) return;
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault(); // stop browser "Save page"
+        actionsRef.current?.["save-node"]();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const callWithSaveCheck = useCallback(
     (action: (() => void) | undefined) => {
       if (!action) return;
@@ -512,7 +526,7 @@ const Challenge = (props: ChallengeProps) => {
         },
       });
     },
-    [hasEdited, props.isEditing, context]
+    [hasEdited, props.isEditing, context],
   );
 
   return (
@@ -579,49 +593,96 @@ const Challenge = (props: ChallengeProps) => {
               <Allotment.Pane>
                 <Allotment vertical defaultSizes={[650, 350]}>
                   <Allotment.Pane>
-                    <MainEditor
-                      parsonsEditorRef={parsonsEditorRef}
-                      typ={nodeTyp}
-                      savedCode={savedCode}
-                      starterCode={starterCode}
-                      pyEditorRef={pyEditorRef}
-                      onToggleFullScreen={() => {
-                        console.log("toggle full screen", editorFullScreen);
-                        setEditorFullScreen((x) => !x);
-                      }}
-                      codeRunner={codeRunner}
-                      isLoading={isLoadingCode}
-                    />
+                    {props.isEditing && !props.bookNode?.py ? (
+                      <Box
+                        sx={{
+                          width: "100%",
+                          height: "100%",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        {props.bookNode?.guide ? (
+                          <span>
+                            This page is guide-only; it does not have a Python
+                            file.
+                          </span>
+                        ) : (
+                          <span>
+                            This page is just a section header; it does not have
+                            a Python file.
+                          </span>
+                        )}
+                      </Box>
+                    ) : (
+                      <MainEditor
+                        parsonsEditorRef={parsonsEditorRef}
+                        typ={nodeTyp}
+                        savedCode={savedCode}
+                        starterCode={starterCode}
+                        pyEditorRef={pyEditorRef}
+                        onToggleFullScreen={() => {
+                          console.log("toggle full screen", editorFullScreen);
+                          setEditorFullScreen((x) => !x);
+                        }}
+                        codeRunner={codeRunner}
+                        isLoading={isLoadingCode}
+                      />
+                    )}
                   </Allotment.Pane>
                   <Allotment.Pane
                     visible={getVisibilityWithHack(!editorFullScreen)}
                     maxSize={750}
                     minSize={150}
                   >
-                    <ChallengeOutputs
-                      ref={outputsRef}
-                      typ={typ}
-                      codeRunner={codeRunner}
-                      usesFixedInput={usesFixedInput}
-                      additionalFiles={props.bookNode.additionalFiles || []}
-                      additionalFilesLoaded={additionalFilesLoaded}
-                      bookNode={props.bookNode}
-                      bookStore={props.store}
-                      isSessionFilesAllowed={
-                        props.bookNode.isSessionFilesAllowed
-                      }
-                      sessionFiles={sessionFiles}
-                      solutionFile={solutionFile}
-                      guideMd={props.isEditing ? guideMd : undefined}
-                      starterCode={props.isEditing ? starterCode : undefined}
-                      hasEdited={hasEdited}
-                    />
+                    {!props.bookNode.guide || !props.bookNode.py ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100%",
+                        }}
+                      >
+                        {!props.bookNode.guide ? (
+                          <span>
+                            This page is guide-only; you can edit its title in
+                            the book drawer on the right.
+                          </span>
+                        ) : (
+                          <span>
+                            This page is just a section header; you can edit its
+                            title in the book drawer on the right.
+                          </span>
+                        )}
+                      </Box>
+                    ) : (
+                      <ChallengeOutputs
+                        ref={outputsRef}
+                        typ={typ}
+                        codeRunner={codeRunner}
+                        usesFixedInput={usesFixedInput}
+                        additionalFiles={props.bookNode.additionalFiles || []}
+                        additionalFilesLoaded={additionalFilesLoaded}
+                        bookNode={props.bookNode}
+                        bookStore={props.store}
+                        isSessionFilesAllowed={
+                          props.bookNode.isSessionFilesAllowed
+                        }
+                        sessionFiles={sessionFiles}
+                        solutionFile={solutionFile}
+                        guideMd={props.isEditing ? guideMd : undefined}
+                        starterCode={props.isEditing ? starterCode : undefined}
+                        hasEdited={hasEdited}
+                      />
+                    )}
                   </Allotment.Pane>
                 </Allotment>
               </Allotment.Pane>
               <Allotment.Pane
                 visible={getVisibilityWithHack(
-                  !editorFullScreen && !isGuideMinimised
+                  !editorFullScreen && !isGuideMinimised,
                 )}
               >
                 <Allotment vertical className="challenge__right-pane">
@@ -634,7 +695,19 @@ const Challenge = (props: ChallengeProps) => {
                       height: "100%",
                     }}
                   >
-                    {isGuideMinimised ? null : (
+                    {isGuideMinimised ? null : !props.bookNode.guide ? (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100%",
+                        }}
+                      >
+                        This page is just a section header; it does not have a
+                        guide text.
+                      </Box>
+                    ) : (
                       <ChallengeGuide
                         ref={guideRef}
                         challengeId={props.bookNode.id}
@@ -663,7 +736,7 @@ const Challenge = (props: ChallengeProps) => {
                         props.isEditing
                           ? () => {
                               bookServerUploaderRef.current?.showDialog(
-                                props.fetcher
+                                props.fetcher,
                               );
                             }
                           : undefined
@@ -690,7 +763,7 @@ const Challenge = (props: ChallengeProps) => {
                       }}
                       OnWatchRemove={(n) => {
                         watches.current = watches.current.filter(
-                          (x) => x !== n
+                          (x) => x !== n,
                         );
                         codeRunner.refreshDebugContext(makeDebugSetup());
                       }}
