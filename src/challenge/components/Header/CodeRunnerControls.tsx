@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { Button, Grid2, Divider, Tooltip } from "@mui/material";
+import { Button, Grid2, Divider } from "@mui/material";
 import TestResultsIndicator from "../../../components/TestResultIndicator";
 import { TestResults } from "../../../models/Tests";
 import ChallengeContext from "../../ChallengeContext";
@@ -15,7 +15,6 @@ type CodeRunnerControlsProps = {
   canRunOnly: boolean;
   canSubmit: boolean;
   canVerifySolutions: boolean;
-  isSubmitDisabledDueToEditing: boolean;
   codeRunner: CodeRunnerRef;
   testResults: TestResults;
   isAssessment: boolean;
@@ -43,30 +42,15 @@ const CodeRunnerControls = (props: CodeRunnerControlsProps) => {
         Stop
       </Button>
       {props.canSubmit ? (
-        props.isSubmitDisabledDueToEditing ? (
-          <Tooltip title="You are in edit mode. Preview this book to test submitting, or add a solution and verify that it passes the tests.">
-            <span>
-              <Button
-                variant="contained"
-                color="primary"
-                disabled={true}
-                size="small"
-              >
-                Submit
-              </Button>
-            </span>
-          </Tooltip>
-        ) : (
-          <Button
-            variant="contained"
-            color="primary"
-            disabled={!canDebug}
-            onClick={() => challengeContext?.actions["test"]()}
-            size="small"
-          >
-            Submit
-          </Button>
-        )
+        <Button
+          variant="contained"
+          color="primary"
+          disabled={!canDebug}
+          onClick={() => challengeContext?.actions["test"]()}
+          size="small"
+        >
+          Submit
+        </Button>
       ) : null}
       {props.canVerifySolutions ? (
         <Button
