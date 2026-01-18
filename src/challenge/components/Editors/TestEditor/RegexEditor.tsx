@@ -1,8 +1,6 @@
 import { Box, TextField, TextFieldProps, useTheme } from "@mui/material";
 import { useRef, useEffect, useState } from "react";
-import { colorizePattern, loadStyles } from "regex-colorizer";
-
-loadStyles();
+import { colorizePattern } from "regex-colorizer";
 
 // Get the regex-colorizer style ID from the loaded stylesheet
 function getRegexColorizerClass(): string {
