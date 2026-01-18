@@ -24,7 +24,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
   const location = useLocation();
   const searchParams = useMemo(
     () => new URLSearchParams(location.search),
-    [location]
+    [location],
   );
   const previewUrl = useMemo(() => {
     let chid = searchParams.get("chid");
@@ -48,12 +48,14 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
       </Grid2>
       <Grid2 key="edit-preview">
         <a href={previewUrl} target="_blank" rel="noreferrer noopener">
-          <Button>Preview</Button>
+          <Tooltip title="Preview local copy in a new tab">
+            <Button>Preview</Button>
+          </Tooltip>
         </a>
       </Grid2>
       <Grid2 key="unsaved-changes">
         {props.hasUnsavedChanges ? (
-          <Tooltip title="You have unsaved changes">
+          <Tooltip title="You have unsaved changes. Press Ctrl+S to save locally.">
             <FiberManualRecordIcon sx={{ color: "red", margin: "5px" }} />
           </Tooltip>
         ) : undefined}
@@ -68,7 +70,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
               }}
             />
           }
-          label="Edit guide"
+          label="Edit Guide"
         />
       </Grid2>
     </>

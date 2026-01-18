@@ -14,8 +14,10 @@ import useAiTeacherTests from "../../../../ai/hooks/useAiTeacherTests";
 import NotificationsContext from "../../../../components/NotificationsContext";
 import SessionContext from "../../../../auth/contexts/SessionContext";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import AddIcon from "@mui/icons-material/Add";
 
 type TestEditorProps = {
+  challengeId: string;
   tests?: TestCases;
   guideMd?: string;
   starterCode?: string;
@@ -28,7 +30,7 @@ type TestEditorHandle = {
 };
 
 const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
-  ({ tests, guideMd, starterCode, hasEdited, onChange }, ref) => {
+  ({ tests, guideMd, starterCode, hasEdited, onChange, challengeId }, ref) => {
     const { canUseAi } = useContext(SessionContext);
     const [testCases, setTestCases] = useState<TestCases>(tests || []);
 
@@ -53,7 +55,7 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
     const getValue = () => {
       if (!testCases) return [];
       return testCases.map(
-        (t, i) => testCaseRefs.current?.[i]?.getValue() || t
+        (t, i) => testCaseRefs.current?.[i]?.getValue() || t,
       );
     };
     useImperativeHandle(ref, () => ({
@@ -77,14 +79,14 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
       if (!guideMd) {
         notificationsContext.addMessage(
           "No guide found. Please save your changes first to generate a solution",
-          "error"
+          "error",
         );
         return;
       }
       if (!starterCode) {
         notificationsContext.addMessage(
           "No starter code found. Please save your changes first to generate a solution",
-          "error"
+          "error",
         );
         return;
       }
@@ -98,7 +100,7 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
       <div>
         {testCases?.map((test, i) => (
           <TestCaseEditor
-            key={i}
+            key={challengeId + i}
             testCase={test}
             onChange={onChange}
             onDel={() => {
@@ -111,11 +113,12 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
         <Box sx={{ marginTop: "10px" }}>
           <Tooltip title="Add new test case">
             <Button
+              sx={{ width: "100%", justifyContent: "left" }}
               onClick={() => {
                 setTestCases([...testCases, { in: [], out: "" }]);
               }}
             >
-              +
+              <AddIcon />
             </Button>
           </Tooltip>
         </Box>
@@ -146,7 +149,7 @@ const TestEditor = React.forwardRef<TestEditorHandle, TestEditorProps>(
         ) : null}
       </div>
     );
-  }
+  },
 );
 
 export default TestEditor;

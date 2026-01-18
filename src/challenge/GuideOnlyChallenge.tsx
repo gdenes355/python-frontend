@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import BookNodeModel from "../models/BookNodeModel";
-import { Box } from "@mui/material";
+import { Box, Container } from "@mui/material";
 import HeaderBar from "../components/HeaderBar";
 import Guide from "../components/Guide";
 import BookControlFabs from "../book/components/BookControlFabs";
@@ -53,16 +53,19 @@ const GuideOnlyChallenge = (props: GuideOnlyChallengeProps) => {
       justifyContent="center"
     >
       <HeaderBar title={props.title} />
+
       <Box
         sx={{
           flex: 1,
           overflow: "auto",
-          width: "auto",
+          width: "100%",
           marginLeft: "auto",
           marginRight: "auto",
         }}
       >
-        <Guide md={error ? "Failed to load guide" : md || "Loading..."} />
+        <Container maxWidth="md">
+          <Guide md={error ? "Failed to load guide" : md || "Loading..."} />
+        </Container>
       </Box>
 
       <BookControlFabs

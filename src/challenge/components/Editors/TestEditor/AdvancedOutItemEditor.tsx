@@ -12,9 +12,11 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Tooltip,
 } from "@mui/material";
 import VeryDenseTableCell from "../../../../components/VeryDenseTableCell";
 import ClearIcon from "@mui/icons-material/Clear";
+import { RegexInput } from "./RegexEditor";
 
 type AdvancedOutItemEditorHandle = {
   getValue: () => AdvancedOutRequirement;
@@ -45,12 +47,12 @@ const AdvancedOutItemEditor = React.forwardRef<
 >((props, ref) => {
   const [pattern, setPattern] = useState<string>(props.req.pattern);
   const [isRegex, setIsRegex] = useState<boolean>(
-    props.req.regex === false ? false : true
+    props.req.regex === false ? false : true,
   );
   const [ignore, setIgnore] = useState<("w" | "c" | "p")[]>([]);
   const [count, setCount] = useState<number>(props.req.count || -1);
   const [typ, setTyp] = useState<AdvancedOutRequirementType>(
-    props.req.typ || "+"
+    props.req.typ || "+",
   );
   const [fileName, setFileName] = useState<string>(props.req.filename || "");
   const [statement, setStatement] = useState<string>(props.req.statement || "");
@@ -61,7 +63,7 @@ const AdvancedOutItemEditor = React.forwardRef<
     setIgnore(
       (props.req.ignore || "")
         .split("")
-        .filter((c) => ["w", "c", "p"].includes(c)) as ("w" | "c" | "p")[]
+        .filter((c) => ["w", "c", "p"].includes(c)) as ("w" | "c" | "p")[],
     );
     setCount(props.req.count || -1);
     setTyp(props.req.typ || "+");
@@ -100,18 +102,30 @@ const AdvancedOutItemEditor = React.forwardRef<
   return (
     <TableRow>
       <VeryDenseTableCell>
-        <TextField
-          value={pattern || ""}
-          onChange={(e) => {
-            setPattern(e.target.value);
-            props.onChange?.();
-          }}
-          size="small"
-          variant="standard"
-          hiddenLabel={true}
-          inputProps={{ style: { fontFamily: "monospace" } }}
-          sx={{ width: "98%" }}
-        />
+        {isRegex ? (
+          <RegexInput
+            value={pattern || ""}
+            onChange={(e) => {
+              const value = e.target.value;
+              setPattern(value);
+              props.onChange?.();
+            }}
+            variant="standard"
+          />
+        ) : (
+          <TextField
+            value={pattern || ""}
+            onChange={(e) => {
+              setPattern(e.target.value);
+              props.onChange?.();
+            }}
+            size="small"
+            variant="standard"
+            hiddenLabel={true}
+            inputProps={{ style: { fontFamily: "monospace" } }}
+            sx={{ width: "98%" }}
+          />
+        )}
         {typ[0] === "f" || typ[0] === "t" ? (
           <TextField
             value={fileName || ""}
@@ -212,14 +226,16 @@ const AdvancedOutItemEditor = React.forwardRef<
         />
       </VeryDenseTableCell>
       <VeryDenseTableCell>
-        <IconButton
-          aria-label="remove watch"
-          size="small"
-          onClick={props.onDel}
-          style={{ float: "right" }}
-        >
-          <ClearIcon color="error" fontSize="small" />
-        </IconButton>
+        <Tooltip title="Remove this output check">
+          <IconButton
+            aria-label="remove watch"
+            size="small"
+            onClick={props.onDel}
+            style={{ float: "right" }}
+          >
+            <ClearIcon color="error" fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </VeryDenseTableCell>
     </TableRow>
   );

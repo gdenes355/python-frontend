@@ -1,6 +1,6 @@
 {
   "name": "python-sponge",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "private": true,
   "type": "module",
   "description": "Client-side framework for learning Python and authoring Python challenges",
@@ -46,6 +46,7 @@
     "react-markdown": "^10.0.0",
     "react-router-dom": "^6.8.0",
     "react-syntax-highlighter": "^15.6.1",
+    "regex-colorizer": "^1.0.2",
     "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
@@ -11,6 +11,7 @@ import { Autocomplete } from "@mui/material";
 type InputDialogProps = {
   title?: string;
   message?: string;
+  placeholder?: string;
   inputLabel?: string;
   defaultValue?: string;
   okButtonLabel?: string;
@@ -27,6 +28,23 @@ type InputDialogProps = {
 const InputDialog = (props: InputDialogProps) => {
   const { open } = props;
   const [value, setValue] = useState<string | undefined>(undefined);
+  const openRef = useRef<boolean>(open);
+
+  const visibleComponentRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const tryFocus = (remainingAttempts: number) => {
+      if (!openRef.current) return;
+      if (remainingAttempts <= 0) return;
+      if (visibleComponentRef.current?.focus()) return;
+      setTimeout(() => tryFocus(remainingAttempts - 1), 50);
+    };
+    openRef.current = open;
+    if (open) {
+      tryFocus(5);
+      setValue(props.defaultValue || "");
+    }
+  }, [open]);
 
   useEffect(() => {
     setValue(props.defaultValue);
@@ -39,12 +57,18 @@ const InputDialog = (props: InputDialogProps) => {
         <DialogContentText>{props.message}</DialogContentText>
         {props.type === "combo" ? (
           <Autocomplete
+            ref={visibleComponentRef}
             options={props.options || []}
             getOptionDisabled={(option) =>
               props.disabledOptions?.includes(option) || false
             }
             renderInput={(params) => (
-              <TextField {...params} label="Book" variant="standard" />
+              <TextField
+                {...params}
+                label="Book"
+                variant="standard"
+                placeholder={props.placeholder}
+              />
             )}
             onChange={(_, n) => setValue(n || "")}
             value={value || ""}
@@ -56,7 +80,6 @@ const InputDialog = (props: InputDialogProps) => {
           />
         ) : (
           <TextField
-            autoFocus
             margin="dense"
             id="formField"
             label={props.inputLabel}
@@ -64,7 +87,9 @@ const InputDialog = (props: InputDialogProps) => {
             fullWidth
             variant="standard"
             autoComplete="off"
+            placeholder={props.placeholder}
             onChange={(e) => setValue(e.target.value)}
+            inputRef={visibleComponentRef}
             onKeyPress={(ev) => {
               if (ev.key === "Enter") {
                 props.onInputEntered(value || "");

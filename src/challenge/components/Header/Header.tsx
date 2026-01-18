@@ -55,7 +55,7 @@ const Header = (props: HeaderProps) => {
   const challengeContext = useContext(ChallengeContext);
 
   const [exportText, setExportText] = React.useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   const exportBookZip = async () => {
@@ -87,7 +87,7 @@ const Header = (props: HeaderProps) => {
     setExportText(
       `${
         window.location.href.split("?")[0]
-      }?bk=book.json&zip-data=${base64data}`
+      }?bk=book.json&zip-data=${base64data}`,
     );
   };
 
