@@ -70,7 +70,7 @@ const HeaderButtonsEditor = (props: HeaderButtonsEditorProps) => {
               }}
             />
           }
-          label="Edit guide"
+          label="Edit Guide"
         />
       </Grid2>
     </>

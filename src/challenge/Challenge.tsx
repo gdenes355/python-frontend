@@ -19,7 +19,7 @@ import BookUploadModal from "../book/components/BookUploadModal";
 import { Paper } from "@mui/material";
 import { Box } from "@mui/system";
 
-import { Allotment } from "allotment";
+import { Allotment, AllotmentHandle } from "allotment";
 import "allotment/dist/style.css";
 
 import BookControlFabs from "../book/components/BookControlFabs";
@@ -94,9 +94,11 @@ const Challenge = (props: ChallengeProps) => {
   const [editorFullScreen, setEditorFullScreen] = useState<boolean>(false);
   const [testResults, setTestResults] = useState<TestResults>([]);
   const [comment, setComment] = useState<string | undefined>(undefined);
-  const [isGuideMinimised, setGuideMinimised] = useState<boolean>(false);
   const [typ, setTyp] = useState<ChallengeTypes>(ChallengeTypes.py);
   const [usesFixedInput, setUsesFixedInput] = useState<boolean>(false);
+
+  // states related to UI
+  const [isGuideMinimised, setGuideMinimised] = useState<boolean>(false);
   const [showBookUpload, setShowBookUpload] = useState<boolean>(false);
   const [turtleExampleRendered, setTurtleExampleRendered] = useState<
     string | undefined
@@ -120,8 +122,30 @@ const Challenge = (props: ChallengeProps) => {
 
   const notificationContext = useContext(NotificationsContext);
 
+  const mainAllotmentRef = useRef<AllotmentHandle | null>(null);
+  const leftHandSideAllotmentRef = useRef<AllotmentHandle | null>(null);
+  const leftHandSideAllotmentIsResizingRef = useRef<boolean>(false);
+  const leftHandSideAllotmentSizesInDebugRef = useRef<[number, number] | null>(
+    null,
+  );
+  const leftHandSideAllotmentSizesNotInDebugRef = useRef<
+    [number, number] | null
+  >(null);
+
   // state related to session files
   const [sessionFiles, setSessionFiles] = useState<SessionFile[]>([]);
+
+  const currentProgressStorageRef = useRef<ProgressStorage | null>(null);
+  useEffect(() => {
+    currentProgressStorageRef.current = props.progressStorage;
+  }, [props.progressStorage]);
+
+  const currentTestResultsRef = useRef<TestResults | null>(null);
+  useEffect(() => {
+    currentTestResultsRef.current = testResults;
+  }, [testResults]);
+
+  const currentTestResultNodeIddRef = useRef<string | null>(null);
 
   /// hooks
   const codeRunner = useCodeRunner({
@@ -199,19 +223,21 @@ const Challenge = (props: ChallengeProps) => {
   const onReportResult = useCallback(
     (results: TestResults, code: string, bookNode: BookNodeModel) => {
       setTestResults(results);
+      currentTestResultsRef.current = results;
+      currentTestResultNodeIddRef.current = bookNode.id;
       let newTestOutcome =
         results.length === 0
           ? undefined
           : results.filter((x) => x.outcome !== true).length === 0;
 
-      props.progressStorage?.setResult(
+      currentProgressStorageRef.current?.setResult(
         bookNode,
         newTestOutcome,
         code,
         bookNode.isLong,
       );
     },
-    [props.progressStorage],
+    [],
   );
 
   const getVisibilityWithHack = (visible: boolean) => {
@@ -239,20 +265,36 @@ const Challenge = (props: ChallengeProps) => {
 
   // results changed
   useEffect(() => {
+    if (
+      props.isEditing &&
+      currentTestResultNodeIddRef.current === props.bookNode.id
+    ) {
+      return;
+    }
+
     let testRes = props.bookNode
       ? props.progressStorage.getResult(props.bookNode)
       : undefined;
     setTestResults(testRes === undefined ? [] : [{ outcome: testRes }]);
+    currentTestResultNodeIddRef.current = props.bookNode.id;
     let comment = props.bookNode
       ? props.progressStorage.allTestResults.comments.get(props.bookNode.id)
       : undefined;
     setComment(comment);
     // TODO: consider re-loading the code file if a result is present and not change has been made so far
-  }, [props.bookNode, props.progressStorage]);
+  }, [props.bookNode, props.progressStorage, props.isEditing]);
 
   // run state
   useEffect(() => {
     pyEditorRef.current?.updateEditorDecorations();
+    if (
+      codeRunner.state === CodeRunnerState.READY &&
+      leftHandSideAllotmentSizesNotInDebugRef.current
+    ) {
+      leftHandSideAllotmentRef.current?.resize(
+        leftHandSideAllotmentSizesNotInDebugRef.current,
+      );
+    }
     if (
       codeRunner.state === CodeRunnerState.AWAITING_INPUT ||
       CodeRunnerState.READY
@@ -278,6 +320,11 @@ const Challenge = (props: ChallengeProps) => {
   const actions = useMemo(() => {
     return {
       debug: (mode: "debug" | "run" = "debug") => {
+        if (leftHandSideAllotmentSizesInDebugRef.current) {
+          leftHandSideAllotmentRef.current?.resize(
+            leftHandSideAllotmentSizesInDebugRef.current,
+          );
+        }
         if (nodeTyp === ChallengeTypes.parsons && !props.isEditing) {
           let code = parsonsEditorRef.current?.getValue();
           if (code) {
@@ -578,6 +625,11 @@ const Challenge = (props: ChallengeProps) => {
               onEditingGuideChange={(editing) => {
                 setIsEditingGuide(editing);
                 setHasEdited((x) => x || editing);
+                if (editing) {
+                  mainAllotmentRef.current?.resize([300, 700]);
+                } else {
+                  mainAllotmentRef.current?.resize([650, 350]);
+                }
               }}
               bookFetcher={props.fetcher}
               canRunOnly={nodeTyp === "parsons" && !props.isEditing}
@@ -589,9 +641,40 @@ const Challenge = (props: ChallengeProps) => {
                 bookServerUploaderRef.current?.showDialog(props.fetcher);
               }}
             />
-            <Allotment className="h-100" defaultSizes={[650, 350]}>
+            <Allotment
+              className="h-100"
+              defaultSizes={[650, 350]}
+              ref={mainAllotmentRef}
+            >
               <Allotment.Pane>
-                <Allotment vertical defaultSizes={[650, 350]}>
+                <Allotment
+                  vertical
+                  defaultSizes={[650, 350]}
+                  onDragStart={() => {
+                    leftHandSideAllotmentIsResizingRef.current = true;
+                  }}
+                  onDragEnd={() => {
+                    leftHandSideAllotmentIsResizingRef.current = false;
+                  }}
+                  ref={leftHandSideAllotmentRef}
+                  onChange={(sizes) => {
+                    if (!leftHandSideAllotmentIsResizingRef.current) return;
+                    if (
+                      codeRunner.state ===
+                        CodeRunnerState.RUNNING_WITH_DEBUGGER ||
+                      codeRunner.state === CodeRunnerState.ON_BREAKPOINT ||
+                      codeRunner.state === CodeRunnerState.AWAITING_INPUT
+                    ) {
+                      leftHandSideAllotmentSizesInDebugRef.current = sizes as [
+                        number,
+                        number,
+                      ];
+                    } else {
+                      leftHandSideAllotmentSizesNotInDebugRef.current =
+                        sizes as [number, number];
+                    }
+                  }}
+                >
                   <Allotment.Pane>
                     {props.isEditing && !props.bookNode?.py ? (
                       <Box

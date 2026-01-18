@@ -6,7 +6,14 @@ import React, {
 } from "react";
 import ChallengeContext from "../../ChallengeContext";
 import Guide from "../../../components/Guide";
-import { Fade, Paper, Skeleton, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Fade,
+  Paper,
+  Skeleton,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 type ChallengeGuideProps = {
   initialMd: string;
@@ -38,15 +45,24 @@ const ChallengeGuide = React.forwardRef<ChallengeGuideRef, ChallengeGuideProps>(
 
     if (challengeContext?.isEditing && props.isEditing) {
       return (
-        <TextField
-          multiline
-          margin="dense"
-          value={md}
-          onChange={(e) => setMd(e.target.value)}
-          variant="standard"
-          InputProps={{ disableUnderline: true }}
-          sx={{ width: "100%", height: "100%", overflowY: "auto" }}
-        />
+        <Box sx={{ height: "100%", display: "flex" }}>
+          <TextField
+            multiline
+            margin="dense"
+            value={md}
+            onChange={(e) => setMd(e.target.value)}
+            variant="standard"
+            InputProps={{ disableUnderline: true }}
+            sx={{ width: "50%", height: "100%", overflowY: "auto" }}
+          />
+          <Box sx={{ width: "50%", height: "100%", overflowY: "auto" }}>
+            <Guide
+              challengeId={props.challengeId}
+              md={md}
+              turtleExampleImage={props.turtleExampleImage}
+            />
+          </Box>
+        </Box>
       );
     }
     if (props.isLoading) {
@@ -93,7 +109,7 @@ const ChallengeGuide = React.forwardRef<ChallengeGuideRef, ChallengeGuideProps>(
         ) : null}
       </>
     );
-  }
+  },
 );
 
 export default ChallengeGuide;
