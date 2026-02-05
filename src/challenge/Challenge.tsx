@@ -72,7 +72,7 @@ const Challenge = (props: ChallengeProps) => {
       props.bookNode.typ
         ? ChallengeTypes[props.bookNode.typ]
         : ChallengeTypes.py,
-    [props.bookNode.typ],
+    [props.bookNode.typ]
   );
 
   const canSubmit = useMemo(
@@ -81,12 +81,12 @@ const Challenge = (props: ChallengeProps) => {
         ((!!props.bookNode.tests && props.bookNode.tests.length > 0) ||
           nodeTyp === "parsons")) ||
       !!props.bookNode.isAssessment,
-    [props.bookNode, nodeTyp],
+    [props.bookNode, nodeTyp]
   );
 
   const canVerifySolutions = useMemo(
     () => (!!props.bookNode.sol && props.isEditing) || false,
-    [props.bookNode.sol, props.isEditing],
+    [props.bookNode.sol, props.isEditing]
   );
 
   /// state
@@ -126,7 +126,7 @@ const Challenge = (props: ChallengeProps) => {
   const leftHandSideAllotmentRef = useRef<AllotmentHandle | null>(null);
   const leftHandSideAllotmentIsResizingRef = useRef<boolean>(false);
   const leftHandSideAllotmentSizesInDebugRef = useRef<[number, number] | null>(
-    null,
+    null
   );
   const leftHandSideAllotmentSizesNotInDebugRef = useRef<
     [number, number] | null
@@ -234,10 +234,10 @@ const Challenge = (props: ChallengeProps) => {
         bookNode,
         newTestOutcome,
         code,
-        bookNode.isLong,
+        bookNode.isLong
       );
     },
-    [],
+    []
   );
 
   const getVisibilityWithHack = (visible: boolean) => {
@@ -292,7 +292,7 @@ const Challenge = (props: ChallengeProps) => {
       leftHandSideAllotmentSizesNotInDebugRef.current
     ) {
       leftHandSideAllotmentRef.current?.resize(
-        leftHandSideAllotmentSizesNotInDebugRef.current,
+        leftHandSideAllotmentSizesNotInDebugRef.current
       );
     }
     if (
@@ -322,7 +322,7 @@ const Challenge = (props: ChallengeProps) => {
       debug: (mode: "debug" | "run" = "debug") => {
         if (leftHandSideAllotmentSizesInDebugRef.current) {
           leftHandSideAllotmentRef.current?.resize(
-            leftHandSideAllotmentSizesInDebugRef.current,
+            leftHandSideAllotmentSizesInDebugRef.current
           );
         }
         if (nodeTyp === ChallengeTypes.parsons && !props.isEditing) {
@@ -336,6 +336,7 @@ const Challenge = (props: ChallengeProps) => {
               additionalFilesLoaded,
               usesFixedInput ? outputsRef.current?.getFixedInputs() : undefined,
               sessionFiles,
+              props.bookNode.isSessionFilesAllowed
             );
           }
         } else {
@@ -354,12 +355,32 @@ const Challenge = (props: ChallengeProps) => {
                   ? outputsRef.current?.getFixedInputs()
                   : undefined,
                 sessionFiles,
+                props.bookNode.isSessionFilesAllowed
               )
-              .then(() => {
+              .then((data) => {
                 if (props.bookNode?.isExample) {
                   onReportResult([{ outcome: true }], code, bookNode);
                 }
                 outputsRef.current?.getCanvas()?.runTurtleClearup();
+                for (const file of data.updatedSessionFiles) {
+                  if (!file.filename.startsWith("session/")) {
+                    continue;
+                  }
+                  const filename = file.filename.substring("session/".length);
+                  // remove if already exists
+                  const index = sessionFiles.findIndex(
+                    (f) => f.filename === filename
+                  );
+                  if (index >= 0) {
+                    sessionFiles.splice(index, 1);
+                  }
+                  // add new file
+                  sessionFiles.push({
+                    ...file,
+                    filename: filename,
+                  });
+                }
+                actions["has-changed-session-files"]();
               });
           }
         }
@@ -388,6 +409,7 @@ const Challenge = (props: ChallengeProps) => {
                 additionalFilesLoaded,
                 props.bookNode,
                 sessionFiles,
+                props.bookNode.isSessionFilesAllowed
               )
               .then((results) => {
                 onReportResult(results.results, results.code, results.bookNode);
@@ -411,6 +433,7 @@ const Challenge = (props: ChallengeProps) => {
             additionalFilesLoaded,
             props.bookNode,
             sessionFiles,
+            props.bookNode.isSessionFilesAllowed
           )
           .then((results) => {
             onReportResult(results.results, results.code, results.bookNode);
@@ -458,7 +481,7 @@ const Challenge = (props: ChallengeProps) => {
         if (typ === ChallengeTypes.canvas) {
           setTyp(nodeTyp);
           codeRunner.addConsoleText(
-            "Hiding turtle. Did you forget to call turtle.done()?",
+            "Hiding turtle. Did you forget to call turtle.done()?"
           );
         }
       },
@@ -498,7 +521,7 @@ const Challenge = (props: ChallengeProps) => {
           additionalFilesLoaded,
           outputsRef.current?.getVisibleFileContents(),
           outputsRef.current?.getSolutionFileEditor()?.getSolutionObject(),
-          outputsRef.current?.getSolutionFileEditor()?.getSolutionValue(),
+          outputsRef.current?.getSolutionFileEditor()?.getSolutionValue()
         );
         forceReload();
         setHasEdited(false);
@@ -573,7 +596,7 @@ const Challenge = (props: ChallengeProps) => {
         },
       });
     },
-    [hasEdited, props.isEditing, context],
+    [hasEdited, props.isEditing, context]
   );
 
   return (
@@ -667,7 +690,7 @@ const Challenge = (props: ChallengeProps) => {
                     ) {
                       leftHandSideAllotmentSizesInDebugRef.current = sizes as [
                         number,
-                        number,
+                        number
                       ];
                     } else {
                       leftHandSideAllotmentSizesNotInDebugRef.current =
@@ -765,7 +788,7 @@ const Challenge = (props: ChallengeProps) => {
               </Allotment.Pane>
               <Allotment.Pane
                 visible={getVisibilityWithHack(
-                  !editorFullScreen && !isGuideMinimised,
+                  !editorFullScreen && !isGuideMinimised
                 )}
               >
                 <Allotment vertical className="challenge__right-pane">
@@ -819,7 +842,7 @@ const Challenge = (props: ChallengeProps) => {
                         props.isEditing
                           ? () => {
                               bookServerUploaderRef.current?.showDialog(
-                                props.fetcher,
+                                props.fetcher
                               );
                             }
                           : undefined
@@ -846,7 +869,7 @@ const Challenge = (props: ChallengeProps) => {
                       }}
                       OnWatchRemove={(n) => {
                         watches.current = watches.current.filter(
-                          (x) => x !== n,
+                          (x) => x !== n
                         );
                         codeRunner.refreshDebugContext(makeDebugSetup());
                       }}

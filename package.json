@@ -1,6 +1,6 @@
 {
   "name": "python-sponge",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "private": true,
   "type": "module",
   "description": "Client-side framework for learning Python and authoring Python challenges",
@@ -39,6 +39,7 @@
     "jszip": "^3.10.1",
     "jwt-decode": "^4.0.0",
     "lodash": "^4.17.21",
+    "mime": "^4.1.0",
     "monaco-editor": "^0.52.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

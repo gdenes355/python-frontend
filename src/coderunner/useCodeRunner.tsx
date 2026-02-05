@@ -20,6 +20,7 @@ import {
 import DebugSetup from "./DebugSetup";
 import throttle from "lodash/throttle";
 import DebugContext from "./DebugContext";
+import { SessionFile } from "../models/SessionFile";
 
 type CodeRunnerProps = {
   enabled: boolean;
@@ -50,7 +51,9 @@ type CodeRunnerRef = {
     dbgSetup?: DebugSetup,
     additionalFiles?: AdditionalFile[] | undefined,
     additionalFilesLoaded?: AdditionalFilesContents,
-    fixedUserInput?: string
+    fixedUserInput?: string,
+    sessionFiles?: SessionFile[] | null,
+    isSessionFilesAllowed?: boolean
   ) => Promise<DebugFinishedData>;
   drawTurtleExample: (
     additionalFilesLoaded: AdditionalFilesContents,
@@ -214,8 +217,10 @@ const useCodeRunner = ({
         __dbgSetup?: DebugSetup,
         __additionalFiles?: AdditionalFile[] | undefined,
         __additionalFilesLoaded?: AdditionalFilesContents,
-        __fixedUserInput?: string
-      ) => Promise.resolve({ reason: "" })),
+        __fixedUserInput?: string,
+        __sessionFiles?: SessionFile[] | null,
+        __isSessionFilesAllowed?: boolean
+      ) => Promise.resolve({ reason: "", updatedSessionFiles: [] })),
     keyDown: pythonCodeRunner?.keyDown || (() => {}),
     keyUp: pythonCodeRunner?.keyUp || (() => {}),
     step: pythonCodeRunner?.step || (() => {}),

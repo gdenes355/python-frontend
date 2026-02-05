@@ -8,6 +8,16 @@ const VeryDenseTableCell = styled(TableCell)(({ theme }) => ({
   },
   [`&.${tableCellClasses.root}`]: {
     padding: 0,
+
+    width: "100%",
+    minWidth: 0,
+
+    overflow: "hidden",
+
+    "& > *": {
+      minWidth: 0,
+      width: "100%",
+    },
   },
 }));
 

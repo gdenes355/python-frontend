@@ -29,7 +29,7 @@ import BookNodeModel from "../../../models/BookNodeModel";
 import BookJsonEditor from "../Editors/BookJSONEditor";
 
 import EditableBookStore from "../../../book/utils/EditableBookStore";
-import SessionFiles from "./SessionFiles";
+
 import { SessionFile } from "../../../models/SessionFile";
 import SessionFileView from "../Editors/SessionFileView";
 import SolutionFileEditor, {
@@ -37,6 +37,7 @@ import SolutionFileEditor, {
 } from "../Editors/SolutionFileEditor";
 
 const BookNodeEditor = React.lazy(() => import("../Editors/BookNodeEditor"));
+const SessionFiles = React.lazy(() => import("./SessionFiles"));
 
 type ChallengeOutputsProps = {
   typ: ChallengeTypes;
@@ -259,22 +260,32 @@ const ChallengeOutputs = React.forwardRef<
     panes.push({
       label: "Session Files",
       content: (
-        <SessionFiles
-          onAddSessionFile={(file) => {
-            props.sessionFiles.push(file);
-            challengeContext?.actions["has-changed-session-files"]();
-          }}
-          sessionFiles={props.sessionFiles}
-          onRemoveSessionFile={(fileName) => {
-            const index = props.sessionFiles.findIndex(
-              (file) => file.filename === fileName,
-            );
-            if (index >= 0) {
-              props.sessionFiles.splice(index, 1);
+        <React.Suspense fallback={<div>Loading session files...</div>}>
+          <SessionFiles
+            onAddSessionFile={(file) => {
+              // remove if already exists
+              const index = props.sessionFiles.findIndex(
+                (f) => f.filename === file.filename
+              );
+              if (index >= 0) {
+                props.sessionFiles.splice(index, 1);
+              }
+              // add new file
+              props.sessionFiles.push(file);
               challengeContext?.actions["has-changed-session-files"]();
-            }
-          }}
-        />
+            }}
+            sessionFiles={props.sessionFiles}
+            onRemoveSessionFile={(fileName) => {
+              const index = props.sessionFiles.findIndex(
+                (file) => file.filename === fileName
+              );
+              if (index >= 0) {
+                props.sessionFiles.splice(index, 1);
+                challengeContext?.actions["has-changed-session-files"]();
+              }
+            }}
+          />
+        </React.Suspense>
       ),
       show: true,
       name: "session_files",

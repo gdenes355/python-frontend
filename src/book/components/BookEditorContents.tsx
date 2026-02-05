@@ -49,10 +49,10 @@ import DriveFileRenameOutline from "@mui/icons-material/DriveFileRenameOutline";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DoneIcon from "@mui/icons-material/Done";
 import { SimpleTreeView, TreeItem } from "@mui/x-tree-view";
-import CodeIcon from '@mui/icons-material/Code';
-import TaskAltIcon from '@mui/icons-material/TaskAlt';
-import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
-import AbcOutlinedIcon from '@mui/icons-material/AbcOutlined';
+import CodeIcon from "@mui/icons-material/Code";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
+import AbcOutlinedIcon from "@mui/icons-material/AbcOutlined";
 
 type EditorTestResults = {
   passed: Set<string>;
@@ -93,10 +93,10 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
       setContextMenu(
         contextMenu === null
           ? {
-            mouseX: event.clientX - 2,
-            mouseY: event.clientY - 4,
-            node,
-          }
+              mouseX: event.clientX - 2,
+              mouseY: event.clientY - 4,
+              node,
+            }
           : null
       );
       event.preventDefault();
@@ -159,8 +159,11 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
             Make subpage
           </MenuItem>
           <Divider />
-          <MenuItem onClick={() => dispatchCommand(props.onDeleteNode)} sx={{ color: (theme) => theme.palette.error.main }}>
-            <ListItemIcon sx={{ color: (theme) => theme.palette.error.main }} >
+          <MenuItem
+            onClick={() => dispatchCommand(props.onDeleteNode)}
+            sx={{ color: (theme) => theme.palette.error.main }}
+          >
+            <ListItemIcon sx={{ color: (theme) => theme.palette.error.main }}>
               <DeleteIcon />
             </ListItemIcon>
             Delete
@@ -199,8 +202,8 @@ function RecursiveItem(props: RecursiveItemProps) {
 
   const style = transform
     ? {
-      transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    }
+        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+      }
     : undefined;
 
   const dropStyle: React.CSSProperties = {
@@ -222,11 +225,46 @@ function RecursiveItem(props: RecursiveItemProps) {
               ) : null}
               {node.name}
             </Box>
-            {!!node.guide ? <Tooltip title="Guide"><AbcOutlinedIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
-            {node.py ? <Tooltip title="Python code"><CodeIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
-            {!!node.tests?.length ? <Tooltip title="Tests"><TaskAltIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
-            {!!node.sol?.file ? <Tooltip title="Solutions"><LightbulbOutlinedIcon sx={{ fontSize: 16, color: (theme) => theme.palette.info.main }} /></Tooltip> : null}
-
+            {!!node.guide ? (
+              <Tooltip title="Guide">
+                <AbcOutlinedIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.info.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
+            {node.py ? (
+              <Tooltip title="Python code">
+                <CodeIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.info.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
+            {!!node.tests?.length ? (
+              <Tooltip title="Tests">
+                <TaskAltIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.info.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
+            {!!node.sol?.file ? (
+              <Tooltip title="Solutions">
+                <LightbulbOutlinedIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.info.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
           </Box>
         }
         ref={setNodeDragRef}

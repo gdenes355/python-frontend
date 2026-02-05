@@ -1,4 +1,4 @@
-name: Build with NodeJS and Webpack
+name: Build with NodeJS and Vite
 
 on:
   push:

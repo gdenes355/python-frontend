@@ -30,29 +30,6 @@ const INCLUDED_WHEELS = [
   "requests",
 ];
 
-const rewriteWorkerJs = (isStandalone: boolean) => {
-  const inputPath = path.resolve(__dirname, "src/utils/pyworker_sw.js");
-  const outputPath = path.resolve(__dirname, "public/static/js/pyworker_sw.js");
-
-  let contents = fs.readFileSync(inputPath, "utf-8");
-  if (isStandalone) {
-    console.log(
-      "[vite] replacing STANDALONE_BUILD = false with STANDALONE_BUILD = true in src/utils/pyworker_sw.js -> public/static/js/pyworker_sw.js"
-    );
-    contents = contents.replace(
-      "const STANDALONE_BUILD = false",
-      "const STANDALONE_BUILD = true"
-    );
-  }
-
-  fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-  fs.writeFileSync(outputPath, contents, "utf-8");
-
-  console.log(
-    `[vite] Processed pyworker_sw.js: STANDALONE_BUILD=${isStandalone}`
-  );
-};
-
 const identifyAllWheelFiles = (packageFilePath: string, version: string) => {
   const packageJson: Record<string, any> = JSON.parse(
     fs.readFileSync(packageFilePath, "utf-8")
@@ -131,16 +108,12 @@ export default defineConfig(({ mode }) => {
       {
         name: "transform-pyworker",
         apply: "build",
-        buildStart() {
-          rewriteWorkerJs(isStandalone);
-        },
+        buildStart() {},
       },
       {
         name: "transform-pyworker-dev",
         apply: "serve",
-        configureServer() {
-          rewriteWorkerJs(false);
-        },
+        configureServer() {},
       },
       // Process cdn-mirror; normal build doesn't need it; standalone may or may not need wheels
       {

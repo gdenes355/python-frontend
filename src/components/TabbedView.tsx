@@ -95,6 +95,8 @@ const TabbedView = React.forwardRef<TabbedViewHandle, TabbedViewProps>(
               value={actualCurrent}
               onChange={(_, newVal) => setCurrentTab(newVal)}
               aria-label="Output tabs"
+              variant="scrollable"
+              scrollButtons="auto"
             >
               {props.panes.map((pane) => (
                 <Tab

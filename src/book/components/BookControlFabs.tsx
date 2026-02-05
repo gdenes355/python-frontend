@@ -46,7 +46,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
   }
   if (props.onSave) {
     btns.push(
-      <Tooltip title="Save">
+      <Tooltip title="Save" key="save">
         <Fab
           key="save"
           sx={{ m: 1 }}

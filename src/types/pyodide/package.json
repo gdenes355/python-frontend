@@ -1,0 +1,5 @@
+{
+  "name": "pyodide",
+  "version": "0.28.0",
+  "typings": "main.d.ts"
+}

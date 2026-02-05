@@ -10,6 +10,14 @@ import { keyToVMCode } from "../utils/keyTools";
 import CodeRunnerState from "./CodeRunnerState";
 import DebugSetup from "./DebugSetup";
 import { SessionFile } from "../models/SessionFile";
+import {
+  WorkerDebugDto,
+  WorkerDrawTurtleExampleDto,
+  WorkerRunDto,
+  WorkerTestDto,
+} from "./WorkerDtos";
+
+const STANDALONE_BUILD = import.meta.env.VITE_STANDALONE_BUILD === "true";
 
 interface ICodeRunner {
   // publis state
@@ -84,6 +92,7 @@ type Data2 = {
 
 type DebugFinishedData = {
   reason: string;
+  updatedSessionFiles: SessionFile[];
 };
 
 type TestFinishedData = {
@@ -145,7 +154,8 @@ class PythonCodeRunner implements ICodeRunner {
     additionalFiles?: AdditionalFile[] | undefined,
     additionalFilesLoaded?: AdditionalFilesContents,
     fixedUserInput?: string,
-    sessionFiles: SessionFile[] = []
+    sessionFiles?: SessionFile[] | null,
+    isSessionFilesAllowed?: boolean
   ) => {
     if (this.debugPromiseResRej) {
       this.debugPromiseResRej.rej("Debug cancelled");
@@ -159,7 +169,8 @@ class PythonCodeRunner implements ICodeRunner {
         additionalFiles,
         additionalFilesLoaded,
         fixedUserInput,
-        sessionFiles
+        sessionFiles || [],
+        isSessionFilesAllowed
       );
     });
   };
@@ -170,7 +181,8 @@ class PythonCodeRunner implements ICodeRunner {
     additionalFiles: AdditionalFile[] | undefined,
     additionalFilesLoaded: AdditionalFilesContents,
     bookNode: BookNodeModel,
-    sessionFiles: SessionFile[] = []
+    sessionFiles: SessionFile[] = [],
+    isSessionFilesAllowed?: boolean
   ) => {
     if (this.testPromiseResRej) {
       this.testPromiseResRej.rej("Test cancelled");
@@ -183,7 +195,8 @@ class PythonCodeRunner implements ICodeRunner {
         additionalFiles,
         additionalFilesLoaded,
         bookNode,
-        sessionFiles
+        sessionFiles,
+        isSessionFilesAllowed
       );
     });
   };
@@ -204,8 +217,7 @@ class PythonCodeRunner implements ICodeRunner {
 
   private additionalCodeForFiles = (
     additionalFiles?: AdditionalFile[] | undefined,
-    additionalFilesLoaded?: AdditionalFilesContents,
-    sessionFiles: SessionFile[] = []
+    additionalFilesLoaded?: AdditionalFilesContents
   ) => {
     let code = additionalFilesLoaded
       ? additionalFiles
@@ -217,29 +229,11 @@ class PythonCodeRunner implements ICodeRunner {
           )
           .join("\n")
       : "";
-    if (sessionFiles.length > 0) {
-      code += "import os\n";
-      code += "os.makedirs('session', exist_ok=True)\n";
-      code += sessionFiles
-        .map((file) =>
-          file.isText
-            ? this.fileWriteTXT(`session/${file.filename}`, file.data as string)
-            : this.fileWriteBin(
-                `session/${file.filename}`,
-                file.data as ArrayBuffer
-              )
-        )
-        .join("\n");
-    }
     return code;
   };
 
   private fileWriteTXT = (filename: string, content: string) => {
     return `with open("${filename}", "w") as f:f.write(r"""${content} """)\n`;
-  };
-
-  private fileWriteBin = (filename: string, content: ArrayBuffer) => {
-    return `with open("${filename}", "wb") as f:f.write(bytearray([${content}]))\n`;
   };
 
   private runDebug = (
@@ -249,7 +243,8 @@ class PythonCodeRunner implements ICodeRunner {
     additionalFiles?: AdditionalFile[] | undefined,
     additionalFilesLoaded?: AdditionalFilesContents,
     fixedUserInput?: string,
-    sessionFiles: SessionFile[] = []
+    sessionFiles: SessionFile[] = [],
+    isSessionFilesAllowed?: boolean
   ) => {
     if (!code || !this.worker || this.state !== CodeRunnerState.READY) {
       this.debugPromiseResRej?.rej("cannot run debug");
@@ -262,22 +257,24 @@ class PythonCodeRunner implements ICodeRunner {
 
     const additionalCode = this.additionalCodeForFiles(
       additionalFiles,
-      additionalFilesLoaded,
-      sessionFiles
+      additionalFilesLoaded
     );
 
     navigator.serviceWorker.controller?.postMessage({ cmd: "ps-prerun" });
     this.currentFixedUserInput = fixedUserInput?.split("\n");
     this.debugContext = undefined;
     this.onTurtleReset.fire(false);
-    this.worker?.postMessage({
+    const cmd: WorkerDebugDto | WorkerRunDto = {
       cmd: mode,
       code: code,
       initCode: additionalCode,
       breakpoints:
         dbgSetup?.breakpoints === undefined ? null : dbgSetup?.breakpoints,
       watches: dbgSetup?.watches === undefined ? null : dbgSetup?.watches,
-    });
+      sessionFiles: sessionFiles,
+      isSessionFilesAllowed: isSessionFilesAllowed,
+    };
+    this.worker?.postMessage(cmd);
     this.state =
       mode === "debug"
         ? CodeRunnerState.RUNNING_WITH_DEBUGGER
@@ -416,7 +413,7 @@ class PythonCodeRunner implements ICodeRunner {
       this.state = CodeRunnerState.READY;
       this.onStateChanged.fire(this.state);
     },
-    "debug-finished": ({ reason }: DebugFinishedData) => {
+    "debug-finished": ({ reason, updatedSessionFiles }: DebugFinishedData) => {
       this.forceStopping = false;
       const msg = {
         ok: "Program finished ok. Press run/debug to run again...",
@@ -427,7 +424,7 @@ class PythonCodeRunner implements ICodeRunner {
       this.onPrint.fire(`\n${msg}\n`);
       this.state = CodeRunnerState.READY;
       this.onStateChanged.fire(this.state);
-      this.debugPromiseResRej?.res({ reason });
+      this.debugPromiseResRej?.res({ reason, updatedSessionFiles });
     },
     input: () => {
       if (this.currentFixedUserInput) {
@@ -485,7 +482,8 @@ class PythonCodeRunner implements ICodeRunner {
     additionalFiles: AdditionalFile[] | undefined,
     additionalFilesLoaded: AdditionalFilesContents,
     bookNode: BookNodeModel,
-    sessionFiles: SessionFile[] = []
+    sessionFiles: SessionFile[] = [],
+    isSessionFilesAllowed?: boolean
   ) => {
     if (
       !code ||
@@ -501,8 +499,7 @@ class PythonCodeRunner implements ICodeRunner {
     }
     const additionalCode = this.additionalCodeForFiles(
       additionalFiles,
-      additionalFilesLoaded,
-      sessionFiles
+      additionalFilesLoaded
     );
     const testsClone = structuredClone(tests);
     let hasTurtleTest = false;
@@ -530,7 +527,9 @@ class PythonCodeRunner implements ICodeRunner {
           initCode: additionalCode,
           tests: testsClone,
           bookNode: bookNode,
-        });
+          sessionFiles: sessionFiles,
+          isSessionFilesAllowed: isSessionFilesAllowed,
+        } as WorkerTestDto);
       });
     } else {
       // use the original tests for non turtle tests to avoid changing filenames to contents
@@ -540,7 +539,7 @@ class PythonCodeRunner implements ICodeRunner {
         initCode: additionalCode,
         tests: tests,
         bookNode: bookNode,
-      });
+      } as WorkerTestDto);
     }
     this.state = CodeRunnerState.RUNNING;
     this.onStateChanged.fire(this.state);
@@ -592,7 +591,7 @@ class PythonCodeRunner implements ICodeRunner {
         code: code,
         inputs: inputs,
         bookNode: bookNode,
-      });
+      } as WorkerDrawTurtleExampleDto);
     });
     this.state = CodeRunnerState.RUNNING;
     this.onStateChanged.fire(this.state);
@@ -610,7 +609,15 @@ class PythonCodeRunner implements ICodeRunner {
     }
     this.worker?.terminate();
     this.forceStopping = false;
-    this.worker = new Worker("/static/js/pyworker_sw.js");
+
+    console.log("restartWorker");
+    this.worker = new Worker(
+      new URL("../workers/pyworker.ts?worker", import.meta.url),
+      {
+        type: "classic",
+      }
+    );
+    this.worker.postMessage({ cmd: "init", standalone: STANDALONE_BUILD });
     this.worker.addEventListener(
       "message",
       (msg: MessageEvent<WorkerResponse>) => {

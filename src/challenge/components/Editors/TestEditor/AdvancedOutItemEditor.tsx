@@ -47,12 +47,12 @@ const AdvancedOutItemEditor = React.forwardRef<
 >((props, ref) => {
   const [pattern, setPattern] = useState<string>(props.req.pattern);
   const [isRegex, setIsRegex] = useState<boolean>(
-    props.req.regex === false ? false : true,
+    props.req.regex === false ? false : true
   );
   const [ignore, setIgnore] = useState<("w" | "c" | "p")[]>([]);
   const [count, setCount] = useState<number>(props.req.count || -1);
   const [typ, setTyp] = useState<AdvancedOutRequirementType>(
-    props.req.typ || "+",
+    props.req.typ || "+"
   );
   const [fileName, setFileName] = useState<string>(props.req.filename || "");
   const [statement, setStatement] = useState<string>(props.req.statement || "");
@@ -63,7 +63,7 @@ const AdvancedOutItemEditor = React.forwardRef<
     setIgnore(
       (props.req.ignore || "")
         .split("")
-        .filter((c) => ["w", "c", "p"].includes(c)) as ("w" | "c" | "p")[],
+        .filter((c) => ["w", "c", "p"].includes(c)) as ("w" | "c" | "p")[]
     );
     setCount(props.req.count || -1);
     setTyp(props.req.typ || "+");
@@ -123,7 +123,6 @@ const AdvancedOutItemEditor = React.forwardRef<
             variant="standard"
             hiddenLabel={true}
             inputProps={{ style: { fontFamily: "monospace" } }}
-            sx={{ width: "98%" }}
           />
         )}
         {typ[0] === "f" || typ[0] === "t" ? (
