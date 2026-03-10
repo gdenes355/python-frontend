@@ -48,16 +48,19 @@ const BookNodeEditor = React.forwardRef<
   // node model state
   const [name, setName] = useState<string>(props.bookNode.name);
   const [typ, setTyp] = useState<"py" | "parsons" | "canvas">(
-    props.bookNode.typ || "py",
+    props.bookNode.typ || "py"
   );
   const [isExample, setIsExample] = useState<boolean>(
-    props.bookNode.isExample || false,
+    props.bookNode.isExample || false
   );
   const [isAssessment, setIsAssessment] = useState<boolean>(
-    props.bookNode.isAssessment || false,
+    props.bookNode.isAssessment || false
+  );
+  const [isAiHelpAllowed, setIsAiHelpAllowed] = useState<boolean>(
+    props.bookNode.isAiHelpAllowed || false
   );
   const [isSessionFilesAllowed, setisSessionFilesAllowed] = useState<boolean>(
-    props.bookNode.isSessionFilesAllowed || false,
+    props.bookNode.isSessionFilesAllowed || false
   );
   const [additionalFiles, setAdditionalFiles] = useState<AdditionalFile[]>([]);
 
@@ -71,6 +74,7 @@ const BookNodeEditor = React.forwardRef<
     setTyp(props.bookNode.typ || "py");
     setIsExample(props.bookNode.isExample || false);
     setIsAssessment(props.bookNode.isAssessment || false);
+    setIsAiHelpAllowed(props.bookNode.isAiHelpAllowed || false);
     setisSessionFilesAllowed(props.bookNode.isSessionFilesAllowed || false);
     setAdditionalFiles(props.bookNode.additionalFiles || []);
   }, [props.bookNode]);
@@ -87,6 +91,7 @@ const BookNodeEditor = React.forwardRef<
       typ,
       isExample: isExample && typ !== "parsons",
       isAssessment: isAssessment && typ !== "parsons",
+      isAiHelpAllowed,
       isSessionFilesAllowed,
       additionalFiles,
       tests: testEditor.current
@@ -213,7 +218,7 @@ const BookNodeEditor = React.forwardRef<
                         <IconButton
                           onClick={() => {
                             setAdditionalFiles(
-                              additionalFiles.filter((f) => f !== file),
+                              additionalFiles.filter((f) => f !== file)
                             );
                             props.onChange?.();
                           }}
@@ -242,7 +247,7 @@ const BookNodeEditor = React.forwardRef<
 
                         {!props.bookNode?.additionalFiles ||
                         props.bookNode?.additionalFiles?.filter(
-                          (f) => f.filename === file.filename,
+                          (f) => f.filename === file.filename
                         ).length === 0 ? (
                           <Tooltip title="You must first save the book to edit this file.">
                             <ListItemText

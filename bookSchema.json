@@ -21,6 +21,9 @@
         },
         "bookMainUrl": {
           "$ref": "#/$defs/bookMainUrl"
+        },
+        "isAiHelpAllowed": {
+          "$ref": "#/$defs/isAiHelpAllowed"
         }
       },
       "required": ["name", "id", "children"],
@@ -53,6 +56,9 @@
         },
         "isAssessment": {
           "$ref": "#/$defs/isAssessment"
+        },
+        "isAiHelpAllowed": {
+          "$ref": "#/$defs/isAiHelpAllowed"
         },
         "isSessionFilesAllowed": {
           "$ref": "#/$defs/isSessionFilesAllowed"
@@ -110,7 +116,12 @@
       "description": "is this for an assessment? Students can submit but will get no test feedback - setting inherited by all children",
       "type": "boolean",
       "default": false
-    },  
+    },
+    "isAiHelpAllowed": {
+      "description": "is AI help allowed for this challenge - setting inherited by all children",
+      "type": "boolean",
+      "default": false
+    }, 
     "isSessionFilesAllowed": {
       "description": "are session files allowed for this challenge?",
       "type": "boolean",

@@ -53,6 +53,7 @@ import CodeIcon from "@mui/icons-material/Code";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import LightbulbOutlinedIcon from "@mui/icons-material/LightbulbOutlined";
 import AbcOutlinedIcon from "@mui/icons-material/AbcOutlined";
+import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 
 type EditorTestResults = {
   passed: Set<string>;
@@ -74,6 +75,7 @@ type PopupMenuProps = {
   onDeleteNode: (node: BookNodeModel) => void;
   onPromoteNode: (node: BookNodeModel) => void;
   onDemote: (node: BookNodeModel) => void;
+  onSetAiHelpAllowed: (isAiHelpAllowed: boolean, node: BookNodeModel) => void;
 };
 type PopupMenuHandle = {
   handleContextMenu: (e: React.MouseEvent, node: BookNodeModel) => void;
@@ -159,6 +161,33 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
             Make subpage
           </MenuItem>
           <Divider />
+          {contextMenu?.node.isAiHelpAllowed ? (
+            <MenuItem
+              disabled={contextMenu?.node.isAiHelpAllowedInherited}
+              onClick={() =>
+                dispatchCommand((node) => props.onSetAiHelpAllowed(false, node))
+              }
+            >
+              <ListItemIcon>
+                <AutoAwesomeOutlinedIcon />
+              </ListItemIcon>
+              {contextMenu?.node.isAiHelpAllowedInherited
+                ? "AI help cannot be disabled (inherited from parent)"
+                : "Disable AI help"}
+            </MenuItem>
+          ) : (
+            <MenuItem
+              onClick={() =>
+                dispatchCommand((node) => props.onSetAiHelpAllowed(true, node))
+              }
+            >
+              <ListItemIcon>
+                <AutoAwesomeOutlinedIcon />
+              </ListItemIcon>
+              Enable AI help
+            </MenuItem>
+          )}
+          <Divider />
           <MenuItem
             onClick={() => dispatchCommand(props.onDeleteNode)}
             sx={{ color: (theme) => theme.palette.error.main }}
@@ -216,7 +245,7 @@ function RecursiveItem(props: RecursiveItemProps) {
     <div style={dropStyle} ref={setNodeDropRef}>
       <TreeItem
         label={
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: "1px" }}>
             <Box className="test-state-icon">
               {props.testRes?.passed.has(node.id) ? (
                 <DoneIcon color="success"></DoneIcon>
@@ -225,6 +254,7 @@ function RecursiveItem(props: RecursiveItemProps) {
               ) : null}
               {node.name}
             </Box>
+
             {!!node.guide ? (
               <Tooltip title="Guide">
                 <AbcOutlinedIcon
@@ -258,6 +288,26 @@ function RecursiveItem(props: RecursiveItemProps) {
             {!!node.sol?.file ? (
               <Tooltip title="Solutions">
                 <LightbulbOutlinedIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.info.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
+            {!!node.isAiHelpAllowed && !node.isAiHelpAllowedInherited ? (
+              <Tooltip title="AI help enabled for this challenge and all children">
+                <AutoAwesomeOutlinedIcon
+                  sx={{
+                    fontSize: 16,
+                    color: (theme) => theme.palette.warning.main,
+                  }}
+                />
+              </Tooltip>
+            ) : null}
+            {node.isAiHelpAllowedInherited ? (
+              <Tooltip title="AI help enabled (inherited from parent)">
+                <AutoAwesomeOutlinedIcon
                   sx={{
                     fontSize: 16,
                     color: (theme) => theme.palette.info.main,
@@ -351,6 +401,13 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
     }
   };
 
+  const setAiHelpAllowed = (isAiHelpAllowed: boolean, node?: BookNodeModel) => {
+    if (node) {
+      node.isAiHelpAllowed = isAiHelpAllowed;
+      props.onBookModified();
+    }
+  };
+
   const demoteNode = (node?: BookNodeModel) => {
     if (node) {
       demoteBookNode(props.bookRoot, node);
@@ -412,6 +469,7 @@ const BookEditorContents = (props: BookEditorContentsProps) => {
         onDeleteNode={startDeleteNode}
         onPromoteNode={promoteNode}
         onDemote={demoteNode}
+        onSetAiHelpAllowed={setAiHelpAllowed}
       />
       <InputDialog
         title="Rename"

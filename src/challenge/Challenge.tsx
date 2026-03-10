@@ -46,8 +46,10 @@ import { BookUploadType } from "../book/components/BookUpload";
 import BookServerUploader, {
   BookServerUploaderRef,
 } from "./components/Editors/BookServerUploader";
+import AiContext, { AiProvider } from "../ai/AiContext";
 
 type ChallengeProps = {
+  bookPath: string;
   uid: string;
   guidePath: string;
   codePath: string;
@@ -67,6 +69,7 @@ type ChallengeProps = {
 };
 
 const Challenge = (props: ChallengeProps) => {
+  const { askAi } = useContext(AiContext);
   const nodeTyp: ChallengeTypes = useMemo(
     () =>
       props.bookNode.typ
@@ -535,6 +538,16 @@ const Challenge = (props: ChallengeProps) => {
         setHasEdited(false);
         props.onBookReloadRequested();
       },
+      "ask-ai-for-hints": () => {
+        const code = pyEditorRef.current?.getValue();
+        askAi(
+          guideMd || "",
+          code || "",
+          codeRunner.consoleText || "",
+          props.bookPath,
+          props.bookNode.id || ""
+        );
+      },
     };
   }, [
     additionalFilesLoaded,
@@ -847,6 +860,9 @@ const Challenge = (props: ChallengeProps) => {
                             }
                           : undefined
                       }
+                      onAskAiForHints={() => {
+                        actions["ask-ai-for-hints"]();
+                      }}
                     />
                   </Box>
                   <Allotment.Pane

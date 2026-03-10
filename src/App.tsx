@@ -22,6 +22,7 @@ import FolderPicker from "./components/FolderPicker";
 import packageJson from "../package.json";
 import { BookUploadType } from "./book/components/BookUpload";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { AiProvider } from "./ai/AiContext";
 
 const AdminWrapper = lazy(() => import("./auth/AdminWrapper"));
 const AllClasses = lazy(() => import("./teacher/AllClasses"));
@@ -77,11 +78,13 @@ const AppContainer = () => {
 
   if (bookPath || bookFile) {
     return (
-      <Book
-        zipFile={bookFile || undefined}
-        localFolder={localFolder}
-        onBookUploaded={openBookFromZip}
-      />
+      <AiProvider>
+        <Book
+          zipFile={bookFile || undefined}
+          localFolder={localFolder}
+          onBookUploaded={openBookFromZip}
+        />
+      </AiProvider>
     );
   } else {
     return (

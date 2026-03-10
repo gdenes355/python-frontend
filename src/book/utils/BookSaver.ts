@@ -65,6 +65,10 @@ const saveNode = (
     changed = true;
     bookNode.isAssessment = newBookNode.isAssessment ? true : undefined;
   }
+  if (newBookNode.isAiHelpAllowed !== bookNode.isAiHelpAllowed) {
+    changed = true;
+    bookNode.isAiHelpAllowed = newBookNode.isAiHelpAllowed ? true : undefined;
+  }
   if (newBookNode.typ !== bookNode.typ) {
     changed = true;
     bookNode.typ = newBookNode.typ;

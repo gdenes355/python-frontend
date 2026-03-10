@@ -1,4 +1,8 @@
-import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
+import BookNodeModel, {
+  computeRecursiveProperties,
+  getSinglePage,
+  removeTransientProperties,
+} from "../../models/BookNodeModel";
 import BookFetcher from "./BookFetcher";
 import { v4 as uuidv4 } from "uuid";
 import { absolutisePath } from "../../utils/pathTools";
@@ -176,6 +180,7 @@ class EditableBookStore implements IEditableBookStore {
     fetchBook: () => {
       let allResults: AllTestResults = emptyTestResults();
       this.book = JSON.parse(JSON.stringify(this.book));
+      computeRecursiveProperties(this.book, false);
       return new Promise<IBookFetchResult>((r) =>
         r({
           book: this.book,
@@ -196,6 +201,8 @@ class EditableBookStore implements IEditableBookStore {
       if (newBook) {
         this.book = JSON.parse(newBook) as BookNodeModel;
       }
+      removeTransientProperties(this.book);
+
       localStorage.setItem("edit://edit/book.json", JSON.stringify(this.book));
     },
   };

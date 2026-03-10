@@ -159,6 +159,7 @@ const ResultsTable = React.forwardRef<ResultsTableRef, ResultsTableProps>(
 
     const aggregatedResultsFetcher = useCallback(
       (student: string) => {
+        console.log("aggregatedResultsFetcher", student, props.results);
         return getAggregateResultsFromRef(student);
       },
       [getAggregateResultsFromRef]

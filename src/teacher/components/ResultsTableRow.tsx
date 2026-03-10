@@ -139,6 +139,14 @@ const ResultsTableRow = React.forwardRef<
     }
   };
 
+  const getAiHelp = (id: string) => {
+    let res = (results as any)?.[id] as any;
+    if (res === undefined) {
+      return false;
+    }
+    return res.ai_help;
+  };
+
   const StyledResCell = useMemo(
     () =>
       styled("span")(
@@ -207,7 +215,11 @@ const ResultsTableRow = React.forwardRef<
                 return (
                   <Tooltip
                     key={id}
-                    className={" res res-" + getPassedCode(id)}
+                    className={
+                      " res res-" +
+                      getPassedCode(id) +
+                      (getAiHelp(id) ? "-ai-help" : "")
+                    }
                     title={props.challengeInfo?.map.get(id)?.name}
                     onClick={(e) => onIndividialResultClicked(e, id)}
                   >

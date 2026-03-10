@@ -47,6 +47,7 @@ class BookFetcher implements IBookFetcher {
   }
 
   public async fetch(url: string, sessionContext?: SessionContextType) {
+    console.log("fetching", url);
     if (this.localFolder) {
       let pathParts = splitToParts(url.replace("pfdir://in.dir/", ""));
       let folder = this.localFolder;
@@ -169,7 +170,8 @@ class BookFetcher implements IBookFetcher {
     allRes: AllTestResults,
     fileRoot: boolean,
     authContext?: SessionContextType,
-    isAssessment: boolean = false
+    isAssessment: boolean = false,
+    isAiHelpAllowed: boolean = false
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
@@ -182,6 +184,10 @@ class BookFetcher implements IBookFetcher {
       bookNode.isAssessment = true;
     }
 
+    if (isAiHelpAllowed) {
+      bookNode.isAiHelpAllowed = true;
+    }
+
     if (bookNode.children) {
       for (const child of bookNode.children) {
         await this.expandBookLinks(
@@ -190,7 +196,8 @@ class BookFetcher implements IBookFetcher {
           allRes,
           false,
           authContext,
-          isAssessment || bookNode.isAssessment
+          isAssessment || bookNode.isAssessment,
+          isAiHelpAllowed || bookNode.isAiHelpAllowed
         );
       }
     }

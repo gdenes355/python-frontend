@@ -18,6 +18,7 @@ export type ChallengeResultComplexModel = {
   title?: string;
   name?: string;
   comment?: string;
+  ai_help?: boolean;
 };
 
 export type ChallengeResultModel = boolean | ChallengeResultComplexModel;

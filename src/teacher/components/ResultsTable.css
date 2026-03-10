@@ -21,12 +21,24 @@
   background-color: #aa0000;
 }
 
+.res--1-ai-help {
+  background: linear-gradient(to bottom, #aa0000, gainsboro);
+}
+
 .res-1 {
   background-color: #00bb00;
 }
 
+.res-1-ai-help {
+  background: linear-gradient(to bottom, #00bb00, gainsboro);
+}
+
 .res-2 {
   background-color: #00ee00;
+}
+
+.res-2-ai-help {
+  background: linear-gradient(to bottom, #00ee00, gainsboro);
 }
 
 .res--1-p {
@@ -34,12 +46,24 @@
   opacity: 0.3;
 }
 
+.res--1-p-ai-help {
+  background: linear-gradient(to bottom, #550000, gainsboro);
+}
+
 .res-1-p {
   background-color: #005500;
   opacity: 0.2;
 }
 
+.res-1-p-ai-help {
+  background: linear-gradient(to bottom, #005500, gainsboro);
+}
+
 .res-2-p {
   background-color: #009900;
   opacity: 0.2;
+}
+
+.res-2-p-ai-help {
+  background: linear-gradient(to bottom, #009900, gainsboro);
 }

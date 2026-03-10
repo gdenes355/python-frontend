@@ -21,6 +21,9 @@ export const clearBook = (b: BookNodeModel) => {
   if (b.bookLink) {
     b.bookLink = undefined;
   }
+  if (b.isAiHelpAllowedInherited !== undefined) {
+    b.isAiHelpAllowedInherited = undefined;
+  }
   if (b.children) {
     b.children = b.children.map(clearBook);
   }
