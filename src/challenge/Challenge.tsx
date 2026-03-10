@@ -46,7 +46,7 @@ import { BookUploadType } from "../book/components/BookUpload";
 import BookServerUploader, {
   BookServerUploaderRef,
 } from "./components/Editors/BookServerUploader";
-import AiContext, { AiProvider } from "../ai/AiContext";
+import AiContext from "../ai/AiContext";
 
 type ChallengeProps = {
   bookPath: string;
