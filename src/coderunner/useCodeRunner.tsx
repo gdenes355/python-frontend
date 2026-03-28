@@ -59,6 +59,11 @@ type CodeRunnerRef = {
   kill: () => void;
   keyDown: (data: React.KeyboardEvent) => void;
   keyUp: (data: React.KeyboardEvent) => void;
+  click: (data: React.MouseEvent) => void;
+  mouseDown: (data: React.MouseEvent) => void;
+  mouseUp: (data: React.MouseEvent) => void;
+  mouseMove: (data: React.MouseEvent) => void;
+  wheel: (data: React.WheelEvent) => void;
   step: () => void;
   continue: () => void;
   input: (input: string) => void;
@@ -187,7 +192,12 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     debug: pythonCodeRunner.debug,
     keyDown: pythonCodeRunner.keyDown,
     keyUp: pythonCodeRunner.keyUp,
-    step: pythonCodeRunner.step,
+    click: pythonCodeRunner.click,
+    mouseDown: pythonCodeRunner.mouseDown,
+    mouseUp: pythonCodeRunner.mouseUp,
+    mouseMove: pythonCodeRunner.mouseMove,
+    wheel: pythonCodeRunner.wheel,
+    ep: pythonCodeRunner.step,
     refreshDebugContext: pythonCodeRunner.refreshDebugContext,
     continue: pythonCodeRunner.continue,
     input: pythonCodeRunner.input,

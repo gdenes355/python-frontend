@@ -15,6 +15,11 @@ type Actions = {
   "handle-code-upload": (file: File) => void;
   "canvas-keydown": (data: React.KeyboardEvent) => void;
   "canvas-keyup": (data: React.KeyboardEvent) => void;
+  "canvas-click": (data: React.MouseEvent) => void;
+  "canvas-mousedown": (data: React.MouseEvent) => void;
+  "canvas-mouseup": (data: React.MouseEvent) => void;
+  "canvas-mousemove": (data: React.MouseEvent) => void;
+  "canvas-wheel": (data: React.WheelEvent) => void;
   "hide-turtle": () => void;
   reload: () => void;
   "has-made-edit": () => void;
@@ -51,6 +56,16 @@ const wrapActions = (r: React.MutableRefObject<any>) => {
     "canvas-keyup": (data: React.KeyboardEvent) =>
       r.current["canvas-keyup"](data),
     reload: () => r.current.reload(),
+    "canvas-click": (data: React.MouseEvent) =>
+    r.current["canvas-click"](data),
+    "canvas-mousedown": (data: React.MouseEvent) =>
+    r.current["canvas-mousedown"](data),
+    "canvas-mouseup": (data: React.MouseEvent) =>
+    r.current["canvas-mouseup"](data),
+    "canvas-mousemove": (data: React.MouseEvent) =>
+    r.current["canvas-mousemove"](data),
+    "canvas-wheel": (data: React.WheelEvent) =>
+    r.current["canvas-wheel"](data),
     "has-made-edit": () => r.current["has-made-edit"](),
     "has-changed-session-files": () => r.current["has-changed-session-files"](),
     "save-node": () => r.current["save-node"](),

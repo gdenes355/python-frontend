@@ -16,7 +16,9 @@ importScripts(pyodideImportPath);
 //   run(code) which runs a piece of code
 //   input(data) which provides the input from the user to a currently blocked code
 // the assumption is that run will not be called while there is an active Python code running
-// also, there is an assumption that there cannot be two synchronouse inputs
+// also, there is an assumption that there cannot be two synchronouse inputsa
+
+
 onmessage = function (e) {
   if (e.data.cmd === "setSharedBuffers") {
     if (self.pyodide) {
@@ -27,6 +29,9 @@ onmessage = function (e) {
     }
     self.interruptBuffer = e.data.interruptBuffer;
     self.keyDownBuffer = e.data.keyDownBuffer;
+    self.mouseBuffer = e.data.mouseBuffer;
+    self.mouseDataBuffer = e.data.mouseDataBuffer;
+    console.log("Loaded Shared Buffers");
   } else if (e.data.cmd === "install-deps") {
     (async () => {
       for (const dep of e.data.deps) {
@@ -183,3 +188,20 @@ function workerCheckKeyDown(keyCode) {
 function workerInterrupted() {
   return self.interruptBuffer && self.interruptBuffer[0] > 2;
 }
+function workerCheckClick() {
+  return self.mouseBuffer[1];
+}
+function workerCheckButton(buttonCode) {
+  return self.mouseBuffer[0] & buttonCode;
+}
+function workerGetButtons() {
+  return self.mouseBuffer[0];
+}
+function workerGetMousePos() {
+  return [mouseDataBuffer[0], mouseDataBuffer[1]];
+}
+function workerGetWheelVelo() {
+    return [mouseDataBuffer[2], mouseDataBuffer[3], mouseDataBuffer[4]];
+}
+
+

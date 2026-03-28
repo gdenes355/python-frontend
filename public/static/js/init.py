@@ -9,8 +9,11 @@ import json
 import re
 from collections import deque
 from pyodide.ffi import to_js
+from enum import IntEnum, IntFlag
 
 print(sys.version)
+
+
 
 
 class NotEnoughInputsError(Exception):
@@ -28,6 +31,60 @@ class DebugAudio:
 
 
 class DebugContext:
+    class BUTTON(IntFlag):
+        LEFT = 1
+        RIGHT = 2
+        MIDDLE = 4
+        BACK = 8
+        FORWARD = 16
+
+    class KEY(IntEnum):
+        BACKSPACE = 8
+        TAB = 9
+        ENTER = 13
+        SHIFT = 16
+        CONTROL = 17
+        ALT = 18
+        ALTGRAPH = 18
+        ESCAPE = 27
+        SPACE =  32
+        PAGEUP =  33
+        PAGEDOWN = 34
+        END = 35
+        HOME = 36
+        LEFT = 37
+        UP = 38
+        RIGHT = 39
+        DOWN = 40
+        INSERT = 45
+        DELETE = 46
+        A = 65
+        B = 66
+        C = 67
+        D = 68
+        E = 69
+        F = 70
+        G = 71
+        H = 72
+        I = 73
+        J = 74
+        K = 75
+        L = 76
+        M = 77
+        N = 78
+        O = 79
+        P = 80
+        Q = 81
+        R = 82
+        S = 83
+        T = 84
+        U = 85
+        V = 86
+        W = 87
+        X = 88
+        Y = 89
+        Z = 90
+        META = 91
 
     def __init__(self):
         self.width = 500  # fixed
@@ -175,6 +232,21 @@ class DebugContext:
 
     def check_key(self, key_code):
         return js.workerCheckKeyDown(key_code)
+
+    def check_click(self):
+        return bool(js.workerCheckClick())
+
+    def check_button(self, button_code):
+        return js.workerCheckButton(button_code)
+
+    def get_button_flags(self):
+        return js.workerGetButtons()
+
+    def get_mouse_pos(self):
+        return tuple(js.workerGetMousePos())
+
+    def get_wheel_velo(self):
+        return tuple(js.workerGetWheelVelo())
 
     @property
     def double_buffering(self):
