@@ -197,7 +197,7 @@ const useCodeRunner = (props: CodeRunnerProps) => {
     mouseUp: pythonCodeRunner.mouseUp,
     mouseMove: pythonCodeRunner.mouseMove,
     wheel: pythonCodeRunner.wheel,
-    ep: pythonCodeRunner.step,
+    step: pythonCodeRunner.step,
     refreshDebugContext: pythonCodeRunner.refreshDebugContext,
     continue: pythonCodeRunner.continue,
     input: pythonCodeRunner.input,
