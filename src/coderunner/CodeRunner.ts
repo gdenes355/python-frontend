@@ -271,6 +271,21 @@ class PythonCodeRunner implements ICodeRunner {
     if (this.interruptBuffer) {
       this.interruptBuffer[0] = 0;
     }
+    if (this.keyDownBuffer) {
+        for (var i in this.keyDownBuffer) {
+            this.keyDownBuffer[i] = 0;
+        }
+    }
+    if (this.mouseBuffer) {
+        for (var i in this.mouseBuffer) {
+            this.mouseBuffer[i] = 0;
+        }
+    }
+    if (this.mouseDataBuffer) {
+        for (var i in this.mouseDataBuffer) {
+            this.mouseDataBuffer[i] = 0;
+        }
+    }
 
     const additionalCode = this.additionalCodeForFiles(
       additionalFiles,
