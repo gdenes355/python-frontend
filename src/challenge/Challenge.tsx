@@ -372,6 +372,11 @@ const Challenge = (props: ChallengeProps) => {
       "canvas-keydown": (data: React.KeyboardEvent) =>
         codeRunner?.keyDown(data),
       "canvas-keyup": (data: React.KeyboardEvent) => codeRunner?.keyUp(data),
+      "canvas-click": (data: React.MouseEvent) => codeRunner?.click(data),
+      "canvas-mousedown": (data: React.MouseEvent) => codeRunner?.mouseDown(data),
+      "canvas-mouseup": (data: React.MouseEvent) => codeRunner?.mouseUp(data),
+      "canvas-mousemove": (data: React.MouseEvent) => codeRunner?.mouseMove(data),
+      "canvas-wheel": (data: React.WheelEvent) => codeRunner?.wheel(data),
       "hide-turtle": () => {
         if (typ === ChallengeTypes.canvas) {
           setTyp(nodeTyp);

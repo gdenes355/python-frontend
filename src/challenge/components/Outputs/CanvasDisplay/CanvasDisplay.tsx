@@ -139,8 +139,13 @@ const CanvasDisplay = React.forwardRef<CanvasDisplayHandle, CanvasDisplayProps>(
           width={dimensions.width}
           height={dimensions.height}
           ref={canvasEl}
+          onClick={challengeContext?.actions["canvas-click"]}
           onKeyDown={challengeContext?.actions["canvas-keydown"]}
           onKeyUp={challengeContext?.actions["canvas-keyup"]}
+          onMouseDown={challengeContext?.actions["canvas-mousedown"]}
+          onMouseUp={challengeContext?.actions["canvas-mouseup"]}
+          onMouseMove={challengeContext?.actions["canvas-mousemove"]}
+          onWheel={challengeContext?.actions["canvas-wheel"]}
           tabIndex={1}
           style={{
             outline: "none",

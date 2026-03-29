@@ -64,6 +64,13 @@ interface ICodeRunner {
   // send keyboard events to the running code
   keyDown: (data: React.KeyboardEvent) => void;
   keyUp: (data: React.KeyboardEvent) => void;
+  click: (data: React.MouseEvent) => void;
+  mouseDown: (data: React.MouseEvent) => void;
+  mouseUp: (data: React.MouseEvent) => void;
+  mouseMove: (data: React.MouseEvent) => void;
+  wheel: (data: React.WheelEvent) => void;
+
+
 
   // install pip dependencies
   installDependencies: (deps: string[]) => void;
@@ -119,8 +126,13 @@ class PythonCodeRunner implements ICodeRunner {
   private worker: Worker | null = null;
   private interruptBuffer: Uint8Array | null = null;
   private keyDownBuffer: Uint8Array | null = null;
+  private mouseBuffer: Uint8Array | null = null;
+  private mouseDataBuffer: Float64Array | null = null;
   private workerFullyInitialised = false;
   private forceStopping = false;
+
+  private wheeling = undefined;
+  private clicking = undefined;
 
   // testing session
   private testPromiseResRej: PromiseResRej<TestFinishedData> | null = null; // active test promise
@@ -258,6 +270,21 @@ class PythonCodeRunner implements ICodeRunner {
     }
     if (this.interruptBuffer) {
       this.interruptBuffer[0] = 0;
+    }
+    if (this.keyDownBuffer) {
+        for (var i in this.keyDownBuffer) {
+            this.keyDownBuffer[i] = 0;
+        }
+    }
+    if (this.mouseBuffer) {
+        for (var i in this.mouseBuffer) {
+            this.mouseBuffer[i] = 0;
+        }
+    }
+    if (this.mouseDataBuffer) {
+        for (var i in this.mouseDataBuffer) {
+            this.mouseDataBuffer[i] = 0;
+        }
     }
 
     const additionalCode = this.additionalCodeForFiles(
@@ -627,15 +654,22 @@ class PythonCodeRunner implements ICodeRunner {
     );
     let newInterruptBuffer: Uint8Array | null = null;
     let newKeyDownBuffer: Uint8Array | null = null;
+    let newMouseBuffer: Uint8Array | null = null;
+    let newMouseDataBuffer: Float64Array | null = null;
     if (window.crossOriginIsolated && window.SharedArrayBuffer) {
       console.log("Cross origin isolated with shared array buffer");
       newInterruptBuffer = new Uint8Array(new window.SharedArrayBuffer(1));
       newInterruptBuffer[0] = 0;
       newKeyDownBuffer = new Uint8Array(new window.SharedArrayBuffer(256));
+      newMouseBuffer = new Uint8Array(new window.SharedArrayBuffer(2));
+      newMouseDataBuffer = new Float64Array(new window.SharedArrayBuffer(5 * 8));
+      console.log("Posting...");
       this.worker.postMessage({
         cmd: "setSharedBuffers",
         interruptBuffer: newInterruptBuffer,
         keyDownBuffer: newKeyDownBuffer,
+        mouseBuffer: newMouseBuffer,
+        mouseDataBuffer: newMouseDataBuffer
       });
     } else {
       console.log(
@@ -645,6 +679,8 @@ class PythonCodeRunner implements ICodeRunner {
     msg = msg || "";
     this.interruptBuffer = newInterruptBuffer;
     this.keyDownBuffer = newKeyDownBuffer;
+    this.mouseBuffer = newMouseBuffer;
+    this.mouseDataBuffer = newMouseDataBuffer;
     this.state = CodeRunnerState.RESTARTING_WORKER;
     this.onStateChanged.fire(this.state);
     navigator.serviceWorker.controller?.postMessage({ cmd: "ps-reset" });
@@ -668,6 +704,40 @@ class PythonCodeRunner implements ICodeRunner {
       }
     }
   };
+
+  public timeoutClick = () => {
+      this.clicking = undefined;
+      this.mouseBuffer[1] = 0;
+  }
+  public click = (data : React.MouseEvent) => {
+      this.mouseBuffer[1] = 1;
+      clearTimeout(this.clicking);
+      this.clicking = setTimeout(this.timeoutClick, 100);
+  };
+  public mouseDown = (data : React.MouseEvent) => {
+      this.mouseBuffer[0] = data.buttons;
+  };
+  public mouseUp = (data : React.MouseEvent) => {
+      this.mouseBuffer[0] = data.buttons;
+  };
+  public mouseMove = (data : React.MouseEvent) => {
+      var bounds = data.target.getBoundingClientRect();
+      this.mouseDataBuffer[0] = data.clientX - bounds.left;
+      this.mouseDataBuffer[1] = data.clientY - bounds.top;
+  };
+  public timeoutWheel = () => {
+      this.wheeling = undefined;
+      this.mouseDataBuffer[2] = 0.0;
+      this.mouseDataBuffer[3] = 0.0;
+      this.mouseDataBuffer[4] = 0.0;
+  }
+  public wheel = (data : React.WheelEvent) => {
+      this.mouseDataBuffer[2] = data.deltaX;
+      this.mouseDataBuffer[3] = data.deltaY;
+      this.mouseDataBuffer[4] = data.deltaZ;
+      clearTimeout(this.wheeling);
+      this.wheeling = setTimeout(this.timeoutWheel, 100);
+  }
 }
 
 export {
