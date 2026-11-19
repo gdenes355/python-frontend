@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import BookNodeModel from "../models/BookNodeModel";
+import BookNodeModel, { isAiHelpEnabled } from "../models/BookNodeModel";
 import { Box, Container } from "@mui/material";
 import HeaderBar from "../components/HeaderBar";
 import Guide from "../components/Guide";
@@ -73,6 +73,7 @@ const GuideOnlyChallenge = (props: GuideOnlyChallengeProps) => {
         onNavigateToPrevPage={props.onRequestPreviousChallenge}
         onOpenMenu={() => props.openBookDrawer?.(true)}
         hasEdited={false}
+        isAiHelpAllowed={isAiHelpEnabled(props.bookNode)}
       />
     </Box>
   );

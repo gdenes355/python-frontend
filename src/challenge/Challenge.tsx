@@ -10,7 +10,7 @@ import { TestResults } from "../models/Tests";
 import ChallengeTypes from "../models/ChallengeTypes";
 import IBookFetcher from "../book/utils/IBookFetcher";
 import { ProgressStorage } from "../book/utils/ProgressStorage";
-import BookNodeModel from "../models/BookNodeModel";
+import BookNodeModel, { isAiHelpEnabled } from "../models/BookNodeModel";
 import { PyEditorHandle } from "./components/Editors/PyEditor";
 import { ParsonsEditorHandle } from "./components/Editors/ParsonsEditor";
 
@@ -539,6 +539,7 @@ const Challenge = (props: ChallengeProps) => {
         props.onBookReloadRequested();
       },
       "ask-ai-for-hints": () => {
+        if (!isAiHelpEnabled(props.bookNode)) return;
         const code = pyEditorRef.current?.getValue();
         askAi(
           guideMd || "",
@@ -839,6 +840,7 @@ const Challenge = (props: ChallengeProps) => {
                     )}
                     <BookControlFabs
                       hasEdited={hasEdited}
+                      isAiHelpAllowed={isAiHelpEnabled(props.bookNode)}
                       onNavigateToPrevPage={() =>
                         callWithSaveCheck(props.onRequestPreviousChallenge)
                       }

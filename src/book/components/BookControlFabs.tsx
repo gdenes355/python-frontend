@@ -25,6 +25,8 @@ type BookControlFabsProps = {
   onSave?: () => void;
   onAskAiForHints?: () => void;
   onUploadToServer?: () => void;
+  /** Book/challenge flag after inheritance; ANDed with session canUseAi. */
+  isAiHelpAllowed?: boolean;
 };
 
 const BookControlFabs = (props: BookControlFabsProps) => {
@@ -68,7 +70,7 @@ const BookControlFabs = (props: BookControlFabsProps) => {
       </Tooltip>
     );
   }
-  if (!props.onSave && canUseAi) {
+  if (!props.onSave && canUseAi && props.isAiHelpAllowed) {
     btns.push(
       <Tooltip
         title={

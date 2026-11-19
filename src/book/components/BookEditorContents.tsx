@@ -161,9 +161,10 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
             Make subpage
           </MenuItem>
           <Divider />
-          {contextMenu?.node.isAiHelpAllowed ? (
+          {contextMenu?.node &&
+          (contextMenu.node.isAiHelpAllowed ||
+            contextMenu.node.isAiHelpAllowedInherited) ? (
             <MenuItem
-              disabled={contextMenu?.node.isAiHelpAllowedInherited}
               onClick={() =>
                 dispatchCommand((node) => props.onSetAiHelpAllowed(false, node))
               }
@@ -172,7 +173,7 @@ const PopupMenu = React.forwardRef<PopupMenuHandle, PopupMenuProps>(
                 <AutoAwesomeOutlinedIcon />
               </ListItemIcon>
               {contextMenu?.node.isAiHelpAllowedInherited
-                ? "AI help cannot be disabled (inherited from parent)"
+                ? "Disable AI help (override inherited)"
                 : "Disable AI help"}
             </MenuItem>
           ) : (

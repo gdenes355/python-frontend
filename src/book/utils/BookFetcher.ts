@@ -4,7 +4,10 @@ import {
   splitToParts,
 } from "../../utils/pathTools";
 import JSZip from "jszip";
-import BookNodeModel, { getSinglePage } from "../../models/BookNodeModel";
+import BookNodeModel, {
+  computeRecursiveProperties,
+  getSinglePage,
+} from "../../models/BookNodeModel";
 import { AllTestResults, emptyTestResults } from "../../models/Tests";
 import { loadTestStateLocal } from "./ProgressStorage";
 import UnauthorisedError from "../../auth/UnauthorisedException";
@@ -138,9 +141,10 @@ class BookFetcher implements IBookFetcher {
                 authContext
               );
             })
-            .then((res) =>
-              r({ ...res, singlePageBook: getSinglePage(res.book) })
-            )
+            .then((res) => {
+              computeRecursiveProperties(res.book, false);
+              return r({ ...res, singlePageBook: getSinglePage(res.book) });
+            })
         )
         .catch((t) => {
           if (t instanceof UnauthorisedError) {
@@ -170,8 +174,7 @@ class BookFetcher implements IBookFetcher {
     allRes: AllTestResults,
     fileRoot: boolean,
     authContext?: SessionContextType,
-    isAssessment: boolean = false,
-    isAiHelpAllowed: boolean = false
+    isAssessment: boolean = false
   ) {
     bookNode.bookMainUrl = mainUrl;
     if (fileRoot) {
@@ -184,10 +187,6 @@ class BookFetcher implements IBookFetcher {
       bookNode.isAssessment = true;
     }
 
-    if (isAiHelpAllowed) {
-      bookNode.isAiHelpAllowed = true;
-    }
-
     if (bookNode.children) {
       for (const child of bookNode.children) {
         await this.expandBookLinks(
@@ -196,8 +195,7 @@ class BookFetcher implements IBookFetcher {
           allRes,
           false,
           authContext,
-          isAssessment || bookNode.isAssessment,
-          isAiHelpAllowed || bookNode.isAiHelpAllowed
+          isAssessment || bookNode.isAssessment
         );
       }
     }

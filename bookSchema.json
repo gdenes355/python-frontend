@@ -118,7 +118,7 @@
       "default": false
     },
     "isAiHelpAllowed": {
-      "description": "is AI help allowed for this challenge - setting inherited by all children",
+      "description": "is AI help allowed for this challenge. Inherited by children when unset; a local true/false overrides the parent and is passed to descendants",
       "type": "boolean",
       "default": false
     }, 

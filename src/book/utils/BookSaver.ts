@@ -67,7 +67,12 @@ const saveNode = (
   }
   if (newBookNode.isAiHelpAllowed !== bookNode.isAiHelpAllowed) {
     changed = true;
-    bookNode.isAiHelpAllowed = newBookNode.isAiHelpAllowed ? true : undefined;
+    // Persist explicit false overrides; only drop the property when undefined/null
+    bookNode.isAiHelpAllowed =
+      newBookNode.isAiHelpAllowed === undefined ||
+      newBookNode.isAiHelpAllowed === null
+        ? undefined
+        : !!newBookNode.isAiHelpAllowed;
   }
   if (newBookNode.typ !== bookNode.typ) {
     changed = true;

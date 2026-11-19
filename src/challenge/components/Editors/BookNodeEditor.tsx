@@ -56,9 +56,6 @@ const BookNodeEditor = React.forwardRef<
   const [isAssessment, setIsAssessment] = useState<boolean>(
     props.bookNode.isAssessment || false
   );
-  const [isAiHelpAllowed, setIsAiHelpAllowed] = useState<boolean>(
-    props.bookNode.isAiHelpAllowed || false
-  );
   const [isSessionFilesAllowed, setisSessionFilesAllowed] = useState<boolean>(
     props.bookNode.isSessionFilesAllowed || false
   );
@@ -74,7 +71,6 @@ const BookNodeEditor = React.forwardRef<
     setTyp(props.bookNode.typ || "py");
     setIsExample(props.bookNode.isExample || false);
     setIsAssessment(props.bookNode.isAssessment || false);
-    setIsAiHelpAllowed(props.bookNode.isAiHelpAllowed || false);
     setisSessionFilesAllowed(props.bookNode.isSessionFilesAllowed || false);
     setAdditionalFiles(props.bookNode.additionalFiles || []);
   }, [props.bookNode]);
@@ -91,7 +87,8 @@ const BookNodeEditor = React.forwardRef<
       typ,
       isExample: isExample && typ !== "parsons",
       isAssessment: isAssessment && typ !== "parsons",
-      isAiHelpAllowed,
+      // Managed via book tree context menu (supports inheritance / false override)
+      isAiHelpAllowed: props.bookNode.isAiHelpAllowed,
       isSessionFilesAllowed,
       additionalFiles,
       tests: testEditor.current

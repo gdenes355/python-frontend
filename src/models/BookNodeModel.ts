@@ -53,17 +53,36 @@ export const removeTransientProperties: (node: BookNodeModel) => void = (
   }
 };
 
+/**
+ * Resolve whether AI help is enabled for a node after computeRecursiveProperties.
+ * Local true/false overrides inheritance; undefined/null inherits from parent.
+ */
+export const isAiHelpEnabled = (node: BookNodeModel): boolean =>
+  node.isAiHelpAllowed !== undefined && node.isAiHelpAllowed !== null
+    ? !!node.isAiHelpAllowed
+    : !!node.isAiHelpAllowedInherited;
+
+/**
+ * Propagate isAiHelpAllowed down the tree.
+ * - undefined/null on a child → inherit parent's effective value
+ * - local true/false → use that value and pass it to descendants
+ * Sets isAiHelpAllowedInherited when enabled solely via a parent.
+ */
 export const computeRecursiveProperties: (
   node: BookNodeModel,
-  isAiHelpAllowed: boolean
-) => void = (node, isAiHelpAllowed = false) => {
-  node.isAiHelpAllowedInherited = isAiHelpAllowed;
+  inheritedAiHelpAllowed?: boolean
+) => void = (node, inheritedAiHelpAllowed = false) => {
+  const hasLocalOverride =
+    node.isAiHelpAllowed !== undefined && node.isAiHelpAllowed !== null;
+  const effective = hasLocalOverride
+    ? !!node.isAiHelpAllowed
+    : inheritedAiHelpAllowed;
+
+  node.isAiHelpAllowedInherited = !hasLocalOverride && inheritedAiHelpAllowed;
+
   if (node.children) {
     for (let child of node.children) {
-      computeRecursiveProperties(
-        child,
-        isAiHelpAllowed || node.isAiHelpAllowed || false
-      );
+      computeRecursiveProperties(child, effective);
     }
   }
 };
